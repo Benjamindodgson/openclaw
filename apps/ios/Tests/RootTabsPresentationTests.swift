@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import SwiftUI
 import Testing
 import UIKit
@@ -39,6 +40,120 @@ import UIKit
             discoveredGatewayCount: 1)
 
         #expect(!shouldPresent)
+    }
+
+    @Test func startupPresentationOpensOnboardingForFreshInstall() {
+        #expect(
+            RootTabs.startupPresentationRoute(
+                gatewayConnected: false,
+                hasConnectedOnce: false,
+                onboardingComplete: false,
+                hasExistingGatewayConfig: false,
+                shouldPresentOnLaunch: false) == .onboarding)
+    }
+
+    @Test func startupPresentationOpensSettingsWhenOnboardingCompleteWithoutConfig() {
+        #expect(
+            RootTabs.startupPresentationRoute(
+                gatewayConnected: false,
+                hasConnectedOnce: true,
+                onboardingComplete: true,
+                hasExistingGatewayConfig: false,
+                shouldPresentOnLaunch: false) == .settings)
+    }
+
+    @Test func startupPresentationDoesNotInterruptConnectedGateway() {
+        #expect(
+            RootTabs.startupPresentationRoute(
+                gatewayConnected: true,
+                hasConnectedOnce: false,
+                onboardingComplete: false,
+                hasExistingGatewayConfig: false,
+                shouldPresentOnLaunch: true) == .none)
+    }
+
+    @Test func reducerUpdatesStartupPresentationRoute() async {
+        let store = TestStore(initialState: RootPresentationFeature.State(
+            gatewayConnected: true,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: true,
+            shouldPresentOnLaunch: false))
+        {
+            RootPresentationFeature()
+        }
+
+        await store.send(.startupSnapshotChanged(
+            gatewayConnected: false,
+            hasConnectedOnce: false,
+            onboardingComplete: false,
+            hasExistingGatewayConfig: false,
+            shouldPresentOnLaunch: false))
+        {
+            $0.gatewayConnected = false
+            $0.hasConnectedOnce = false
+            $0.onboardingComplete = false
+            $0.hasExistingGatewayConfig = false
+            $0.startupRoute = .onboarding
+        }
+
+        await store.send(.startupSnapshotChanged(
+            gatewayConnected: false,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: false,
+            shouldPresentOnLaunch: false))
+        {
+            $0.hasConnectedOnce = true
+            $0.onboardingComplete = true
+            $0.startupRoute = .settings
+        }
+
+        await store.send(.startupSnapshotChanged(
+            gatewayConnected: false,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: true,
+            shouldPresentOnLaunch: false))
+        {
+            $0.hasExistingGatewayConfig = true
+            $0.startupRoute = .none
+        }
+    }
+
+    @Test func reducerUpdatesQuickSetupPresentation() async {
+        let store = TestStore(initialState: RootPresentationFeature.State(
+            quickSetupDismissed: false,
+            showOnboarding: false,
+            hasPresentedSheet: false,
+            discoveredGatewayCount: 0))
+        {
+            RootPresentationFeature()
+        }
+
+        await store.send(.quickSetupSnapshotChanged(
+            quickSetupDismissed: false,
+            showOnboarding: false,
+            hasPresentedSheet: false,
+            gatewayConnected: false,
+            hasExistingGatewayConfig: false,
+            discoveredGatewayCount: 1))
+        {
+            $0.discoveredGatewayCount = 1
+            $0.shouldPresentQuickSetup = true
+        }
+
+        await store.send(.quickSetupSnapshotChanged(
+            quickSetupDismissed: false,
+            showOnboarding: true,
+            hasPresentedSheet: false,
+            gatewayConnected: false,
+            hasExistingGatewayConfig: false,
+            discoveredGatewayCount: 1))
+        {
+            $0.showOnboarding = true
+            $0.shouldPresentQuickSetup = false
+        }
     }
 
     @Test func sidebarTabsEnabledForIPadRegularWidth() {
