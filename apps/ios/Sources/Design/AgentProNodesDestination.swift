@@ -1,6 +1,62 @@
+import ComposableArchitecture
 import OpenClawProtocol
 import SwiftUI
 import UIKit
+
+struct AgentNodeClipboardClient {
+    var copy: @Sendable (String) async -> Void
+}
+
+extension AgentNodeClipboardClient: DependencyKey {
+    static let liveValue = AgentNodeClipboardClient(copy: { text in
+        await MainActor.run {
+            UIPasteboard.general.string = text
+        }
+    })
+
+    static let testValue = AgentNodeClipboardClient(copy: { _ in })
+}
+
+extension DependencyValues {
+    var agentNodeClipboard: AgentNodeClipboardClient {
+        get { self[AgentNodeClipboardClient.self] }
+        set { self[AgentNodeClipboardClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct AgentNodeDetailCopyFeature {
+    private let clipboardOverride: AgentNodeClipboardClient?
+
+    init(clipboard: AgentNodeClipboardClient? = nil) {
+        self.clipboardOverride = clipboard
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case copyButtonTapped(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.agentNodeClipboard) var dependencyClipboard
+            let clipboard = self.clipboardOverride ?? dependencyClipboard
+
+            switch action {
+            case let .copyButtonTapped(value):
+                return .run { _ in
+                    await clipboard.copy(value)
+                }
+            }
+        }
+        .autoLogActions()
+    }
+}
 
 struct AgentProNodesDestination: View {
     let headerLeadingAction: OpenClawSidebarHeaderAction?
@@ -224,14 +280,7 @@ struct AgentProNodesDestination: View {
             Text(normalized)
                 .lineLimit(1)
                 .truncationMode(.middle)
-            Button {
-                UIPasteboard.general.string = normalized
-            } label: {
-                Image(systemName: "doc.on.doc")
-            }
-            .buttonStyle(.plain)
-            .disabled(normalized == "n/a")
-            .accessibilityLabel("Copy \(title)")
+            AgentNodeDetailCopyButton(title: title, value: normalized)
         }
         .font(.subheadline)
         .padding(.vertical, 10)
@@ -353,6 +402,37 @@ struct AgentProNodesDestination: View {
     private static func relativeTime(fromMilliseconds milliseconds: Int) -> String {
         let date = Date(timeIntervalSince1970: Double(milliseconds) / 1000)
         return date.formatted(.relative(presentation: .named, unitsStyle: .abbreviated))
+    }
+}
+
+private struct AgentNodeDetailCopyButton: View {
+    let title: String
+    let value: String
+    @State private var store: StoreOf<AgentNodeDetailCopyFeature>
+
+    init(
+        title: String,
+        value: String,
+        store: StoreOf<AgentNodeDetailCopyFeature> = Store(
+            initialState: AgentNodeDetailCopyFeature.State())
+        {
+            AgentNodeDetailCopyFeature()
+        })
+    {
+        self.title = title
+        self.value = value
+        self._store = SwiftUI.State(wrappedValue: store)
+    }
+
+    var body: some View {
+        Button {
+            self.store.send(.copyButtonTapped(self.value))
+        } label: {
+            Image(systemName: "doc.on.doc")
+        }
+        .buttonStyle(.plain)
+        .disabled(self.value == "n/a")
+        .accessibilityLabel("Copy \(self.title)")
     }
 }
 
