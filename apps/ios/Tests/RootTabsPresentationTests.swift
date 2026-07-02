@@ -121,6 +121,52 @@ import UIKit
         }
     }
 
+    @Test func cameraFlashOverlayReducerFadesOutAfterDelay() async {
+        let store = TestStore(initialState: RootCameraFlashOverlayFeature.State()) {
+            RootCameraFlashOverlayFeature(sleeper: RootCameraFlashOverlaySleepClient(sleep: {}))
+        }
+
+        await store.send(.nonceChanged) {
+            $0.opacity = 0.85
+        }
+        await store.receive(.fadeOutDelayElapsed) {
+            $0.opacity = 0
+        }
+    }
+
+    @Test func cameraFlashOverlayReducerCancelsFadeOutOnDisappear() async {
+        let probe = RootCameraFlashOverlaySleepProbe()
+        let store = TestStore(initialState: RootCameraFlashOverlayFeature.State()) {
+            RootCameraFlashOverlayFeature(sleeper: probe.client)
+        }
+
+        await store.send(.nonceChanged) {
+            $0.opacity = 0.85
+        }
+        await store.send(.disappeared)
+
+        await store.finish()
+        #expect(probe.wasCancelled)
+    }
+
+    private final class RootCameraFlashOverlaySleepProbe: @unchecked Sendable {
+        var wasCancelled = false
+        private var continuation: CheckedContinuation<Void, Error>?
+
+        var client: RootCameraFlashOverlaySleepClient {
+            RootCameraFlashOverlaySleepClient(sleep: {
+                try await withTaskCancellationHandler {
+                    try await withCheckedThrowingContinuation { continuation in
+                        self.continuation = continuation
+                    }
+                } onCancel: {
+                    self.wasCancelled = true
+                    self.continuation?.resume(throwing: CancellationError())
+                }
+            })
+        }
+    }
+
     @Test func reducerUpdatesQuickSetupPresentation() async {
         let store = TestStore(initialState: RootPresentationFeature.State(
             quickSetupDismissed: false,
