@@ -1,6 +1,72 @@
+import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 import UIKit
+
+struct GatewayProblemClipboardClient {
+    var copy: @Sendable (String) async -> Void
+}
+
+extension GatewayProblemClipboardClient: DependencyKey {
+    static let liveValue = GatewayProblemClipboardClient(copy: { text in
+        await MainActor.run {
+            UIPasteboard.general.string = text
+        }
+    })
+
+    static let testValue = GatewayProblemClipboardClient(copy: { _ in })
+}
+
+extension DependencyValues {
+    var gatewayProblemClipboard: GatewayProblemClipboardClient {
+        get { self[GatewayProblemClipboardClient.self] }
+        set { self[GatewayProblemClipboardClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct GatewayProblemDetailsFeature {
+    private let clipboardOverride: GatewayProblemClipboardClient?
+
+    init(clipboard: GatewayProblemClipboardClient? = nil) {
+        self.clipboardOverride = clipboard
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var copyFeedback: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case copyRequestIDButtonTapped(String)
+        case copyCommandButtonTapped(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.gatewayProblemClipboard) var dependencyClipboard
+            let clipboard = self.clipboardOverride ?? dependencyClipboard
+
+            switch action {
+            case let .copyRequestIDButtonTapped(requestID):
+                state.copyFeedback = "Copied request ID"
+                return .run { _ in
+                    await clipboard.copy(requestID)
+                }
+
+            case let .copyCommandButtonTapped(command):
+                state.copyFeedback = "Copied command"
+                return .run { _ in
+                    await clipboard.copy(command)
+                }
+            }
+        }
+        .autoLogActions()
+    }
+}
 
 struct GatewayProblemBanner: View {
     let problem: GatewayConnectionProblem
@@ -80,8 +146,23 @@ struct GatewayProblemDetailsSheet: View {
     let problem: GatewayConnectionProblem
     var primaryActionTitle: String?
     var onPrimaryAction: (() -> Void)?
+    @State private var store: StoreOf<GatewayProblemDetailsFeature>
 
-    @State private var copyFeedback: String?
+    init(
+        problem: GatewayConnectionProblem,
+        primaryActionTitle: String? = nil,
+        onPrimaryAction: (() -> Void)? = nil,
+        store: StoreOf<GatewayProblemDetailsFeature> = Store(
+            initialState: GatewayProblemDetailsFeature.State())
+        {
+            GatewayProblemDetailsFeature()
+        })
+    {
+        self.problem = problem
+        self.primaryActionTitle = primaryActionTitle
+        self.onPrimaryAction = onPrimaryAction
+        self._store = SwiftUI.State(wrappedValue: store)
+    }
 
     var body: some View {
         NavigationStack {
@@ -107,8 +188,7 @@ struct GatewayProblemDetailsSheet: View {
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Button("Copy request ID") {
-                            UIPasteboard.general.string = requestId
-                            self.copyFeedback = "Copied request ID"
+                            self.store.send(.copyRequestIDButtonTapped(requestId))
                         }
                     }
                 }
@@ -119,8 +199,7 @@ struct GatewayProblemDetailsSheet: View {
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Button("Copy command") {
-                            UIPasteboard.general.string = actionCommand
-                            self.copyFeedback = "Copied command"
+                            self.store.send(.copyCommandButtonTapped(actionCommand))
                         }
                     }
                 }
@@ -146,7 +225,7 @@ struct GatewayProblemDetailsSheet: View {
                     }
                 }
 
-                if let copyFeedback {
+                if let copyFeedback = self.store.copyFeedback {
                     Section {
                         Text(copyFeedback)
                             .font(.footnote)
