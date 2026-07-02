@@ -256,6 +256,15 @@ import UIKit
         _ = Self.host(root)
     }
 
+    @Test @MainActor func gatewayDiscoveryDebugLogBuildsAViewHierarchy() {
+        let appModel = NodeAppModel()
+        let gatewayController = GatewayConnectionController(appModel: appModel, startDiscovery: false)
+        let root = GatewayDiscoveryDebugLogView()
+            .environment(gatewayController)
+
+        _ = Self.host(root)
+    }
+
     @MainActor private static func waitForPresentedAlert(in window: UIWindow) async {
         for _ in 0 ..< 10 {
             if window.rootViewController?.presentedViewController != nil { return }

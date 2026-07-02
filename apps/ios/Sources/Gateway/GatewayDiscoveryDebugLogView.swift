@@ -1,9 +1,74 @@
+import ComposableArchitecture
 import SwiftUI
 import UIKit
+
+struct GatewayDiscoveryDebugLogClipboardClient {
+    var copy: @Sendable (String) async -> Void
+}
+
+extension GatewayDiscoveryDebugLogClipboardClient: DependencyKey {
+    static let liveValue = GatewayDiscoveryDebugLogClipboardClient(copy: { text in
+        await MainActor.run {
+            UIPasteboard.general.string = text
+        }
+    })
+
+    static let testValue = GatewayDiscoveryDebugLogClipboardClient(copy: { _ in })
+}
+
+extension DependencyValues {
+    var gatewayDiscoveryDebugLogClipboard: GatewayDiscoveryDebugLogClipboardClient {
+        get { self[GatewayDiscoveryDebugLogClipboardClient.self] }
+        set { self[GatewayDiscoveryDebugLogClipboardClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct GatewayDiscoveryDebugLogFeature {
+    private let clipboardOverride: GatewayDiscoveryDebugLogClipboardClient?
+
+    init(clipboard: GatewayDiscoveryDebugLogClipboardClient? = nil) {
+        self.clipboardOverride = clipboard
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case copyButtonTapped(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.gatewayDiscoveryDebugLogClipboard) var dependencyClipboard
+            let clipboard = self.clipboardOverride ?? dependencyClipboard
+
+            switch action {
+            case let .copyButtonTapped(log):
+                return .run { _ in
+                    await clipboard.copy(log)
+                }
+            }
+        }
+        .autoLogActions()
+    }
+}
 
 struct GatewayDiscoveryDebugLogView: View {
     @Environment(GatewayConnectionController.self) private var gatewayController
     @AppStorage("gateway.discovery.debugLogs") private var debugLogsEnabled: Bool = false
+    @State private var store: StoreOf<GatewayDiscoveryDebugLogFeature>
+
+    init(store: StoreOf<GatewayDiscoveryDebugLogFeature> = Store(
+        initialState: GatewayDiscoveryDebugLogFeature.State())
+    {
+        GatewayDiscoveryDebugLogFeature()
+    }) {
+        self._store = SwiftUI.State(wrappedValue: store)
+    }
 
     var body: some View {
         List {
@@ -33,7 +98,7 @@ struct GatewayDiscoveryDebugLogView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Copy") {
-                    UIPasteboard.general.string = self.formattedLog()
+                    self.store.send(.copyButtonTapped(self.formattedLog()))
                 }
                 .disabled(self.gatewayController.discoveryDebugLog.isEmpty)
             }
