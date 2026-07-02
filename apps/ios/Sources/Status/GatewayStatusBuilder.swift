@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import Foundation
 import OpenClawKit
 
@@ -8,16 +9,38 @@ enum GatewayDisplayState: Equatable {
     case disconnected
 }
 
-enum GatewayStatusBuilder {
-    @MainActor
-    static func build(appModel: NodeAppModel) -> GatewayDisplayState {
-        self.build(
-            gatewayServerName: appModel.gatewayServerName,
-            lastGatewayProblem: appModel.lastGatewayProblem,
-            gatewayStatusText: appModel.gatewayStatusText)
+@Reducer
+struct GatewayStatusFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var gatewayServerName: String?
+        var lastGatewayProblem: GatewayConnectionProblem?
+        var gatewayStatusText: String
+        var displayState: GatewayDisplayState = .disconnected
     }
 
-    static func build(
+    enum Action: Equatable, Sendable {
+        case refresh
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .refresh:
+                state.displayState = Self.displayState(
+                    gatewayServerName: state.gatewayServerName,
+                    lastGatewayProblem: state.lastGatewayProblem,
+                    gatewayStatusText: state.gatewayStatusText)
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    static func displayState(
         gatewayServerName: String?,
         lastGatewayProblem: GatewayConnectionProblem?,
         gatewayStatusText: String) -> GatewayDisplayState
@@ -37,5 +60,26 @@ enum GatewayStatusBuilder {
         }
 
         return .disconnected
+    }
+}
+
+enum GatewayStatusBuilder {
+    @MainActor
+    static func build(appModel: NodeAppModel) -> GatewayDisplayState {
+        self.build(
+            gatewayServerName: appModel.gatewayServerName,
+            lastGatewayProblem: appModel.lastGatewayProblem,
+            gatewayStatusText: appModel.gatewayStatusText)
+    }
+
+    static func build(
+        gatewayServerName: String?,
+        lastGatewayProblem: GatewayConnectionProblem?,
+        gatewayStatusText: String) -> GatewayDisplayState
+    {
+        GatewayStatusFeature.displayState(
+            gatewayServerName: gatewayServerName,
+            lastGatewayProblem: lastGatewayProblem,
+            gatewayStatusText: gatewayStatusText)
     }
 }
