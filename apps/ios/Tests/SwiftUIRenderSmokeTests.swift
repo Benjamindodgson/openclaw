@@ -265,6 +265,20 @@ import UIKit
         _ = Self.host(root)
     }
 
+    @Test @MainActor func agentProNodesDestinationBuildsAViewHierarchy() {
+        let root = AgentProNodesDestination(
+            headerLeadingAction: nil,
+            overview: nil,
+            gatewayConnected: false,
+            agentCount: 0,
+            instancesValue: "0",
+            instancesDetail: "No instances connected",
+            instancesColor: .secondary,
+            refresh: {})
+
+        _ = Self.host(root)
+    }
+
     @MainActor private static func waitForPresentedAlert(in window: UIWindow) async {
         for _ in 0 ..< 10 {
             if window.rootViewController?.presentedViewController != nil { return }
