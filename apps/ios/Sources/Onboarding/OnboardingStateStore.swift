@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import Foundation
 
 enum OnboardingConnectionMode: String, CaseIterable {
@@ -17,6 +18,92 @@ enum OnboardingConnectionMode: String, CaseIterable {
     }
 }
 
+@Reducer
+struct OnboardingStateFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var isCompleted: Bool
+        var firstRunIntroSeen: Bool
+        var lastMode: OnboardingConnectionMode?
+        var hasSavedGatewayConnection: Bool
+        var gatewayServerName: String?
+        var shouldPresentOnLaunch: Bool
+        var shouldPresentFirstRunIntro: Bool
+
+        init(
+            isCompleted: Bool = false,
+            firstRunIntroSeen: Bool = false,
+            lastMode: OnboardingConnectionMode? = nil,
+            hasSavedGatewayConnection: Bool = false,
+            gatewayServerName: String? = nil)
+        {
+            self.isCompleted = isCompleted
+            self.firstRunIntroSeen = firstRunIntroSeen
+            self.lastMode = lastMode
+            self.hasSavedGatewayConnection = hasSavedGatewayConnection
+            self.gatewayServerName = gatewayServerName
+            self.shouldPresentOnLaunch = false
+            self.shouldPresentFirstRunIntro = true
+            self.refreshPresentation()
+        }
+
+        mutating func refreshPresentation() {
+            self.shouldPresentOnLaunch =
+                !self.isCompleted &&
+                !self.hasSavedGatewayConnection &&
+                self.gatewayServerName == nil
+            self.shouldPresentFirstRunIntro = !self.firstRunIntroSeen
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case refreshPresentation
+        case gatewaySnapshotChanged(gatewayServerName: String?, hasSavedGatewayConnection: Bool)
+        case markCompleted(OnboardingConnectionMode?)
+        case markFirstRunIntroSeen
+        case reset
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .refreshPresentation:
+                state.refreshPresentation()
+                return .none
+
+            case let .gatewaySnapshotChanged(gatewayServerName, hasSavedGatewayConnection):
+                state.gatewayServerName = gatewayServerName
+                state.hasSavedGatewayConnection = hasSavedGatewayConnection
+                state.refreshPresentation()
+                return .none
+
+            case let .markCompleted(mode):
+                state.isCompleted = true
+                if let mode {
+                    state.lastMode = mode
+                }
+                state.refreshPresentation()
+                return .none
+
+            case .markFirstRunIntroSeen:
+                state.firstRunIntroSeen = true
+                state.refreshPresentation()
+                return .none
+
+            case .reset:
+                state.isCompleted = false
+                state.firstRunIntroSeen = false
+                state.refreshPresentation()
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 enum OnboardingStateStore {
     private static let completedDefaultsKey = "onboarding.completed"
     private static let firstRunIntroSeenDefaultsKey = "onboarding.first_run_intro_seen"
@@ -30,11 +117,13 @@ enum OnboardingStateStore {
         hasSavedGatewayConnection: Bool? = nil)
         -> Bool
     {
-        if defaults.bool(forKey: self.completedDefaultsKey) { return false }
         let hasSavedGatewayConnection =
             hasSavedGatewayConnection ?? (GatewaySettingsStore.loadLastGatewayConnection() != nil)
-        if hasSavedGatewayConnection { return false }
-        return appModel.gatewayServerName == nil
+        return Self.featureState(
+            defaults: defaults,
+            gatewayServerName: appModel.gatewayServerName,
+            hasSavedGatewayConnection: hasSavedGatewayConnection)
+            .shouldPresentOnLaunch
     }
 
     static func markCompleted(mode: OnboardingConnectionMode? = nil, defaults: UserDefaults = .standard) {
@@ -46,7 +135,7 @@ enum OnboardingStateStore {
     }
 
     static func shouldPresentFirstRunIntro(defaults: UserDefaults = .standard) -> Bool {
-        !defaults.bool(forKey: self.firstRunIntroSeenDefaultsKey)
+        self.featureState(defaults: defaults).shouldPresentFirstRunIntro
     }
 
     static func markFirstRunIntroSeen(defaults: UserDefaults = .standard) {
@@ -63,5 +152,19 @@ enum OnboardingStateStore {
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !raw.isEmpty else { return nil }
         return OnboardingConnectionMode(rawValue: raw)
+    }
+
+    private static func featureState(
+        defaults: UserDefaults,
+        gatewayServerName: String? = nil,
+        hasSavedGatewayConnection: Bool = false)
+        -> OnboardingStateFeature.State
+    {
+        OnboardingStateFeature.State(
+            isCompleted: defaults.bool(forKey: self.completedDefaultsKey),
+            firstRunIntroSeen: defaults.bool(forKey: self.firstRunIntroSeenDefaultsKey),
+            lastMode: self.lastMode(defaults: defaults),
+            hasSavedGatewayConnection: hasSavedGatewayConnection,
+            gatewayServerName: gatewayServerName)
     }
 }
