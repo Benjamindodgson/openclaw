@@ -228,6 +228,18 @@ import UIKit
         _ = Self.host(root)
     }
 
+    @Test @MainActor func talkRuntimeIssueDetailsBuildsAViewHierarchy() {
+        let issue = TalkRuntimeIssue.realtimeUnavailable(
+            message: "Realtime unavailable",
+            provider: "openai",
+            model: "gpt-realtime-2",
+            transport: "webrtc",
+            phase: "connect")
+        let root = TalkRuntimeIssueDetailsSheet(issue: issue)
+
+        _ = Self.host(root)
+    }
+
     @MainActor private static func waitForPresentedAlert(in window: UIWindow) async {
         for _ in 0 ..< 10 {
             if window.rootViewController?.presentedViewController != nil { return }
