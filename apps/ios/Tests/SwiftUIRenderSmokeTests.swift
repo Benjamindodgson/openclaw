@@ -240,6 +240,22 @@ import UIKit
         _ = Self.host(root)
     }
 
+    @Test @MainActor func gatewayProblemDetailsBuildsAViewHierarchy() {
+        let problem = GatewayConnectionProblem(
+            kind: .pairingRequired,
+            owner: .gateway,
+            title: "Pairing required",
+            message: "Approve this device before reconnecting.",
+            actionCommand: "openclaw gateway approve req-123",
+            requestId: "req-123",
+            retryable: false,
+            pauseReconnect: true,
+            technicalDetails: "request failed")
+        let root = GatewayProblemDetailsSheet(problem: problem)
+
+        _ = Self.host(root)
+    }
+
     @MainActor private static func waitForPresentedAlert(in window: UIWindow) async {
         for _ in 0 ..< 10 {
             if window.rootViewController?.presentedViewController != nil { return }
