@@ -1,4 +1,5 @@
 import Combine
+import ComposableArchitecture
 import CoreImage
 import OpenClawKit
 import PhotosUI
@@ -88,6 +89,13 @@ struct OnboardingWizardView: View {
             initialValue: OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome)
     }
 
+    @MainActor
+    private func makeGatewayTrustPromptStore() -> StoreOf<GatewayTrustPromptFeature> {
+        Store(initialState: GatewayTrustPromptFeature.State()) {
+            GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))
+        }
+    }
+
     private var isFullScreenStep: Bool {
         self.step == .intro || self.step == .welcome || self.step == .success
     }
@@ -161,7 +169,7 @@ struct OnboardingWizardView: View {
                 }
             }
         }
-        .gatewayTrustPromptAlert()
+        .gatewayTrustPromptAlert(store: self.makeGatewayTrustPromptStore())
         .alert("QR Scanner Unavailable", isPresented: Binding(
             get: { self.scannerError != nil },
             set: { if !$0 { self.scannerError = nil } }))
