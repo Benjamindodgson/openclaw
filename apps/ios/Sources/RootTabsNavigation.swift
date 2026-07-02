@@ -1,6 +1,164 @@
+import ComposableArchitecture
 import CoreGraphics
 import Foundation
 import SwiftUI
+
+@Reducer
+struct RootPresentationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var gatewayConnected: Bool
+        var hasConnectedOnce: Bool
+        var onboardingComplete: Bool
+        var hasExistingGatewayConfig: Bool
+        var shouldPresentOnLaunch: Bool
+        var quickSetupDismissed: Bool
+        var showOnboarding: Bool
+        var hasPresentedSheet: Bool
+        var discoveredGatewayCount: Int
+        var startupRoute: RootTabs.StartupPresentationRoute
+        var shouldPresentQuickSetup: Bool
+
+        init(
+            gatewayConnected: Bool = false,
+            hasConnectedOnce: Bool = false,
+            onboardingComplete: Bool = false,
+            hasExistingGatewayConfig: Bool = false,
+            shouldPresentOnLaunch: Bool = false,
+            quickSetupDismissed: Bool = false,
+            showOnboarding: Bool = false,
+            hasPresentedSheet: Bool = false,
+            discoveredGatewayCount: Int = 0)
+        {
+            self.gatewayConnected = gatewayConnected
+            self.hasConnectedOnce = hasConnectedOnce
+            self.onboardingComplete = onboardingComplete
+            self.hasExistingGatewayConfig = hasExistingGatewayConfig
+            self.shouldPresentOnLaunch = shouldPresentOnLaunch
+            self.quickSetupDismissed = quickSetupDismissed
+            self.showOnboarding = showOnboarding
+            self.hasPresentedSheet = hasPresentedSheet
+            self.discoveredGatewayCount = discoveredGatewayCount
+            self.startupRoute = .none
+            self.shouldPresentQuickSetup = false
+            self.refreshPresentation()
+        }
+
+        mutating func refreshPresentation() {
+            self.startupRoute = Self.startupRoute(
+                gatewayConnected: self.gatewayConnected,
+                hasConnectedOnce: self.hasConnectedOnce,
+                onboardingComplete: self.onboardingComplete,
+                hasExistingGatewayConfig: self.hasExistingGatewayConfig,
+                shouldPresentOnLaunch: self.shouldPresentOnLaunch)
+            self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
+                quickSetupDismissed: self.quickSetupDismissed,
+                showOnboarding: self.showOnboarding,
+                hasPresentedSheet: self.hasPresentedSheet,
+                gatewayConnected: self.gatewayConnected,
+                hasExistingGatewayConfig: self.hasExistingGatewayConfig,
+                discoveredGatewayCount: self.discoveredGatewayCount)
+        }
+
+        static func startupRoute(
+            gatewayConnected: Bool,
+            hasConnectedOnce: Bool,
+            onboardingComplete: Bool,
+            hasExistingGatewayConfig: Bool,
+            shouldPresentOnLaunch: Bool)
+            -> RootTabs.StartupPresentationRoute
+        {
+            if gatewayConnected {
+                return .none
+            }
+            if shouldPresentOnLaunch || !hasConnectedOnce || !onboardingComplete {
+                return .onboarding
+            }
+            if !hasExistingGatewayConfig {
+                return .settings
+            }
+            return .none
+        }
+
+        static func shouldPresentQuickSetup(
+            quickSetupDismissed: Bool,
+            showOnboarding: Bool,
+            hasPresentedSheet: Bool,
+            gatewayConnected: Bool,
+            hasExistingGatewayConfig: Bool,
+            discoveredGatewayCount: Int)
+            -> Bool
+        {
+            guard !quickSetupDismissed else { return false }
+            guard !showOnboarding else { return false }
+            guard !hasPresentedSheet else { return false }
+            guard !gatewayConnected else { return false }
+            guard !hasExistingGatewayConfig else { return false }
+            return discoveredGatewayCount > 0
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case refreshPresentation
+        case startupSnapshotChanged(
+            gatewayConnected: Bool,
+            hasConnectedOnce: Bool,
+            onboardingComplete: Bool,
+            hasExistingGatewayConfig: Bool,
+            shouldPresentOnLaunch: Bool)
+        case quickSetupSnapshotChanged(
+            quickSetupDismissed: Bool,
+            showOnboarding: Bool,
+            hasPresentedSheet: Bool,
+            gatewayConnected: Bool,
+            hasExistingGatewayConfig: Bool,
+            discoveredGatewayCount: Int)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .refreshPresentation:
+                state.refreshPresentation()
+                return .none
+
+            case let .startupSnapshotChanged(
+                gatewayConnected,
+                hasConnectedOnce,
+                onboardingComplete,
+                hasExistingGatewayConfig,
+                shouldPresentOnLaunch):
+                state.gatewayConnected = gatewayConnected
+                state.hasConnectedOnce = hasConnectedOnce
+                state.onboardingComplete = onboardingComplete
+                state.hasExistingGatewayConfig = hasExistingGatewayConfig
+                state.shouldPresentOnLaunch = shouldPresentOnLaunch
+                state.refreshPresentation()
+                return .none
+
+            case let .quickSetupSnapshotChanged(
+                quickSetupDismissed,
+                showOnboarding,
+                hasPresentedSheet,
+                gatewayConnected,
+                hasExistingGatewayConfig,
+                discoveredGatewayCount):
+                state.quickSetupDismissed = quickSetupDismissed
+                state.showOnboarding = showOnboarding
+                state.hasPresentedSheet = hasPresentedSheet
+                state.gatewayConnected = gatewayConnected
+                state.hasExistingGatewayConfig = hasExistingGatewayConfig
+                state.discoveredGatewayCount = discoveredGatewayCount
+                state.refreshPresentation()
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
 
 extension RootTabs {
     private static var sidebarPersistentWidthThreshold: CGFloat {
@@ -216,16 +374,12 @@ extension RootTabs {
         hasExistingGatewayConfig: Bool,
         shouldPresentOnLaunch: Bool) -> StartupPresentationRoute
     {
-        if gatewayConnected {
-            return .none
-        }
-        if shouldPresentOnLaunch || !hasConnectedOnce || !onboardingComplete {
-            return .onboarding
-        }
-        if !hasExistingGatewayConfig {
-            return .settings
-        }
-        return .none
+        RootPresentationFeature.State.startupRoute(
+            gatewayConnected: gatewayConnected,
+            hasConnectedOnce: hasConnectedOnce,
+            onboardingComplete: onboardingComplete,
+            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            shouldPresentOnLaunch: shouldPresentOnLaunch)
     }
 
     static func shouldPresentQuickSetup(
@@ -236,12 +390,13 @@ extension RootTabs {
         hasExistingGatewayConfig: Bool,
         discoveredGatewayCount: Int) -> Bool
     {
-        guard !quickSetupDismissed else { return false }
-        guard !showOnboarding else { return false }
-        guard !hasPresentedSheet else { return false }
-        guard !gatewayConnected else { return false }
-        guard !hasExistingGatewayConfig else { return false }
-        return discoveredGatewayCount > 0
+        RootPresentationFeature.State.shouldPresentQuickSetup(
+            quickSetupDismissed: quickSetupDismissed,
+            showOnboarding: showOnboarding,
+            hasPresentedSheet: hasPresentedSheet,
+            gatewayConnected: gatewayConnected,
+            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            discoveredGatewayCount: discoveredGatewayCount)
     }
 
     struct SidebarGroup: Identifiable {
