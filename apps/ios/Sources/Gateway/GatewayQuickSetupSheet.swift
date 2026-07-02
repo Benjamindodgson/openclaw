@@ -1,5 +1,130 @@
+import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
+
+struct GatewayQuickSetupClient {
+    var connect: @Sendable @MainActor (GatewayDiscoveryModel.DiscoveredGateway) async -> String?
+    var trustRotatedGatewayCertificate: @Sendable @MainActor (GatewayConnectionProblem) async -> Bool
+    var openProtocolMismatchHelpIfNeeded: @Sendable @MainActor (GatewayConnectionProblem) -> Bool
+}
+
+extension GatewayQuickSetupClient: DependencyKey {
+    static let liveValue = GatewayQuickSetupClient(
+        connect: { _ in nil },
+        trustRotatedGatewayCertificate: { _ in false },
+        openProtocolMismatchHelpIfNeeded: { GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded($0) })
+
+    static let testValue = GatewayQuickSetupClient(
+        connect: { _ in nil },
+        trustRotatedGatewayCertificate: { _ in false },
+        openProtocolMismatchHelpIfNeeded: { _ in false })
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        GatewayQuickSetupClient(
+            connect: { candidate in
+                await gatewayController.connectWithDiagnostics(candidate)
+            },
+            trustRotatedGatewayCertificate: { problem in
+                await gatewayController.trustRotatedGatewayCertificate(from: problem)
+            },
+            openProtocolMismatchHelpIfNeeded: { problem in
+                GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem)
+            })
+    }
+}
+
+extension DependencyValues {
+    var gatewayQuickSetup: GatewayQuickSetupClient {
+        get { self[GatewayQuickSetupClient.self] }
+        set { self[GatewayQuickSetupClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct GatewayQuickSetupFeature {
+    private let clientOverride: GatewayQuickSetupClient?
+
+    init(client: GatewayQuickSetupClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var connecting = false
+        var connectError: String?
+        var showGatewayProblemDetails = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case connectButtonTapped(GatewayDiscoveryModel.DiscoveredGateway)
+        case connectResponse(String?)
+        case gatewayProblemDetailsButtonTapped
+        case gatewayProblemDetailsDismissed
+        case gatewayProblemPrimaryActionTapped(
+            GatewayConnectionProblem,
+            candidate: GatewayDiscoveryModel.DiscoveredGateway?)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    private enum CancelID { case connect }
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.gatewayQuickSetup) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case let .connectButtonTapped(candidate):
+                return self.connect(candidate: candidate, state: &state, client: client)
+
+            case let .connectResponse(error):
+                state.connecting = false
+                state.connectError = error
+                return .none
+
+            case .gatewayProblemDetailsButtonTapped:
+                state.showGatewayProblemDetails = true
+                return .none
+
+            case .gatewayProblemDetailsDismissed:
+                state.showGatewayProblemDetails = false
+                return .none
+
+            case let .gatewayProblemPrimaryActionTapped(problem, candidate):
+                if problem.canTrustRotatedCertificate {
+                    return .run { _ in
+                        _ = await client.trustRotatedGatewayCertificate(problem)
+                    }
+                }
+                if problem.kind == .protocolMismatch {
+                    return .run { _ in
+                        _ = await client.openProtocolMismatchHelpIfNeeded(problem)
+                    }
+                }
+                guard problem.retryable, let candidate else { return .none }
+                return self.connect(candidate: candidate, state: &state, client: client)
+            }
+        }
+        .autoLogActions()
+    }
+
+    private func connect(
+        candidate: GatewayDiscoveryModel.DiscoveredGateway,
+        state: inout State,
+        client: GatewayQuickSetupClient) -> Effect<Action>
+    {
+        state.connectError = nil
+        state.connecting = true
+        return .run { send in
+            let error = await client.connect(candidate)
+            await send(.connectResponse(error))
+        }
+        .cancellable(id: CancelID.connect, cancelInFlight: true)
+    }
+}
 
 struct GatewayQuickSetupSheet: View {
     @Environment(NodeAppModel.self) private var appModel
@@ -7,9 +132,15 @@ struct GatewayQuickSetupSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage("onboarding.quickSetupDismissed") private var quickSetupDismissed: Bool = false
-    @State private var connecting: Bool = false
-    @State private var connectError: String?
-    @State private var showGatewayProblemDetails: Bool = false
+    @State private var store: StoreOf<GatewayQuickSetupFeature>
+
+    init(store: StoreOf<GatewayQuickSetupFeature> = Store(
+        initialState: GatewayQuickSetupFeature.State())
+    {
+        GatewayQuickSetupFeature()
+    }) {
+        self._store = SwiftUI.State(wrappedValue: store)
+    }
 
     var body: some View {
         NavigationStack {
@@ -22,10 +153,12 @@ struct GatewayQuickSetupSheet: View {
                         problem: gatewayProblem,
                         primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
                         onPrimaryAction: {
-                            Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }
+                            self.store.send(.gatewayProblemPrimaryActionTapped(
+                                gatewayProblem,
+                                candidate: self.bestCandidate))
                         },
                         onShowDetails: {
-                            self.showGatewayProblemDetails = true
+                            self.store.send(.gatewayProblemDetailsButtonTapped)
                         })
                 }
 
@@ -39,19 +172,10 @@ struct GatewayQuickSetupSheet: View {
                         operatorStatusText: self.appModel.operatorStatusText)
 
                     Button {
-                        self.connectError = nil
-                        self.connecting = true
-                        Task {
-                            let err = await self.gatewayController.connectWithDiagnostics(candidate)
-                            await MainActor.run {
-                                self.connecting = false
-                                self.connectError = err
-                                // If we kicked off a connect, leave the sheet up so the user can see status evolve.
-                            }
-                        }
+                        self.store.send(.connectButtonTapped(candidate))
                     } label: {
                         Group {
-                            if self.connecting {
+                            if self.store.connecting {
                                 HStack(spacing: 8) {
                                     ProgressView().progressViewStyle(.circular)
                                     Text("Connecting…")
@@ -63,9 +187,9 @@ struct GatewayQuickSetupSheet: View {
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(self.connecting)
+                    .disabled(self.store.connecting)
 
-                    if let connectError {
+                    if let connectError = self.store.connectError {
                         Text(connectError)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
@@ -79,7 +203,7 @@ struct GatewayQuickSetupSheet: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
-                    .disabled(self.connecting)
+                    .disabled(self.store.connecting)
 
                     self.fullRowToggle("Don’t show this again", isOn: self.$quickSetupDismissed)
                         .padding(.top, 4)
@@ -104,13 +228,15 @@ struct GatewayQuickSetupSheet: View {
                 }
             }
         }
-        .sheet(isPresented: self.$showGatewayProblemDetails) {
+        .sheet(isPresented: self.gatewayProblemDetailsBinding) {
             if let gatewayProblem = self.appModel.lastGatewayProblem {
                 GatewayProblemDetailsSheet(
                     problem: gatewayProblem,
                     primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
                     onPrimaryAction: {
-                        Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }
+                        self.store.send(.gatewayProblemPrimaryActionTapped(
+                            gatewayProblem,
+                            candidate: self.bestCandidate))
                     })
             }
         }
@@ -142,21 +268,16 @@ struct GatewayQuickSetupSheet: View {
         GatewayProblemPrimaryAction.title(for: problem, retryTitle: "Connect")
     }
 
-    private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
-        if problem.canTrustRotatedCertificate {
-            _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)
-            return
-        }
-        if GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem) {
-            return
-        }
-        guard problem.retryable else { return }
-        guard let candidate = self.bestCandidate else { return }
-        self.connectError = nil
-        self.connecting = true
-        let err = await self.gatewayController.connectWithDiagnostics(candidate)
-        self.connecting = false
-        self.connectError = err
+    private var gatewayProblemDetailsBinding: Binding<Bool> {
+        Binding(
+            get: { self.store.showGatewayProblemDetails },
+            set: { isPresented in
+                if isPresented {
+                    self.store.send(.gatewayProblemDetailsButtonTapped)
+                } else {
+                    self.store.send(.gatewayProblemDetailsDismissed)
+                }
+            })
     }
 }
 
