@@ -1,4 +1,48 @@
+import ComposableArchitecture
 import SwiftUI
+
+@Reducer
+struct TalkProTabFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var showPermissionPrompt = false
+        var showTalkIssueDetails = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case permissionRequired
+        case permissionPromptDismissed
+        case permissionReady
+        case runtimeIssueDetailsButtonTapped
+        case runtimeIssueDetailsDismissed
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .permissionRequired:
+                state.showPermissionPrompt = true
+                return .none
+
+            case .permissionPromptDismissed, .permissionReady:
+                state.showPermissionPrompt = false
+                return .none
+
+            case .runtimeIssueDetailsButtonTapped:
+                state.showTalkIssueDetails = true
+                return .none
+
+            case .runtimeIssueDetailsDismissed:
+                state.showTalkIssueDetails = false
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
 
 struct TalkProTab: View {
     @Environment(NodeAppModel.self) private var appModel
@@ -6,8 +50,7 @@ struct TalkProTab: View {
     @AppStorage(TalkDefaults.speakerphoneEnabledKey) private var talkSpeakerphoneEnabled: Bool =
         TalkDefaults.speakerphoneEnabledByDefault
     @AppStorage("talk.background.enabled") private var talkBackgroundEnabled: Bool = false
-    @State private var showPermissionPrompt = false
-    @State private var showTalkIssueDetails = false
+    @State private var store: StoreOf<TalkProTabFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let ownsNavigationStack: Bool
     var openSettings: () -> Void
@@ -17,12 +60,16 @@ struct TalkProTab: View {
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         ownsNavigationStack: Bool = true,
         openSettings: @escaping () -> Void,
-        openVoiceSettings: (() -> Void)? = nil)
+        openVoiceSettings: (() -> Void)? = nil,
+        store: StoreOf<TalkProTabFeature> = Store(initialState: TalkProTabFeature.State()) {
+            TalkProTabFeature()
+        })
     {
         self.headerLeadingAction = headerLeadingAction
         self.ownsNavigationStack = ownsNavigationStack
         self.openSettings = openSettings
         self.openVoiceSettings = openVoiceSettings ?? openSettings
+        self._store = SwiftUI.State(wrappedValue: store)
     }
 
     private var state: TalkProState {
@@ -48,12 +95,12 @@ struct TalkProTab: View {
                 self.content
             }
         }
-        .sheet(isPresented: self.$showPermissionPrompt) {
+        .sheet(isPresented: self.permissionPromptBinding) {
             NavigationStack {
                 TalkPermissionPromptView(
                     style: .sheet,
                     onPermissionReady: {
-                        self.showPermissionPrompt = false
+                        self.store.send(.permissionReady)
                         self.startTalk()
                     })
                     .padding()
@@ -61,7 +108,7 @@ struct TalkProTab: View {
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Not Now") {
-                                self.showPermissionPrompt = false
+                                self.store.send(.permissionPromptDismissed)
                             }
                         }
                     }
@@ -69,7 +116,7 @@ struct TalkProTab: View {
             .presentationDetents([.medium, .large])
             .openClawSheetChrome()
         }
-        .sheet(isPresented: self.$showTalkIssueDetails) {
+        .sheet(isPresented: self.talkIssueDetailsBinding) {
             if let fallbackIssue = self.fallbackIssue {
                 TalkRuntimeIssueDetailsSheet(
                     issue: fallbackIssue,
@@ -91,7 +138,7 @@ struct TalkProTab: View {
                             issue: fallbackIssue,
                             onOpenSettings: self.openVoiceSettings,
                             onShowDetails: {
-                                self.showTalkIssueDetails = true
+                                self.store.send(.runtimeIssueDetailsButtonTapped)
                             })
                             .padding(.horizontal, OpenClawProMetric.pagePadding)
                     }
@@ -263,7 +310,7 @@ struct TalkProTab: View {
             self.stopTalk()
         case .enablePermission:
             self.stopTalk()
-            self.showPermissionPrompt = true
+            self.store.send(.permissionRequired)
         case .openSettings:
             self.openPrimarySettings()
         case .waiting:
@@ -289,6 +336,26 @@ struct TalkProTab: View {
         } else {
             self.openSettings()
         }
+    }
+
+    private var permissionPromptBinding: Binding<Bool> {
+        Binding(
+            get: { self.store.showPermissionPrompt },
+            set: { isPresented in
+                if !isPresented {
+                    self.store.send(.permissionPromptDismissed)
+                }
+            })
+    }
+
+    private var talkIssueDetailsBinding: Binding<Bool> {
+        Binding(
+            get: { self.store.showTalkIssueDetails },
+            set: { isPresented in
+                if !isPresented {
+                    self.store.send(.runtimeIssueDetailsDismissed)
+                }
+            })
     }
 }
 
