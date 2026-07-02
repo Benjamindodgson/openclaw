@@ -135,7 +135,7 @@ struct VoiceWakeWordsSettingsFeature {
 
 struct VoiceWakeWordsSettingsView: View {
     @Environment(NodeAppModel.self) private var appModel
-    let store: StoreOf<VoiceWakeWordsSettingsFeature>
+    @State private var store: StoreOf<VoiceWakeWordsSettingsFeature>
     @FocusState private var focusedTriggerIndex: Int?
     @State private var syncTask: Task<Void, Never>?
 
@@ -145,7 +145,7 @@ struct VoiceWakeWordsSettingsView: View {
     {
         VoiceWakeWordsSettingsFeature()
     }) {
-        self.store = store
+        self._store = SwiftUI.State(wrappedValue: store)
     }
 
     var body: some View {
