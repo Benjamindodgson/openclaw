@@ -76,17 +76,17 @@ struct GatewayTrustPromptFeature {
 
 struct GatewayTrustPromptAlert: ViewModifier {
     @Environment(GatewayConnectionController.self) private var gatewayController: GatewayConnectionController
-    private let storeOverride: StoreOf<GatewayTrustPromptFeature>?
+    @State private var store: StoreOf<GatewayTrustPromptFeature>
 
-    init(store: StoreOf<GatewayTrustPromptFeature>? = nil) {
-        self.storeOverride = store
+    init(store: StoreOf<GatewayTrustPromptFeature> = Store(
+        initialState: GatewayTrustPromptFeature.State())
+    {
+        GatewayTrustPromptFeature()
+    }) {
+        self._store = State(wrappedValue: store)
     }
 
     func body(content: Content) -> some View {
-        let store = self.storeOverride ?? Store(initialState: GatewayTrustPromptFeature.State()) {
-            GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))
-        }
-
         content.alert(
             "Trust this gateway?",
             isPresented: Binding(
@@ -99,10 +99,10 @@ struct GatewayTrustPromptAlert: ViewModifier {
             presenting: self.gatewayController.pendingTrustPrompt)
         { _ in
             Button("Cancel", role: .cancel) {
-                store.send(.cancelButtonTapped)
+                self.store.send(.cancelButtonTapped)
             }
             Button("Trust and connect") {
-                store.send(.trustAndConnectButtonTapped)
+                self.store.send(.trustAndConnectButtonTapped)
             }
         } message: { prompt in
             Text(String(
@@ -116,7 +116,11 @@ struct GatewayTrustPromptAlert: ViewModifier {
 
 extension View {
     func gatewayTrustPromptAlert(
-        store: StoreOf<GatewayTrustPromptFeature>? = nil) -> some View
+        store: StoreOf<GatewayTrustPromptFeature> = Store(
+            initialState: GatewayTrustPromptFeature.State())
+        {
+            GatewayTrustPromptFeature()
+        }) -> some View
     {
         self.modifier(GatewayTrustPromptAlert(store: store))
     }

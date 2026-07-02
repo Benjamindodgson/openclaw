@@ -801,8 +801,8 @@ struct RootTabs: View {
                     .environment(self.gatewayController)
                     .preferredColorScheme(self.appearancePreference.colorScheme)
             }
-            .gatewayTrustPromptAlert()
-            .deepLinkAgentPromptAlert()
+            .gatewayTrustPromptAlert(store: self.makeGatewayTrustPromptStore())
+            .deepLinkAgentPromptAlert(store: self.makeDeepLinkAgentPromptStore())
             .execApprovalPromptDialog(
                 suppressedApprovalID: self.activeExecApprovalPromptSuppressionID)
             .notificationPermissionGuidanceDialog(openNotifications: { approvalId in
@@ -817,6 +817,20 @@ struct RootTabs: View {
             GatewayQuickSetupFeature()
         } withDependencies: {
             $0.gatewayQuickSetup = .live(gatewayController: self.gatewayController)
+        }
+    }
+
+    @MainActor
+    private func makeGatewayTrustPromptStore() -> StoreOf<GatewayTrustPromptFeature> {
+        Store(initialState: GatewayTrustPromptFeature.State()) {
+            GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
+    private func makeDeepLinkAgentPromptStore() -> StoreOf<DeepLinkAgentPromptFeature> {
+        Store(initialState: DeepLinkAgentPromptFeature.State()) {
+            DeepLinkAgentPromptFeature(client: .live(appModel: self.appModel))
         }
     }
 
