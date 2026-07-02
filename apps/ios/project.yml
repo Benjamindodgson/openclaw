@@ -11,6 +11,9 @@ settings:
     ENABLE_APP_INTENTS_METADATA_GENERATION: NO
 
 packages:
+  ComposableArchitecture:
+    url: https://github.com/pointfreeco/swift-composable-architecture.git
+    exactVersion: "1.26.0"
   OpenClawKit:
     path: ../shared/OpenClawKit
   Swabble:
@@ -75,6 +78,7 @@ targets:
         product: OpenClawChatUI
       - package: OpenClawKit
         product: OpenClawProtocol
+      - package: ComposableArchitecture
       - package: Swabble
         product: SwabbleKit
       - package: WebRTC
@@ -310,6 +314,7 @@ targets:
           - Logic
     dependencies:
       - target: OpenClaw
+      - package: ComposableArchitecture
       - package: Swabble
         product: SwabbleKit
       - sdk: AppIntents.framework
