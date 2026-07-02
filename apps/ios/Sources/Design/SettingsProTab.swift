@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 
@@ -54,6 +55,10 @@ struct SettingsProTab: View {
     @State var locationStatusText: String?
     @State var previousLocationModeRaw: String = OpenClawLocationMode.off.rawValue
     @State var notificationStatus: SettingsNotificationStatus = .checking
+    @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
+        PushEnrollmentConsentFeature()
+    }
+
     @State var isRequestingNotificationAuthorization = false
     @State var showNotificationRelayDisclosure = false
     @State var diagnosticsLastRunText = "Not run"

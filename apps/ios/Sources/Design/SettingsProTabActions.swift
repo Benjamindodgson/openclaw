@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 import UIKit
@@ -164,6 +165,7 @@ extension SettingsProTab {
     }
 
     func syncSettingsState() {
+        self.pushEnrollmentConsentStore.send(.refresh)
         self.manualGatewayPortText = self.manualGatewayPort > 0 ? String(self.manualGatewayPort) : ""
         self.selectedAgentPickerId = self.appModel.selectedAgentId ?? ""
         self.defaultShareInstruction = ShareToAgentSettings.loadDefaultInstruction()
@@ -441,7 +443,7 @@ extension SettingsProTab {
 
     func requestNotificationAuthorizationFromSettings() {
         guard !self.isRequestingNotificationAuthorization else { return }
-        PushEnrollmentConsent.markDisclosureAccepted()
+        self.pushEnrollmentConsentStore.send(.acceptDisclosure)
         self.isRequestingNotificationAuthorization = true
         Task {
             let granted = await (try? UNUserNotificationCenter.current().requestAuthorization(options: [
@@ -461,7 +463,7 @@ extension SettingsProTab {
 
     @MainActor
     func registerForRemoteNotificationsIfEnrollmentReady() {
-        guard PushEnrollmentConsent.disclosureAccepted else { return }
+        guard self.pushEnrollmentConsentStore.disclosureAccepted else { return }
         guard self.notificationStatus.allowsNotifications else { return }
         UIApplication.shared.registerForRemoteNotifications()
     }
