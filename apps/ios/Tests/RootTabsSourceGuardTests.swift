@@ -687,7 +687,8 @@ struct RootTabsSourceGuardTests {
 
         #expect(appSource.contains("PushEnrollmentConsent.disclosureAccepted"))
         #expect(appSource.contains("await Self.isNotificationAuthorizationAllowed()"))
-        #expect(actionsSource.contains("PushEnrollmentConsent.markDisclosureAccepted()"))
+        #expect(actionsSource.contains("self.pushEnrollmentConsentStore.send(.acceptDisclosure)"))
+        #expect(actionsSource.contains("self.pushEnrollmentConsentStore.disclosureAccepted"))
         #expect(actionsSource.contains("self.registerForRemoteNotificationsIfEnrollmentReady()"))
         #expect(modelSource.contains("PushEnrollmentConsent.disclosureAccepted"))
         #expect(modelSource.contains("notifications_not_authorized"))
