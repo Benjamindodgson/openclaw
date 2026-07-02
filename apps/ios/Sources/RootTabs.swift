@@ -780,7 +780,7 @@ struct RootTabs: View {
             .sheet(item: self.$presentedSheet) { sheet in
                 switch sheet {
                 case .quickSetup:
-                    GatewayQuickSetupSheet()
+                    GatewayQuickSetupSheet(store: self.makeGatewayQuickSetupStore())
                         .environment(self.appModel)
                         .environment(self.gatewayController)
                         .openClawSheetChrome()
@@ -809,6 +809,15 @@ struct RootTabs: View {
                 self.suppressedExecApprovalPromptIDForNotificationSettings = approvalId
                 self.selectSettingsRoute(.notifications)
             })
+    }
+
+    @MainActor
+    private func makeGatewayQuickSetupStore() -> StoreOf<GatewayQuickSetupFeature> {
+        Store(initialState: GatewayQuickSetupFeature.State()) {
+            GatewayQuickSetupFeature()
+        } withDependencies: {
+            $0.gatewayQuickSetup = .live(gatewayController: self.gatewayController)
+        }
     }
 
     private var appearancePreference: AppAppearancePreference {
