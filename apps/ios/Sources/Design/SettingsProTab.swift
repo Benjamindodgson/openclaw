@@ -548,6 +548,9 @@ struct SettingsGatewayCredentialsFeature {
             case let .setupAuthPersistenceRequested(request):
                 guard Self.trimmedInstanceId(request.instanceId) != nil else { return .none }
                 return .run { _ in
+                    if request.hasBootstrapToken {
+                        await setupAuthPersistenceClient.prepareForBootstrapPairing(request.instanceId)
+                    }
                     await setupAuthPersistenceClient.saveSetupAuth(request)
                 }
 
@@ -1217,6 +1220,11 @@ struct SettingsProTab: View {
         {
             SettingsManualGatewayEndpointFeature()
         },
+        gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature> = Store(
+            initialState: SettingsGatewayCredentialsFeature.State())
+        {
+            SettingsGatewayCredentialsFeature()
+        },
         navigationStore: StoreOf<SettingsNavigationFeature> = Store(
             initialState: SettingsNavigationFeature.State())
         {
@@ -1231,6 +1239,7 @@ struct SettingsProTab: View {
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
+        self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
         self._navigationStore = State(wrappedValue: navigationStore)
         self.onRouteChange = onRouteChange
     }

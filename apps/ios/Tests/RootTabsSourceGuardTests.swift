@@ -1192,10 +1192,11 @@ struct RootTabsSourceGuardTests {
     @Test func `settings setup auth derivation is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let applyGatewayLinkFunction = try Self.extract(
             actionsSource,
-            from: "func applyGatewayLink(_ link: GatewayConnectDeepLink)",
+            from: "func applyGatewayLink(_ link: GatewayConnectDeepLink) async",
             to: "func openGatewayQRScanner()")
 
         #expect(supportSource.contains("struct SettingsGatewaySetupAuthPersistenceRequest: Equatable"))
@@ -1207,18 +1208,29 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource
             .contains("let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)"))
         #expect(settingsSource.contains("setupAuthPersistenceClient.currentInstanceID()"))
+        #expect(settingsSource.contains("await setupAuthPersistenceClient.prepareForBootstrapPairing(request.instanceId)"))
         #expect(settingsSource.contains("await setupAuthPersistenceClient.saveSetupAuth(request)"))
         #expect(supportSource.contains("struct SettingsGatewaySetupAuthPersistenceClient"))
+        #expect(supportSource.contains("prepareForBootstrapPairing"))
+        #expect(supportSource
+            .contains("GatewayOnboardingReset.prepareForBootstrapPairing(appModel: appModel, instanceId: instanceId)"))
         #expect(supportSource.contains("GatewaySettingsStore.currentInstanceID()"))
         #expect(supportSource.contains("GatewaySettingsStore.saveGatewayBootstrapToken("))
         #expect(supportSource.contains("GatewaySettingsStore.saveGatewayToken("))
         #expect(supportSource.contains("GatewaySettingsStore.saveGatewayPassword("))
+        #expect(rootSource.contains("self.makeSettingsGatewayCredentialsStore()"))
+        #expect(rootSource.contains("setupAuthPersistenceClient: .live(appModel: self.appModel)"))
+        #expect(actionsSource.contains("guard await self.applySetupCode() else { return }"))
+        #expect(actionsSource.contains("await self.applyGatewayLink(link)"))
+        #expect(actionsSource.contains("await self.applyGatewayLink(scannedLink)"))
         #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupLinkApplied(link))"))
-        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request))"))
+        #expect(actionsSource
+            .contains("await self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request)).finish()"))
         #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled)"))
         #expect(!applyGatewayLinkFunction
             .contains("GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)"))
         #expect(!applyGatewayLinkFunction.contains(".setupAuthApplied(setupAuth)"))
+        #expect(!applyGatewayLinkFunction.contains("GatewayOnboardingReset.prepareForBootstrapPairing"))
         #expect(!applyGatewayLinkFunction.contains("GatewaySettingsStore.currentInstanceID"))
         #expect(!applyGatewayLinkFunction.contains("GatewaySettingsStore.saveGatewayBootstrapToken"))
         #expect(!applyGatewayLinkFunction.contains("GatewaySettingsStore.saveGatewayToken"))

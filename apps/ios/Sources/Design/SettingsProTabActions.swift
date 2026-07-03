@@ -294,7 +294,7 @@ extension SettingsProTab {
 
     func applySetupCodeAndConnect() async {
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
-        guard self.applySetupCode() else { return }
+        guard await self.applySetupCode() else { return }
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard self.resolveManualPortForConnection(host: host) else { return }
         guard await self.preflightGateway(host: host) else { return }
@@ -314,7 +314,7 @@ extension SettingsProTab {
     }
 
     @discardableResult
-    func applySetupCode() -> Bool {
+    func applySetupCode() async -> Bool {
         self.gatewaySetupLinkStore.send(.applyRequested)
         guard let result = self.gatewaySetupLinkStore.applyResult else { return false }
         self.gatewaySetupLinkStore.send(.applyResultHandled)
@@ -331,22 +331,19 @@ extension SettingsProTab {
             return false
 
         case let .gatewayLink(link):
-            self.applyGatewayLink(link)
+            await self.applyGatewayLink(link)
             return true
         }
     }
 
-    func applyGatewayLink(_ link: GatewayConnectDeepLink) {
+    func applyGatewayLink(_ link: GatewayConnectDeepLink) async {
         self.applyManualGatewaySetupLink(host: link.host, tls: link.tls)
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(link.port))
         self.gatewayCredentialsStore.send(.setupLinkApplied(link))
         guard let request = self.gatewayCredentialsStore.setupAuthPersistenceRequest else { return }
         defer { self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled) }
 
-        if request.hasBootstrapToken {
-            GatewayOnboardingReset.prepareForBootstrapPairing(appModel: self.appModel, instanceId: request.instanceId)
-        }
-        self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request))
+        await self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request)).finish()
     }
 
     func openGatewayQRScanner() {
@@ -362,12 +359,14 @@ extension SettingsProTab {
         self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
-        self.applyGatewayLink(scannedLink)
         if let statusText = self.gatewaySetupLinkStore.scannedGatewayLinkStatusText {
             self.gatewaySetupStatusStore.send(.statusChanged(statusText))
             self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)
         }
-        Task { await self.connectAfterScannedGatewayLink() }
+        Task {
+            await self.applyGatewayLink(scannedLink)
+            await self.connectAfterScannedGatewayLink()
+        }
     }
 
     func handleScannedSetupCode(_ code: String) {

@@ -59,7 +59,18 @@ extension DependencyValues {
 
 struct SettingsGatewaySetupAuthPersistenceClient {
     var currentInstanceID: @Sendable () -> String
+    var prepareForBootstrapPairing: @MainActor @Sendable (_ instanceId: String) -> Void
     var saveSetupAuth: @MainActor @Sendable (_ request: SettingsGatewaySetupAuthPersistenceRequest) -> Void
+
+    init(
+        currentInstanceID: @escaping @Sendable () -> String,
+        prepareForBootstrapPairing: @escaping @MainActor @Sendable (_ instanceId: String) -> Void = { _ in },
+        saveSetupAuth: @escaping @MainActor @Sendable (_ request: SettingsGatewaySetupAuthPersistenceRequest) -> Void)
+    {
+        self.currentInstanceID = currentInstanceID
+        self.prepareForBootstrapPairing = prepareForBootstrapPairing
+        self.saveSetupAuth = saveSetupAuth
+    }
 }
 
 struct SettingsGatewaySetupAuthPersistenceRequest: Equatable {
@@ -90,6 +101,18 @@ extension SettingsGatewaySetupAuthPersistenceClient: DependencyKey {
                 GatewaySettingsStore.saveGatewayPassword(request.setupAuth.password, instanceId: instanceId)
             }
         })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsGatewaySetupAuthPersistenceClient(
+            currentInstanceID: {
+                GatewaySettingsStore.currentInstanceID()
+            },
+            prepareForBootstrapPairing: { instanceId in
+                GatewayOnboardingReset.prepareForBootstrapPairing(appModel: appModel, instanceId: instanceId)
+            },
+            saveSetupAuth: self.liveValue.saveSetupAuth)
+    }
 
     static let testValue = SettingsGatewaySetupAuthPersistenceClient(
         currentInstanceID: { "" },

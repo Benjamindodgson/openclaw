@@ -190,6 +190,7 @@ struct RootTabs: View {
                 initialRoute: self.selectedSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
@@ -473,6 +474,7 @@ struct RootTabs: View {
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                    gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
                 SettingsProTab(
@@ -481,6 +483,7 @@ struct RootTabs: View {
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                    gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
         case .gateway:
@@ -491,6 +494,7 @@ struct RootTabs: View {
                 navigateToRoute: self.pushSidebarSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }
     }
@@ -811,6 +815,14 @@ struct RootTabs: View {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(
                 localNetworkAccessClient: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsGatewayCredentialsStore() -> StoreOf<SettingsGatewayCredentialsFeature> {
+        Store(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature(
+                setupAuthPersistenceClient: .live(appModel: self.appModel))
         }
     }
 

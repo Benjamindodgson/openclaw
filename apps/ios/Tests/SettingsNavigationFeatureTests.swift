@@ -1095,7 +1095,7 @@ struct SettingsNavigationFeatureTests {
         let setupAuthProbe = SettingsGatewaySetupAuthPersistenceProbe()
         let setupAuth = GatewayConnectionController.ManualAuthOverride.SetupAuth(
             token: "token-7",
-            bootstrapToken: "bootstrap-7",
+            bootstrapToken: "",
             password: "password-7")
         let request = SettingsGatewaySetupAuthPersistenceRequest(
             setupAuth: setupAuth,
@@ -1108,6 +1108,28 @@ struct SettingsNavigationFeatureTests {
         await store.finish()
 
         #expect(setupAuthProbe.savedRequests == [request])
+        #expect(setupAuthProbe.preparedBootstrapPairingInstanceIds.isEmpty)
+    }
+
+    @Test func `settings gateway credentials prepares bootstrap pairing before setup auth persistence`() async {
+        let setupAuthProbe = SettingsGatewaySetupAuthPersistenceProbe()
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.SetupAuth(
+            token: "token-9",
+            bootstrapToken: "bootstrap-9",
+            password: "password-9")
+        let request = SettingsGatewaySetupAuthPersistenceRequest(
+            setupAuth: setupAuth,
+            instanceId: "instance-9")
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
+        }
+
+        await store.send(.setupAuthPersistenceRequested(request))
+        await store.finish()
+
+        #expect(setupAuthProbe.preparedBootstrapPairingInstanceIds == ["instance-9"])
+        #expect(setupAuthProbe.savedRequests == [request])
+        #expect(setupAuthProbe.events == ["prepare:instance-9", "save:instance-9"])
     }
 
     @Test func `settings gateway credentials ignore setup auth persistence without instance id`() async {
@@ -2381,6 +2403,8 @@ private final class SettingsGatewayCredentialsPersistenceProbe: @unchecked Senda
 
 private final class SettingsGatewaySetupAuthPersistenceProbe: @unchecked Sendable {
     var instanceId = ""
+    var events: [String] = []
+    var preparedBootstrapPairingInstanceIds: [String] = []
     var savedRequests: [SettingsGatewaySetupAuthPersistenceRequest] = []
 
     var client: SettingsGatewaySetupAuthPersistenceClient {
@@ -2388,8 +2412,13 @@ private final class SettingsGatewaySetupAuthPersistenceProbe: @unchecked Sendabl
             currentInstanceID: {
                 self.instanceId
             },
+            prepareForBootstrapPairing: { instanceId in
+                self.preparedBootstrapPairingInstanceIds.append(instanceId)
+                self.events.append("prepare:\(instanceId)")
+            },
             saveSetupAuth: { request in
                 self.savedRequests.append(request)
+                self.events.append("save:\(request.instanceId)")
             })
     }
 }
