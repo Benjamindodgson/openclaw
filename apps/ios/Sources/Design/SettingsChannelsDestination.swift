@@ -1,18 +1,346 @@
+import ComposableArchitecture
 import OpenClawKit
 import OpenClawProtocol
 import SwiftUI
+
+struct SettingsChannelsClient {
+    var status: @Sendable @MainActor () async throws -> ChannelsStatusResult
+    var start: @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void
+    var stop: @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void
+    var logout: @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void
+}
+
+extension SettingsChannelsClient: DependencyKey {
+    static let liveValue = SettingsChannelsClient(
+        status: { SettingsChannelsClient.emptyStatus() },
+        start: { _, _ in },
+        stop: { _, _ in },
+        logout: { _, _ in })
+
+    static let testValue = SettingsChannelsClient(
+        status: { SettingsChannelsClient.emptyStatus() },
+        start: { _, _ in },
+        stop: { _, _ in },
+        logout: { _, _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsChannelsClient(
+            status: {
+                let params = ChannelsStatusParams(probe: false, timeoutms: 10000, channel: nil)
+                let data = try await Self.request(
+                    appModel: appModel,
+                    method: "channels.status",
+                    params: params,
+                    timeoutSeconds: 12)
+                return try JSONDecoder().decode(ChannelsStatusResult.self, from: data)
+            },
+            start: { channelID, accountID in
+                let params = ChannelsStartParams(channel: channelID, accountid: accountID)
+                _ = try await Self.request(
+                    appModel: appModel,
+                    method: "channels.start",
+                    params: params,
+                    timeoutSeconds: 20)
+            },
+            stop: { channelID, accountID in
+                let params = ChannelsStopParams(channel: channelID, accountid: accountID)
+                _ = try await Self.request(
+                    appModel: appModel,
+                    method: "channels.stop",
+                    params: params,
+                    timeoutSeconds: 20)
+            },
+            logout: { channelID, accountID in
+                let params = ChannelsLogoutParams(channel: channelID, accountid: accountID)
+                _ = try await Self.request(
+                    appModel: appModel,
+                    method: "channels.logout",
+                    params: params,
+                    timeoutSeconds: 20)
+            })
+    }
+
+    private static func emptyStatus() -> ChannelsStatusResult {
+        ChannelsStatusResult(
+            ts: 0,
+            channelorder: [],
+            channellabels: [:],
+            channeldetaillabels: nil,
+            channelsystemimages: nil,
+            channelmeta: nil,
+            channels: [:],
+            channelaccounts: [:],
+            channeldefaultaccountid: [:],
+            eventloop: nil,
+            partial: nil,
+            warnings: nil)
+    }
+
+    @MainActor
+    private static func request(
+        appModel: NodeAppModel,
+        method: String,
+        params: some Encodable,
+        timeoutSeconds: Int) async throws -> Data
+    {
+        let data = try JSONEncoder().encode(params)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw SettingsChannelError.invalidPayload
+        }
+        return try await appModel.operatorSession.request(
+            method: method,
+            paramsJSON: json,
+            timeoutSeconds: timeoutSeconds)
+    }
+}
+
+extension DependencyValues {
+    var settingsChannels: SettingsChannelsClient {
+        get { self[SettingsChannelsClient.self] }
+        set { self[SettingsChannelsClient.self] = newValue }
+    }
+}
+
+// swiftformat:disable redundantSendable
+enum SettingsChannelsError: Error, Equatable, Sendable {
+    case failed(String)
+}
+
+// swiftformat:enable redundantSendable
+
+@Reducer
+struct SettingsChannelsFeature {
+    private let clientOverride: SettingsChannelsClient?
+
+    init(client: SettingsChannelsClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var entries: [SettingsChannelEntry] = []
+        var isLoading = false
+        var errorText: String?
+        var busyOperation: SettingsChannelOperation?
+    }
+
+    enum Action: Equatable, Sendable {
+        case refreshRequested(sceneActive: Bool, canRead: Bool, force: Bool)
+        case refreshResponse(force: Bool, Result<[SettingsChannelEntry], SettingsChannelsError>)
+        case operationRequested(
+            SettingsChannelOperation.Kind,
+            channelID: String,
+            accountID: String?,
+            canRead: Bool,
+            canAdmin: Bool)
+        case operationResponse(Result<[SettingsChannelEntry], SettingsChannelsError>)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.settingsChannels) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case let .refreshRequested(sceneActive, canRead, force):
+                guard sceneActive else {
+                    state.isLoading = false
+                    return .none
+                }
+                guard canRead else {
+                    state.entries = []
+                    state.isLoading = false
+                    state.errorText = nil
+                    return .none
+                }
+                guard !state.isLoading else { return .none }
+
+                state.isLoading = true
+                state.errorText = nil
+                return .run { send in
+                    do {
+                        let snapshot = try await client.status()
+                        await send(.refreshResponse(force: force, .success(Self.entries(from: snapshot))))
+                    } catch {
+                        await send(.refreshResponse(force: force, .failure(.failed(Self.message(for: error)))))
+                    }
+                }
+
+            case let .refreshResponse(_, .success(entries)):
+                state.isLoading = false
+                state.entries = entries
+                state.errorText = nil
+                return .none
+
+            case let .refreshResponse(force, .failure(error)):
+                state.isLoading = false
+                if force || state.entries.isEmpty {
+                    state.errorText = error.message
+                }
+                return .none
+
+            case let .operationRequested(kind, channelID, accountID, canRead, canAdmin):
+                guard SettingsChannelsDestination.shouldEnableChannelOperation(
+                    canRead: canRead,
+                    hasOperatorAdminScope: canAdmin),
+                    state.busyOperation == nil
+                else {
+                    return .none
+                }
+
+                state.busyOperation = SettingsChannelOperation(
+                    kind: kind,
+                    channelID: channelID,
+                    accountID: accountID)
+                state.errorText = nil
+                return .run { send in
+                    do {
+                        switch kind {
+                        case .start:
+                            try await client.start(channelID, accountID)
+                        case .stop:
+                            try await client.stop(channelID, accountID)
+                        case .logout:
+                            try await client.logout(channelID, accountID)
+                        }
+                        let snapshot = try await client.status()
+                        await send(.operationResponse(.success(Self.entries(from: snapshot))))
+                    } catch {
+                        await send(.operationResponse(.failure(.failed(Self.message(for: error)))))
+                    }
+                }
+
+            case let .operationResponse(.success(entries)):
+                state.busyOperation = nil
+                state.entries = entries
+                state.errorText = nil
+                return .none
+
+            case let .operationResponse(.failure(error)):
+                state.busyOperation = nil
+                state.errorText = error.message
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    static func entries(from snapshot: ChannelsStatusResult) -> [SettingsChannelEntry] {
+        let ids = snapshot.channelorder.isEmpty ? Array(snapshot.channels.keys).sorted() : snapshot.channelorder
+        return ids.map { self.entry(channelID: $0, snapshot: snapshot) }
+    }
+
+    private static func entry(channelID: String, snapshot: ChannelsStatusResult) -> SettingsChannelEntry {
+        let summary = snapshot.channels[channelID]?.dictionaryValue ?? [:]
+        let accounts = self.accounts(channelID: channelID, snapshot: snapshot)
+        let configured = accounts.contains(where: \.configured) || summary["configured"]?.boolValue == true
+        let running = accounts.contains(where: \.running)
+        let connected = accounts.contains(where: \.connected)
+        let linked = accounts.contains(where: \.linked)
+        let label = snapshot.channellabels[channelID]?.stringValue ?? SettingsChannelsDestination
+            .fallbackLabel(channelID)
+        let detail = snapshot.channeldetaillabels?[channelID]?.stringValue ?? SettingsChannelsDestination
+            .fallbackDetail(channelID)
+        let systemImage = snapshot.channelsystemimages?[channelID]?.stringValue ?? SettingsChannelsDestination
+            .fallbackSystemImage(channelID)
+        let lastActivity = accounts.compactMap(\.lastActivityMs).max()
+        let lastError = accounts.compactMap(\.lastError).first ?? summary["lastError"]?.stringValue
+        return SettingsChannelEntry(
+            id: channelID,
+            label: label,
+            detail: detail,
+            systemImage: systemImage,
+            configured: configured,
+            running: running,
+            connected: connected,
+            linked: linked,
+            lastActivityText: lastActivity.map(Self.relativeTime),
+            lastError: lastError,
+            unavailableReason: configured ? nil : "Configure this channel on the gateway.",
+            accounts: accounts)
+    }
+
+    private static func accounts(channelID: String, snapshot: ChannelsStatusResult) -> [SettingsChannelAccount] {
+        let rawAccounts = snapshot.channelaccounts[channelID]?.arrayValue ?? []
+        return rawAccounts.compactMap { raw in
+            guard let dict = raw.dictionaryValue else { return nil }
+            let accountID = dict["accountId"]?.stringValue ?? "default"
+            let name = dict["name"]?.stringValue
+            let lastActivity = [
+                dict["lastInboundAt"]?.intValue,
+                dict["lastOutboundAt"]?.intValue,
+                dict["lastTransportActivityAt"]?.intValue,
+            ]
+                .compactMap(\.self)
+                .max()
+            return SettingsChannelAccount(
+                id: accountID,
+                name: name,
+                configured: dict["configured"]?.boolValue == true,
+                enabled: dict["enabled"]?.boolValue != false,
+                running: dict["running"]?.boolValue == true,
+                connected: dict["connected"]?.boolValue == true,
+                linked: dict["linked"]?.boolValue == true,
+                healthState: dict["healthState"]?.stringValue,
+                lastError: dict["lastError"]?.stringValue,
+                lastActivityMs: lastActivity)
+        }
+    }
+
+    private static func relativeTime(_ milliseconds: Int) -> String {
+        let age = max(0, Int(Date().timeIntervalSince1970 * 1000) - milliseconds)
+        let minutes = age / 60000
+        if minutes < 1 { return "now" }
+        if minutes < 60 { return "\(minutes)m ago" }
+        let hours = minutes / 60
+        if hours < 24 { return "\(hours)h ago" }
+        return "\(hours / 24)d ago"
+    }
+
+    private static func message(for error: Error) -> String {
+        if let channelError = error as? SettingsChannelError {
+            return channelError.message
+        }
+        return error.localizedDescription
+    }
+}
+
+extension SettingsChannelsError {
+    var message: String {
+        switch self {
+        case let .failed(message):
+            message
+        }
+    }
+}
+
+enum SettingsChannelsStoreFactory {
+    @MainActor
+    static func live(appModel: NodeAppModel) -> StoreOf<SettingsChannelsFeature> {
+        Store(initialState: SettingsChannelsFeature.State()) {
+            SettingsChannelsFeature(client: .live(appModel: appModel))
+        }
+    }
+}
 
 struct SettingsChannelsDestination: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
     let showsSummaryCard: Bool
-    @State private var snapshot: ChannelsStatusResult?
-    @State private var isLoading = false
-    @State private var errorText: String?
-    @State private var busyOperation: SettingsChannelOperation?
+    @State private var store: StoreOf<SettingsChannelsFeature>
 
-    init(showsSummaryCard: Bool = true) {
+    init(
+        showsSummaryCard: Bool = true,
+        store: StoreOf<SettingsChannelsFeature> = Store(initialState: SettingsChannelsFeature.State()) {
+            SettingsChannelsFeature()
+        })
+    {
         self.showsSummaryCard = showsSummaryCard
+        self._store = State(wrappedValue: store)
     }
 
     var body: some View {
@@ -23,10 +351,10 @@ struct SettingsChannelsDestination: View {
             self.channelsCard
         }
         .task(id: self.refreshID) {
-            await self.loadChannels(force: false)
+            await self.refreshChannels(force: false)
         }
         .refreshable {
-            await self.loadChannels(force: true)
+            await self.refreshChannels(force: true)
         }
     }
 
@@ -55,14 +383,14 @@ struct SettingsChannelsDestination: View {
                 ProPanelHeader(
                     title: "Message Routing",
                     value: self.headerValue,
-                    actionIcon: self.isLoading ? "hourglass" : "arrow.clockwise",
+                    actionIcon: self.store.isLoading ? "hourglass" : "arrow.clockwise",
                     actionAccessibilityLabel: "Refresh Channels",
-                    isActionDisabled: self.isLoading,
+                    isActionDisabled: self.store.isLoading,
                     action: {
-                        Task { await self.loadChannels(force: true) }
+                        Task { await self.refreshChannels(force: true) }
                     })
 
-                if let errorText {
+                if let errorText = self.store.errorText {
                     ProStatusRow(
                         icon: "exclamationmark.triangle",
                         title: "Channel status unavailable",
@@ -76,7 +404,7 @@ struct SettingsChannelsDestination: View {
                         detail: "Connect to the gateway to load installed channels, accounts, and routing status.",
                         value: "offline",
                         color: .secondary)
-                } else if self.isLoading, self.snapshot == nil {
+                } else if self.store.isLoading, self.store.entries.isEmpty {
                     ProStatusRow(
                         icon: "hourglass",
                         title: "Loading channels",
@@ -98,7 +426,7 @@ struct SettingsChannelsDestination: View {
                         SettingsChannelRow(
                             entry: entry,
                             canAdmin: self.canAdmin,
-                            busyOperation: self.busyOperation,
+                            busyOperation: self.store.busyOperation,
                             start: { accountID in
                                 Task { await self.run(.start, channelID: entry.id, accountID: accountID) }
                             },
@@ -130,12 +458,12 @@ struct SettingsChannelsDestination: View {
         self.appModel.hasOperatorAdminScope
     }
 
-    static func shouldEnableChannelOperation(canRead: Bool, hasOperatorAdminScope: Bool) -> Bool {
+    nonisolated static func shouldEnableChannelOperation(canRead: Bool, hasOperatorAdminScope: Bool) -> Bool {
         canRead && hasOperatorAdminScope
     }
 
     private var headerValue: String? {
-        if self.isLoading { return "Loading" }
+        if self.store.isLoading { return "Loading" }
         guard self.canRead else { return "Offline" }
         return "\(self.channelEntries.count)"
     }
@@ -144,7 +472,7 @@ struct SettingsChannelsDestination: View {
         guard self.canRead else {
             return "Connect to load channel integrations."
         }
-        if let errorText {
+        if let errorText = self.store.errorText {
             return errorText
         }
         return "Installed channel clients, account state, and message-routing readiness."
@@ -152,143 +480,40 @@ struct SettingsChannelsDestination: View {
 
     private var summaryValue: String {
         guard self.canRead else { return "offline" }
-        if self.isLoading { return "loading" }
-        if self.errorText != nil { return "error" }
+        if self.store.isLoading { return "loading" }
+        if self.store.errorText != nil { return "error" }
         let configured = self.channelEntries.count(where: { $0.configured })
         return "\(configured)/\(self.channelEntries.count)"
     }
 
     private var summaryColor: Color {
         guard self.canRead else { return .secondary }
-        if self.errorText != nil { return OpenClawBrand.warn }
+        if self.store.errorText != nil { return OpenClawBrand.warn }
         return self.channelEntries.contains(where: { $0.running || $0.connected }) ? OpenClawBrand.ok : OpenClawBrand
             .accent
     }
 
     private var channelEntries: [SettingsChannelEntry] {
-        guard let snapshot else { return [] }
-        let ids = snapshot.channelorder.isEmpty ? Array(snapshot.channels.keys).sorted() : snapshot.channelorder
-        return ids.map { self.entry(channelID: $0, snapshot: snapshot) }
+        self.store.entries
     }
 
-    private func entry(channelID: String, snapshot: ChannelsStatusResult) -> SettingsChannelEntry {
-        let summary = snapshot.channels[channelID]?.dictionaryValue ?? [:]
-        let accounts = self.accounts(channelID: channelID, snapshot: snapshot)
-        let configured = accounts.contains(where: \.configured) || summary["configured"]?.boolValue == true
-        let running = accounts.contains(where: \.running)
-        let connected = accounts.contains(where: \.connected)
-        let linked = accounts.contains(where: \.linked)
-        let label = snapshot.channellabels[channelID]?.stringValue ?? Self.fallbackLabel(channelID)
-        let detail = snapshot.channeldetaillabels?[channelID]?.stringValue ?? Self.fallbackDetail(channelID)
-        let systemImage = snapshot.channelsystemimages?[channelID]?.stringValue ?? Self.fallbackSystemImage(channelID)
-        let lastActivity = accounts.compactMap(\.lastActivityMs).max()
-        let lastError = accounts.compactMap(\.lastError).first ?? summary["lastError"]?.stringValue
-        return SettingsChannelEntry(
-            id: channelID,
-            label: label,
-            detail: detail,
-            systemImage: systemImage,
-            configured: configured,
-            running: running,
-            connected: connected,
-            linked: linked,
-            lastActivityText: lastActivity.map(Self.relativeTime),
-            lastError: lastError,
-            unavailableReason: configured ? nil : "Configure this channel on the gateway.",
-            accounts: accounts)
-    }
-
-    private func accounts(channelID: String, snapshot: ChannelsStatusResult) -> [SettingsChannelAccount] {
-        let rawAccounts = snapshot.channelaccounts[channelID]?.arrayValue ?? []
-        return rawAccounts.compactMap { raw in
-            guard let dict = raw.dictionaryValue else { return nil }
-            let accountID = dict["accountId"]?.stringValue ?? "default"
-            let name = dict["name"]?.stringValue
-            let lastActivity = [
-                dict["lastInboundAt"]?.intValue,
-                dict["lastOutboundAt"]?.intValue,
-                dict["lastTransportActivityAt"]?.intValue,
-            ]
-                .compactMap(\.self)
-                .max()
-            return SettingsChannelAccount(
-                id: accountID,
-                name: name,
-                configured: dict["configured"]?.boolValue == true,
-                enabled: dict["enabled"]?.boolValue != false,
-                running: dict["running"]?.boolValue == true,
-                connected: dict["connected"]?.boolValue == true,
-                linked: dict["linked"]?.boolValue == true,
-                healthState: dict["healthState"]?.stringValue,
-                lastError: dict["lastError"]?.stringValue,
-                lastActivityMs: lastActivity)
-        }
-    }
-
-    private func loadChannels(force: Bool) async {
-        guard self.scenePhase == .active else { return }
-        guard self.canRead else {
-            self.snapshot = nil
-            self.errorText = nil
-            return
-        }
-        if self.isLoading { return }
-
-        self.isLoading = true
-        self.errorText = nil
-        defer { self.isLoading = false }
-
-        do {
-            let params = ChannelsStatusParams(probe: false, timeoutms: 10000, channel: nil)
-            let data = try await self.request(method: "channels.status", params: params, timeoutSeconds: 12)
-            self.snapshot = try JSONDecoder().decode(ChannelsStatusResult.self, from: data)
-        } catch {
-            if force || self.snapshot == nil {
-                self.errorText = Self.message(for: error)
-            }
-        }
+    private func refreshChannels(force: Bool) async {
+        await self.store.send(.refreshRequested(
+            sceneActive: self.scenePhase == .active,
+            canRead: self.canRead,
+            force: force)).finish()
     }
 
     private func run(_ kind: SettingsChannelOperation.Kind, channelID: String, accountID: String?) async {
-        guard Self.shouldEnableChannelOperation(canRead: self.canRead, hasOperatorAdminScope: self.canAdmin),
-              self.busyOperation == nil
-        else {
-            return
-        }
-        self.busyOperation = SettingsChannelOperation(kind: kind, channelID: channelID, accountID: accountID)
-        self.errorText = nil
-        defer { self.busyOperation = nil }
-
-        do {
-            switch kind {
-            case .start:
-                let params = ChannelsStartParams(channel: channelID, accountid: accountID)
-                _ = try await self.request(method: "channels.start", params: params, timeoutSeconds: 20)
-            case .stop:
-                let params = ChannelsStopParams(channel: channelID, accountid: accountID)
-                _ = try await self.request(method: "channels.stop", params: params, timeoutSeconds: 20)
-            case .logout:
-                let params = ChannelsLogoutParams(channel: channelID, accountid: accountID)
-                _ = try await self.request(method: "channels.logout", params: params, timeoutSeconds: 20)
-            }
-            await self.loadChannels(force: true)
-        } catch {
-            self.errorText = Self.message(for: error)
-        }
+        await self.store.send(.operationRequested(
+            kind,
+            channelID: channelID,
+            accountID: accountID,
+            canRead: self.canRead,
+            canAdmin: self.canAdmin)).finish()
     }
 
-    private func request(method: String, params: some Encodable, timeoutSeconds: Int) async throws -> Data {
-        let data = try JSONEncoder().encode(params)
-        guard let json = String(data: data, encoding: .utf8) else {
-            throw SettingsChannelError.invalidPayload
-        }
-        return try await self.appModel.operatorSession.request(
-            method: method,
-            paramsJSON: json,
-            timeoutSeconds: timeoutSeconds)
-    }
-
-    static func fallbackLabel(_ id: String) -> String {
+    nonisolated static func fallbackLabel(_ id: String) -> String {
         if let metadata = self.fallbackMetadata[id.lowercased()] {
             return metadata.label
         }
@@ -299,37 +524,20 @@ struct SettingsChannelsDestination: View {
             .joined(separator: " ")
     }
 
-    static func fallbackDetail(_ id: String) -> String {
+    nonisolated static func fallbackDetail(_ id: String) -> String {
         self.fallbackMetadata[id.lowercased()]?.detail ?? "Channel integration"
     }
 
-    static func fallbackSystemImage(_ id: String) -> String {
+    nonisolated static func fallbackSystemImage(_ id: String) -> String {
         self.fallbackMetadata[id.lowercased()]?.systemImage ?? "bubble.left.and.text.bubble.right"
     }
 
-    private static let fallbackMetadata: [String: SettingsChannelFallbackMetadata] = [
+    private nonisolated static let fallbackMetadata: [String: SettingsChannelFallbackMetadata] = [
         "clickclack": SettingsChannelFallbackMetadata(
             label: "ClickClack",
             detail: "Self-hosted chat bot routing.",
             systemImage: "bubble.left.and.bubble.right"),
     ]
-
-    private static func relativeTime(_ milliseconds: Int) -> String {
-        let age = max(0, Int(Date().timeIntervalSince1970 * 1000) - milliseconds)
-        let minutes = age / 60000
-        if minutes < 1 { return "now" }
-        if minutes < 60 { return "\(minutes)m ago" }
-        let hours = minutes / 60
-        if hours < 24 { return "\(hours)h ago" }
-        return "\(hours / 24)d ago"
-    }
-
-    private static func message(for error: Error) -> String {
-        if let channelError = error as? SettingsChannelError {
-            return channelError.message
-        }
-        return error.localizedDescription
-    }
 }
 
 private struct SettingsChannelRow: View {
@@ -432,7 +640,8 @@ private struct SettingsChannelRow: View {
     }
 }
 
-private struct SettingsChannelEntry: Identifiable {
+// swiftformat:disable redundantSendable
+struct SettingsChannelEntry: Equatable, Identifiable, Sendable {
     let id: String
     let label: String
     let detail: String
@@ -471,13 +680,16 @@ private struct SettingsChannelEntry: Identifiable {
     }
 }
 
+// swiftformat:enable redundantSendable
+
 private struct SettingsChannelFallbackMetadata {
     let label: String
     let detail: String
     let systemImage: String
 }
 
-private struct SettingsChannelAccount: Identifiable {
+// swiftformat:disable redundantSendable
+struct SettingsChannelAccount: Equatable, Identifiable, Sendable {
     let id: String
     let name: String?
     let configured: Bool
@@ -523,8 +735,8 @@ private struct SettingsChannelAccount: Identifiable {
     }
 }
 
-private struct SettingsChannelOperation: Equatable {
-    enum Kind {
+struct SettingsChannelOperation: Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
         case start
         case stop
         case logout
@@ -534,6 +746,8 @@ private struct SettingsChannelOperation: Equatable {
     let channelID: String
     let accountID: String?
 }
+
+// swiftformat:enable redundantSendable
 
 private enum SettingsChannelError: Error {
     case invalidPayload
