@@ -994,7 +994,7 @@ struct SettingsProTab: View {
     @AppStorage("gateway.autoconnect") var storedGatewayAutoConnect: Bool = false
     @AppStorage("gateway.manual.enabled") var storedManualGatewayEnabled: Bool = false
     @AppStorage("gateway.manual.host") var storedManualGatewayHost: String = ""
-    @AppStorage("gateway.manual.port") var manualGatewayPort: Int = 18789
+    @AppStorage("gateway.manual.port") var storedManualGatewayPort: Int = 18789
     @AppStorage("gateway.manual.tls") var storedManualGatewayTLS: Bool = true
     @AppStorage("gateway.discovery.debugLogs") var storedDiscoveryDebugLogsEnabled: Bool = false
     @AppStorage("canvas.debugStatusEnabled") var storedCanvasDebugStatusEnabled: Bool = false
@@ -1255,7 +1255,7 @@ struct SettingsProTab: View {
                 self.handleLocationModeChange(newValue)
             }
             .onChange(of: self.manualGatewayPortStore.manualGatewayPort) { _, newValue in
-                self.manualGatewayPort = newValue
+                self.storedManualGatewayPort = newValue
             }
             .onChange(of: self.agentSelectionStore.selectedAgentPickerId) { _, newValue in
                 let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
