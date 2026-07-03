@@ -1,18 +1,89 @@
+import ComposableArchitecture
 import OpenClawProtocol
 import SwiftUI
+
+@Reducer
+struct RootTabsPhoneControlHubFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var navigationPath: [RootTabs.SidebarDestination] = []
+        var didApplyInitialDestination = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case detailBackTapped
+        case detailDestinationTapped(RootTabs.SidebarDestination)
+        case initialDestinationAppeared(destination: RootTabs.SidebarDestination?, opensRootTab: Bool)
+        case navigationPathChanged([RootTabs.SidebarDestination])
+        case rootDestinationTapped(RootTabs.SidebarDestination)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .detailBackTapped:
+                guard !state.navigationPath.isEmpty else { return .none }
+                state.navigationPath.removeLast()
+                return .none
+
+            case let .detailDestinationTapped(destination):
+                state.navigationPath.append(destination)
+                return .none
+
+            case let .initialDestinationAppeared(initialDestination, opensRootTab):
+                guard !state.didApplyInitialDestination else { return .none }
+                state.didApplyInitialDestination = true
+                guard let initialDestination, initialDestination != .overview else { return .none }
+                guard !opensRootTab else {
+                    state.navigationPath = []
+                    return .none
+                }
+                state.navigationPath = [initialDestination]
+                return .none
+
+            case let .navigationPathChanged(navigationPath):
+                state.navigationPath = navigationPath
+                return .none
+
+            case .rootDestinationTapped:
+                state.navigationPath = []
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
 
 struct RootTabsPhoneControlHub: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @State private var navigationPath: [RootTabs.SidebarDestination] = []
-    @State private var didApplyInitialDestination = false
+    @State private var store: StoreOf<RootTabsPhoneControlHubFeature>
 
     let groups: [RootTabs.SidebarGroup]
     let initialDestination: RootTabs.SidebarDestination?
     let openRootDestination: (RootTabs.SidebarDestination) -> Void
 
+    init(
+        groups: [RootTabs.SidebarGroup],
+        initialDestination: RootTabs.SidebarDestination?,
+        openRootDestination: @escaping (RootTabs.SidebarDestination) -> Void,
+        store: StoreOf<RootTabsPhoneControlHubFeature> = Store(
+            initialState: RootTabsPhoneControlHubFeature.State())
+        {
+            RootTabsPhoneControlHubFeature()
+        })
+    {
+        self.groups = groups
+        self.initialDestination = initialDestination
+        self.openRootDestination = openRootDestination
+        self._store = State(wrappedValue: store)
+    }
+
     var body: some View {
-        NavigationStack(path: self.$navigationPath) {
+        NavigationStack(path: self.navigationPathBinding) {
             ZStack {
                 OpenClawProBackground()
                 ScrollView {
@@ -37,6 +108,12 @@ struct RootTabsPhoneControlHub: View {
                 self.applyInitialDestinationIfNeeded()
             }
         }
+    }
+
+    private var navigationPathBinding: Binding<[RootTabs.SidebarDestination]> {
+        Binding(
+            get: { self.store.navigationPath },
+            set: { self.store.send(.navigationPathChanged($0)) })
     }
 
     private var headerCard: some View {
@@ -108,7 +185,7 @@ struct RootTabsPhoneControlHub: View {
             .buttonStyle(.plain)
         } else {
             Button {
-                self.navigationPath.append(destination)
+                self.openPhoneDetailDestination(destination)
             } label: {
                 self.rowLabel(destination)
             }
@@ -145,7 +222,7 @@ struct RootTabsPhoneControlHub: View {
                 showsHeaderMark: false,
                 openChat: { self.openPhoneRootDestination(.chat) },
                 openSettings: { self.openPhoneRootDestination(.gateway) },
-                openSessions: { self.navigationPath.append(.sessions) },
+                openSessions: { self.openPhoneDetailDestination(.sessions) },
                 recentSessionsStore: CommandCenterRecentSessionsStoreFactory.live(appModel: self.appModel))
         case .activity:
             IPadActivityScreen(
@@ -209,12 +286,15 @@ struct RootTabsPhoneControlHub: View {
     }
 
     private func popPhoneDetail() {
-        guard !self.navigationPath.isEmpty else { return }
-        self.navigationPath.removeLast()
+        self.store.send(.detailBackTapped)
+    }
+
+    private func openPhoneDetailDestination(_ destination: RootTabs.SidebarDestination) {
+        self.store.send(.detailDestinationTapped(destination))
     }
 
     private func openPhoneRootDestination(_ destination: RootTabs.SidebarDestination) {
-        self.navigationPath.removeAll()
+        self.store.send(.rootDestinationTapped(destination))
         self.openRootDestination(destination)
     }
 
@@ -223,13 +303,14 @@ struct RootTabsPhoneControlHub: View {
     }
 
     private func applyInitialDestinationIfNeeded() {
-        guard !self.didApplyInitialDestination else { return }
-        self.didApplyInitialDestination = true
+        guard !self.store.didApplyInitialDestination else { return }
+        let shouldOpenRoot = self.initialDestination.map(self.opensRootTab) ?? false
+        self.store.send(.initialDestinationAppeared(
+            destination: self.initialDestination,
+            opensRootTab: shouldOpenRoot))
         guard let initialDestination, initialDestination != .overview else { return }
-        if self.opensRootTab(initialDestination) {
-            self.openPhoneRootDestination(initialDestination)
-        } else {
-            self.navigationPath = [initialDestination]
+        if shouldOpenRoot {
+            self.openRootDestination(initialDestination)
         }
     }
 

@@ -363,10 +363,11 @@ struct RootTabsSourceGuardTests {
             source,
             from: "private func openPhoneRootDestination(_ destination: RootTabs.SidebarDestination)",
             to: "private func opensRootTab(_ destination: RootTabs.SidebarDestination)")
-        let clearRange = try #require(handoff.range(of: "self.navigationPath.removeAll()"))
+        let clearRange = try #require(handoff.range(of: "self.store.send(.rootDestinationTapped(destination))"))
         let openRange = try #require(handoff.range(of: "self.openRootDestination(destination)"))
 
-        #expect(source.contains("NavigationStack(path: self.$navigationPath)"))
+        #expect(source.contains("NavigationStack(path: self.navigationPathBinding)"))
+        #expect(source.contains("set: { self.store.send(.navigationPathChanged($0)) }"))
         #expect(!source.contains("self.openRootDestination(.gateway)"))
         #expect(source.contains("self.openPhoneRootDestination(.gateway)"))
         #expect(clearRange.lowerBound < openRange.lowerBound)
