@@ -11,9 +11,7 @@ struct AgentProTab: View {
     let openSettings: (() -> Void)?
     @State private var navigationStore: StoreOf<AgentNavigationFeature>
     @State var filterStore: StoreOf<AgentOverviewFilterFeature>
-    @State var overview: AgentOverviewSnapshot?
-    @State var overviewErrorText: String?
-    @State var overviewLoading: Bool = false
+    @State var overviewStore: StoreOf<AgentOverviewLoadFeature>
     @State var skillFilter: String = ""
     @State var skillStatusFilter: SkillStatusFilter = .all
     @State var skillMutationBusyKeys: Set<String> = []
@@ -123,6 +121,11 @@ struct AgentProTab: View {
         {
             AgentNavigationFeature()
         },
+        overviewStore: StoreOf<AgentOverviewLoadFeature> = Store(
+            initialState: AgentOverviewLoadFeature.State())
+        {
+            AgentOverviewLoadFeature()
+        },
         filterStore: StoreOf<AgentOverviewFilterFeature> = Store(
             initialState: AgentOverviewFilterFeature.State())
         {
@@ -134,6 +137,7 @@ struct AgentProTab: View {
         self.headerTitle = headerTitle
         self.openSettings = openSettings
         self._navigationStore = State(wrappedValue: navigationStore)
+        self._overviewStore = State(wrappedValue: overviewStore)
         self._filterStore = State(wrappedValue: filterStore)
     }
 
@@ -155,6 +159,18 @@ struct AgentProTab: View {
                 self.missingSkillEditorSheet
             }
         }
+    }
+
+    var overview: AgentOverviewSnapshot? {
+        self.overviewStore.overview
+    }
+
+    var overviewErrorText: String? {
+        self.overviewStore.errorText
+    }
+
+    var overviewLoading: Bool {
+        self.overviewStore.isLoading
     }
 
     private var overviewNavigation: some View {
@@ -194,6 +210,76 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+@Reducer
+struct AgentOverviewLoadFeature {
+    struct RefreshRequest: Equatable {
+        let id: Int
+        let activeAgentID: String
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var overview: AgentOverviewSnapshot?
+        var errorText: String?
+        var isLoading = false
+        var refreshRequest: RefreshRequest?
+        var nextRefreshRequestID = 0
+    }
+
+    enum Action: Equatable, Sendable {
+        case refreshFinished(AgentOverviewSnapshot, requestID: Int)
+        case refreshLaunched(requestID: Int)
+        case refreshRequested(gatewayConnected: Bool, force: Bool, activeAgentID: String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .refreshRequested(gatewayConnected, force, activeAgentID):
+                guard gatewayConnected else {
+                    state.overview = nil
+                    state.errorText = nil
+                    state.isLoading = false
+                    state.refreshRequest = nil
+                    return .none
+                }
+
+                guard force || !state.isLoading else {
+                    state.refreshRequest = nil
+                    return .none
+                }
+
+                state.nextRefreshRequestID += 1
+                state.refreshRequest = RefreshRequest(
+                    id: state.nextRefreshRequestID,
+                    activeAgentID: activeAgentID)
+                state.isLoading = true
+                state.errorText = nil
+                return .none
+
+            case let .refreshFinished(snapshot, requestID):
+                state.overview = snapshot
+                state.errorText = snapshot.hasAnyLiveData ? nil : "Live overview could not load yet."
+                state.isLoading = false
+                if state.refreshRequest?.id == requestID {
+                    state.refreshRequest = nil
+                }
+                return .none
+
+            case let .refreshLaunched(requestID):
+                if state.refreshRequest?.id == requestID {
+                    state.refreshRequest = nil
+                }
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }
 

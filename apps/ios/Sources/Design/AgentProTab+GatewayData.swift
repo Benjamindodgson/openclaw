@@ -96,21 +96,16 @@ extension AgentProTab {
     @MainActor
     func refreshOverview(force: Bool) async {
         guard self.scenePhase == .active else { return }
-        guard self.liveGatewayConnected else {
-            self.overview = nil
-            self.overviewErrorText = nil
-            self.overviewLoading = false
-            return
-        }
-        if self.overviewLoading, force == false {
-            return
-        }
+        let requestedAgentID = self.activeAgentID
+        self.overviewStore.send(.refreshRequested(
+            gatewayConnected: self.liveGatewayConnected,
+            force: force,
+            activeAgentID: requestedAgentID))
+        guard let refreshRequest = self.overviewStore.refreshRequest else { return }
 
-        self.overviewLoading = true
-        self.overviewErrorText = nil
-        defer { self.overviewLoading = false }
-
-        let activeAgentID = self.activeAgentID
+        let requestID = refreshRequest.id
+        let activeAgentID = refreshRequest.activeAgentID
+        self.overviewStore.send(.refreshLaunched(requestID: requestID))
         let skillsParams = Self.agentScopedParams(agentId: activeAgentID)
         async let skills = self.requestOptional(
             SkillStatusReportLite.self,
@@ -153,12 +148,7 @@ extension AgentProTab {
                 ?? loadedConfig?.effectiveSkillFilter(agentId: activeAgentID),
             loadedAt: Date())
 
-        if snapshot.hasAnyLiveData {
-            self.overview = snapshot
-        } else {
-            self.overview = snapshot
-            self.overviewErrorText = "Live overview could not load yet."
-        }
+        self.overviewStore.send(.refreshFinished(snapshot, requestID: requestID))
     }
 
     func requestOptional<T: Decodable>(
