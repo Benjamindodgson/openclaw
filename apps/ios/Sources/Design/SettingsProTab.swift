@@ -46,6 +46,7 @@ struct SettingsPresentationFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var showGatewayProblemDetails = false
+        var showNotificationRelayDisclosure = false
         var showResetOnboardingAlert = false
         var showTalkIssueDetails = false
     }
@@ -53,6 +54,8 @@ struct SettingsPresentationFeature {
     enum Action: Equatable, Sendable {
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
+        case notificationRelayDisclosureRequested
+        case notificationRelayDisclosureDismissed
         case resetOnboardingButtonTapped
         case resetOnboardingAlertDismissed
         case talkIssueDetailsButtonTapped
@@ -70,6 +73,14 @@ struct SettingsPresentationFeature {
 
             case .gatewayProblemDetailsDismissed:
                 state.showGatewayProblemDetails = false
+                return .none
+
+            case .notificationRelayDisclosureRequested:
+                state.showNotificationRelayDisclosure = true
+                return .none
+
+            case .notificationRelayDisclosureDismissed:
+                state.showNotificationRelayDisclosure = false
                 return .none
 
             case .resetOnboardingButtonTapped:
@@ -151,7 +162,6 @@ struct SettingsProTab: View {
     @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
 
     @State var isRequestingNotificationAuthorization = false
-    @State var showNotificationRelayDisclosure = false
     @State var diagnosticsLastRunText = "Not run"
     @State var diagnosticsIssueCount: Int?
     @State var presentationStore: StoreOf<SettingsPresentationFeature> = Store(
@@ -345,7 +355,7 @@ struct SettingsProTab: View {
                         }
                 }
             }
-            .sheet(isPresented: self.$showNotificationRelayDisclosure) {
+            .sheet(isPresented: self.notificationRelayDisclosureBinding) {
                 HostedPushRelayDisclosureSheet(
                     message: self.notificationRelayDisclosureMessage,
                     onContinue: self.requestNotificationAuthorizationFromSettings)
@@ -426,6 +436,18 @@ extension SettingsProTab {
                     self.presentationStore.send(.resetOnboardingButtonTapped)
                 } else {
                     self.presentationStore.send(.resetOnboardingAlertDismissed)
+                }
+            })
+    }
+
+    private var notificationRelayDisclosureBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showNotificationRelayDisclosure },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.notificationRelayDisclosureRequested)
+                } else {
+                    self.presentationStore.send(.notificationRelayDisclosureDismissed)
                 }
             })
     }

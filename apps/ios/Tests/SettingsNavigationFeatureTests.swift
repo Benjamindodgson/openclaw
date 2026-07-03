@@ -85,4 +85,17 @@ struct SettingsNavigationFeatureTests {
             $0.showResetOnboardingAlert = false
         }
     }
+
+    @Test func `settings presentation opens and dismisses notification relay disclosure`() async {
+        let store = TestStore(initialState: SettingsPresentationFeature.State()) {
+            SettingsPresentationFeature()
+        }
+
+        await store.send(.notificationRelayDisclosureRequested) {
+            $0.showNotificationRelayDisclosure = true
+        }
+        await store.send(.notificationRelayDisclosureDismissed) {
+            $0.showNotificationRelayDisclosure = false
+        }
+    }
 }
