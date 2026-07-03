@@ -355,6 +355,7 @@ struct SettingsLocationFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var isChangingLocationMode = false
+        var locationModeRaw = OpenClawLocationMode.off.rawValue
         var previousLocationModeRaw = OpenClawLocationMode.off.rawValue
         var statusText: String?
     }
@@ -362,7 +363,9 @@ struct SettingsLocationFeature {
     enum Action: Equatable, Sendable {
         case locationChangeFinished
         case locationChangeStarted
+        case locationModeChanged(String)
         case locationModeApplied(String)
+        case locationModeSynced(String)
         case locationPermissionDenied(previousRawValue: String)
     }
 
@@ -380,11 +383,23 @@ struct SettingsLocationFeature {
                 state.statusText = nil
                 return .none
 
+            case let .locationModeChanged(rawValue):
+                state.locationModeRaw = rawValue
+                return .none
+
             case let .locationModeApplied(rawValue):
+                state.locationModeRaw = rawValue
+                state.previousLocationModeRaw = rawValue
+                return .none
+
+            case let .locationModeSynced(rawValue):
+                guard !state.isChangingLocationMode else { return .none }
+                state.locationModeRaw = rawValue
                 state.previousLocationModeRaw = rawValue
                 return .none
 
             case let .locationPermissionDenied(previousRawValue):
+                state.locationModeRaw = previousRawValue
                 state.previousLocationModeRaw = previousRawValue
                 state.statusText = "Location permission was not granted."
                 return .none
@@ -701,7 +716,7 @@ struct SettingsProTab: View {
     @AppStorage("node.displayName") var displayName: String = "iOS Node"
     @AppStorage("node.instanceId") var instanceId: String = UUID().uuidString
     @AppStorage("camera.enabled") var storedCameraEnabled: Bool = true
-    @AppStorage("location.enabledMode") var locationModeRaw: String = OpenClawLocationMode.off.rawValue
+    @AppStorage("location.enabledMode") var storedLocationModeRaw: String = OpenClawLocationMode.off.rawValue
     @AppStorage("screen.preventSleep") var storedPreventSleep: Bool = true
     @AppStorage("talk.enabled") var talkEnabled: Bool = false
     @AppStorage(TalkModeProviderSelection.storageKey) var talkProviderSelectionRaw: String =
@@ -914,7 +929,6 @@ struct SettingsProTab: View {
     private func settingsLifecycle(_ content: some View) -> some View {
         content
             .task {
-                self.locationStore.send(.locationModeApplied(self.locationModeRaw))
                 self.syncSettingsState()
                 self.refreshNotificationSettings()
                 self.applyPendingGatewaySetupLinkIfNeeded()
@@ -927,7 +941,8 @@ struct SettingsProTab: View {
                     self.refreshNotificationSettings()
                 }
             }
-            .onChange(of: self.locationModeRaw) { _, newValue in
+            .onChange(of: self.storedLocationModeRaw) { _, newValue in
+                self.locationStore.send(.locationModeChanged(newValue))
                 self.handleLocationModeChange(newValue)
             }
             .onChange(of: self.manualGatewayPortStore.manualGatewayPort) { _, newValue in

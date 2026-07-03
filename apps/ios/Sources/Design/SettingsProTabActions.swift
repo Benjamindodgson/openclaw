@@ -170,6 +170,7 @@ extension SettingsProTab {
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
             preventSleep: self.storedPreventSleep))
+        self.locationStore.send(.locationModeSynced(self.storedLocationModeRaw))
         self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
         self.manualGatewayEndpointStore.send(.endpointSynced(
             enabled: self.storedManualGatewayEnabled,
@@ -416,7 +417,7 @@ extension SettingsProTab {
             self.locationStore.send(.locationModeApplied(rawValue))
             self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
         } else {
-            self.locationModeRaw = previous
+            self.storedLocationModeRaw = previous
             self.locationStore.send(.locationPermissionDenied(previousRawValue: previous))
         }
     }
@@ -566,6 +567,21 @@ extension SettingsProTab {
     func updatePreventSleep(_ enabled: Bool) {
         self.deviceCapabilityStore.send(.preventSleepChanged(enabled))
         self.storedPreventSleep = enabled
+    }
+
+    var locationModeRaw: String {
+        self.locationStore.locationModeRaw
+    }
+
+    var locationModeBinding: Binding<String> {
+        Binding(
+            get: { self.locationStore.locationModeRaw },
+            set: { self.updateLocationModeRaw($0) })
+    }
+
+    func updateLocationModeRaw(_ rawValue: String) {
+        self.locationStore.send(.locationModeChanged(rawValue))
+        self.storedLocationModeRaw = rawValue
     }
 
     func updateGatewayAutoConnect(_ enabled: Bool) {
