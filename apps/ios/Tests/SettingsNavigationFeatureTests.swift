@@ -140,6 +140,33 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings appearance syncs persisted preference`() async {
+        let store = TestStore(initialState: SettingsAppearanceFeature.State()) {
+            SettingsAppearanceFeature()
+        }
+
+        await store.send(.appearancePreferenceSynced(AppAppearancePreference.dark.rawValue)) {
+            $0.appearancePreferenceRaw = AppAppearancePreference.dark.rawValue
+        }
+    }
+
+    @Test func `settings appearance records picker changes`() async {
+        let store = TestStore(initialState: SettingsAppearanceFeature.State()) {
+            SettingsAppearanceFeature()
+        }
+
+        await store.send(.appearancePreferenceChanged(AppAppearancePreference.light.rawValue)) {
+            $0.appearancePreferenceRaw = AppAppearancePreference.light.rawValue
+        }
+    }
+
+    @Test func `settings appearance falls back to system for invalid stored values`() {
+        var state = SettingsAppearanceFeature.State()
+        state.appearancePreferenceRaw = "sepia"
+
+        #expect(state.appearancePreference == .system)
+    }
+
     @Test func `settings gateway activity tracks reconnect lifecycle`() async {
         let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
             SettingsGatewayActivityFeature()
