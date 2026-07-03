@@ -233,10 +233,20 @@ struct SettingsGatewaySetupStatusFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var gatewayProblemMessage: String?
+        var gatewayStatusText = ""
         var statusText: String?
+
+        var setupStatusLine: String? {
+            SettingsGatewaySetupStatusFeature.setupStatusLine(
+                problemMessage: self.gatewayProblemMessage,
+                setupStatusText: self.statusText,
+                gatewayStatusText: self.gatewayStatusText)
+        }
     }
 
     enum Action: Equatable, Sendable {
+        case gatewayStatusSynced(problemMessage: String?, gatewayStatusText: String)
         case statusChanged(String?)
     }
 
@@ -245,12 +255,69 @@ struct SettingsGatewaySetupStatusFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .gatewayStatusSynced(problemMessage, gatewayStatusText):
+                state.gatewayProblemMessage = problemMessage
+                state.gatewayStatusText = gatewayStatusText
+                return .none
+
             case let .statusChanged(statusText):
                 state.statusText = statusText
                 return .none
             }
         }
         .autoLogActions()
+    }
+
+    static func setupStatusLine(
+        problemMessage: String?,
+        setupStatusText: String?,
+        gatewayStatusText: String) -> String?
+    {
+        if let problemMessage {
+            return problemMessage
+        }
+        let trimmedSetup = setupStatusText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let gatewayStatus = gatewayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let friendly = Self.friendlyGatewayMessage(from: gatewayStatus) { return friendly }
+        if let friendly = Self.friendlyGatewayMessage(from: trimmedSetup) { return friendly }
+        if Self.isTransientSetupStatus(trimmedSetup),
+           !gatewayStatus.isEmpty,
+           gatewayStatus != "Offline"
+        {
+            return gatewayStatus
+        }
+        if !trimmedSetup.isEmpty { return trimmedSetup }
+        if gatewayStatus.isEmpty || gatewayStatus == "Offline" { return nil }
+        return gatewayStatus
+    }
+
+    static func friendlyGatewayMessage(from raw: String) -> String? {
+        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if lower.contains("pairing required") {
+            return "Pairing required. Run /pair approve in your OpenClaw chat, then connect again."
+        }
+        if lower.contains("device nonce required") || lower.contains("device nonce mismatch") {
+            return "Secure handshake failed. Check Tailscale, then connect again."
+        }
+        if lower.contains("tls fingerprint verification timed out")
+            || lower.contains("no tls endpoint detected")
+        {
+            return raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if lower.contains("timed out") {
+            return "Connection timed out. Make sure Tailscale is connected, then try again."
+        }
+        if lower.contains("unauthorized role") {
+            return "Connected, but some controls are restricted for nodes. This is expected."
+        }
+        return nil
+    }
+
+    static func isTransientSetupStatus(_ raw: String) -> Bool {
+        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return lower == "setup code applied. connecting..."
+            || lower.hasPrefix("qr loaded. connecting to ")
+            || lower == "checking gateway reachability..."
     }
 }
 
@@ -1270,6 +1337,10 @@ struct SettingsProTab: View {
     }
 
     private func settingsLifecycle(_ content: some View) -> some View {
+        self.settingsGatewaySetupStatusLifecycle(self.settingsBaseLifecycle(content))
+    }
+
+    private func settingsBaseLifecycle(_ content: some View) -> some View {
         content
             .task {
                 self.syncSettingsState()
@@ -1369,6 +1440,16 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.navigationStore.navigationPath) { _, _ in
                 self.notifyRouteChange()
+            }
+    }
+
+    private func settingsGatewaySetupStatusLifecycle(_ content: some View) -> some View {
+        content
+            .onChange(of: self.appModel.lastGatewayProblem?.message) { _, _ in
+                self.syncGatewaySetupStatusContext()
+            }
+            .onChange(of: self.appModel.gatewayStatusText) { _, _ in
+                self.syncGatewaySetupStatusContext()
             }
     }
 

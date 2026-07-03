@@ -291,6 +291,45 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup status syncs gateway context`() async {
+        let store = TestStore(initialState: SettingsGatewaySetupStatusFeature.State()) {
+            SettingsGatewaySetupStatusFeature()
+        }
+
+        await store.send(.gatewayStatusSynced(
+            problemMessage: "Pairing required",
+            gatewayStatusText: "Offline"))
+        {
+            $0.gatewayProblemMessage = "Pairing required"
+            $0.gatewayStatusText = "Offline"
+        }
+    }
+
+    @Test func `settings gateway setup status resolves display line`() {
+        #expect(SettingsGatewaySetupStatusFeature.setupStatusLine(
+            problemMessage: "Reset required",
+            setupStatusText: "Setup code applied. Connecting...",
+            gatewayStatusText: "Connected") == "Reset required")
+        #expect(SettingsGatewaySetupStatusFeature.setupStatusLine(
+            problemMessage: nil,
+            setupStatusText: "Setup code applied. Connecting...",
+            gatewayStatusText: "Connected") == "Connected")
+        #expect(SettingsGatewaySetupStatusFeature.setupStatusLine(
+            problemMessage: nil,
+            setupStatusText: nil,
+            gatewayStatusText: "Pairing required") ==
+            "Pairing required. Run /pair approve in your OpenClaw chat, then connect again.")
+        #expect(SettingsGatewaySetupStatusFeature.setupStatusLine(
+            problemMessage: nil,
+            setupStatusText: "Request timed out",
+            gatewayStatusText: "Offline") ==
+            "Connection timed out. Make sure Tailscale is connected, then try again.")
+        #expect(SettingsGatewaySetupStatusFeature.setupStatusLine(
+            problemMessage: nil,
+            setupStatusText: nil,
+            gatewayStatusText: "Offline") == nil)
+    }
+
     @Test func `settings gateway setup link stages pending links`() async {
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
