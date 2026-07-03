@@ -36,7 +36,7 @@ extension SettingsProTab {
                 self.diagnosticCheckRow(
                     icon: "stethoscope",
                     title: "Last Run",
-                    detail: self.diagnosticsLastRunText,
+                    detail: self.diagnosticsStore.lastRunText,
                     value: self.diagnosticsRunValue,
                     color: self.diagnosticsRunColor)
                 Divider().padding(.leading, 60)
@@ -160,8 +160,9 @@ extension SettingsProTab {
             discoveredGatewayCount: self.gatewayController.gateways.count,
             talkConfigLoaded: self.gatewayDiagnosticTalkConfigLoaded,
             notificationsAllowed: self.notificationStatus == .allowed)
-        self.diagnosticsIssueCount = issueCount
-        self.diagnosticsLastRunText = SettingsDiagnostics.timestamp(Date())
+        self.diagnosticsStore.send(.diagnosticsCompleted(
+            issueCount: issueCount,
+            lastRunText: SettingsDiagnostics.timestamp(Date())))
     }
 
     func syncSettingsState() {
@@ -804,12 +805,12 @@ extension SettingsProTab {
     }
 
     var diagnosticsRunValue: String {
-        guard let diagnosticsIssueCount else { return "pending" }
+        guard let diagnosticsIssueCount = self.diagnosticsStore.issueCount else { return "pending" }
         return diagnosticsIssueCount == 0 ? "pass" : "\(diagnosticsIssueCount)"
     }
 
     var diagnosticsRunColor: Color {
-        guard let diagnosticsIssueCount else { return .secondary }
+        guard let diagnosticsIssueCount = self.diagnosticsStore.issueCount else { return .secondary }
         return diagnosticsIssueCount == 0 ? OpenClawBrand.ok : OpenClawBrand.warn
     }
 
