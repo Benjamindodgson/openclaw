@@ -445,7 +445,7 @@ extension SettingsProTab {
                 title: "Voice & Talk",
                 detail: self.appModel.talkMode.gatewayTalkVoiceModeTitle,
                 value: self.voiceDetail,
-                color: self.talkEnabled || self.voiceWakeEnabled ? OpenClawBrand.accent : .secondary)
+                color: self.voiceControlStore.detailColor)
 
             self.voiceFeatureCard
             self.talkVoiceSettingsCard

@@ -757,6 +757,10 @@ struct SettingsVoiceControlFeature {
             return "Off"
         }
 
+        var detailColor: Color {
+            self.talkEnabled || self.voiceWakeEnabled ? OpenClawBrand.accent : .secondary
+        }
+
         var voiceWakeValue: String {
             self.voiceWakeEnabled ? "on" : "off"
         }
