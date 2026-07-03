@@ -726,6 +726,47 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings onboarding state syncs persisted values`() async {
+        let store = TestStore(initialState: SettingsOnboardingStateFeature.State()) {
+            SettingsOnboardingStateFeature()
+        }
+
+        await store.send(.onboardingStateSynced(
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            onboardingRequestID: 4))
+        {
+            $0.hasConnectedOnce = true
+            $0.onboardingComplete = true
+            $0.onboardingRequestID = 4
+        }
+    }
+
+    @Test func `settings onboarding state resets completion flags`() async {
+        var initialState = SettingsOnboardingStateFeature.State()
+        initialState.hasConnectedOnce = true
+        initialState.onboardingComplete = true
+        initialState.onboardingRequestID = 4
+        let store = TestStore(initialState: initialState) {
+            SettingsOnboardingStateFeature()
+        }
+
+        await store.send(.completionStateReset) {
+            $0.hasConnectedOnce = false
+            $0.onboardingComplete = false
+        }
+    }
+
+    @Test func `settings onboarding state records request id changes`() async {
+        let store = TestStore(initialState: SettingsOnboardingStateFeature.State()) {
+            SettingsOnboardingStateFeature()
+        }
+
+        await store.send(.onboardingRequestIDChanged(5)) {
+            $0.onboardingRequestID = 5
+        }
+    }
+
     @Test func `settings device capabilities sync persisted values`() async {
         let store = TestStore(initialState: SettingsDeviceCapabilityFeature.State()) {
             SettingsDeviceCapabilityFeature()
