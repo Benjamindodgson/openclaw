@@ -204,4 +204,28 @@ struct SettingsNavigationFeatureTests {
             $0.statusText = "Location permission was not granted."
         }
     }
+
+    @Test func `settings notifications record permission status`() async {
+        let store = TestStore(initialState: SettingsNotificationFeature.State()) {
+            SettingsNotificationFeature()
+        }
+
+        await store.send(.statusChanged(.notSet)) {
+            $0.status = .notSet
+        }
+    }
+
+    @Test func `settings notifications track authorization request lifecycle`() async {
+        let store = TestStore(initialState: SettingsNotificationFeature.State()) {
+            SettingsNotificationFeature()
+        }
+
+        await store.send(.authorizationRequestStarted) {
+            $0.isRequestingAuthorization = true
+        }
+        await store.send(.authorizationRequestFinished(.allowed)) {
+            $0.isRequestingAuthorization = false
+            $0.status = .allowed
+        }
+    }
 }

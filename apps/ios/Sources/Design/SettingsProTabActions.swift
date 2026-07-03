@@ -66,7 +66,7 @@ extension SettingsProTab {
                     title: "Notifications",
                     detail: "Approval and event alert channel",
                     value: self.notificationStatusText,
-                    color: self.notificationStatus.color)
+                    color: self.notificationStore.status.color)
                 Divider().padding(.leading, 60)
                 self.diagnosticCheckRow(
                     icon: "rectangle.on.rectangle",
@@ -159,7 +159,7 @@ extension SettingsProTab {
             gatewayConnected: self.gatewayDiagnosticConnected,
             discoveredGatewayCount: self.gatewayController.gateways.count,
             talkConfigLoaded: self.gatewayDiagnosticTalkConfigLoaded,
-            notificationsAllowed: self.notificationStatus == .allowed)
+            notificationsAllowed: self.notificationStore.status == .allowed)
         self.diagnosticsStore.send(.diagnosticsCompleted(
             issueCount: issueCount,
             lastRunText: SettingsDiagnostics.timestamp(Date())))
@@ -427,11 +427,11 @@ extension SettingsProTab {
     }
 
     func handleNotificationAction() {
-        if self.notificationStatus.shouldOpenNotificationSettings {
+        if self.notificationStore.status.shouldOpenNotificationSettings {
             self.openNotificationSettings()
             return
         }
-        guard self.notificationStatus == .notSet else { return }
+        guard self.notificationStore.status == .notSet else { return }
 
         if PushBuildConfig.current.usesOpenClawHostedRelay {
             self.presentationStore.send(.notificationRelayDisclosureRequested)
@@ -441,9 +441,9 @@ extension SettingsProTab {
     }
 
     func requestNotificationAuthorizationFromSettings() {
-        guard !self.isRequestingNotificationAuthorization else { return }
+        guard !self.notificationStore.isRequestingAuthorization else { return }
         self.pushEnrollmentConsentStore.send(.acceptDisclosure)
-        self.isRequestingNotificationAuthorization = true
+        self.notificationStore.send(.authorizationRequestStarted)
         Task {
             let granted = await (try? UNUserNotificationCenter.current().requestAuthorization(options: [
                 .alert,
@@ -452,8 +452,8 @@ extension SettingsProTab {
             ])) ?? false
             let settings = await UNUserNotificationCenter.current().notificationSettings()
             await MainActor.run {
-                self.isRequestingNotificationAuthorization = false
-                self.notificationStatus = SettingsNotificationStatus(settings.authorizationStatus)
+                self.notificationStore.send(.authorizationRequestFinished(
+                    SettingsNotificationStatus(settings.authorizationStatus)))
                 guard granted else { return }
                 self.registerForRemoteNotificationsIfEnrollmentReady()
             }
@@ -463,13 +463,13 @@ extension SettingsProTab {
     @MainActor
     func registerForRemoteNotificationsIfEnrollmentReady() {
         guard self.pushEnrollmentConsentStore.disclosureAccepted else { return }
-        guard self.notificationStatus.allowsNotifications else { return }
+        guard self.notificationStore.status.allowsNotifications else { return }
         UIApplication.shared.registerForRemoteNotifications()
     }
 
     @MainActor
     func applyNotificationStatus(_ status: UNAuthorizationStatus) {
-        self.notificationStatus = SettingsNotificationStatus(status)
+        self.notificationStore.send(.statusChanged(SettingsNotificationStatus(status)))
     }
 
     func persistGatewayToken(_ value: String) {
@@ -756,7 +756,7 @@ extension SettingsProTab {
     }
 
     var notificationsNeedAttention: Bool {
-        switch self.notificationStatus {
+        switch self.notificationStore.status {
         case .allowed, .checking:
             false
         case .notAllowed, .notSet, .unknown:
@@ -826,15 +826,15 @@ extension SettingsProTab {
     }
 
     var notificationStatusText: String {
-        self.notificationStatus.text
+        self.notificationStore.status.text
     }
 
     var notificationActionText: String {
-        self.notificationStatus.actionTitle
+        self.notificationStore.status.actionTitle
     }
 
     var notificationStatusDetail: String {
-        switch self.notificationStatus {
+        switch self.notificationStore.status {
         case .checking:
             "Checking iOS notification permission."
         case .allowed:
