@@ -546,4 +546,39 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayHost = ""
         }
     }
+
+    @Test func `settings gateway auto connect syncs persisted value`() async {
+        let store = TestStore(initialState: SettingsGatewayAutoConnectFeature.State()) {
+            SettingsGatewayAutoConnectFeature()
+        }
+
+        await store.send(.enabledSynced(true)) {
+            $0.isEnabled = true
+        }
+    }
+
+    @Test func `settings gateway auto connect records toggle changes`() async {
+        let store = TestStore(initialState: SettingsGatewayAutoConnectFeature.State()) {
+            SettingsGatewayAutoConnectFeature()
+        }
+
+        await store.send(.enabledChanged(true)) {
+            $0.isEnabled = true
+        }
+        await store.send(.enabledChanged(false)) {
+            $0.isEnabled = false
+        }
+    }
+
+    @Test func `settings gateway auto connect disables on onboarding reset`() async {
+        var initialState = SettingsGatewayAutoConnectFeature.State()
+        initialState.isEnabled = true
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewayAutoConnectFeature()
+        }
+
+        await store.send(.disabledForOnboardingReset) {
+            $0.isEnabled = false
+        }
+    }
 }

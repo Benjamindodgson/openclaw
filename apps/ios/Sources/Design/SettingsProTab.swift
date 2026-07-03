@@ -610,6 +610,42 @@ struct SettingsManualGatewayEndpointFeature {
     }
 }
 
+@Reducer
+struct SettingsGatewayAutoConnectFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var isEnabled = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case disabledForOnboardingReset
+        case enabledChanged(Bool)
+        case enabledSynced(Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .disabledForOnboardingReset:
+                state.isEnabled = false
+                return .none
+
+            case let .enabledChanged(enabled):
+                state.isEnabled = enabled
+                return .none
+
+            case let .enabledSynced(enabled):
+                state.isEnabled = enabled
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -632,7 +668,7 @@ struct SettingsProTab: View {
     @AppStorage(TalkDefaults.speakerphoneEnabledKey) var talkSpeakerphoneEnabled: Bool =
         TalkDefaults.speakerphoneEnabledByDefault
     @AppStorage(VoiceWakePreferences.enabledKey) var voiceWakeEnabled: Bool = false
-    @AppStorage("gateway.autoconnect") var gatewayAutoConnect: Bool = false
+    @AppStorage("gateway.autoconnect") var storedGatewayAutoConnect: Bool = false
     @AppStorage("gateway.manual.enabled") var storedManualGatewayEnabled: Bool = false
     @AppStorage("gateway.manual.host") var storedManualGatewayHost: String = ""
     @AppStorage("gateway.manual.port") var manualGatewayPort: Int = 18789
@@ -683,6 +719,12 @@ struct SettingsProTab: View {
         initialState: SettingsGatewayActivityFeature.State())
     {
         SettingsGatewayActivityFeature()
+    }
+
+    @State var gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature> = Store(
+        initialState: SettingsGatewayAutoConnectFeature.State())
+    {
+        SettingsGatewayAutoConnectFeature()
     }
 
     @State var gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
@@ -851,6 +893,9 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.setupCode) { _, newValue in
                 self.gatewaySetupLinkStore.send(.setupCodeChanged(newValue))
+            }
+            .onChange(of: self.storedGatewayAutoConnect) { _, newValue in
+                self.gatewayAutoConnectStore.send(.enabledSynced(newValue))
             }
             .onChange(of: self.shareInstructionStore.defaultShareInstruction) { _, newValue in
                 ShareToAgentSettings.saveDefaultInstruction(newValue)

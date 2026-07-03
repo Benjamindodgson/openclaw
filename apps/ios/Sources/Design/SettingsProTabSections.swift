@@ -834,7 +834,7 @@ extension SettingsProTab {
     var gatewayAdvancedCard: some View {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                self.settingsButtonToggle("Auto-connect on launch", isOn: self.$gatewayAutoConnect)
+                self.settingsButtonToggle("Auto-connect on launch", isOn: self.gatewayAutoConnectBinding)
                 SecureField("Gateway Auth Token", text: self.gatewayTokenBinding)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()

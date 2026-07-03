@@ -167,6 +167,7 @@ extension SettingsProTab {
 
     func syncSettingsState() {
         self.pushEnrollmentConsentStore.send(.refresh)
+        self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
         self.manualGatewayEndpointStore.send(.endpointSynced(
             enabled: self.storedManualGatewayEnabled,
             host: self.storedManualGatewayHost,
@@ -342,7 +343,7 @@ extension SettingsProTab {
         self.gatewayConnectionStore.send(.connectionFinished)
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
         self.setupCode = ""
-        self.gatewayAutoConnect = false
+        self.disableGatewayAutoConnectForOnboardingReset()
         self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
         GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
         self.onboardingComplete = false
@@ -526,6 +527,22 @@ extension SettingsProTab {
         Binding(
             get: { self.manualGatewayPortStore.manualGatewayPortText },
             set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged($0)) })
+    }
+
+    var gatewayAutoConnectBinding: Binding<Bool> {
+        Binding(
+            get: { self.gatewayAutoConnectStore.isEnabled },
+            set: { self.updateGatewayAutoConnect($0) })
+    }
+
+    func updateGatewayAutoConnect(_ enabled: Bool) {
+        self.gatewayAutoConnectStore.send(.enabledChanged(enabled))
+        self.storedGatewayAutoConnect = enabled
+    }
+
+    func disableGatewayAutoConnectForOnboardingReset() {
+        self.gatewayAutoConnectStore.send(.disabledForOnboardingReset)
+        self.storedGatewayAutoConnect = false
     }
 
     var manualGatewayEnabled: Bool {
