@@ -35,6 +35,7 @@ Sources/Design/IPadSidebarFeaturePreviews.swift
 Sources/Design/IPadSidebarFeatureScreens.swift
 Sources/Design/IPadSkillWorkshopScreen.swift
 Sources/Design/IPadSidebarScreenChrome.swift
+Sources/Design/IPadWorkboardFeature.swift
 Sources/Design/IPadWorkboardScreen.swift
 Sources/Design/OpenClawDocsScreen.swift
 Sources/Design/RootTabsPhoneControlHub.swift

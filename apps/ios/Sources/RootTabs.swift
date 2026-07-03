@@ -426,7 +426,8 @@ struct RootTabs: View {
             IPadWorkboardScreen(
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 openChat: { self.selectSidebarDestination(.chat) },
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                store: IPadWorkboardStoreFactory.live(appModel: self.appModel))
         case .skillWorkshop:
             IPadSkillWorkshopScreen(
                 headerLeadingAction: self.sidebarHeaderLeadingAction,

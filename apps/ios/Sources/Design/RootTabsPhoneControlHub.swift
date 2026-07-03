@@ -234,7 +234,8 @@ struct RootTabsPhoneControlHub: View {
             IPadWorkboardScreen(
                 headerLeadingAction: self.phoneDetailBackAction,
                 openChat: { self.openPhoneRootDestination(.chat) },
-                openSettings: { self.openPhoneRootDestination(.gateway) })
+                openSettings: { self.openPhoneRootDestination(.gateway) },
+                store: IPadWorkboardStoreFactory.live(appModel: self.appModel))
         case .skillWorkshop:
             IPadSkillWorkshopScreen(
                 headerLeadingAction: self.phoneDetailBackAction,

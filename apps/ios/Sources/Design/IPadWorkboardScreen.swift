@@ -2,157 +2,12 @@ import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 
-@Reducer
-struct IPadWorkboardPresentationFeature {
-    // swiftformat:disable redundantSendable
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var selectedStatus = "active"
-        var selectedBoardID = ""
-        var query = ""
-        var draftTitle = ""
-        var draftNotes = ""
-        var isCreatingCard = false
-        var errorText: String?
-        var presentedSheet: IPadWorkboardSheet?
-
-        var boardScopeLabel: String {
-            self.selectedBoardID.isEmpty ? "All boards" : IPadWorkboardScreen.boardScopeLabel(for: self.selectedBoardID)
-        }
-
-        var selectedBoardParam: String? {
-            let selected = IPadWorkboardScreen.normalizedScopeID(self.selectedBoardID)
-            return selected.isEmpty ? nil : selected
-        }
-
-        var trimmedDraftTitle: String {
-            self.draftTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        func createUnavailableMessage(canRead: Bool, canWrite: Bool) -> String? {
-            if self.isCreatingCard {
-                return "Card creation is already in progress."
-            }
-            if !canWrite {
-                return IPadWorkboardScreen.compactWriteUnavailableMessage(canRead: canRead)
-            }
-            if self.trimmedDraftTitle.isEmpty {
-                return "Enter a title to create a card."
-            }
-            return nil
-        }
-    }
-
-    enum Action: Equatable, Sendable {
-        case beginCreateCardTapped
-        case boardScopeChanged(String)
-        case cardSheetPresented(IPadWorkboardCard)
-        case clearQueryTapped
-        case createFailed(String)
-        case createStarted
-        case createSucceeded
-        case createValidationFailed(String)
-        case draftNotesChanged(String)
-        case draftTitleChanged(String)
-        case errorTextChanged(String?)
-        case queryChanged(String)
-        case sheetDismissed
-        case statusChanged(String)
-        case statusValidated([String])
-    }
-
-    // swiftformat:enable redundantSendable
-
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case .beginCreateCardTapped:
-                state.draftTitle = ""
-                state.draftNotes = ""
-                state.errorText = nil
-                state.presentedSheet = .create
-                return .none
-
-            case let .boardScopeChanged(boardID):
-                state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(boardID)
-                return .none
-
-            case let .cardSheetPresented(card):
-                state.presentedSheet = .card(card)
-                return .none
-
-            case .clearQueryTapped:
-                state.query = ""
-                return .none
-
-            case let .createFailed(message):
-                state.isCreatingCard = false
-                state.errorText = message
-                return .none
-
-            case .createStarted:
-                state.isCreatingCard = true
-                state.errorText = nil
-                return .none
-
-            case .createSucceeded:
-                state.isCreatingCard = false
-                state.draftTitle = ""
-                state.draftNotes = ""
-                state.presentedSheet = nil
-                return .none
-
-            case let .createValidationFailed(message):
-                state.errorText = message
-                return .none
-
-            case let .draftNotesChanged(notes):
-                state.draftNotes = notes
-                return .none
-
-            case let .draftTitleChanged(title):
-                state.draftTitle = title
-                return .none
-
-            case let .errorTextChanged(message):
-                state.errorText = message
-                return .none
-
-            case let .queryChanged(query):
-                state.query = query
-                return .none
-
-            case .sheetDismissed:
-                state.presentedSheet = nil
-                return .none
-
-            case let .statusChanged(status):
-                state.selectedStatus = status
-                return .none
-
-            case let .statusValidated(statuses):
-                if !statuses.contains(state.selectedStatus), state.selectedStatus != "active" {
-                    state.selectedStatus = "active"
-                }
-                return .none
-            }
-        }
-        .autoLogActions()
-    }
-}
-
 struct IPadWorkboardScreen: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @State private var cards: [IPadWorkboardCard] = []
-    @State private var statuses: [String] = IPadWorkboardDefaults.statuses
-    @State private var knownBoardIDs: [String] = []
-    @State private var isLoading = false
-    @State private var busyCardID: String?
-    @State private var dispatchSummaryText: String?
-    @State private var presentationStore: StoreOf<IPadWorkboardPresentationFeature>
+    @State private var store: StoreOf<IPadWorkboardFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let openChat: () -> Void
     let openSettings: () -> Void
@@ -161,16 +16,16 @@ struct IPadWorkboardScreen: View {
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         openChat: @escaping () -> Void,
         openSettings: @escaping () -> Void = {},
-        presentationStore: StoreOf<IPadWorkboardPresentationFeature> = Store(
-            initialState: IPadWorkboardPresentationFeature.State())
+        store: StoreOf<IPadWorkboardFeature> = Store(
+            initialState: IPadWorkboardFeature.State())
         {
-            IPadWorkboardPresentationFeature()
+            IPadWorkboardFeature()
         })
     {
         self.headerLeadingAction = headerLeadingAction
         self.openChat = openChat
         self.openSettings = openSettings
-        self._presentationStore = State(wrappedValue: presentationStore)
+        self._store = State(wrappedValue: store)
     }
 
     var body: some View {
@@ -204,8 +59,8 @@ struct IPadWorkboardScreen: View {
             case let .card(card):
                 IPadWorkboardCardDetailSheet(
                     card: card,
-                    statuses: self.statuses,
-                    isBusy: self.busyCardID == card.id,
+                    statuses: self.store.statuses,
+                    isBusy: self.store.busyCardID == card.id,
                     canWrite: self.canWrite,
                     openSession: { self.open(card) },
                     move: { status in Task { await self.move(card, to: status) } },
@@ -219,17 +74,17 @@ struct IPadWorkboardScreen: View {
             ProMetric(
                 icon: "tray.full",
                 title: "Cards",
-                value: "\(self.cards.count)",
+                value: "\(self.store.cards.count)",
                 color: OpenClawBrand.accent),
             ProMetric(
                 icon: "figure.run",
                 title: "Running",
-                value: "\(self.cards.count(where: { $0.status == "running" }))",
+                value: "\(self.store.cards.count(where: { $0.status == "running" }))",
                 color: OpenClawBrand.ok),
             ProMetric(
                 icon: "exclamationmark.triangle",
                 title: "Blocked",
-                value: "\(self.cards.count(where: { $0.status == "blocked" }))",
+                value: "\(self.store.cards.count(where: { $0.status == "blocked" }))",
                 color: OpenClawBrand.warn),
         ]
     }
@@ -246,9 +101,9 @@ struct IPadWorkboardScreen: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .font(.subheadline)
-                    if !self.presentationStore.query.isEmpty {
+                    if !self.store.query.isEmpty {
                         Button {
-                            self.presentationStore.send(.clearQueryTapped)
+                            self.store.send(.clearQueryTapped)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                         }
@@ -261,7 +116,7 @@ struct IPadWorkboardScreen: View {
                 } else {
                     Picker("Scope", selection: self.selectedStatusBinding) {
                         Text("Active").tag("active")
-                        ForEach(self.statuses, id: \.self) { status in
+                        ForEach(self.store.statuses, id: \.self) { status in
                             Text(IPadWorkboardDefaults.label(for: status)).tag(status)
                         }
                     }
@@ -280,7 +135,7 @@ struct IPadWorkboardScreen: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .disabled(!self.canWrite || self.isLoading)
+                    .disabled(!self.canWrite || self.store.isLoading)
 
                     Button {
                         Task { await self.loadCards(force: true) }
@@ -290,19 +145,19 @@ struct IPadWorkboardScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.isLoading)
+                    .disabled(self.store.isLoading)
 
-                    if self.isLoading {
+                    if self.store.isLoading {
                         ProgressView().controlSize(.small)
                     }
                 }
 
-                if let dispatchSummaryText {
+                if let dispatchSummaryText = self.store.dispatchSummaryText {
                     Text(dispatchSummaryText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
-                if let errorText = self.presentationStore.errorText {
+                if let errorText = self.store.errorText {
                     Text(errorText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
@@ -316,7 +171,7 @@ struct IPadWorkboardScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text("\(self.filteredCards.count) cards")
+                    Text("\(self.store.filteredCards.count) cards")
                         .font(.headline)
                     Spacer(minLength: 8)
                     self.compactRefreshButton
@@ -337,7 +192,7 @@ struct IPadWorkboardScreen: View {
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                        .disabled(self.isLoading)
+                        .disabled(self.store.isLoading)
                     }
                 } else {
                     Text(Self.compactWriteUnavailableMessage(canRead: self.canRead))
@@ -346,12 +201,12 @@ struct IPadWorkboardScreen: View {
                         .lineLimit(2)
                 }
 
-                if let dispatchSummaryText {
+                if let dispatchSummaryText = self.store.dispatchSummaryText {
                     Text(dispatchSummaryText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
-                if let errorText = self.presentationStore.errorText {
+                if let errorText = self.store.errorText {
                     Text(errorText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
@@ -372,7 +227,7 @@ struct IPadWorkboardScreen: View {
         .buttonStyle(.plain)
         .foregroundStyle(self.neutralControlTint)
         .accessibilityLabel("Refresh workboard")
-        .disabled(self.isLoading)
+        .disabled(self.store.isLoading)
     }
 
     private func newCardButton(expands: Bool) -> some View {
@@ -384,18 +239,18 @@ struct IPadWorkboardScreen: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)
-        .disabled(self.presentationStore.isCreatingCard)
+        .disabled(self.store.isCreatingCard)
         .accessibilityHint("Opens card title and notes entry")
     }
 
     private var compactBoardScopeMenu: some View {
         Menu {
             Button("All boards") {
-                self.presentationStore.send(.boardScopeChanged(""))
+                self.store.send(.boardScopeChanged(""))
             }
             ForEach(self.boardScopeOptions, id: \.self) { boardID in
                 Button(Self.boardScopeLabel(for: boardID)) {
-                    self.presentationStore.send(.boardScopeChanged(boardID))
+                    self.store.send(.boardScopeChanged(boardID))
                 }
             }
         } label: {
@@ -426,7 +281,7 @@ struct IPadWorkboardScreen: View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
                 self.compactStatusChip("active")
-                ForEach(self.compactStatuses, id: \.self) { status in
+                ForEach(self.store.compactStatuses, id: \.self) { status in
                     self.compactStatusChip(status)
                 }
             }
@@ -445,7 +300,7 @@ struct IPadWorkboardScreen: View {
 
     private func compactStatusChip(_ status: String) -> some View {
         Button {
-            self.presentationStore.send(.statusChanged(status))
+            self.store.send(.statusChanged(status))
         } label: {
             Text(IPadWorkboardDefaults.label(for: status))
                 .font(.caption2.weight(.semibold))
@@ -453,21 +308,21 @@ struct IPadWorkboardScreen: View {
                 .padding(.horizontal, 10)
                 .frame(height: 30)
                 .background(
-                    self.presentationStore.selectedStatus == status
+                    self.store.selectedStatus == status
                         ? OpenClawBrand.accent.opacity(0.12)
                         : Color.primary.opacity(0.06),
                     in: Capsule())
                 .overlay {
                     Capsule()
                         .strokeBorder(
-                            self.presentationStore.selectedStatus == status
+                            self.store.selectedStatus == status
                                 ? OpenClawBrand.accent.opacity(0.42)
                                 : Color.primary.opacity(0.08),
                             lineWidth: 1)
                 }
         }
         .buttonStyle(.plain)
-        .foregroundStyle(self.presentationStore.selectedStatus == status ? OpenClawBrand.accent : .primary)
+        .foregroundStyle(self.store.selectedStatus == status ? OpenClawBrand.accent : .primary)
         .accessibilityLabel("Show \(IPadWorkboardDefaults.label(for: status)) cards")
     }
 
@@ -478,11 +333,11 @@ struct IPadWorkboardScreen: View {
                 .foregroundStyle(.secondary)
             Menu {
                 Button("All boards") {
-                    self.presentationStore.send(.boardScopeChanged(""))
+                    self.store.send(.boardScopeChanged(""))
                 }
                 ForEach(self.boardScopeOptions, id: \.self) { boardID in
                     Button(Self.boardScopeLabel(for: boardID)) {
-                        self.presentationStore.send(.boardScopeChanged(boardID))
+                        self.store.send(.boardScopeChanged(boardID))
                     }
                 }
             } label: {
@@ -509,16 +364,16 @@ struct IPadWorkboardScreen: View {
                 .foregroundStyle(.secondary)
             Menu {
                 Button("Active") {
-                    self.presentationStore.send(.statusChanged("active"))
+                    self.store.send(.statusChanged("active"))
                 }
-                ForEach(self.statuses, id: \.self) { status in
+                ForEach(self.store.statuses, id: \.self) { status in
                     Button(IPadWorkboardDefaults.label(for: status)) {
-                        self.presentationStore.send(.statusChanged(status))
+                        self.store.send(.statusChanged(status))
                     }
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text(IPadWorkboardDefaults.label(for: self.presentationStore.selectedStatus))
+                    Text(IPadWorkboardDefaults.label(for: self.store.selectedStatus))
                         .font(.subheadline.weight(.semibold))
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2.weight(.bold))
@@ -533,36 +388,36 @@ struct IPadWorkboardScreen: View {
 
     private var draftNotesBinding: Binding<String> {
         Binding(
-            get: { self.presentationStore.draftNotes },
-            set: { self.presentationStore.send(.draftNotesChanged($0)) })
+            get: { self.store.draftNotes },
+            set: { self.store.send(.draftNotesChanged($0)) })
     }
 
     private var draftTitleBinding: Binding<String> {
         Binding(
-            get: { self.presentationStore.draftTitle },
-            set: { self.presentationStore.send(.draftTitleChanged($0)) })
+            get: { self.store.draftTitle },
+            set: { self.store.send(.draftTitleChanged($0)) })
     }
 
     private var presentedSheetBinding: Binding<IPadWorkboardSheet?> {
         Binding(
-            get: { self.presentationStore.presentedSheet },
+            get: { self.store.presentedSheet },
             set: { sheet in
                 if sheet == nil {
-                    self.presentationStore.send(.sheetDismissed)
+                    self.store.send(.sheetDismissed)
                 }
             })
     }
 
     private var queryBinding: Binding<String> {
         Binding(
-            get: { self.presentationStore.query },
-            set: { self.presentationStore.send(.queryChanged($0)) })
+            get: { self.store.query },
+            set: { self.store.send(.queryChanged($0)) })
     }
 
     private var selectedStatusBinding: Binding<String> {
         Binding(
-            get: { self.presentationStore.selectedStatus },
-            set: { self.presentationStore.send(.statusChanged($0)) })
+            get: { self.store.selectedStatus },
+            set: { self.store.send(.statusChanged($0)) })
     }
 
     private var neutralControlTint: Color {
@@ -572,17 +427,17 @@ struct IPadWorkboardScreen: View {
     private var kanbanBoard: some View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
-                ForEach(self.visibleKanbanStatuses, id: \.self) { status in
+                ForEach(self.store.visibleKanbanStatuses, id: \.self) { status in
                     IPadWorkboardKanbanColumn(
                         status: status,
                         cards: self.cards(forKanbanStatus: status),
-                        statuses: self.statuses,
-                        busyCardID: self.busyCardID,
+                        statuses: self.store.statuses,
+                        busyCardID: self.store.busyCardID,
                         openSession: { card in
                             self.open(card)
                         },
                         inspect: { card in
-                            self.presentationStore.send(.cardSheetPresented(card))
+                            self.store.send(.cardSheetPresented(card))
                         },
                         move: { card, status in
                             Task { await self.move(card, to: status) }
@@ -604,10 +459,10 @@ struct IPadWorkboardScreen: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: "Queue",
-                    value: "\(self.filteredCards.count)",
+                    value: "\(self.store.filteredCards.count)",
                     actionTitle: nil,
                     action: nil)
-                if self.filteredCards.isEmpty {
+                if self.store.filteredCards.isEmpty {
                     ProStatusRow(
                         icon: self.canRead ? "tray" : "wifi.slash",
                         title: self.canRead ? "No cards" : "No cards loaded",
@@ -619,16 +474,16 @@ struct IPadWorkboardScreen: View {
                         actionTitle: nil,
                         action: nil)
                 } else {
-                    ForEach(Array(self.filteredCards.enumerated()), id: \.element.id) { index, card in
+                    ForEach(Array(self.store.filteredCards.enumerated()), id: \.element.id) { index, card in
                         if index > 0 {
                             Divider().padding(.leading, 58)
                         }
                         IPadWorkboardQueueRow(
                             card: card,
-                            statuses: self.statuses,
-                            isBusy: self.busyCardID == card.id,
+                            statuses: self.store.statuses,
+                            isBusy: self.store.busyCardID == card.id,
                             inspect: {
-                                self.presentationStore.send(.cardSheetPresented(card))
+                                self.store.send(.cardSheetPresented(card))
                             },
                             openSession: {
                                 self.open(card)
@@ -656,7 +511,7 @@ struct IPadWorkboardScreen: View {
                     .lineLimit(3...6)
                     .textInputAutocapitalization(.sentences)
             }
-            if let errorText = self.presentationStore.errorText {
+            if let errorText = self.store.errorText {
                 Section {
                     Text(errorText)
                         .foregroundStyle(OpenClawBrand.warn)
@@ -668,7 +523,7 @@ struct IPadWorkboardScreen: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
-                    self.presentationStore.send(.sheetDismissed)
+                    self.store.send(.sheetDismissed)
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
@@ -677,9 +532,9 @@ struct IPadWorkboardScreen: View {
                         await self.createCard()
                     }
                 } label: {
-                    Text(self.presentationStore.isCreatingCard ? "Creating..." : "Create")
+                    Text(self.store.isCreatingCard ? "Creating..." : "Create")
                 }
-                .disabled(self.presentationStore.isCreatingCard)
+                .disabled(self.store.isCreatingCard)
                 .accessibilityHint(self.createUnavailableMessage ?? "Creates a workboard card")
             }
         }
@@ -689,7 +544,7 @@ struct IPadWorkboardScreen: View {
         [
             self.canRead ? "connected" : "offline",
             self.scenePhase == .active ? "active" : "inactive",
-            self.presentationStore.selectedBoardID.isEmpty ? "all" : self.presentationStore.selectedBoardID,
+            self.store.selectedBoardID.isEmpty ? "all" : self.store.selectedBoardID,
         ].joined(separator: ":")
     }
 
@@ -705,38 +560,23 @@ struct IPadWorkboardScreen: View {
     private var currentWorkboardSubtitle: String {
         Self.workboardSubtitle(
             boardScopeLabel: self.boardScopeLabel,
-            selectedStatus: self.presentationStore.selectedStatus)
+            selectedStatus: self.store.selectedStatus)
     }
 
     private var boardScopeOptions: [String] {
-        Self.boardScopeOptions(
-            knownBoardIDs: self.knownBoardIDs,
-            cardBoardIDs: self.cards.map { self.boardID(for: $0) })
+        self.store.boardScopeOptions
     }
 
     private var boardScopeLabel: String {
-        self.presentationStore.boardScopeLabel
-    }
-
-    private var selectedBoardParam: String? {
-        self.presentationStore.selectedBoardParam
-    }
-
-    private var trimmedDraftTitle: String {
-        self.presentationStore.trimmedDraftTitle
+        self.store.boardScopeLabel
     }
 
     private var createUnavailableMessage: String? {
-        if self.presentationStore.isCreatingCard {
-            return "Card creation is already in progress."
-        }
-        if !self.canWrite {
-            return Self.compactWriteUnavailableMessage(canRead: self.canRead)
-        }
-        if self.presentationStore.trimmedDraftTitle.isEmpty {
-            return "Enter a title to create a card."
-        }
-        return nil
+        IPadWorkboardFeature.State.createUnavailableMessage(
+            isCreatingCard: self.store.isCreatingCard,
+            trimmedDraftTitle: self.store.trimmedDraftTitle,
+            canRead: self.canRead,
+            canWrite: self.canWrite)
     }
 
     private var isCompactWidth: Bool {
@@ -765,281 +605,57 @@ struct IPadWorkboardScreen: View {
             .sorted()
     }
 
-    private var visibleKanbanStatuses: [String] {
-        if self.presentationStore.selectedStatus == "active" {
-            return self.statuses.filter { $0 != "done" }
-        }
-        if self.statuses.contains(self.presentationStore.selectedStatus) {
-            return [self.presentationStore.selectedStatus]
-        }
-        return self.statuses
-    }
-
-    private var compactStatuses: [String] {
-        let preferred = ["todo", "ready", "running", "review", "blocked", "scheduled", "done"]
-        let known = preferred.filter { self.statuses.contains($0) }
-        let custom = self.statuses.filter { !preferred.contains($0) }
-        return known + custom
-    }
-
     private func cards(forKanbanStatus status: String) -> [IPadWorkboardCard] {
-        self.cards
-            .filter { card in
-                card
-                    .status == status &&
-                    (self.presentationStore.selectedStatus != "active" || card.metadata?.archivedAt == nil)
-            }
-            .filter { self.matchesQuery($0) }
-            .sorted { $0.position < $1.position }
-    }
-
-    private var filteredCards: [IPadWorkboardCard] {
-        self.cards
-            .filter { card in
-                if self.presentationStore.selectedStatus == "active" {
-                    return card.metadata?.archivedAt == nil && card.status != "done"
-                }
-                return card.status == self.presentationStore.selectedStatus
-            }
-            .filter { self.matchesQuery($0) }
-            .sorted { left, right in
-                if left.status != right.status {
-                    return IPadWorkboardDefaults.rank(left.status) < IPadWorkboardDefaults.rank(right.status)
-                }
-                return left.position < right.position
-            }
-    }
-
-    private func matchesQuery(_ card: IPadWorkboardCard) -> Bool {
-        let trimmedQuery = self.presentationStore.query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !trimmedQuery.isEmpty else { return true }
-        return [
-            card.title,
-            card.notes,
-            card.agentId,
-            card.sessionKey,
-            card.labels.joined(separator: " "),
-        ]
-            .compactMap(\.self)
-            .joined(separator: " ")
-            .lowercased()
-            .contains(trimmedQuery)
+        IPadWorkboardFeature.State.cardsForKanbanStatus(
+            cards: self.store.cards,
+            status: status,
+            selectedStatus: self.store.selectedStatus,
+            query: self.store.query)
     }
 
     private func loadCards(force: Bool) async {
-        guard self.scenePhase == .active else { return }
-        guard self.canRead else {
-            self.cards = []
-            self.presentationStore.send(.errorTextChanged(nil))
-            return
-        }
-        if self.isLoading { return }
-
-        self.isLoading = true
-        self.presentationStore.send(.errorTextChanged(nil))
-        defer { self.isLoading = false }
-
-        self.presentationStore.send(.statusValidated(self.statuses))
-
-        do {
-            try await self.applyCardsResponse(self.fetchCards())
-            await self.loadBoardScopes(force: force)
-        } catch {
-            if force || self.cards.isEmpty {
-                self.presentationStore.send(.errorTextChanged(Self.message(for: error)))
-            }
-        }
+        await self.store.send(.refreshRequested(
+            sceneActive: self.scenePhase == .active,
+            canRead: self.canRead,
+            force: force)).finish()
     }
 
     private func beginCreateCard() {
-        self.presentationStore.send(.beginCreateCardTapped)
+        self.store.send(.beginCreateCardTapped)
     }
 
     private func createCard() async {
-        if let createUnavailableMessage {
-            self.presentationStore.send(.createValidationFailed(createUnavailableMessage))
-            return
-        }
-
-        self.presentationStore.send(.createStarted)
-
-        do {
-            let status = self.statuses.contains(self.presentationStore.selectedStatus) ? self.presentationStore
-                .selectedStatus : "todo"
-            let data = try await request(
-                method: "workboard.cards.create",
-                params: IPadWorkboardCreateParams(
-                    title: trimmedDraftTitle,
-                    notes: self.presentationStore.draftNotes.trimmingCharacters(in: .whitespacesAndNewlines),
-                    status: status,
-                    priority: "normal",
-                    labels: [],
-                    agentId: "",
-                    sessionKey: nil,
-                    position: self.nextPosition(for: status),
-                    boardId: self.selectedBoardParam),
-                timeoutSeconds: 20)
-            try self.replace(Self.decodeCardResponse(data))
-            self.presentationStore.send(.createSucceeded)
-        } catch {
-            self.presentationStore.send(.createFailed(Self.message(for: error)))
-        }
+        await self.store.send(.createRequested(canRead: self.canRead, canWrite: self.canWrite)).finish()
     }
 
     private func move(_ card: IPadWorkboardCard, to status: String) async {
-        guard self.canWrite, self.busyCardID == nil else { return }
-        self.busyCardID = card.id
-        self.presentationStore.send(.errorTextChanged(nil))
-        defer { self.busyCardID = nil }
-
-        do {
-            let data = try await request(
-                method: "workboard.cards.move",
-                params: IPadWorkboardMoveParams(
-                    id: card.id,
-                    status: status,
-                    position: self.nextPosition(for: status, excluding: card.id)),
-                timeoutSeconds: 20)
-            try self.replace(Self.decodeCardResponse(data))
-        } catch {
-            self.presentationStore.send(.errorTextChanged(Self.message(for: error)))
-        }
+        await self.store.send(.moveRequested(card, status: status, canWrite: self.canWrite)).finish()
     }
 
     private func archive(_ card: IPadWorkboardCard) async {
-        guard self.canWrite, self.busyCardID == nil else { return }
-        self.busyCardID = card.id
-        self.presentationStore.send(.errorTextChanged(nil))
-        defer { self.busyCardID = nil }
-
-        do {
-            let data = try await request(
-                method: "workboard.cards.archive",
-                params: IPadWorkboardArchiveParams(
-                    id: card.id,
-                    archived: card.metadata?.archivedAt == nil),
-                timeoutSeconds: 20)
-            try self.replace(Self.decodeCardResponse(data))
-        } catch {
-            self.presentationStore.send(.errorTextChanged(Self.message(for: error)))
-        }
+        await self.store.send(.archiveRequested(card, canWrite: self.canWrite)).finish()
     }
 
     private func dispatchCards() async {
-        guard self.canWrite, !self.isLoading else { return }
-        self.isLoading = true
-        self.presentationStore.send(.errorTextChanged(nil))
-        self.dispatchSummaryText = nil
-        defer { self.isLoading = false }
-
-        do {
-            let data = try await request(
-                method: "workboard.cards.dispatch",
-                params: IPadWorkboardListParams(boardId: selectedBoardParam),
-                timeoutSeconds: 45)
-            self.dispatchSummaryText = try JSONDecoder()
-                .decode(IPadWorkboardDispatchSummary.self, from: data)
-                .summaryText
-            try await self.applyCardsResponse(self.fetchCards())
-        } catch {
-            self.presentationStore.send(.errorTextChanged(Self.message(for: error)))
-        }
+        await self.store.send(.dispatchRequested(canWrite: self.canWrite)).finish()
     }
 
     private func open(_ card: IPadWorkboardCard) {
-        guard let sessionKey = normalized(card.sessionKey) else { return }
+        guard let sessionKey = Self.normalized(card.sessionKey) else { return }
         self.appModel.openChat(sessionKey: sessionKey)
         self.openChat()
     }
 
-    private func replace(_ card: IPadWorkboardCard) {
-        self.cards.removeAll { $0.id == card.id }
-        self.cards.append(card)
-        self.cards.sort { $0.position < $1.position }
-    }
-
-    private func fetchCards() async throws -> IPadWorkboardCardsResponse {
-        let data = try await request(
-            method: "workboard.cards.list",
-            params: IPadWorkboardListParams(boardId: selectedBoardParam),
-            timeoutSeconds: 20)
-        return try JSONDecoder().decode(IPadWorkboardCardsResponse.self, from: data)
-    }
-
-    private func applyCardsResponse(_ response: IPadWorkboardCardsResponse) {
-        self.cards = response.cards.sorted { $0.position < $1.position }
-        self.statuses = self.normalizedStatuses(response.statuses)
-        self.rememberBoardIDs(from: response.cards)
-    }
-
-    private func loadBoardScopes(force: Bool) async {
-        do {
-            let data = try await request(
-                method: "workboard.boards.list",
-                params: EmptyParams(),
-                timeoutSeconds: 20)
-            let response = try JSONDecoder().decode(IPadWorkboardBoardsResponse.self, from: data)
-            self.rememberBoardIDs(from: response.boards)
-        } catch {
-            if force, self.knownBoardIDs.isEmpty {
-                self.presentationStore.send(.errorTextChanged(Self.message(for: error)))
-            }
-        }
-    }
-
-    private func request(method: String, params: some Encodable, timeoutSeconds: Int) async throws -> Data {
-        guard self.canRead else { throw IPadSidebarGatewayError.offline }
-        let data = try JSONEncoder().encode(params)
-        guard let json = String(data: data, encoding: .utf8) else {
-            throw IPadSidebarGatewayError.invalidPayload
-        }
-        return try await self.appModel.operatorSession.request(
-            method: method,
-            paramsJSON: json,
-            timeoutSeconds: timeoutSeconds)
-    }
-
-    private func normalizedStatuses(_ statuses: [String]?) -> [String] {
-        let normalized = (statuses ?? [])
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        return normalized.isEmpty ? IPadWorkboardDefaults.statuses : normalized
-    }
-
-    private func nextPosition(for status: String, excluding cardID: String? = nil) -> Double {
-        let maxPosition = self.cards
-            .filter { $0.status == status && $0.id != cardID }
-            .map(\.position)
-            .max() ?? 0
-        return maxPosition + 1000
-    }
-
-    private static func decodeCardResponse(_ data: Data) throws -> IPadWorkboardCard {
-        try JSONDecoder().decode(IPadWorkboardCardResponse.self, from: data).card
-    }
-
-    private func normalized(_ value: String?) -> String? {
+    private static func normalized(_ value: String?) -> String? {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }
 
-    private func boardID(for card: IPadWorkboardCard) -> String {
-        Self.normalizedScopeID(card.metadata?.automation?.boardId).isEmpty
+    nonisolated static func boardID(for card: IPadWorkboardCard) -> String {
+        self.normalizedScopeID(card.metadata?.automation?.boardId).isEmpty
             ? "default"
-            : Self.normalizedScopeID(card.metadata?.automation?.boardId)
-    }
-
-    private func rememberBoardIDs(from cards: [IPadWorkboardCard]) {
-        let discovered = cards.map { self.boardID(for: $0) }
-        self.knownBoardIDs = Array(Set(self.knownBoardIDs + discovered)).sorted()
-    }
-
-    private func rememberBoardIDs(from boards: [IPadWorkboardBoardSummary]) {
-        let discovered = boards.map(\.id)
-        self.knownBoardIDs = Self.boardScopeOptions(
-            knownBoardIDs: self.knownBoardIDs,
-            cardBoardIDs: discovered)
+            : self.normalizedScopeID(card.metadata?.automation?.boardId)
     }
 
     nonisolated static func normalizedScopeID(_ value: String?) -> String {
@@ -1049,13 +665,6 @@ struct IPadWorkboardScreen: View {
     nonisolated static func boardScopeLabel(for boardID: String) -> String {
         let normalized = self.normalizedScopeID(boardID)
         return normalized.isEmpty ? "All boards" : normalized
-    }
-
-    private static func message(for error: Error) -> String {
-        if let gatewayError = error as? IPadSidebarGatewayError {
-            return gatewayError.message
-        }
-        return error.localizedDescription
     }
 }
 
@@ -1409,7 +1018,7 @@ enum IPadWorkboardSheet: Equatable, Identifiable, Sendable {
     }
 }
 
-private enum IPadWorkboardDefaults {
+enum IPadWorkboardDefaults {
     static let statuses = ["todo", "scheduled", "ready", "running", "review", "blocked", "done"]
 
     static func label(for status: String) -> String {
@@ -1425,20 +1034,20 @@ private enum IPadWorkboardDefaults {
     }
 }
 
-private struct IPadWorkboardCardsResponse: Decodable {
+struct IPadWorkboardCardsResponse: Decodable, Equatable, Sendable {
     let cards: [IPadWorkboardCard]
     let statuses: [String]?
 }
 
-private struct IPadWorkboardCardResponse: Decodable {
+struct IPadWorkboardCardResponse: Decodable, Equatable, Sendable {
     let card: IPadWorkboardCard
 }
 
-private struct IPadWorkboardBoardsResponse: Decodable {
+struct IPadWorkboardBoardsResponse: Decodable, Equatable, Sendable {
     let boards: [IPadWorkboardBoardSummary]
 }
 
-private struct IPadWorkboardBoardSummary: Decodable {
+struct IPadWorkboardBoardSummary: Decodable, Equatable, Sendable {
     let id: String
 }
 
@@ -1465,11 +1074,11 @@ struct IPadWorkboardAutomationMetadata: Decodable, Equatable, Sendable {
     let boardId: String?
 }
 
-private struct IPadWorkboardListParams: Encodable {
+struct IPadWorkboardListParams: Encodable, Equatable, Sendable {
     let boardId: String?
 }
 
-private struct IPadWorkboardCreateParams: Encodable {
+struct IPadWorkboardCreateParams: Encodable, Equatable, Sendable {
     let title: String
     let notes: String
     let status: String
@@ -1481,18 +1090,18 @@ private struct IPadWorkboardCreateParams: Encodable {
     let boardId: String?
 }
 
-private struct IPadWorkboardMoveParams: Encodable {
+struct IPadWorkboardMoveParams: Encodable, Equatable, Sendable {
     let id: String
     let status: String
     let position: Double
 }
 
-private struct IPadWorkboardArchiveParams: Encodable {
+struct IPadWorkboardArchiveParams: Encodable, Equatable, Sendable {
     let id: String
     let archived: Bool
 }
 
-struct IPadWorkboardDispatchSummary: Decodable {
+struct IPadWorkboardDispatchSummary: Decodable, Equatable, Sendable {
     private let startedCount: Int
     private let startFailureCount: Int
     private let promotedCount: Int
@@ -1509,6 +1118,24 @@ struct IPadWorkboardDispatchSummary: Decodable {
         case reclaimed
         case orchestrated
         case count
+    }
+
+    init(
+        startedCount: Int = 0,
+        startFailureCount: Int = 0,
+        promotedCount: Int = 0,
+        blockedCount: Int = 0,
+        reclaimedCount: Int = 0,
+        orchestratedCount: Int = 0,
+        dispatchCount: Int = 0)
+    {
+        self.startedCount = startedCount
+        self.startFailureCount = startFailureCount
+        self.promotedCount = promotedCount
+        self.blockedCount = blockedCount
+        self.reclaimedCount = reclaimedCount
+        self.orchestratedCount = orchestratedCount
+        self.dispatchCount = dispatchCount
     }
 
     init(from decoder: Decoder) throws {
@@ -1557,6 +1184,6 @@ struct IPadWorkboardDispatchSummary: Decodable {
     }
 }
 
-private struct IPadWorkboardDispatchEntry: Decodable {}
+private struct IPadWorkboardDispatchEntry: Decodable, Equatable, Sendable {}
 
 // swiftformat:enable redundantSendable
