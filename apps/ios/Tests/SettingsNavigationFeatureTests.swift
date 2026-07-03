@@ -140,6 +140,19 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings diagnostics summarize run state`() {
+        var state = SettingsDiagnosticsFeature.State()
+
+        #expect(state.detailText == "System checks")
+        #expect(state.runValue == "pending")
+
+        state.issueCount = 0
+        #expect(state.runValue == "pass")
+
+        state.issueCount = 3
+        #expect(state.runValue == "3")
+    }
+
     @Test func `settings appearance syncs persisted preference`() async {
         let store = TestStore(initialState: SettingsAppearanceFeature.State()) {
             SettingsAppearanceFeature()
