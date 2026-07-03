@@ -229,6 +229,32 @@ struct SettingsGatewayConnectionFeature {
 }
 
 @Reducer
+struct SettingsGatewaySetupStatusFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var statusText: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case statusChanged(String?)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .statusChanged(statusText):
+                state.statusText = statusText
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct SettingsLocationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -467,7 +493,6 @@ struct SettingsProTab: View {
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
     @State var gatewayToken = ""
     @State var gatewayPassword = ""
-    @State var setupStatusText: String?
     @State var stagedGatewaySetupLink: GatewayConnectDeepLink?
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State var suppressCredentialPersist = false
@@ -511,6 +536,12 @@ struct SettingsProTab: View {
         initialState: SettingsGatewayConnectionFeature.State())
     {
         SettingsGatewayConnectionFeature()
+    }
+
+    @State var gatewaySetupStatusStore: StoreOf<SettingsGatewaySetupStatusFeature> = Store(
+        initialState: SettingsGatewaySetupStatusFeature.State())
+    {
+        SettingsGatewaySetupStatusFeature()
     }
 
     @State var locationStore: StoreOf<SettingsLocationFeature> = Store(
@@ -703,7 +734,7 @@ struct SettingsProTab: View {
                         },
                         onError: { error in
                             self.presentationStore.send(.qrScannerErrorReceived(error))
-                            self.setupStatusText = "Scanner error: \(error)"
+                            self.gatewaySetupStatusStore.send(.statusChanged("Scanner error: \(error)"))
                         },
                         onDismiss: {
                             self.presentationStore.send(.qrScannerDismissed)
@@ -767,6 +798,10 @@ struct SettingsProTab: View {
 extension SettingsProTab {
     var connectingGatewayID: String? {
         self.gatewayConnectionStore.connectingGatewayID
+    }
+
+    var setupStatusText: String? {
+        self.gatewaySetupStatusStore.statusText
     }
 
     var defaultShareInstructionBinding: Binding<String> {
