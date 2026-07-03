@@ -9,6 +9,7 @@ struct RootTabsPhoneControlHubFeature {
     struct State: Equatable, Sendable {
         var navigationPath: [RootTabs.SidebarDestination] = []
         var didApplyInitialDestination = false
+        var presentation = RootTabsPhoneControlHubPresentationState()
     }
 
     enum Action: Equatable, Sendable {
@@ -16,6 +17,7 @@ struct RootTabsPhoneControlHubFeature {
         case detailDestinationTapped(RootTabs.SidebarDestination)
         case initialDestinationAppeared(destination: RootTabs.SidebarDestination?, opensRootTab: Bool)
         case navigationPathChanged([RootTabs.SidebarDestination])
+        case presentationChanged(RootTabsPhoneControlHubPresentationState)
         case rootDestinationTapped(RootTabs.SidebarDestination)
     }
 
@@ -46,6 +48,10 @@ struct RootTabsPhoneControlHubFeature {
 
             case let .navigationPathChanged(navigationPath):
                 state.navigationPath = navigationPath
+                return .none
+
+            case let .presentationChanged(presentation):
+                state.presentation = presentation
                 return .none
 
             case .rootDestinationTapped:
@@ -105,7 +111,11 @@ struct RootTabsPhoneControlHub: View {
                     .toolbar(.hidden, for: .navigationBar)
             }
             .onAppear {
+                self.syncPresentationSnapshot()
                 self.applyInitialDestinationIfNeeded()
+            }
+            .onChange(of: self.currentPresentation) { _, _ in
+                self.syncPresentationSnapshot()
             }
         }
     }
@@ -117,7 +127,8 @@ struct RootTabsPhoneControlHub: View {
     }
 
     private var headerCard: some View {
-        ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
+        let presentation = self.store.presentation
+        return ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             Button {
                 self.openPhoneRootDestination(.gateway)
             } label: {
@@ -126,11 +137,11 @@ struct RootTabsPhoneControlHub: View {
                         size: self.isCompactHeight ? 28 : 34,
                         shadowRadius: self.isCompactHeight ? 3 : 5)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(self.sidebarActiveAgentTitle)
+                        Text(presentation.activeAgentTitle)
                             .font(.headline)
                             .foregroundStyle(.primary)
                             .lineLimit(1)
-                        Text(self.gatewayDisplayLabel)
+                        Text(presentation.gatewayDisplayLabel)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -138,10 +149,10 @@ struct RootTabsPhoneControlHub: View {
                     }
                     Spacer(minLength: 8)
                     HStack(spacing: 7) {
-                        ProStatusDot(color: self.gatewayStateColor)
-                        Text(self.gatewayStateText)
+                        ProStatusDot(color: presentation.gatewayStateColor)
+                        Text(presentation.gatewayStateText)
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(self.gatewayStateColor)
+                            .foregroundStyle(presentation.gatewayStateColor)
                         Image(systemName: "chevron.right")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
@@ -151,7 +162,7 @@ struct RootTabsPhoneControlHub: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Gateway \(self.gatewayStateText)")
+            .accessibilityLabel("Gateway \(presentation.gatewayStateText)")
             .accessibilityHint("Opens Settings / Gateway")
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
@@ -316,40 +327,22 @@ struct RootTabsPhoneControlHub: View {
         }
     }
 
-    private var sidebarActiveAgentTitle: String {
-        let selectedID = self.normalized(self.appModel.selectedAgentId) ?? self.resolveDefaultAgentID()
-        if let agent = self.appModel.gatewayAgents.first(where: { $0.id == selectedID }) {
-            return self.agentTitle(for: agent)
-        }
-        return self.normalized(self.appModel.activeAgentName) ?? "Default Agent"
+    private var currentPresentation: RootTabsPhoneControlHubPresentationState {
+        RootTabsPhoneControlHubPresentationState(
+            gatewayDisplayState: GatewayStatusBuilder.build(appModel: self.appModel),
+            gatewayServerName: self.appModel.gatewayServerName,
+            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress,
+            gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
+            selectedAgentId: self.appModel.selectedAgentId,
+            gatewayDefaultAgentId: self.appModel.gatewayDefaultAgentId,
+            gatewayAgents: self.appModel.gatewayAgents.map(RootTabsPhoneControlHubAgent.init),
+            activeAgentName: self.appModel.activeAgentName)
     }
 
-    private var gatewayDisplayLabel: String {
-        self.normalized(self.appModel.gatewayServerName)
-            ?? self.normalized(self.appModel.gatewayRemoteAddress)
-            ?? self.appModel.gatewayDisplayStatusText
-    }
-
-    private var gatewayStateText: String {
-        switch GatewayStatusBuilder.build(appModel: self.appModel) {
-        case .connected: "Online"
-        case .connecting: "Connecting"
-        case .error: "Attention"
-        case .disconnected: "Offline"
-        }
-    }
-
-    private var gatewayStateColor: Color {
-        switch GatewayStatusBuilder.build(appModel: self.appModel) {
-        case .connected:
-            OpenClawBrand.ok
-        case .connecting:
-            OpenClawBrand.accent
-        case .error:
-            OpenClawBrand.warn
-        case .disconnected:
-            .secondary
-        }
+    private func syncPresentationSnapshot() {
+        let presentation = self.currentPresentation
+        guard self.store.presentation != presentation else { return }
+        self.store.send(.presentationChanged(presentation))
     }
 
     private var isCompactHeight: Bool {
@@ -363,20 +356,79 @@ struct RootTabsPhoneControlHub: View {
     static func bottomScrollInset(verticalSizeClass: UserInterfaceSizeClass?) -> CGFloat {
         verticalSizeClass == .compact ? 72 : 112
     }
+}
 
-    private func resolveDefaultAgentID() -> String {
-        self.normalized(self.appModel.gatewayDefaultAgentId) ?? ""
+struct RootTabsPhoneControlHubPresentationState: Equatable {
+    var gatewayDisplayState: GatewayDisplayState = .disconnected
+    var gatewayServerName: String?
+    var gatewayRemoteAddress: String?
+    var gatewayDisplayStatusText = "Offline"
+    var selectedAgentId: String?
+    var gatewayDefaultAgentId: String?
+    var gatewayAgents: [RootTabsPhoneControlHubAgent] = []
+    var activeAgentName = "Default Agent"
+
+    var activeAgentTitle: String {
+        let selectedID = Self.normalized(self.selectedAgentId)
+            ?? Self.normalized(self.gatewayDefaultAgentId)
+            ?? ""
+        if let agent = self.gatewayAgents.first(where: { $0.id == selectedID }) {
+            return self.agentTitle(for: agent)
+        }
+        return Self.normalized(self.activeAgentName) ?? "Default Agent"
     }
 
-    private func agentTitle(for agent: AgentSummary) -> String {
-        let name = self.normalized(agent.name) ?? agent.id
+    var gatewayDisplayLabel: String {
+        Self.normalized(self.gatewayServerName)
+            ?? Self.normalized(self.gatewayRemoteAddress)
+            ?? self.gatewayDisplayStatusText
+    }
+
+    var gatewayStateText: String {
+        switch self.gatewayDisplayState {
+        case .connected: "Online"
+        case .connecting: "Connecting"
+        case .error: "Attention"
+        case .disconnected: "Offline"
+        }
+    }
+
+    var gatewayStateColor: Color {
+        switch self.gatewayDisplayState {
+        case .connected:
+            OpenClawBrand.ok
+        case .connecting:
+            OpenClawBrand.accent
+        case .error:
+            OpenClawBrand.warn
+        case .disconnected:
+            .secondary
+        }
+    }
+
+    private func agentTitle(for agent: RootTabsPhoneControlHubAgent) -> String {
+        let name = Self.normalized(agent.name) ?? agent.id
         return name == agent.id ? name : "\(name) (\(agent.id))"
     }
 
-    private func normalized(_ value: String?) -> String? {
+    private static func normalized(_ value: String?) -> String? {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+struct RootTabsPhoneControlHubAgent: Equatable {
+    let id: String
+    let name: String?
+
+    init(id: String, name: String?) {
+        self.id = id
+        self.name = name
+    }
+
+    init(agent: AgentSummary) {
+        self.init(id: agent.id, name: agent.name)
     }
 }
 
