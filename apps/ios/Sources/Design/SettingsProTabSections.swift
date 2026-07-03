@@ -228,7 +228,8 @@ extension SettingsProTab {
                     case .permissions:
                         self.permissionsDestination
                     case .channels:
-                        SettingsChannelsDestination()
+                        SettingsChannelsDestination(
+                            store: SettingsChannelsStoreFactory.live(appModel: self.appModel))
                     case .voice:
                         self.voiceDestination
                     case .diagnostics:
