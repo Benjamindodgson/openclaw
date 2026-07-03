@@ -34,8 +34,12 @@ struct RootTabs: View {
     @State private var sidebarVisibilityUserOverridden: Bool = Self.initialSidebarVisibility != nil
     @State private var isSidebarDrawerLayout: Bool = false
     @State private var didResolveSidebarLayout: Bool = false
-    @State private var voiceWakeToastText: String?
-    @State private var toastDismissTask: Task<Void, Never>?
+    @State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature> = Store(
+        initialState: RootVoiceWakeToastFeature.State())
+    {
+        RootVoiceWakeToastFeature()
+    }
+
     @State private var presentedSheet: PresentedSheet?
     @State private var showGatewayProblemDetails: Bool = false
     @State private var showOnboarding: Bool = false
@@ -611,14 +615,18 @@ struct RootTabs: View {
                 }
             }
             .overlay(alignment: .topLeading) {
-                if let voiceWakeToastText, !voiceWakeToastText.isEmpty {
+                if let voiceWakeToastText = self.voiceWakeToastStore.commandText,
+                   !voiceWakeToastText.isEmpty
+                {
                     VoiceWakeToast(command: voiceWakeToastText)
                         .padding(.leading, 10)
                         .safeAreaPadding(.top, self.appModel.lastGatewayProblem == nil ? 58 : 132)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
-
+            .animation(
+                self.voiceWakeToastAnimation,
+                value: self.voiceWakeToastStore.commandText)
             .overlay {
                 if self.appModel.cameraFlashNonce != 0 {
                     RootCameraFlashOverlay(nonce: self.appModel.cameraFlashNonce)
@@ -656,6 +664,13 @@ struct RootTabs: View {
         }
     }
 
+    private var voiceWakeToastAnimation: Animation? {
+        guard !self.reduceMotion else { return nil }
+        return self.voiceWakeToastStore.commandText == nil
+            ? .easeOut(duration: 0.25)
+            : .spring(response: 0.25, dampingFraction: 0.85)
+    }
+
     private func rootLifecycle(_ content: some View) -> some View {
         self.rootRequestLifecycle(
             self.rootGatewayLifecycle(
@@ -667,22 +682,7 @@ struct RootTabs: View {
         content
             .onChange(of: self.voiceWake.lastTriggeredCommand) { _, newValue in
                 guard let newValue else { return }
-                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return }
-
-                self.toastDismissTask?.cancel()
-                withAnimation(self.reduceMotion ? .none : .spring(response: 0.25, dampingFraction: 0.85)) {
-                    self.voiceWakeToastText = trimmed
-                }
-
-                self.toastDismissTask = Task {
-                    try? await Task.sleep(nanoseconds: 2_300_000_000)
-                    await MainActor.run {
-                        withAnimation(self.reduceMotion ? .none : .easeOut(duration: 0.25)) {
-                            self.voiceWakeToastText = nil
-                        }
-                    }
-                }
+                self.voiceWakeToastStore.send(.commandTriggered(newValue))
             }
     }
 
@@ -712,8 +712,7 @@ struct RootTabs: View {
             }
             .onDisappear {
                 UIApplication.shared.isIdleTimerDisabled = false
-                self.toastDismissTask?.cancel()
-                self.toastDismissTask = nil
+                self.voiceWakeToastStore.send(.disappeared)
             }
     }
 
@@ -1241,6 +1240,79 @@ private struct RootTabsHomeCanvasAgentCard: Codable {
     var badge: String
     var caption: String
     var isActive: Bool
+}
+
+@Reducer
+struct RootVoiceWakeToastFeature {
+    private let sleepOverride: RootVoiceWakeToastSleepClient?
+
+    private enum CancelID {
+        case dismiss
+    }
+
+    init(sleeper: RootVoiceWakeToastSleepClient? = nil) {
+        self.sleepOverride = sleeper
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var commandText: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case commandTriggered(String)
+        case dismissDelayElapsed
+        case disappeared
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.rootVoiceWakeToastSleep) var dependencySleeper
+            let sleeper = self.sleepOverride ?? dependencySleeper
+
+            switch action {
+            case let .commandTriggered(command):
+                let trimmed = command.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return .none }
+                state.commandText = trimmed
+                return .run { send in
+                    try await sleeper.sleep()
+                    await send(.dismissDelayElapsed)
+                }
+                .cancellable(id: CancelID.dismiss, cancelInFlight: true)
+
+            case .dismissDelayElapsed:
+                state.commandText = nil
+                return .none
+
+            case .disappeared:
+                return .cancel(id: CancelID.dismiss)
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+struct RootVoiceWakeToastSleepClient {
+    var sleep: @Sendable () async throws -> Void
+}
+
+extension RootVoiceWakeToastSleepClient: DependencyKey {
+    static let liveValue = RootVoiceWakeToastSleepClient(sleep: {
+        try await Task.sleep(nanoseconds: 2_300_000_000)
+    })
+
+    static let testValue = RootVoiceWakeToastSleepClient(sleep: {})
+}
+
+extension DependencyValues {
+    var rootVoiceWakeToastSleep: RootVoiceWakeToastSleepClient {
+        get { self[RootVoiceWakeToastSleepClient.self] }
+        set { self[RootVoiceWakeToastSleepClient.self] = newValue }
+    }
 }
 
 private struct RootCameraFlashOverlay: View {
