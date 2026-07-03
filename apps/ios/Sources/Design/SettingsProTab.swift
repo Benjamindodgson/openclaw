@@ -127,6 +127,34 @@ struct SettingsPresentationFeature {
     }
 }
 
+@Reducer
+struct SettingsDiagnosticsFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var issueCount: Int?
+        var lastRunText = "Not run"
+    }
+
+    enum Action: Equatable, Sendable {
+        case diagnosticsCompleted(issueCount: Int, lastRunText: String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .diagnosticsCompleted(issueCount, lastRunText):
+                state.issueCount = issueCount
+                state.lastRunText = lastRunText
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -183,8 +211,12 @@ struct SettingsProTab: View {
     @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
 
     @State var isRequestingNotificationAuthorization = false
-    @State var diagnosticsLastRunText = "Not run"
-    @State var diagnosticsIssueCount: Int?
+    @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
+        initialState: SettingsDiagnosticsFeature.State())
+    {
+        SettingsDiagnosticsFeature()
+    }
+
     @State var presentationStore: StoreOf<SettingsPresentationFeature> = Store(
         initialState: SettingsPresentationFeature.State())
     {

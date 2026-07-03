@@ -127,4 +127,15 @@ struct SettingsNavigationFeatureTests {
             $0.scannerError = nil
         }
     }
+
+    @Test func `settings diagnostics completion records last run summary`() async {
+        let store = TestStore(initialState: SettingsDiagnosticsFeature.State()) {
+            SettingsDiagnosticsFeature()
+        }
+
+        await store.send(.diagnosticsCompleted(issueCount: 2, lastRunText: "4:20 PM")) {
+            $0.issueCount = 2
+            $0.lastRunText = "4:20 PM"
+        }
+    }
 }
