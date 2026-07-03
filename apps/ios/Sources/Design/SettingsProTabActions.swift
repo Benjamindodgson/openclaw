@@ -315,7 +315,7 @@ extension SettingsProTab {
 
     @discardableResult
     func applySetupCode() async -> Bool {
-        self.gatewaySetupLinkStore.send(.applyRequested)
+        await self.gatewaySetupLinkStore.send(.applyRequested).finish()
         guard let result = self.gatewaySetupLinkStore.applyResult else { return false }
         self.gatewaySetupLinkStore.send(.applyResultHandled)
 
@@ -323,7 +323,6 @@ extension SettingsProTab {
         case let .appleReviewDemo(statusText):
             self.updateSetupCode("")
             self.gatewaySetupStatusStore.send(.statusChanged(statusText))
-            self.appModel.enterAppleReviewDemoMode()
             return false
 
         case let .failure(message):
@@ -376,7 +375,6 @@ extension SettingsProTab {
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
         self.gatewaySetupStatusStore.send(.statusChanged(statusText))
-        self.appModel.enterAppleReviewDemoMode()
     }
 
     func connectAfterScannedGatewayLink() async {
