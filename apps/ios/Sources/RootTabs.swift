@@ -190,6 +190,7 @@ struct RootTabs: View {
                 initialRoute: self.selectedSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
@@ -476,6 +477,7 @@ struct RootTabs: View {
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                    gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
@@ -487,6 +489,7 @@ struct RootTabs: View {
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                    gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
@@ -500,6 +503,7 @@ struct RootTabs: View {
                 navigateToRoute: self.pushSidebarSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
+                gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
@@ -823,6 +827,13 @@ struct RootTabs: View {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(
                 localNetworkAccessClient: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsGatewayConnectionStore() -> StoreOf<SettingsGatewayConnectionFeature> {
+        Store(initialState: SettingsGatewayConnectionFeature.State()) {
+            SettingsGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))
         }
     }
 

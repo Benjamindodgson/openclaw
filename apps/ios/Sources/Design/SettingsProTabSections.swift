@@ -716,7 +716,7 @@ extension SettingsProTab {
                         color: OpenClawBrand.accent,
                         isBusy: self.connectingGatewayID != nil)
                     {
-                        self.openGatewayQRScanner()
+                        Task { await self.openGatewayQRScanner() }
                     }
                     self.gatewayActionButton(
                         title: "Connect",

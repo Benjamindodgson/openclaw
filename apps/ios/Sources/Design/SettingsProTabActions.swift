@@ -345,9 +345,8 @@ extension SettingsProTab {
         await self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request)).finish()
     }
 
-    func openGatewayQRScanner() {
-        self.appModel.disconnectGateway()
-        self.gatewayConnectionStore.send(.connectionFinished)
+    func openGatewayQRScanner() async {
+        await self.gatewayConnectionStore.send(.disconnectRequested).finish()
         self.gatewaySetupStatusStore.send(.qrScannerOpeningStarted)
         self.presentationStore.send(.qrScannerButtonTapped)
     }

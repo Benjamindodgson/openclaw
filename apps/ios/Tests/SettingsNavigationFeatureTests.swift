@@ -465,6 +465,22 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway connection disconnects through client`() async {
+        let probe = SettingsGatewayDisconnectProbe()
+        var initialState = SettingsGatewayConnectionFeature.State()
+        initialState.connectingGatewayID = "manual"
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewayConnectionFeature(disconnectClient: probe.client)
+        }
+
+        await store.send(.disconnectRequested) {
+            $0.connectingGatewayID = nil
+        }
+        await store.finish()
+
+        #expect(probe.disconnectCount == 1)
+    }
+
     @Test func `settings gateway connection persists discovered gateway selection through client`() async {
         let probe = SettingsDiscoveredGatewayPersistenceProbe()
         let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
@@ -2372,6 +2388,16 @@ private final class SettingsDiscoveredGatewayPersistenceProbe: @unchecked Sendab
     var client: SettingsDiscoveredGatewayPersistenceClient {
         SettingsDiscoveredGatewayPersistenceClient(saveSelectedGatewayStableID: { stableID in
             self.savedStableIDs.append(stableID)
+        })
+    }
+}
+
+private final class SettingsGatewayDisconnectProbe: @unchecked Sendable {
+    var disconnectCount = 0
+
+    var client: SettingsGatewayDisconnectClient {
+        SettingsGatewayDisconnectClient(disconnect: {
+            self.disconnectCount += 1
         })
     }
 }
