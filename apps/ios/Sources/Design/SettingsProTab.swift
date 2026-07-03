@@ -197,6 +197,51 @@ struct SettingsGatewayActivityFeature {
     }
 }
 
+@Reducer
+struct SettingsLocationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var isChangingLocationMode = false
+        var previousLocationModeRaw = OpenClawLocationMode.off.rawValue
+        var statusText: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case locationChangeFinished
+        case locationChangeStarted
+        case locationModeApplied(String)
+        case locationPermissionDenied(previousRawValue: String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .locationChangeFinished:
+                state.isChangingLocationMode = false
+                return .none
+
+            case .locationChangeStarted:
+                state.isChangingLocationMode = true
+                state.statusText = nil
+                return .none
+
+            case let .locationModeApplied(rawValue):
+                state.previousLocationModeRaw = rawValue
+                return .none
+
+            case let .locationPermissionDenied(previousRawValue):
+                state.previousLocationModeRaw = previousRawValue
+                state.statusText = "Location permission was not granted."
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -230,7 +275,6 @@ struct SettingsProTab: View {
     @AppStorage("gateway.onboardingComplete") var onboardingComplete: Bool = false
     @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
-    @State var isChangingLocationMode = false
     @State var connectingGatewayID: String?
     @State var selectedAgentPickerId = ""
     @State var gatewayToken = ""
@@ -241,8 +285,6 @@ struct SettingsProTab: View {
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State var defaultShareInstruction = ""
     @State var suppressCredentialPersist = false
-    @State var locationStatusText: String?
-    @State var previousLocationModeRaw: String = OpenClawLocationMode.off.rawValue
     @State var notificationStatus: SettingsNotificationStatus = .checking
     @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
         PushEnrollmentConsentFeature()
@@ -261,6 +303,12 @@ struct SettingsProTab: View {
         initialState: SettingsGatewayActivityFeature.State())
     {
         SettingsGatewayActivityFeature()
+    }
+
+    @State var locationStore: StoreOf<SettingsLocationFeature> = Store(
+        initialState: SettingsLocationFeature.State())
+    {
+        SettingsLocationFeature()
     }
 
     @State var presentationStore: StoreOf<SettingsPresentationFeature> = Store(
@@ -363,7 +411,7 @@ struct SettingsProTab: View {
     private func settingsLifecycle(_ content: some View) -> some View {
         content
             .task {
-                self.previousLocationModeRaw = self.locationModeRaw
+                self.locationStore.send(.locationModeApplied(self.locationModeRaw))
                 self.syncSettingsState()
                 self.refreshNotificationSettings()
                 self.applyPendingGatewaySetupLinkIfNeeded()

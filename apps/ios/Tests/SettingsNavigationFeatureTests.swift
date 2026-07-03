@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import OpenClawKit
 import Testing
 @testable import OpenClaw
 
@@ -162,6 +163,45 @@ struct SettingsNavigationFeatureTests {
         }
         await store.send(.refreshFinished) {
             $0.isRefreshingGateway = false
+        }
+    }
+
+    @Test func `settings location tracks change lifecycle`() async {
+        var initialState = SettingsLocationFeature.State()
+        initialState.statusText = "Location permission was not granted."
+        let store = TestStore(initialState: initialState) {
+            SettingsLocationFeature()
+        }
+
+        await store.send(.locationChangeStarted) {
+            $0.isChangingLocationMode = true
+            $0.statusText = nil
+        }
+        await store.send(.locationChangeFinished) {
+            $0.isChangingLocationMode = false
+        }
+    }
+
+    @Test func `settings location records applied mode`() async {
+        let store = TestStore(initialState: SettingsLocationFeature.State()) {
+            SettingsLocationFeature()
+        }
+
+        await store.send(.locationModeApplied(OpenClawLocationMode.always.rawValue)) {
+            $0.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
+        }
+    }
+
+    @Test func `settings location records permission denial`() async {
+        var initialState = SettingsLocationFeature.State()
+        initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        let store = TestStore(initialState: initialState) {
+            SettingsLocationFeature()
+        }
+
+        await store.send(.locationPermissionDenied(previousRawValue: OpenClawLocationMode.off.rawValue)) {
+            $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
+            $0.statusText = "Location permission was not granted."
         }
     }
 }

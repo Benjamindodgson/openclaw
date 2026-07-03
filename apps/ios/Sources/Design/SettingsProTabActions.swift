@@ -382,10 +382,10 @@ extension SettingsProTab {
     }
 
     func handleLocationModeChange(_ newValue: String) {
-        guard !self.isChangingLocationMode else { return }
-        guard newValue != self.previousLocationModeRaw else { return }
+        guard !self.locationStore.isChangingLocationMode else { return }
+        guard newValue != self.locationStore.previousLocationModeRaw else { return }
         guard let mode = OpenClawLocationMode(rawValue: newValue) else { return }
-        let previous = self.previousLocationModeRaw
+        let previous = self.locationStore.previousLocationModeRaw
         Task {
             await self.applyLocationMode(mode, rawValue: newValue, previous: previous)
         }
@@ -397,24 +397,22 @@ extension SettingsProTab {
         rawValue: String,
         previous: String) async
     {
-        self.isChangingLocationMode = true
-        self.locationStatusText = nil
-        defer { self.isChangingLocationMode = false }
+        self.locationStore.send(.locationChangeStarted)
+        defer { self.locationStore.send(.locationChangeFinished) }
 
         if mode == .off {
-            self.previousLocationModeRaw = rawValue
+            self.locationStore.send(.locationModeApplied(rawValue))
             self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
             return
         }
 
         let granted = await self.appModel.requestLocationPermissions(mode: mode)
         if granted {
-            self.previousLocationModeRaw = rawValue
+            self.locationStore.send(.locationModeApplied(rawValue))
             self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
         } else {
             self.locationModeRaw = previous
-            self.previousLocationModeRaw = previous
-            self.locationStatusText = "Location permission was not granted."
+            self.locationStore.send(.locationPermissionDenied(previousRawValue: previous))
         }
     }
 
