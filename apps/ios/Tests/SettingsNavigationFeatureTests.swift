@@ -452,6 +452,38 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway activity refreshes diagnostics gateway state through client`() async {
+        let probe = SettingsGatewayDiagnosticsRefreshProbe()
+        let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
+            SettingsGatewayActivityFeature(diagnosticsRefreshClient: probe.client)
+        }
+
+        await store.send(.diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: false)) {
+            $0.isRefreshingGateway = true
+        }
+        await store.receive(.refreshFinished) {
+            $0.isRefreshingGateway = false
+        }
+
+        #expect(probe.refreshCount == 1)
+    }
+
+    @Test func `settings gateway activity skips diagnostics gateway refresh in demo mode`() async {
+        let probe = SettingsGatewayDiagnosticsRefreshProbe()
+        let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
+            SettingsGatewayActivityFeature(diagnosticsRefreshClient: probe.client)
+        }
+
+        await store.send(.diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: true)) {
+            $0.isRefreshingGateway = true
+        }
+        await store.receive(.refreshFinished) {
+            $0.isRefreshingGateway = false
+        }
+
+        #expect(probe.refreshCount == 0)
+    }
+
     @Test func `settings gateway connection tracks discovered gateway lifecycle`() async {
         let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
             SettingsGatewayConnectionFeature()
@@ -2388,6 +2420,16 @@ private final class SettingsDiscoveredGatewayPersistenceProbe: @unchecked Sendab
     var client: SettingsDiscoveredGatewayPersistenceClient {
         SettingsDiscoveredGatewayPersistenceClient(saveSelectedGatewayStableID: { stableID in
             self.savedStableIDs.append(stableID)
+        })
+    }
+}
+
+private final class SettingsGatewayDiagnosticsRefreshProbe: @unchecked Sendable {
+    var refreshCount = 0
+
+    var client: SettingsGatewayDiagnosticsRefreshClient {
+        SettingsGatewayDiagnosticsRefreshClient(refreshGateway: {
+            self.refreshCount += 1
         })
     }
 }

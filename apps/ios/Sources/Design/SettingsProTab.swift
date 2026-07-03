@@ -277,6 +277,12 @@ struct SettingsApprovalsFeature {
 
 @Reducer
 struct SettingsGatewayActivityFeature {
+    private let diagnosticsRefreshClientOverride: SettingsGatewayDiagnosticsRefreshClient?
+
+    init(diagnosticsRefreshClient: SettingsGatewayDiagnosticsRefreshClient? = nil) {
+        self.diagnosticsRefreshClientOverride = diagnosticsRefreshClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -285,6 +291,7 @@ struct SettingsGatewayActivityFeature {
     }
 
     enum Action: Equatable, Sendable {
+        case diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: Bool)
         case reconnectFinished
         case reconnectStarted
         case refreshFinished
@@ -295,7 +302,20 @@ struct SettingsGatewayActivityFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsGatewayDiagnosticsRefresh) var dependencyDiagnosticsRefreshClient
+            let diagnosticsRefreshClient = self.diagnosticsRefreshClientOverride ?? dependencyDiagnosticsRefreshClient
+
             switch action {
+            case let .diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled):
+                guard !state.isRefreshingGateway else { return .none }
+                state.isRefreshingGateway = true
+                return .run { send in
+                    if !isAppleReviewDemoModeEnabled {
+                        await diagnosticsRefreshClient.refreshGateway()
+                    }
+                    await send(.refreshFinished)
+                }
+
             case .reconnectFinished:
                 state.isReconnectingGateway = false
                 return .none
@@ -1240,6 +1260,11 @@ struct SettingsProTab: View {
         {
             SettingsManualGatewayEndpointFeature()
         },
+        gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
+            initialState: SettingsGatewayActivityFeature.State())
+        {
+            SettingsGatewayActivityFeature()
+        },
         gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
             initialState: SettingsGatewayConnectionFeature.State())
         {
@@ -1274,6 +1299,7 @@ struct SettingsProTab: View {
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
+        self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)
         self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
         self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
         self._gatewaySetupLinkStore = State(wrappedValue: gatewaySetupLinkStore)

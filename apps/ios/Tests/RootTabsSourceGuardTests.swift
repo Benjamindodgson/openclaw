@@ -858,9 +858,7 @@ struct RootTabsSourceGuardTests {
         #expect(sectionsSource.contains("Task { await self.handleGatewayProblemPrimaryAction(problem) }"))
 
         #expect(actionsSource.contains("await self.gatewayController.connectLastKnown()"))
-        #expect(actionsSource.contains("self.gatewayController.refreshActiveGatewayRegistrationFromSettings()"))
-        #expect(actionsSource.contains("self.gatewayController.restartDiscovery()"))
-        #expect(actionsSource.contains("await self.appModel.refreshGatewayOverviewIfConnected()"))
+        #expect(actionsSource.contains("self.gatewayActivityStore"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
         #expect(gatewaySetupFeaturesSource
             .contains("state.preflightResult = .requestLocalNetworkAccess(reason: \"settings_preflight\")"))
@@ -1502,6 +1500,9 @@ struct RootTabsSourceGuardTests {
 
     @Test func `settings diagnostics completion is reducer owned`() throws {
         let diagnosticsSource = try String(contentsOf: Self.settingsDiagnosticsFeatureSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let runDiagnosticsFunction = try Self.extract(
             actionsSource,
@@ -1509,10 +1510,27 @@ struct RootTabsSourceGuardTests {
             to: "func syncSettingsState()")
 
         #expect(diagnosticsSource.contains("case diagnosticsCompletionRequested("))
+        #expect(supportSource.contains("struct SettingsGatewayDiagnosticsRefreshClient"))
+        #expect(supportSource.contains("var settingsGatewayDiagnosticsRefresh: SettingsGatewayDiagnosticsRefreshClient"))
+        #expect(settingsSource.contains("case diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: Bool)"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsGatewayDiagnosticsRefresh)"))
+        #expect(settingsSource.contains("await diagnosticsRefreshClient.refreshGateway()"))
+        #expect(settingsSource.contains("await send(.refreshFinished)"))
         #expect(diagnosticsSource.contains("state.issueCount = SettingsDiagnostics.issueCount("))
+        #expect(runDiagnosticsFunction.contains("self.gatewayActivityStore"))
+        #expect(runDiagnosticsFunction
+            .contains("let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled"))
+        #expect(runDiagnosticsFunction
+            .contains(".send(.diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))"))
         #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsCompletionRequested("))
         #expect(runDiagnosticsFunction.contains("await self.notificationStore.send(.statusRefreshRequested).finish()"))
         #expect(runDiagnosticsFunction.contains("self.handleNotificationStatusRefreshResult"))
+        #expect(rootSource.contains("gatewayActivityStore: self.makeSettingsGatewayActivityStore()"))
+        #expect(rootSource.contains("SettingsGatewayActivityFeature("))
+        #expect(rootSource.contains("diagnosticsRefreshClient: .live("))
+        #expect(!runDiagnosticsFunction.contains("self.gatewayController.refreshActiveGatewayRegistrationFromSettings()"))
+        #expect(!runDiagnosticsFunction.contains("self.gatewayController.restartDiscovery()"))
+        #expect(!runDiagnosticsFunction.contains("await self.appModel.refreshGatewayOverviewIfConnected()"))
         #expect(runDiagnosticsFunction.contains("UNUserNotificationCenter.current().notificationSettings()") == false)
         #expect(actionsSource.contains("func applyNotificationStatus") == false)
         #expect(runDiagnosticsFunction.contains("SettingsDiagnostics.issueCount(") == false)

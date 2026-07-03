@@ -243,6 +243,31 @@ extension DependencyValues {
     }
 }
 
+struct SettingsGatewayDiagnosticsRefreshClient {
+    var refreshGateway: @MainActor @Sendable () async -> Void
+}
+
+extension SettingsGatewayDiagnosticsRefreshClient: DependencyKey {
+    static let liveValue = SettingsGatewayDiagnosticsRefreshClient(refreshGateway: {})
+    static let testValue = SettingsGatewayDiagnosticsRefreshClient(refreshGateway: {})
+
+    @MainActor
+    static func live(appModel: NodeAppModel, gatewayController: GatewayConnectionController) -> Self {
+        SettingsGatewayDiagnosticsRefreshClient(refreshGateway: {
+            gatewayController.refreshActiveGatewayRegistrationFromSettings()
+            gatewayController.restartDiscovery()
+            await appModel.refreshGatewayOverviewIfConnected()
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsGatewayDiagnosticsRefresh: SettingsGatewayDiagnosticsRefreshClient {
+        get { self[SettingsGatewayDiagnosticsRefreshClient.self] }
+        set { self[SettingsGatewayDiagnosticsRefreshClient.self] = newValue }
+    }
+}
+
 struct SettingsApprovalItem: Identifiable {
     let id: String
     let icon: String
