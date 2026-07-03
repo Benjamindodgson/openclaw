@@ -1,9 +1,18 @@
 import ComposableArchitecture
+import SwiftUI
 import Testing
 @testable import OpenClaw
 
 @MainActor
 struct PrivacyAccessFeatureTests {
+    @Test func `permission statuses expose presentation color`() {
+        #expect(PrivacyAccessStatus.allowed.color == .green)
+        #expect(PrivacyAccessStatus.notSet.color == .orange)
+        #expect(PrivacyAccessStatus.notAllowed.color == .red)
+        #expect(PrivacyAccessStatus.addOnly.color == .yellow)
+        #expect(PrivacyAccessStatus.unknown.color == .red)
+    }
+
     @Test func `refresh loads permission snapshot`() async {
         let probe = PrivacyAccessProbe(snapshot: .init(
             contacts: .allowed,

@@ -120,6 +120,19 @@ enum PrivacyAccessStatus: Equatable {
         }
     }
 
+    var color: Color {
+        switch self {
+        case .allowed:
+            .green
+        case .notSet:
+            .orange
+        case .addOnly:
+            .yellow
+        case .notAllowed, .unknown:
+            .red
+        }
+    }
+
     static func contacts(_ status: CNAuthorizationStatus) -> Self {
         switch status {
         case .authorized, .limited:
@@ -401,7 +414,7 @@ struct PrivacyAccessSectionView: View {
             self.permissionRow(
                 title: "Contacts",
                 icon: "person.crop.circle",
-                status: self.store.contactsStatus.text,
+                status: self.store.contactsStatus,
                 detail: "Search and add contacts from the assistant.",
                 actionTitle: self.store.contactsActionTitle,
                 action: { self.store.send(.contactsButtonTapped) })
@@ -409,7 +422,7 @@ struct PrivacyAccessSectionView: View {
             self.permissionRow(
                 title: "Calendar (Add Events)",
                 icon: "calendar.badge.plus",
-                status: self.store.calendarWriteStatus.text,
+                status: self.store.calendarWriteStatus,
                 detail: "Add events with least privilege.",
                 actionTitle: self.store.calendarWriteActionTitle,
                 action: { self.store.send(.calendarWriteButtonTapped) })
@@ -417,7 +430,7 @@ struct PrivacyAccessSectionView: View {
             self.permissionRow(
                 title: "Calendar (View Events)",
                 icon: "calendar",
-                status: self.store.calendarReadStatus.text,
+                status: self.store.calendarReadStatus,
                 detail: "List and read calendar events.",
                 actionTitle: self.store.calendarReadActionTitle,
                 action: { self.store.send(.calendarReadButtonTapped) })
@@ -425,7 +438,7 @@ struct PrivacyAccessSectionView: View {
             self.permissionRow(
                 title: "Reminders",
                 icon: "checklist",
-                status: self.store.remindersStatus.text,
+                status: self.store.remindersStatus,
                 detail: "List, add, and complete reminders.",
                 actionTitle: self.store.remindersActionTitle,
                 action: { self.store.send(.remindersButtonTapped) })
@@ -443,7 +456,7 @@ struct PrivacyAccessSectionView: View {
     private func permissionRow(
         title: String,
         icon: String,
-        status: String,
+        status: PrivacyAccessStatus,
         detail: String,
         actionTitle: String?,
         action: @escaping () -> Void) -> some View
@@ -452,9 +465,9 @@ struct PrivacyAccessSectionView: View {
             HStack {
                 Label(title, systemImage: icon)
                 Spacer()
-                Text(status)
+                Text(status.text)
                     .font(.footnote.weight(.medium))
-                    .foregroundStyle(self.statusColor(for: status))
+                    .foregroundStyle(status.color)
             }
             Text(detail)
                 .font(.footnote)
@@ -466,18 +479,5 @@ struct PrivacyAccessSectionView: View {
             }
         }
         .padding(.vertical, 2)
-    }
-
-    private func statusColor(for status: String) -> Color {
-        switch status {
-        case "Allowed":
-            .green
-        case "Not Set":
-            .orange
-        case "Add-Only":
-            .yellow
-        default:
-            .red
-        }
     }
 }
