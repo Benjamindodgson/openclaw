@@ -1156,6 +1156,21 @@ struct RootTabsSourceGuardTests {
         #expect(resultFunction.contains("UNUserNotificationCenter") == false)
     }
 
+    @Test func `settings diagnostics completion is reducer owned`() throws {
+        let diagnosticsSource = try String(contentsOf: Self.settingsDiagnosticsFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let runDiagnosticsFunction = try Self.extract(
+            actionsSource,
+            from: "func runDiagnostics()",
+            to: "func syncSettingsState()")
+
+        #expect(diagnosticsSource.contains("case diagnosticsCompletionRequested("))
+        #expect(diagnosticsSource.contains("state.issueCount = SettingsDiagnostics.issueCount("))
+        #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsCompletionRequested("))
+        #expect(runDiagnosticsFunction.contains("SettingsDiagnostics.issueCount(") == false)
+        #expect(actionsSource.contains(".diagnosticsCompleted(") == false)
+    }
+
     @Test func `settings location mode request decision is reducer owned`() throws {
         let locationSource = try String(contentsOf: Self.settingsLocationFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
@@ -1429,6 +1444,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsNotificationFeature.swift")
+    }
+
+    private static func settingsDiagnosticsFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsDiagnosticsFeature.swift")
     }
 
     private static func settingsLocationFeatureSourceURL() -> URL {
