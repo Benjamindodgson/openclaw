@@ -667,6 +667,7 @@ struct OnboardingSetupCodeFeature {
         case applyStarted
         case emptyCodeSubmitted
         case invalidSetupCodeSubmitted
+        case scannedGatewayLinkReceived(GatewayConnectDeepLink)
         case scannedSetupCodeReceived(String)
         case setupCodeAccepted
         case setupCodeChanged(String)
@@ -726,6 +727,12 @@ struct OnboardingSetupCodeFeature {
             case .invalidSetupCodeSubmitted:
                 state.applyResult = nil
                 state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+                return .none
+
+            case let .scannedGatewayLinkReceived(link):
+                state.applyResult = nil
+                state.status = nil
+                state.applyResult = .gatewayLink(link)
                 return .none
 
             case let .scannedSetupCodeReceived(code):

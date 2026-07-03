@@ -777,12 +777,14 @@ extension OnboardingWizardView {
     }
 
     private func handleScannedLink(_ link: GatewayConnectDeepLink) {
-        self.applyGatewayLink(link)
-        self.setupCodeStore.send(.statusCleared)
+        self.setupCodeStore.send(.scannedGatewayLinkReceived(link))
+        guard case let .gatewayLink(scannedLink)? = self.setupCodeStore.applyResult else { return }
+        self.setupCodeStore.send(.applyResultHandled)
+        self.applyGatewayLink(scannedLink)
         self.presentationStore.send(.qrScannerDismissed)
         self.statusStore.send(.connectionStatusUpdated(
             message: "Connecting via QR code...",
-            statusLine: "QR loaded. Connecting to \(link.host):\(link.port)..."))
+            statusLine: "QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)..."))
         self.stepStore.send(.stepChanged(.connect))
         Task { await self.connectManual() }
     }

@@ -999,6 +999,27 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(code)"))
     }
 
+    @Test func `scanner gateway link results are reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(settingsSource.contains("case scannedGatewayLinkReceived(GatewayConnectDeepLink)"))
+        #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
+        #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(link))"))
+        #expect(onboardingStateSource.contains("case scannedGatewayLinkReceived(GatewayConnectDeepLink)"))
+        #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedGatewayLinkReceived(link))"))
+        #expect(!settingsActionsSource.contains("""
+        self.presentationStore.send(.qrScannerDismissed)
+                self.updateSetupCode("")
+                self.applyGatewayLink(link)
+        """))
+        #expect(!onboardingSource
+            .contains(
+                "private func handleScannedLink(_ link: GatewayConnectDeepLink) {\n        self.applyGatewayLink(link)"))
+    }
+
     @Test func `settings manual connection result is reducer owned`() throws {
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),

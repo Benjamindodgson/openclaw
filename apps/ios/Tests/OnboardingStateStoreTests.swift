@@ -643,6 +643,31 @@ import Testing
         }
     }
 
+    @Test @MainActor func `setup code reducer classifies scanned gateway links`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = OnboardingSetupCodeFeature.State()
+        initialState.setupCode = "stale code"
+        initialState.status = "stale status"
+        let store = TestStore(initialState: initialState) {
+            OnboardingSetupCodeFeature()
+        }
+
+        await store.send(.scannedGatewayLinkReceived(link)) {
+            $0.applyResult = .gatewayLink(link)
+            $0.status = nil
+        }
+
+        await store.send(.applyResultHandled) {
+            $0.applyResult = nil
+        }
+    }
+
     @Test @MainActor func `connection form reducer normalizes ports and mode defaults`() async {
         let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
             OnboardingConnectionFormFeature()
