@@ -105,8 +105,8 @@ struct ChatProTab: View {
 
     private var header: some View {
         OpenClawAdaptiveHeaderRow(
-            title: self.headerDisplayTitle,
-            subtitle: self.headerDisplaySubtitle,
+            title: self.presentationState.headerDisplayTitle,
+            subtitle: self.presentationState.headerDisplaySubtitle,
             titleFont: .headline.weight(.semibold),
             subtitleFont: .caption,
             subtitleLineLimit: 1)
@@ -225,7 +225,10 @@ struct ChatProTab: View {
         ChatProPresentationState(
             gatewayDisplayState: self.gatewayDisplayState,
             isGatewayUsable: self.gatewayConnected,
-            agentDisplayName: self.agentDisplayName)
+            agentDisplayName: self.agentDisplayName,
+            headerTitle: self.headerTitle,
+            headerSubtitle: self.headerSubtitle,
+            showsAgentBadge: self.showsAgentBadge)
     }
 
     private var gatewayConnected: Bool {
@@ -237,19 +240,6 @@ struct ChatProTab: View {
 
     private var gatewayDisplayState: GatewayDisplayState {
         GatewayStatusBuilder.build(appModel: self.appModel)
-    }
-
-    private var headerDisplayTitle: String {
-        self.normalized(self.headerTitle)
-            ?? Self.defaultHeaderTitle(showsAgentBadge: self.showsAgentBadge, agentDisplayName: self.agentDisplayName)
-    }
-
-    private var headerDisplaySubtitle: String? {
-        self.normalized(self.headerSubtitle)
-    }
-
-    nonisolated static func defaultHeaderTitle(showsAgentBadge: Bool, agentDisplayName: String) -> String {
-        showsAgentBadge ? agentDisplayName : "Chat"
     }
 
     private var chatUserAccent: Color {
@@ -292,6 +282,9 @@ struct ChatProPresentationState: Equatable {
     let gatewayDisplayState: GatewayDisplayState
     let isGatewayUsable: Bool
     let agentDisplayName: String
+    let headerTitle: String?
+    let headerSubtitle: String?
+    let showsAgentBadge: Bool
 
     var gatewayPillTitle: String {
         switch self.gatewayDisplayState {
@@ -321,5 +314,24 @@ struct ChatProPresentationState: Equatable {
 
     var messagePlaceholder: String {
         self.isGatewayUsable ? "Message \(self.agentDisplayName)..." : "Connect to a gateway"
+    }
+
+    var headerDisplayTitle: String {
+        Self.normalized(self.headerTitle)
+            ?? Self.defaultHeaderTitle(showsAgentBadge: self.showsAgentBadge, agentDisplayName: self.agentDisplayName)
+    }
+
+    var headerDisplaySubtitle: String? {
+        Self.normalized(self.headerSubtitle)
+    }
+
+    nonisolated static func defaultHeaderTitle(showsAgentBadge: Bool, agentDisplayName: String) -> String {
+        showsAgentBadge ? agentDisplayName : "Chat"
+    }
+
+    private static func normalized(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
