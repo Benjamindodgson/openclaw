@@ -178,7 +178,8 @@ extension SettingsProTab {
         self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
-            preventSleep: self.storedPreventSleep))
+            preventSleep: self.storedPreventSleep,
+            locationModeRaw: self.storedLocationModeRaw))
         self.syncVoiceControlState()
         self.syncTalkPreferencesState()
         self.syncTalkRuntimeState()
@@ -718,6 +719,7 @@ extension SettingsProTab {
 
     func updateLocationModeRaw(_ rawValue: String) {
         self.locationStore.send(.locationModeChanged(rawValue))
+        self.deviceCapabilityStore.send(.locationModeChanged(rawValue))
         self.storedLocationModeRaw = rawValue
     }
 
@@ -1024,9 +1026,7 @@ extension SettingsProTab {
     }
 
     var permissionsDetail: String {
-        var enabled = self.deviceCapabilityStore.enabledCount
-        if self.locationModeRaw != OpenClawLocationMode.off.rawValue { enabled += 1 }
-        return "\(enabled) enabled"
+        self.deviceCapabilityStore.permissionsDetail
     }
 
     var pendingApproval: NodeAppModel.ExecApprovalPrompt? {
