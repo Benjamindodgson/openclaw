@@ -975,13 +975,19 @@ struct RootTabsSourceGuardTests {
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
 
         #expect(settingsSource.contains("enum ApplyResult: Equatable, Sendable"))
+        #expect(settingsSource.contains("case appleReviewDemo(statusText: String)"))
         #expect(settingsSource.contains("case applyRequested"))
+        #expect(settingsSource
+            .contains("state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)"))
         #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyRequested)"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
+        #expect(actionsSource.contains("case let .appleReviewDemo(statusText):"))
+        #expect(actionsSource.contains("self.gatewaySetupStatusStore.send(.statusChanged(statusText))"))
         #expect(!actionsSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
         #expect(!actionsSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
         #expect(!actionsSource.contains("let stagedLink = self.stagedGatewaySetupLink"))
+        #expect(!actionsSource.contains("\"Apple Review demo mode enabled.\""))
     }
 
     @Test func `settings setup link staging status is reducer owned`() throws {
@@ -1010,11 +1016,14 @@ struct RootTabsSourceGuardTests {
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
 
         #expect(settingsSource.contains("case scannedSetupCodeReceived(String)"))
-        #expect(settingsSource.contains("state.applyResult = .appleReviewDemo"))
+        #expect(settingsSource
+            .contains("state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)"))
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(code))"))
+        #expect(settingsActionsSource.contains("guard case let .appleReviewDemo(statusText)?"))
         #expect(onboardingStateSource.contains("case scannedSetupCodeReceived(String)"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedSetupCodeReceived(code))"))
         #expect(!settingsActionsSource.contains("AppleReviewDemoMode.isSetupCode(code)"))
+        #expect(!settingsActionsSource.contains("\"Apple Review demo mode enabled.\""))
         #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(code)"))
     }
 

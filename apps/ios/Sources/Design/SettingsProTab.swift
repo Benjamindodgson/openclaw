@@ -334,7 +334,7 @@ struct SettingsGatewaySetupLinkFeature {
     }
 
     enum ApplyResult: Equatable, Sendable {
-        case appleReviewDemo
+        case appleReviewDemo(statusText: String)
         case failure(String)
         case gatewayLink(GatewayConnectDeepLink)
     }
@@ -366,7 +366,7 @@ struct SettingsGatewaySetupLinkFeature {
                 if AppleReviewDemoMode.isSetupCode(raw) {
                     state.setupCode = ""
                     state.stagedGatewaySetupLink = nil
-                    state.applyResult = .appleReviewDemo
+                    state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)
                     return .none
                 }
 
@@ -396,7 +396,7 @@ struct SettingsGatewaySetupLinkFeature {
                 }
                 state.setupCode = ""
                 state.stagedGatewaySetupLink = nil
-                state.applyResult = .appleReviewDemo
+                state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)
                 return .none
 
             case let .setupCodeChanged(setupCode):
@@ -435,6 +435,8 @@ struct SettingsGatewaySetupLinkFeature {
         let security = link.tls ? "TLS" : "plain"
         return "Setup link loaded for \(link.host):\(link.port) (\(security)). Tap Connect to apply."
     }
+
+    private static let appleReviewDemoStatusText = "Apple Review demo mode enabled."
 }
 
 @Reducer
