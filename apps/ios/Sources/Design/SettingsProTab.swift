@@ -1035,9 +1035,17 @@ struct SettingsTalkPreferencesFeature {
         var talkButtonEnabled = true
         var talkBackgroundEnabled = false
         var talkSpeakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
+        var gatewayTalkConfigLoaded = false
+        var gatewayTalkApiKeyConfigured = false
 
         var providerSelection: TalkModeProviderSelection {
             TalkModeProviderSelection.resolved(self.providerSelectionRaw)
+        }
+
+        var talkApiKeyStatus: String {
+            Self.talkApiKeyStatus(
+                configLoaded: self.gatewayTalkConfigLoaded,
+                apiKeyConfigured: self.gatewayTalkApiKeyConfigured)
         }
 
         func shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: Bool) -> Bool {
@@ -1053,9 +1061,15 @@ struct SettingsTalkPreferencesFeature {
             TalkModeProviderSelection.resolved(providerSelectionRaw) == .openAIRealtime
                 || gatewayTalkUsesRealtime
         }
+
+        static func talkApiKeyStatus(configLoaded: Bool, apiKeyConfigured: Bool) -> String {
+            guard configLoaded else { return "Not loaded" }
+            return apiKeyConfigured ? "Configured" : "Not configured"
+        }
     }
 
     enum Action: Equatable, Sendable {
+        case gatewayTalkConfigSynced(configLoaded: Bool, apiKeyConfigured: Bool)
         case preferencesSynced(
             providerSelectionRaw: String,
             realtimeVoiceSelectionRaw: String,
@@ -1076,6 +1090,11 @@ struct SettingsTalkPreferencesFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .gatewayTalkConfigSynced(configLoaded, apiKeyConfigured):
+                state.gatewayTalkConfigLoaded = configLoaded
+                state.gatewayTalkApiKeyConfigured = apiKeyConfigured
+                return .none
+
             case let .preferencesSynced(
                 providerSelectionRaw,
                 realtimeVoiceSelectionRaw,
@@ -1381,7 +1400,9 @@ struct SettingsProTab: View {
     }
 
     private func settingsLifecycle(_ content: some View) -> some View {
-        self.settingsGatewaySetupStatusLifecycle(self.settingsBaseLifecycle(content))
+        self.settingsTalkRuntimeLifecycle(
+            self.settingsGatewaySetupStatusLifecycle(
+                self.settingsBaseLifecycle(content)))
     }
 
     private func settingsBaseLifecycle(_ content: some View) -> some View {
@@ -1494,6 +1515,16 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.appModel.gatewayStatusText) { _, _ in
                 self.syncGatewaySetupStatusContext()
+            }
+    }
+
+    private func settingsTalkRuntimeLifecycle(_ content: some View) -> some View {
+        content
+            .onChange(of: self.appModel.talkMode.gatewayTalkConfigLoaded) { _, _ in
+                self.syncTalkRuntimeState()
+            }
+            .onChange(of: self.appModel.talkMode.gatewayTalkApiKeyConfigured) { _, _ in
+                self.syncTalkRuntimeState()
             }
     }
 

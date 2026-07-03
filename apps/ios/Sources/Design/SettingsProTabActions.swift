@@ -181,6 +181,7 @@ extension SettingsProTab {
             preventSleep: self.storedPreventSleep))
         self.syncVoiceControlState()
         self.syncTalkPreferencesState()
+        self.syncTalkRuntimeState()
         self.locationStore.send(.locationModeSynced(self.storedLocationModeRaw))
         self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
         self.manualGatewayEndpointStore.send(.endpointSynced(
@@ -212,6 +213,12 @@ extension SettingsProTab {
             talkButtonEnabled: self.storedTalkButtonEnabled,
             talkBackgroundEnabled: self.storedTalkBackgroundEnabled,
             talkSpeakerphoneEnabled: self.storedTalkSpeakerphoneEnabled))
+    }
+
+    func syncTalkRuntimeState() {
+        self.talkPreferencesStore.send(.gatewayTalkConfigSynced(
+            configLoaded: self.appModel.talkMode.gatewayTalkConfigLoaded,
+            apiKeyConfigured: self.appModel.talkMode.gatewayTalkApiKeyConfigured))
     }
 
     func syncOnboardingState() {
@@ -928,8 +935,7 @@ extension SettingsProTab {
     }
 
     var talkApiKeyStatus: String {
-        guard self.appModel.talkMode.gatewayTalkConfigLoaded else { return "Not loaded" }
-        return self.appModel.talkMode.gatewayTalkApiKeyConfigured ? "Configured" : "Not configured"
+        self.talkPreferencesStore.talkApiKeyStatus
     }
 
     var gatewayTalkActiveVoiceDetail: String {
