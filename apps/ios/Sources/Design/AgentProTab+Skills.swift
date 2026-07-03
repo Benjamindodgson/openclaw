@@ -605,10 +605,8 @@ extension AgentProTab {
     @MainActor
     func patchAgentSkills(_ skills: [String]?, busyKey: String) async {
         guard self.liveGatewayConnected else { return }
-        self.skillMutationBusyKeys.insert(busyKey)
-        self.skillMutationErrorText = nil
-        self.skillMutationStatusText = nil
-        defer { self.skillMutationBusyKeys.remove(busyKey) }
+        self.skillPolicyMutationStore.send(.mutationStarted(key: busyKey))
+        defer { self.skillPolicyMutationStore.send(.mutationFinished(key: busyKey)) }
 
         do {
             let config = try await self.requestConfigSnapshot()
@@ -618,7 +616,8 @@ extension AgentProTab {
             if skills == nil,
                config.agentConfig(id: self.activeAgentID) == nil
             {
-                self.skillMutationStatusText = "This agent already inherits the default skill policy."
+                self.skillPolicyMutationStore.send(.mutationSucceeded(
+                    message: "This agent already inherits the default skill policy."))
                 return
             }
 
@@ -635,11 +634,12 @@ extension AgentProTab {
                 method: "config.patch",
                 paramsJSON: json,
                 timeoutSeconds: 20)
-            self.skillMutationStatusText = skills == nil ? "Skill policy reset." : "Skill policy saved."
+            self.skillPolicyMutationStore.send(.mutationSucceeded(
+                message: skills == nil ? "Skill policy reset." : "Skill policy saved."))
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
         } catch {
-            self.skillMutationErrorText = Self.skillMutationMessage(error)
+            self.skillPolicyMutationStore.send(.mutationFailed(message: Self.skillMutationMessage(error)))
         }
     }
 

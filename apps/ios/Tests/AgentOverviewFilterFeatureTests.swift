@@ -4,6 +4,60 @@ import Testing
 @testable import OpenClaw
 
 @MainActor
+struct AgentSkillPolicyMutationFeatureTests {
+    @Test func `mutation start records busy key and clears messages`() async {
+        var initialState = AgentSkillPolicyMutationFeature.State()
+        initialState.errorText = "Old error."
+        initialState.statusText = "Old status."
+        let store = TestStore(initialState: initialState) {
+            AgentSkillPolicyMutationFeature()
+        }
+
+        await store.send(.mutationStarted(key: "skill-a")) {
+            $0.busyKeys = ["skill-a"]
+            $0.errorText = nil
+            $0.statusText = nil
+        }
+    }
+
+    @Test func `mutation success stores status while busy key remains active`() async {
+        var initialState = AgentSkillPolicyMutationFeature.State()
+        initialState.busyKeys = ["skill-a"]
+        let store = TestStore(initialState: initialState) {
+            AgentSkillPolicyMutationFeature()
+        }
+
+        await store.send(.mutationSucceeded(message: "Skill policy saved.")) {
+            $0.statusText = "Skill policy saved."
+        }
+    }
+
+    @Test func `mutation failure stores error while busy key remains active`() async {
+        var initialState = AgentSkillPolicyMutationFeature.State()
+        initialState.busyKeys = ["skill-a"]
+        let store = TestStore(initialState: initialState) {
+            AgentSkillPolicyMutationFeature()
+        }
+
+        await store.send(.mutationFailed(message: "Skill policy failed.")) {
+            $0.errorText = "Skill policy failed."
+        }
+    }
+
+    @Test func `mutation finish clears busy key`() async {
+        var initialState = AgentSkillPolicyMutationFeature.State()
+        initialState.busyKeys = ["skill-a", "skill-b"]
+        let store = TestStore(initialState: initialState) {
+            AgentSkillPolicyMutationFeature()
+        }
+
+        await store.send(.mutationFinished(key: "skill-a")) {
+            $0.busyKeys = ["skill-b"]
+        }
+    }
+}
+
+@MainActor
 struct AgentSkillEditorFeatureTests {
     @Test func `editor selection opens changes and dismisses`() async {
         let store = TestStore(initialState: AgentSkillEditorFeature.State()) {
