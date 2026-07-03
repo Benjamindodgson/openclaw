@@ -600,6 +600,7 @@ struct SettingsVoiceControlFeature {
     struct State: Equatable, Sendable {
         var talkEnabled = false
         var voiceWakeEnabled = false
+        var voiceWakeStatusText = "Off"
 
         var detailText: String {
             if self.talkEnabled, self.voiceWakeEnabled { return "Talk + Wake" }
@@ -607,10 +608,17 @@ struct SettingsVoiceControlFeature {
             if self.voiceWakeEnabled { return "Wake on" }
             return "Off"
         }
+
+        var voiceWakeValue: String {
+            self.voiceWakeEnabled ? "on" : "off"
+        }
     }
 
     enum Action: Equatable, Sendable {
-        case controlsSynced(talkEnabled: Bool, voiceWakeEnabled: Bool)
+        case controlsSynced(
+            talkEnabled: Bool,
+            voiceWakeEnabled: Bool,
+            voiceWakeStatusText: String)
         case talkDisabledForAppleReview
         case talkEnabledChanged(Bool)
         case voiceWakeEnabledChanged(Bool)
@@ -621,9 +629,10 @@ struct SettingsVoiceControlFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .controlsSynced(talkEnabled, voiceWakeEnabled):
+            case let .controlsSynced(talkEnabled, voiceWakeEnabled, voiceWakeStatusText):
                 state.talkEnabled = talkEnabled
                 state.voiceWakeEnabled = voiceWakeEnabled
+                state.voiceWakeStatusText = voiceWakeStatusText
                 return .none
 
             case .talkDisabledForAppleReview:
@@ -966,6 +975,9 @@ struct SettingsProTab: View {
                 self.syncVoiceControlState()
             }
             .onChange(of: self.storedVoiceWakeEnabled) { _, _ in
+                self.syncVoiceControlState()
+            }
+            .onChange(of: self.appModel.voiceWake.statusText) { _, _ in
                 self.syncVoiceControlState()
             }
             .onChange(of: self.storedTalkProviderSelectionRaw) { _, _ in

@@ -1095,9 +1095,14 @@ struct SettingsNavigationFeatureTests {
             SettingsVoiceControlFeature()
         }
 
-        await store.send(.controlsSynced(talkEnabled: true, voiceWakeEnabled: true)) {
+        await store.send(.controlsSynced(
+            talkEnabled: true,
+            voiceWakeEnabled: true,
+            voiceWakeStatusText: "Listening"))
+        {
             $0.talkEnabled = true
             $0.voiceWakeEnabled = true
+            $0.voiceWakeStatusText = "Listening"
         }
     }
 
@@ -1130,9 +1135,11 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings voice controls summarize active modes`() {
         var state = SettingsVoiceControlFeature.State()
         #expect(state.detailText == "Off")
+        #expect(state.voiceWakeValue == "off")
 
         state.voiceWakeEnabled = true
         #expect(state.detailText == "Wake on")
+        #expect(state.voiceWakeValue == "on")
 
         state.talkEnabled = true
         #expect(state.detailText == "Talk + Wake")
