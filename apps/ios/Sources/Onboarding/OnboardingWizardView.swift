@@ -49,11 +49,6 @@ struct OnboardingWizardView: View {
     @AppStorage("gateway.discovery.domain") private var discoveryDomain: String = ""
     @AppStorage("onboarding.developerMode") private var developerModeEnabled: Bool = false
     @State private var step: OnboardingStep
-    @State private var selectedMode: OnboardingConnectionMode?
-    @State private var manualHost: String = ""
-    @State private var manualPort: Int = 18789
-    @State private var manualPortText: String = "18789"
-    @State private var manualTLS: Bool = true
     @State private var gatewayToken: String = ""
     @State private var gatewayPassword: String = ""
     @State private var connectMessage: String?
@@ -72,6 +67,12 @@ struct OnboardingWizardView: View {
 
     @State private var lastPairingAutoResumeAttemptAt: Date?
     @State private var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
+    @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature> = Store(
+        initialState: OnboardingConnectionFormFeature.State())
+    {
+        OnboardingConnectionFormFeature()
+    }
+
     @State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature> = Store(
         initialState: OnboardingSetupCodeFeature.State())
     {
@@ -139,6 +140,36 @@ struct OnboardingWizardView: View {
         Binding(
             get: { self.setupCodeStore.setupCode },
             set: { self.setupCodeStore.send(.setupCodeChanged($0)) })
+    }
+
+    private var selectedMode: OnboardingConnectionMode? {
+        self.connectionFormStore.selectedMode
+    }
+
+    private var manualPort: Int {
+        self.connectionFormStore.manualPort
+    }
+
+    private var manualTLS: Bool {
+        self.connectionFormStore.manualTLS
+    }
+
+    private var manualHostBinding: Binding<String> {
+        Binding(
+            get: { self.connectionFormStore.manualHost },
+            set: { self.connectionFormStore.send(.manualHostChanged($0)) })
+    }
+
+    private var manualPortTextBinding: Binding<String> {
+        Binding(
+            get: { self.connectionFormStore.manualPortText },
+            set: { self.connectionFormStore.send(.manualPortTextChanged($0)) })
+    }
+
+    private var manualTLSBinding: Binding<Bool> {
+        Binding(
+            get: { self.connectionFormStore.manualTLS },
+            set: { self.connectionFormStore.send(.manualTLSChanged($0)) })
     }
 
     var body: some View {
@@ -289,24 +320,6 @@ struct OnboardingWizardView: View {
             .onChange(of: self.discoveryDomain) { _, _ in
                 self.scheduleDiscoveryRestart()
             }
-            .onChange(of: self.manualPortText) { _, newValue in
-                let digits = newValue.filter(\.isNumber)
-                if digits != newValue {
-                    self.manualPortText = digits
-                    return
-                }
-                guard let parsed = Int(digits), parsed > 0 else {
-                    self.manualPort = 0
-                    return
-                }
-                self.manualPort = min(parsed, 65535)
-            }
-            .onChange(of: self.manualPort) { _, newValue in
-                let normalized = newValue > 0 ? String(newValue) : ""
-                if self.manualPortText != normalized {
-                    self.manualPortText = normalized
-                }
-            }
             .onChange(of: self.gatewayToken) { _, newValue in
                 self.saveGatewayCredentials(token: newValue, password: self.gatewayPassword)
             }
@@ -403,8 +416,8 @@ struct OnboardingWizardView: View {
                 get: { self.developerModeEnabled },
                 set: { enabled in
                     self.developerModeEnabled = enabled
-                    if !enabled, self.selectedMode == .developerLocal {
-                        self.selectedMode = nil
+                    if !enabled {
+                        self.connectionFormStore.send(.developerModeDisabled)
                     }
                 }))
     }
@@ -526,12 +539,12 @@ struct OnboardingWizardView: View {
 
     private var developerConnectSection: some View {
         Section {
-            TextField("Host", text: self.$manualHost)
+            TextField("Host", text: self.manualHostBinding)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            TextField("Port", text: self.$manualPortText)
+            TextField("Port", text: self.manualPortTextBinding)
                 .keyboardType(.numberPad)
-            self.onboardingButtonToggle("Use TLS", isOn: self.$manualTLS)
+            self.onboardingButtonToggle("Use TLS", isOn: self.manualTLSBinding)
             self.manualConnectButton
         } header: {
             Text("Developer Local")
@@ -701,12 +714,12 @@ extension OnboardingWizardView {
 
     private func manualConnectionFieldsSection(title: String) -> some View {
         Section(title) {
-            TextField("Host", text: self.$manualHost)
+            TextField("Host", text: self.manualHostBinding)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            TextField("Port", text: self.$manualPortText)
+            TextField("Port", text: self.manualPortTextBinding)
                 .keyboardType(.numberPad)
-            self.onboardingButtonToggle("Use TLS", isOn: self.$manualTLS)
+            self.onboardingButtonToggle("Use TLS", isOn: self.manualTLSBinding)
             TextField("Discovery Domain (optional)", text: self.$discoveryDomain)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -734,7 +747,7 @@ extension OnboardingWizardView {
                 Text("Connect")
             }
         }
-        .disabled(!self.canConnectManual || self.connectingGatewayID != nil)
+        .disabled(!self.connectionFormStore.canConnectManual || self.connectingGatewayID != nil)
     }
 
     private func applySetupCodeAndConnect() async {
@@ -776,10 +789,10 @@ extension OnboardingWizardView {
     }
 
     private func applyGatewayLink(_ link: GatewayConnectDeepLink) {
-        self.manualHost = link.host
-        self.manualPort = link.port
-        self.manualPortText = String(link.port)
-        self.manualTLS = link.tls
+        self.connectionFormStore.send(.gatewayLinkApplied(
+            host: link.host,
+            port: link.port,
+            tls: link.tls))
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
         if setupAuth.hasBootstrapToken {
             GatewayOnboardingReset.prepareForBootstrapPairing(
@@ -795,9 +808,6 @@ extension OnboardingWizardView {
         }
         self.pendingManualAuthOverride = setupAuth.manualAuthOverride
         self.saveGatewayCredentials(token: self.gatewayToken, password: self.gatewayPassword)
-        if self.selectedMode == nil {
-            self.selectedMode = link.tls ? .remoteDomain : .homeNetwork
-        }
     }
 
     private func handleScannedSetupCode(_ code: String) {
@@ -806,7 +816,7 @@ extension OnboardingWizardView {
         self.connectingGatewayID = nil
         self.connectMessage = "Apple Review demo mode enabled."
         self.statusLine = "Apple Review demo mode enabled."
-        self.selectedMode = .homeNetwork
+        self.connectionFormStore.send(.selectedModeChanged(.homeNetwork))
         self.appModel.enterAppleReviewDemoMode()
     }
 
@@ -934,38 +944,24 @@ extension OnboardingWizardView {
         self.step = target
     }
 
-    private var canConnectManual: Bool {
-        let host = self.manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !host.isEmpty && self.manualPort > 0 && self.manualPort <= 65535
-    }
-
     private func initializeState() {
-        if self.manualHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            if let last = GatewaySettingsStore.loadLastGatewayConnection() {
-                switch last {
-                case let .manual(host, port, useTLS, _):
-                    self.manualHost = host
-                    self.manualPort = port
-                    self.manualTLS = useTLS
-                case .discovered:
-                    self.manualHost = "openclaw.local"
-                    self.manualPort = 18789
-                    self.manualTLS = true
-                }
-            } else {
-                self.manualHost = "openclaw.local"
-                self.manualPort = 18789
-                self.manualTLS = true
+        let initialConnection: (host: String, port: Int, tls: Bool) = if let last = GatewaySettingsStore
+            .loadLastGatewayConnection()
+        {
+            switch last {
+            case let .manual(host, port, useTLS, _):
+                (host, port, useTLS)
+            case .discovered:
+                ("openclaw.local", 18789, true)
             }
+        } else {
+            ("openclaw.local", 18789, true)
         }
-        self.manualPortText = self.manualPort > 0 ? String(self.manualPort) : ""
-        if self.selectedMode == nil {
-            self.selectedMode = OnboardingStateStore.lastMode()
-        }
-        if self.selectedMode == .developerLocal, self.manualHost == "openclaw.local" {
-            self.manualHost = "localhost"
-            self.manualTLS = false
-        }
+        self.connectionFormStore.send(.initialized(
+            host: initialConnection.host,
+            port: initialConnection.port,
+            tls: initialConnection.tls,
+            lastMode: OnboardingStateStore.lastMode()))
 
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedInstanceId.isEmpty {
@@ -1016,28 +1012,7 @@ extension OnboardingWizardView {
     }
 
     private func selectMode(_ mode: OnboardingConnectionMode) {
-        self.selectedMode = mode
-        self.applyModeDefaults(mode)
-    }
-
-    private func applyModeDefaults(_ mode: OnboardingConnectionMode) {
-        let host = self.manualHost.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let hostIsDefaultLike = host.isEmpty || host == "openclaw.local" || host == "localhost"
-
-        switch mode {
-        case .homeNetwork:
-            if hostIsDefaultLike { self.manualHost = "openclaw.local" }
-            self.manualTLS = true
-            if self.manualPort <= 0 || self.manualPort > 65535 { self.manualPort = 18789 }
-        case .remoteDomain:
-            if host == "openclaw.local" || host == "localhost" { self.manualHost = "" }
-            self.manualTLS = true
-            if self.manualPort <= 0 || self.manualPort > 65535 { self.manualPort = 18789 }
-        case .developerLocal:
-            if hostIsDefaultLike { self.manualHost = "localhost" }
-            self.manualTLS = false
-            if self.manualPort <= 0 || self.manualPort > 65535 { self.manualPort = 18789 }
-        }
+        self.connectionFormStore.send(.modeSelected(mode))
     }
 
     private func gatewayHasResolvableHost(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) -> Bool {
@@ -1048,7 +1023,7 @@ extension OnboardingWizardView {
     }
 
     private func connectManual() async {
-        let host = self.manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        let host = self.connectionFormStore.normalizedManualHost
         guard !host.isEmpty, self.manualPort > 0, self.manualPort <= 65535 else { return }
         self.connectingGatewayID = "manual"
         self.issue = .none

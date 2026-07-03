@@ -225,6 +225,133 @@ struct OnboardingSetupCodeFeature {
     }
 }
 
+@Reducer
+struct OnboardingConnectionFormFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var selectedMode: OnboardingConnectionMode?
+        var manualHost = ""
+        var manualPort = 18789
+        var manualPortText = "18789"
+        var manualTLS = true
+
+        var normalizedManualHost: String {
+            self.manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        var canConnectManual: Bool {
+            !self.normalizedManualHost.isEmpty && self.manualPort > 0 && self.manualPort <= 65535
+        }
+
+        mutating func syncManualPortText() {
+            self.manualPortText = self.manualPort > 0 ? String(self.manualPort) : ""
+        }
+
+        mutating func applyModeDefaults(_ mode: OnboardingConnectionMode) {
+            let host = self.normalizedManualHost.lowercased()
+            let hostIsDefaultLike = host.isEmpty || host == "openclaw.local" || host == "localhost"
+
+            switch mode {
+            case .homeNetwork:
+                if hostIsDefaultLike { self.manualHost = "openclaw.local" }
+                self.manualTLS = true
+            case .remoteDomain:
+                if host == "openclaw.local" || host == "localhost" { self.manualHost = "" }
+                self.manualTLS = true
+            case .developerLocal:
+                if hostIsDefaultLike { self.manualHost = "localhost" }
+                self.manualTLS = false
+            }
+
+            if self.manualPort <= 0 || self.manualPort > 65535 {
+                self.manualPort = 18789
+            }
+            self.syncManualPortText()
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case developerModeDisabled
+        case gatewayLinkApplied(host: String, port: Int, tls: Bool)
+        case initialized(host: String, port: Int, tls: Bool, lastMode: OnboardingConnectionMode?)
+        case manualHostChanged(String)
+        case manualPortTextChanged(String)
+        case manualTLSChanged(Bool)
+        case modeSelected(OnboardingConnectionMode)
+        case selectedModeChanged(OnboardingConnectionMode?)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .developerModeDisabled:
+                if state.selectedMode == .developerLocal {
+                    state.selectedMode = nil
+                }
+                return .none
+
+            case let .gatewayLinkApplied(host, port, tls):
+                state.manualHost = host
+                state.manualPort = port
+                state.syncManualPortText()
+                state.manualTLS = tls
+                if state.selectedMode == nil {
+                    state.selectedMode = tls ? .remoteDomain : .homeNetwork
+                }
+                return .none
+
+            case let .initialized(host, port, tls, lastMode):
+                if state.normalizedManualHost.isEmpty {
+                    state.manualHost = host
+                    state.manualPort = port
+                    state.manualTLS = tls
+                }
+                state.syncManualPortText()
+                if state.selectedMode == nil {
+                    state.selectedMode = lastMode
+                }
+                if state.selectedMode == .developerLocal, state.manualHost == "openclaw.local" {
+                    state.manualHost = "localhost"
+                    state.manualTLS = false
+                }
+                return .none
+
+            case let .manualHostChanged(host):
+                state.manualHost = host
+                return .none
+
+            case let .manualPortTextChanged(portText):
+                let digits = portText.filter(\.isNumber)
+                guard let parsed = Int(digits), parsed > 0 else {
+                    state.manualPort = 0
+                    state.manualPortText = ""
+                    return .none
+                }
+                state.manualPort = min(parsed, 65535)
+                state.syncManualPortText()
+                return .none
+
+            case let .manualTLSChanged(tls):
+                state.manualTLS = tls
+                return .none
+
+            case let .modeSelected(mode):
+                state.selectedMode = mode
+                state.applyModeDefaults(mode)
+                return .none
+
+            case let .selectedModeChanged(mode):
+                state.selectedMode = mode
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 enum OnboardingStateStore {
     private static let completedDefaultsKey = "onboarding.completed"
     private static let firstRunIntroSeenDefaultsKey = "onboarding.first_run_intro_seen"

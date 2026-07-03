@@ -204,6 +204,66 @@ import Testing
         }
     }
 
+    @Test @MainActor func `connection form reducer normalizes ports and mode defaults`() async {
+        let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
+            OnboardingConnectionFormFeature()
+        }
+
+        await store.send(.initialized(
+            host: "openclaw.local",
+            port: 18789,
+            tls: true,
+            lastMode: .developerLocal))
+        {
+            $0.selectedMode = .developerLocal
+            $0.manualHost = "localhost"
+            $0.manualTLS = false
+        }
+
+        await store.send(.manualPortTextChanged("65abc536")) {
+            $0.manualPort = 65535
+            $0.manualPortText = "65535"
+        }
+
+        await store.send(.manualPortTextChanged("0")) {
+            $0.manualPort = 0
+            $0.manualPortText = ""
+        }
+
+        #expect(!store.state.canConnectManual)
+
+        await store.send(.modeSelected(.remoteDomain)) {
+            $0.selectedMode = .remoteDomain
+            $0.manualHost = ""
+            $0.manualPort = 18789
+            $0.manualPortText = "18789"
+            $0.manualTLS = true
+        }
+
+        await store.send(.manualHostChanged("gateway.example.com")) {
+            $0.manualHost = "gateway.example.com"
+        }
+
+        #expect(store.state.canConnectManual)
+
+        await store.send(.gatewayLinkApplied(host: "studio.local", port: 19000, tls: false)) {
+            $0.manualHost = "studio.local"
+            $0.manualPort = 19000
+            $0.manualPortText = "19000"
+            $0.manualTLS = false
+        }
+
+        await store.send(.developerModeDisabled)
+
+        await store.send(.selectedModeChanged(.developerLocal)) {
+            $0.selectedMode = .developerLocal
+        }
+
+        await store.send(.developerModeDisabled) {
+            $0.selectedMode = nil
+        }
+    }
+
     private struct TestDefaults {
         var suiteName: String
         var defaults: UserDefaults
