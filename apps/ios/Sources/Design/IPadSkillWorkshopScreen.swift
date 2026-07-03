@@ -1,28 +1,442 @@
+import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
+
+struct IPadSkillWorkshopClient {
+    var list: @Sendable @MainActor (_ agentID: String?) async throws -> IPadSkillProposalManifest
+    var inspect: @Sendable @MainActor (_ agentID: String?, _ proposalID: String) async throws
+        -> IPadSkillProposalInspectResponse
+    var run: @Sendable @MainActor (_ action: IPadSkillProposalAction.Kind, _ agentID: String?, _ proposalID: String)
+    async throws -> Void
+}
+
+extension IPadSkillWorkshopClient: DependencyKey {
+    static let liveValue = IPadSkillWorkshopClient(
+        list: { _ in IPadSkillProposalManifest(proposals: []) },
+        inspect: { _, _ in throw IPadSkillWorkshopError.failed("Proposal unavailable.") },
+        run: { _, _, _ in })
+
+    static let testValue = IPadSkillWorkshopClient(
+        list: { _ in IPadSkillProposalManifest(proposals: []) },
+        inspect: { _, _ in throw IPadSkillWorkshopError.failed("Proposal unavailable.") },
+        run: { _, _, _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        IPadSkillWorkshopClient(
+            list: { agentID in
+                let data = try await Self.request(
+                    appModel: appModel,
+                    method: "skills.proposals.list",
+                    params: IPadSkillProposalListParams(agentId: agentID),
+                    timeoutSeconds: 20)
+                return try JSONDecoder().decode(IPadSkillProposalManifest.self, from: data)
+            },
+            inspect: { agentID, proposalID in
+                let data = try await Self.request(
+                    appModel: appModel,
+                    method: "skills.proposals.inspect",
+                    params: IPadSkillProposalInspectParams(
+                        agentId: agentID,
+                        proposalId: proposalID),
+                    timeoutSeconds: 20)
+                return try JSONDecoder().decode(IPadSkillProposalInspectResponse.self, from: data)
+            },
+            run: { action, agentID, proposalID in
+                let method = action == .apply ? "skills.proposals.apply" : "skills.proposals.reject"
+                _ = try await Self.request(
+                    appModel: appModel,
+                    method: method,
+                    params: IPadSkillProposalInspectParams(
+                        agentId: agentID,
+                        proposalId: proposalID),
+                    timeoutSeconds: 30)
+            })
+    }
+
+    @MainActor
+    private static func request(
+        appModel: NodeAppModel,
+        method: String,
+        params: some Encodable,
+        timeoutSeconds: Int) async throws -> Data
+    {
+        let data = try JSONEncoder().encode(params)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw IPadSidebarGatewayError.invalidPayload
+        }
+        return try await appModel.operatorSession.request(
+            method: method,
+            paramsJSON: json,
+            timeoutSeconds: timeoutSeconds)
+    }
+}
+
+extension DependencyValues {
+    var iPadSkillWorkshop: IPadSkillWorkshopClient {
+        get { self[IPadSkillWorkshopClient.self] }
+        set { self[IPadSkillWorkshopClient.self] = newValue }
+    }
+}
+
+// swiftformat:disable redundantSendable
+enum IPadSkillWorkshopError: Error, Equatable, Sendable {
+    case failed(String)
+
+    var message: String {
+        switch self {
+        case let .failed(message):
+            message
+        }
+    }
+}
+
+// swiftformat:enable redundantSendable
+
+@Reducer
+struct IPadSkillWorkshopFeature {
+    private let clientOverride: IPadSkillWorkshopClient?
+
+    init(client: IPadSkillWorkshopClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var proposals: [IPadSkillProposal] = []
+        var selectedProposalID: String?
+        var selectedAgentScopeID = ""
+        var statusFilter = "pending"
+        var query = ""
+        var isLoading = false
+        var inspectingProposalID: String?
+        var busyAction: IPadSkillProposalAction?
+        var errorText: String?
+        var noticeText: String?
+        var presentedProposalRoute: IPadSkillProposalSheetRoute?
+
+        var selectedAgentParam: String? {
+            let selected = IPadSkillWorkshopScreen.normalizedScopeID(self.selectedAgentScopeID)
+            return selected.isEmpty ? nil : selected
+        }
+
+        var statusFilterLabel: String {
+            IPadSkillWorkshopScreen.proposalStatusFilterLabel(self.statusFilter)
+        }
+
+        var filteredProposals: [IPadSkillProposal] {
+            Self.filteredProposals(
+                proposals: self.proposals,
+                statusFilter: self.statusFilter,
+                query: self.query)
+        }
+
+        var visibleProposalLaneStatuses: [String] {
+            IPadSkillWorkshopScreen.proposalStatusBoardLanes(
+                filter: self.statusFilter,
+                proposalStatuses: self.proposals.map(\.status))
+        }
+
+        func proposals(forLaneStatus status: String) -> [IPadSkillProposal] {
+            Self.filteredProposals(
+                proposals: self.proposals.filter { $0.status == status },
+                statusFilter: "all",
+                query: self.query)
+                .sorted { $0.updatedAtMs > $1.updatedAtMs }
+        }
+
+        mutating func syncSelectedProposalIDForVisibleProposals() {
+            let nextID = IPadSkillWorkshopScreen.nextSelectedProposalID(
+                current: self.selectedProposalID,
+                visibleProposalIDs: self.filteredProposals.map(\.id))
+            guard self.selectedProposalID != nextID else { return }
+            self.selectedProposalID = nextID
+        }
+
+        mutating func merge(_ proposal: IPadSkillProposal) {
+            self.proposals.removeAll { $0.id == proposal.id }
+            self.proposals.append(proposal)
+            self.proposals.sort { $0.updatedAtMs > $1.updatedAtMs }
+        }
+
+        private static func filteredProposals(
+            proposals: [IPadSkillProposal],
+            statusFilter: String,
+            query: String) -> [IPadSkillProposal]
+        {
+            let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return proposals
+                .filter { proposal in
+                    IPadSkillWorkshopScreen.proposalStatusMatchesFilter(
+                        status: proposal.status,
+                        filter: statusFilter)
+                }
+                .filter { proposal in
+                    guard !trimmedQuery.isEmpty else { return true }
+                    return [
+                        proposal.title,
+                        proposal.description,
+                        proposal.skillName,
+                        proposal.skillKey,
+                    ]
+                        .joined(separator: " ")
+                        .lowercased()
+                        .contains(trimmedQuery)
+                }
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case agentScopeChanged(String)
+        case clearQueryTapped
+        case inspectRequested(proposalID: String, canRead: Bool, force: Bool)
+        case inspectResponse(proposalID: String, Result<IPadSkillProposalInspectResponse, IPadSkillWorkshopError>)
+        case proposalMutationRequested(
+            IPadSkillProposalAction.Kind,
+            proposalID: String,
+            sceneActive: Bool,
+            canRead: Bool,
+            canWrite: Bool,
+            hasOperatorAdminScope: Bool)
+        case proposalMutationResponse(
+            IPadSkillProposalAction.Kind,
+            sceneActive: Bool,
+            canRead: Bool,
+            Result<Bool, IPadSkillWorkshopError>)
+        case proposalSelected(proposalID: String, opensSheet: Bool, canRead: Bool, forceInspect: Bool)
+        case proposalSheetDismissed
+        case queryChanged(String)
+        case refreshRequested(sceneActive: Bool, canRead: Bool, force: Bool)
+        case refreshResponse(force: Bool, Result<IPadSkillProposalManifest, IPadSkillWorkshopError>)
+        case statusFilterChanged(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.iPadSkillWorkshop) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case let .agentScopeChanged(agentID):
+                state.selectedAgentScopeID = IPadSkillWorkshopScreen.normalizedScopeID(agentID)
+                return .none
+
+            case .clearQueryTapped:
+                state.query = ""
+                state.syncSelectedProposalIDForVisibleProposals()
+                return .none
+
+            case let .inspectRequested(proposalID, canRead, force):
+                return self.inspectEffect(
+                    state: &state,
+                    client: client,
+                    proposalID: proposalID,
+                    canRead: canRead,
+                    force: force)
+
+            case let .inspectResponse(proposalID, .success(response)):
+                state.inspectingProposalID = nil
+                let previous = state.proposals.first { $0.id == proposalID }
+                state.merge(IPadSkillProposal(inspect: response, previous: previous))
+                return .none
+
+            case let .inspectResponse(_, .failure(error)):
+                state.inspectingProposalID = nil
+                state.errorText = error.message
+                return .none
+
+            case let .proposalMutationRequested(
+                kind,
+                proposalID,
+                sceneActive,
+                canRead,
+                canWrite,
+                hasOperatorAdminScope):
+                guard IPadSkillWorkshopScreen.shouldEnableProposalMutation(
+                    canWrite: canWrite,
+                    hasOperatorAdminScope: hasOperatorAdminScope),
+                    state.busyAction == nil
+                else {
+                    return .none
+                }
+
+                state.busyAction = IPadSkillProposalAction(kind: kind, proposalID: proposalID)
+                state.errorText = nil
+                state.noticeText = nil
+                let agentID = state.selectedAgentParam
+                return .run { send in
+                    do {
+                        try await client.run(kind, agentID, proposalID)
+                        await send(.proposalMutationResponse(
+                            kind,
+                            sceneActive: sceneActive,
+                            canRead: canRead,
+                            .success(true)))
+                    } catch {
+                        await send(.proposalMutationResponse(
+                            kind,
+                            sceneActive: sceneActive,
+                            canRead: canRead,
+                            .failure(.failed(Self.message(for: error)))))
+                    }
+                }
+
+            case let .proposalMutationResponse(kind, sceneActive, canRead, .success):
+                state.busyAction = nil
+                state.noticeText = kind == .apply ? "Proposal applied." : "Proposal rejected."
+                return .run { send in
+                    await send(.refreshRequested(sceneActive: sceneActive, canRead: canRead, force: true))
+                }
+
+            case let .proposalMutationResponse(_, _, _, .failure(error)):
+                state.busyAction = nil
+                state.errorText = error.message
+                return .none
+
+            case let .proposalSelected(proposalID, opensSheet, canRead, forceInspect):
+                state.selectedProposalID = proposalID
+                if opensSheet {
+                    state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: proposalID)
+                }
+                return self.inspectEffect(
+                    state: &state,
+                    client: client,
+                    proposalID: proposalID,
+                    canRead: canRead,
+                    force: forceInspect)
+
+            case .proposalSheetDismissed:
+                state.presentedProposalRoute = nil
+                return .none
+
+            case let .queryChanged(query):
+                state.query = query
+                state.syncSelectedProposalIDForVisibleProposals()
+                return .none
+
+            case let .refreshRequested(sceneActive, canRead, force):
+                guard sceneActive else {
+                    state.isLoading = false
+                    return .none
+                }
+                guard canRead else {
+                    state.proposals = []
+                    state.errorText = nil
+                    state.isLoading = false
+                    state.inspectingProposalID = nil
+                    return .none
+                }
+                guard !state.isLoading else { return .none }
+
+                state.isLoading = true
+                state.errorText = nil
+                let agentID = state.selectedAgentParam
+                return .run { send in
+                    do {
+                        let manifest = try await client.list(agentID)
+                        await send(.refreshResponse(force: force, .success(manifest)))
+                    } catch {
+                        await send(.refreshResponse(force: force, .failure(.failed(Self.message(for: error)))))
+                    }
+                }
+
+            case let .refreshResponse(force, .success(manifest)):
+                state.isLoading = false
+                let previousByID = Dictionary(uniqueKeysWithValues: state.proposals.map { ($0.id, $0) })
+                state.proposals = manifest.proposals
+                    .map { IPadSkillProposal(entry: $0, previous: previousByID[$0.id]) }
+                    .sorted { $0.updatedAtMs > $1.updatedAtMs }
+                state.syncSelectedProposalIDForVisibleProposals()
+                guard let proposalID = state.selectedProposalID else { return .none }
+                return self.inspectEffect(
+                    state: &state,
+                    client: client,
+                    proposalID: proposalID,
+                    canRead: true,
+                    force: force)
+
+            case let .refreshResponse(force, .failure(error)):
+                state.isLoading = false
+                if force || state.proposals.isEmpty {
+                    state.errorText = error.message
+                }
+                return .none
+
+            case let .statusFilterChanged(filter):
+                state.statusFilter = filter
+                state.syncSelectedProposalIDForVisibleProposals()
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    private func inspectEffect(
+        state: inout State,
+        client: IPadSkillWorkshopClient,
+        proposalID: String,
+        canRead: Bool,
+        force: Bool) -> Effect<Action>
+    {
+        guard canRead else { return .none }
+        guard force || state.proposals.first(where: { $0.id == proposalID })?.content == nil else { return .none }
+        guard state.inspectingProposalID == nil else { return .none }
+
+        state.inspectingProposalID = proposalID
+        state.errorText = nil
+        let agentID = state.selectedAgentParam
+        return .run { send in
+            do {
+                let response = try await client.inspect(agentID, proposalID)
+                await send(.inspectResponse(proposalID: proposalID, .success(response)))
+            } catch {
+                await send(.inspectResponse(proposalID: proposalID, .failure(.failed(Self.message(for: error)))))
+            }
+        }
+    }
+
+    private static func message(for error: Error) -> String {
+        if let workflowError = error as? IPadSkillWorkshopError {
+            return workflowError.message
+        }
+        if let gatewayError = error as? IPadSidebarGatewayError {
+            return gatewayError.message
+        }
+        return error.localizedDescription
+    }
+}
+
+enum IPadSkillWorkshopStoreFactory {
+    @MainActor
+    static func live(appModel: NodeAppModel) -> StoreOf<IPadSkillWorkshopFeature> {
+        Store(initialState: IPadSkillWorkshopFeature.State()) {
+            IPadSkillWorkshopFeature(client: .live(appModel: appModel))
+        }
+    }
+}
 
 struct IPadSkillWorkshopScreen: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @State private var proposals: [IPadSkillProposal] = []
-    @State private var selectedProposalID: String?
-    @State private var selectedAgentScopeID = ""
-    @State private var statusFilter = "pending"
-    @State private var query = ""
-    @State private var isLoading = false
-    @State private var inspectingProposalID: String?
-    @State private var busyAction: IPadSkillProposalAction?
-    @State private var errorText: String?
-    @State private var noticeText: String?
-    @State private var presentedProposalRoute: IPadSkillProposalSheetRoute?
+    @State private var store: StoreOf<IPadSkillWorkshopFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let openSettings: () -> Void
 
-    init(headerLeadingAction: OpenClawSidebarHeaderAction? = nil, openSettings: @escaping () -> Void = {}) {
+    init(
+        headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
+        openSettings: @escaping () -> Void = {},
+        store: StoreOf<IPadSkillWorkshopFeature> = Store(initialState: IPadSkillWorkshopFeature.State()) {
+            IPadSkillWorkshopFeature()
+        })
+    {
         self.headerLeadingAction = headerLeadingAction
         self.openSettings = openSettings
+        self._store = State(wrappedValue: store)
     }
 
     var body: some View {
@@ -46,13 +460,7 @@ struct IPadSkillWorkshopScreen: View {
         .refreshable {
             await self.loadProposals(force: true)
         }
-        .onChange(of: self.statusFilter) { _, _ in
-            self.syncSelectedProposalIDForVisibleProposals()
-        }
-        .onChange(of: self.query) { _, _ in
-            self.syncSelectedProposalIDForVisibleProposals()
-        }
-        .sheet(item: self.$presentedProposalRoute) { route in
+        .sheet(item: self.presentedProposalRouteBinding) { route in
             NavigationStack {
                 ScrollView {
                     self.presentedProposalDetail(proposalID: route.proposalID)
@@ -65,7 +473,7 @@ struct IPadSkillWorkshopScreen: View {
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done") {
-                            self.presentedProposalRoute = nil
+                            self.store.send(.proposalSheetDismissed)
                         }
                     }
                 }
@@ -98,7 +506,7 @@ struct IPadSkillWorkshopScreen: View {
             VStack(alignment: .leading, spacing: 12) {
                 self.agentScopeMenu
                 self.proposalSearchField
-                Picker("Status", selection: self.$statusFilter) {
+                Picker("Status", selection: self.statusFilterBinding) {
                     ForEach(Self.proposalStatusFilters, id: \.self) { filter in
                         Text(Self.proposalStatusFilterLabel(filter)).tag(filter)
                     }
@@ -115,18 +523,18 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.isLoading)
+                    .disabled(self.store.isLoading)
 
-                    if self.isLoading {
+                    if self.store.isLoading {
                         ProgressView().controlSize(.small)
                     }
                 }
-                if let noticeText {
+                if let noticeText = self.store.noticeText {
                     Text(noticeText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
-                if let errorText {
+                if let errorText = self.store.errorText {
                     Text(errorText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
@@ -148,13 +556,13 @@ struct IPadSkillWorkshopScreen: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 8)
-                    if self.isLoading {
+                    if self.store.isLoading {
                         ProgressView().controlSize(.small)
                     }
                 }
 
                 self.agentScopeMenu
-                Picker("Status", selection: self.$statusFilter) {
+                Picker("Status", selection: self.statusFilterBinding) {
                     ForEach(Self.proposalStatusFilters, id: \.self) { filter in
                         Text(Self.proposalStatusFilterLabel(filter)).tag(filter)
                     }
@@ -175,14 +583,14 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.isLoading)
+                    .disabled(self.store.isLoading)
                 }
-                if let noticeText {
+                if let noticeText = self.store.noticeText {
                     Text(noticeText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
-                if let errorText {
+                if let errorText = self.store.errorText {
                     Text(errorText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
@@ -197,13 +605,13 @@ struct IPadSkillWorkshopScreen: View {
             Image(systemName: "magnifyingglass")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-            TextField("Search proposals", text: self.$query)
+            TextField("Search proposals", text: self.queryBinding)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.subheadline)
-            if !self.query.isEmpty {
+            if !self.store.query.isEmpty {
                 Button {
-                    self.query = ""
+                    self.store.send(.clearQueryTapped)
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                 }
@@ -220,11 +628,11 @@ struct IPadSkillWorkshopScreen: View {
                 .foregroundStyle(.secondary)
             Menu {
                 Button("Default agent") {
-                    self.selectedAgentScopeID = ""
+                    self.store.send(.agentScopeChanged(""))
                 }
                 ForEach(self.agentScopeOptions, id: \.id) { option in
                     Button(option.title) {
-                        self.selectedAgentScopeID = option.id
+                        self.store.send(.agentScopeChanged(option.id))
                     }
                 }
             } label: {
@@ -285,10 +693,10 @@ struct IPadSkillWorkshopScreen: View {
                     IPadSkillProposalKanbanColumn(
                         status: status,
                         proposals: self.proposals(forLaneStatus: status),
-                        selectedProposalID: self.selectedProposalID,
-                        inspectingProposalID: self.inspectingProposalID,
+                        selectedProposalID: self.store.selectedProposalID,
+                        inspectingProposalID: self.store.inspectingProposalID,
                         canApplyProposalMutations: self.canApplyProposalMutations,
-                        busyAction: self.busyAction,
+                        busyAction: self.store.busyAction,
                         select: { proposal in
                             self.selectProposal(
                                 proposal,
@@ -335,8 +743,8 @@ struct IPadSkillWorkshopScreen: View {
                     } label: {
                         IPadSkillProposalRow(
                             proposal: proposal,
-                            isSelected: proposal.id == self.selectedProposalID,
-                            isBusy: self.inspectingProposalID == proposal.id)
+                            isSelected: proposal.id == self.store.selectedProposalID,
+                            isBusy: self.store.inspectingProposalID == proposal.id)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -350,11 +758,11 @@ struct IPadSkillWorkshopScreen: View {
                             Button("Apply") {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
-                            .disabled(!self.canApplyProposalMutations || self.busyAction != nil)
+                            .disabled(!self.canApplyProposalMutations || self.store.busyAction != nil)
                             Button("Reject", role: .destructive) {
                                 Task { await self.run(.reject, proposal: proposal) }
                             }
-                            .disabled(!self.canApplyProposalMutations || self.busyAction != nil)
+                            .disabled(!self.canApplyProposalMutations || self.store.busyAction != nil)
                         }
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -363,11 +771,11 @@ struct IPadSkillWorkshopScreen: View {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
                             .tint(OpenClawBrand.ok)
-                            .disabled(!self.canApplyProposalMutations || self.busyAction != nil)
+                            .disabled(!self.canApplyProposalMutations || self.store.busyAction != nil)
                             Button("Reject", role: .destructive) {
                                 Task { await self.run(.reject, proposal: proposal) }
                             }
-                            .disabled(!self.canApplyProposalMutations || self.busyAction != nil)
+                            .disabled(!self.canApplyProposalMutations || self.store.busyAction != nil)
                         }
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -419,7 +827,7 @@ struct IPadSkillWorkshopScreen: View {
                     ProValuePill(value: proposal.status, color: proposal.statusColor)
                 }
 
-                if self.inspectingProposalID == proposal.id {
+                if self.store.inspectingProposalID == proposal.id {
                     ProgressView().controlSize(.small)
                 }
 
@@ -479,7 +887,7 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)
-        .disabled(!self.canApplyProposalMutations || self.busyAction != nil)
+        .disabled(!self.canApplyProposalMutations || self.store.busyAction != nil)
     }
 
     private func proposalRejectButton(_ proposal: IPadSkillProposal) -> some View {
@@ -491,7 +899,7 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .disabled(!self.canApplyProposalMutations || self.busyAction != nil)
+        .disabled(!self.canApplyProposalMutations || self.store.busyAction != nil)
     }
 
     private func proposalInspectButton(_ proposal: IPadSkillProposal) -> some View {
@@ -503,14 +911,14 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .disabled(self.inspectingProposalID != nil)
+        .disabled(self.store.inspectingProposalID != nil)
     }
 
     private var refreshID: String {
         [
             self.canRead ? "connected" : "offline",
             self.scenePhase == .active ? "active" : "inactive",
-            self.selectedAgentScopeID.isEmpty ? "default" : self.selectedAgentScopeID,
+            self.store.selectedAgentScopeID.isEmpty ? "default" : self.store.selectedAgentScopeID,
         ].joined(separator: ":")
     }
 
@@ -543,7 +951,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var agentScopeLabel: String {
-        let selected = Self.normalizedScopeID(self.selectedAgentScopeID)
+        let selected = Self.normalizedScopeID(self.store.selectedAgentScopeID)
         guard !selected.isEmpty else { return self.defaultAgentScopeLabel }
         return self.agentScopeOptions.first(where: { $0.id == selected })?.title ?? selected
     }
@@ -558,12 +966,7 @@ struct IPadSkillWorkshopScreen: View {
         return activeName.isEmpty ? "Default agent" : activeName
     }
 
-    private var selectedAgentParam: String? {
-        let selected = Self.normalizedScopeID(self.selectedAgentScopeID)
-        return selected.isEmpty ? nil : selected
-    }
-
-    static func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool {
+    nonisolated static func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool {
         canWrite && hasOperatorAdminScope
     }
 
@@ -585,18 +988,18 @@ struct IPadSkillWorkshopScreen: View {
             verticalSizeClass: self.verticalSizeClass)
     }
 
-    static func usesCompactTaskFlow(
+    nonisolated static func usesCompactTaskFlow(
         horizontalSizeClass: UserInterfaceSizeClass?,
         verticalSizeClass: UserInterfaceSizeClass?) -> Bool
     {
         horizontalSizeClass == .compact || verticalSizeClass == .compact
     }
 
-    static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
+    nonisolated static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
 
-    static let defaultProposalStatusBoardLanes = ["pending", "quarantined", "stale", "applied", "rejected"]
+    nonisolated static let defaultProposalStatusBoardLanes = ["pending", "quarantined", "stale", "applied", "rejected"]
 
-    static func proposalStatusFilterLabel(_ filter: String) -> String {
+    nonisolated static func proposalStatusFilterLabel(_ filter: String) -> String {
         switch filter {
         case "pending": "Pending"
         case "held": "Held"
@@ -606,7 +1009,7 @@ struct IPadSkillWorkshopScreen: View {
         }
     }
 
-    static func proposalLaneLabel(_ status: String) -> String {
+    nonisolated static func proposalLaneLabel(_ status: String) -> String {
         switch status {
         case "quarantined": "Quarantined"
         case "stale": "Stale"
@@ -617,7 +1020,7 @@ struct IPadSkillWorkshopScreen: View {
         }
     }
 
-    static func titleCasedProposalStatus(_ status: String) -> String {
+    nonisolated static func titleCasedProposalStatus(_ status: String) -> String {
         status
             .replacingOccurrences(of: "_", with: " ")
             .replacingOccurrences(of: "-", with: " ")
@@ -632,7 +1035,7 @@ struct IPadSkillWorkshopScreen: View {
             .joined(separator: " ")
     }
 
-    static func proposalStatusBoardLanes(filter: String, proposalStatuses: [String]) -> [String] {
+    nonisolated static func proposalStatusBoardLanes(filter: String, proposalStatuses: [String]) -> [String] {
         let customStatuses = proposalStatuses
             .filter { !self.defaultProposalStatusBoardLanes.contains($0) }
             .sorted()
@@ -648,7 +1051,7 @@ struct IPadSkillWorkshopScreen: View {
         }
     }
 
-    static func proposalStatusMatchesFilter(status: String, filter: String) -> Bool {
+    nonisolated static func proposalStatusMatchesFilter(status: String, filter: String) -> Bool {
         switch filter {
         case "all":
             true
@@ -659,7 +1062,7 @@ struct IPadSkillWorkshopScreen: View {
         }
     }
 
-    static func nextSelectedProposalID(
+    nonisolated static func nextSelectedProposalID(
         current: String?,
         proposals: [(id: String, status: String)],
         filter: String) -> String?
@@ -668,7 +1071,7 @@ struct IPadSkillWorkshopScreen: View {
         return Self.nextSelectedProposalID(current: current, visibleProposalIDs: filtered.map(\.id))
     }
 
-    static func nextSelectedProposalID(current: String?, visibleProposalIDs: [String]) -> String? {
+    nonisolated static func nextSelectedProposalID(current: String?, visibleProposalIDs: [String]) -> String? {
         guard !visibleProposalIDs.isEmpty else { return nil }
         if let current, visibleProposalIDs.contains(current) {
             return current
@@ -676,43 +1079,47 @@ struct IPadSkillWorkshopScreen: View {
         return visibleProposalIDs.first
     }
 
-    static func normalizedScopeID(_ value: String?) -> String {
+    nonisolated static func normalizedScopeID(_ value: String?) -> String {
         (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var presentedProposalRouteBinding: Binding<IPadSkillProposalSheetRoute?> {
+        Binding(
+            get: { self.store.presentedProposalRoute },
+            set: { route in
+                if route == nil {
+                    self.store.send(.proposalSheetDismissed)
+                }
+            })
+    }
+
+    private var queryBinding: Binding<String> {
+        Binding(
+            get: { self.store.query },
+            set: { self.store.send(.queryChanged($0)) })
+    }
+
+    private var statusFilterBinding: Binding<String> {
+        Binding(
+            get: { self.store.statusFilter },
+            set: { self.store.send(.statusFilterChanged($0)) })
+    }
+
     private var statusFilterLabel: String {
-        Self.proposalStatusFilterLabel(self.statusFilter)
+        self.store.statusFilterLabel
     }
 
     private var filteredProposals: [IPadSkillProposal] {
-        let trimmedQuery = self.query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return self.proposals
-            .filter { proposal in
-                Self.proposalStatusMatchesFilter(status: proposal.status, filter: self.statusFilter)
-            }
-            .filter { proposal in
-                guard !trimmedQuery.isEmpty else { return true }
-                return [
-                    proposal.title,
-                    proposal.description,
-                    proposal.skillName,
-                    proposal.skillKey,
-                ]
-                    .joined(separator: " ")
-                    .lowercased()
-                    .contains(trimmedQuery)
-            }
+        self.store.filteredProposals
     }
 
     private var visibleProposalLaneStatuses: [String] {
-        Self.proposalStatusBoardLanes(
-            filter: self.statusFilter,
-            proposalStatuses: self.proposals.map(\.status))
+        self.store.visibleProposalLaneStatuses
     }
 
     private func proposals(forLaneStatus status: String) -> [IPadSkillProposal] {
-        let trimmedQuery = self.query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return self.proposals
+        let trimmedQuery = self.store.query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return self.store.proposals
             .filter { $0.status == status }
             .filter { proposal in
                 guard !trimmedQuery.isEmpty else { return true }
@@ -729,20 +1136,12 @@ struct IPadSkillWorkshopScreen: View {
             .sorted { $0.updatedAtMs > $1.updatedAtMs }
     }
 
-    private func syncSelectedProposalIDForVisibleProposals() {
-        let nextID = Self.nextSelectedProposalID(
-            current: self.selectedProposalID,
-            visibleProposalIDs: self.filteredProposals.map(\.id))
-        guard self.selectedProposalID != nextID else { return }
-        self.selectedProposalID = nextID
-    }
-
     private func count(_ status: String) -> Int {
-        self.proposals.count(where: { $0.status == status })
+        self.store.proposals.count(where: { $0.status == status })
     }
 
     private func proposal(withID id: String) -> IPadSkillProposal? {
-        self.proposals.first { $0.id == id }
+        self.store.proposals.first { $0.id == id }
     }
 
     private func selectProposal(
@@ -750,116 +1149,37 @@ struct IPadSkillWorkshopScreen: View {
         opensSheet: Bool,
         forceInspect: Bool)
     {
-        self.selectedProposalID = proposal.id
-        if opensSheet {
-            self.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: proposal.id)
+        Task {
+            await self.store.send(.proposalSelected(
+                proposalID: proposal.id,
+                opensSheet: opensSheet,
+                canRead: self.canRead,
+                forceInspect: forceInspect)).finish()
         }
-        Task { await self.inspect(proposalID: proposal.id, force: forceInspect) }
     }
 
     private func loadProposals(force: Bool) async {
-        guard self.scenePhase == .active else { return }
-        guard self.canRead else {
-            self.proposals = []
-            self.errorText = nil
-            return
-        }
-        guard !self.isLoading else { return }
-
-        self.isLoading = true
-        self.errorText = nil
-        defer { self.isLoading = false }
-
-        do {
-            let data = try await request(
-                method: "skills.proposals.list",
-                params: IPadSkillProposalListParams(agentId: selectedAgentParam),
-                timeoutSeconds: 20)
-            let response = try JSONDecoder().decode(IPadSkillProposalManifest.self, from: data)
-            let previousByID = Dictionary(uniqueKeysWithValues: proposals.map { ($0.id, $0) })
-            let next = response.proposals
-                .map { IPadSkillProposal(entry: $0, previous: previousByID[$0.id]) }
-                .sorted { $0.updatedAtMs > $1.updatedAtMs }
-            self.proposals = next
-            self.syncSelectedProposalIDForVisibleProposals()
-            if let selectedProposalID {
-                await self.inspect(proposalID: selectedProposalID, force: force)
-            }
-        } catch {
-            if force || self.proposals.isEmpty {
-                self.errorText = Self.message(for: error)
-            }
-        }
+        await self.store.send(.refreshRequested(
+            sceneActive: self.scenePhase == .active,
+            canRead: self.canRead,
+            force: force)).finish()
     }
 
     private func inspect(proposalID: String, force: Bool) async {
-        guard self.canRead else { return }
-        guard force || self.proposals.first(where: { $0.id == proposalID })?.content == nil else { return }
-        guard self.inspectingProposalID == nil else { return }
-
-        self.inspectingProposalID = proposalID
-        self.errorText = nil
-        defer { self.inspectingProposalID = nil }
-
-        do {
-            let data = try await request(
-                method: "skills.proposals.inspect",
-                params: IPadSkillProposalInspectParams(
-                    agentId: selectedAgentParam,
-                    proposalId: proposalID),
-                timeoutSeconds: 20)
-            let response = try JSONDecoder().decode(IPadSkillProposalInspectResponse.self, from: data)
-            self.merge(IPadSkillProposal(inspect: response, previous: self.proposals.first { $0.id == proposalID }))
-        } catch {
-            self.errorText = Self.message(for: error)
-        }
+        await self.store.send(.inspectRequested(
+            proposalID: proposalID,
+            canRead: self.canRead,
+            force: force)).finish()
     }
 
     private func run(_ action: IPadSkillProposalAction.Kind, proposal: IPadSkillProposal) async {
-        guard self.canApplyProposalMutations, self.busyAction == nil else { return }
-        self.busyAction = IPadSkillProposalAction(kind: action, proposalID: proposal.id)
-        self.errorText = nil
-        self.noticeText = nil
-        defer { self.busyAction = nil }
-
-        do {
-            let method = action == .apply ? "skills.proposals.apply" : "skills.proposals.reject"
-            _ = try await self.request(
-                method: method,
-                params: IPadSkillProposalInspectParams(
-                    agentId: self.selectedAgentParam,
-                    proposalId: proposal.id),
-                timeoutSeconds: 30)
-            self.noticeText = action == .apply ? "Proposal applied." : "Proposal rejected."
-            await self.loadProposals(force: true)
-        } catch {
-            self.errorText = Self.message(for: error)
-        }
-    }
-
-    private func merge(_ proposal: IPadSkillProposal) {
-        self.proposals.removeAll { $0.id == proposal.id }
-        self.proposals.append(proposal)
-        self.proposals.sort { $0.updatedAtMs > $1.updatedAtMs }
-    }
-
-    private func request(method: String, params: some Encodable, timeoutSeconds: Int) async throws -> Data {
-        guard self.canRead else { throw IPadSidebarGatewayError.offline }
-        let data = try JSONEncoder().encode(params)
-        guard let json = String(data: data, encoding: .utf8) else {
-            throw IPadSidebarGatewayError.invalidPayload
-        }
-        return try await self.appModel.operatorSession.request(
-            method: method,
-            paramsJSON: json,
-            timeoutSeconds: timeoutSeconds)
-    }
-
-    private static func message(for error: Error) -> String {
-        if let gatewayError = error as? IPadSidebarGatewayError {
-            return gatewayError.message
-        }
-        return error.localizedDescription
+        await self.store.send(.proposalMutationRequested(
+            action,
+            proposalID: proposal.id,
+            sceneActive: self.scenePhase == .active,
+            canRead: self.canRead,
+            canWrite: self.canWrite,
+            hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)).finish()
     }
 }
 
@@ -1041,7 +1361,8 @@ struct IPadSkillProposalRow: View {
     }
 }
 
-private struct IPadSkillProposalSheetRoute: Identifiable {
+// swiftformat:disable redundantSendable
+struct IPadSkillProposalSheetRoute: Equatable, Identifiable, Sendable {
     let proposalID: String
 
     var id: String {
@@ -1049,8 +1370,8 @@ private struct IPadSkillProposalSheetRoute: Identifiable {
     }
 }
 
-struct IPadSkillProposalAction: Equatable {
-    enum Kind {
+struct IPadSkillProposalAction: Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
         case apply
         case reject
     }
@@ -1059,11 +1380,11 @@ struct IPadSkillProposalAction: Equatable {
     let proposalID: String
 }
 
-private struct IPadSkillProposalManifest: Decodable {
+struct IPadSkillProposalManifest: Decodable, Equatable, Sendable {
     let proposals: [IPadSkillProposalManifestEntry]
 }
 
-struct IPadSkillProposalManifestEntry: Decodable {
+struct IPadSkillProposalManifestEntry: Decodable, Equatable, Sendable {
     let id: String
     let kind: String
     let status: String
@@ -1090,13 +1411,13 @@ private struct IPadSkillProposalInspectParams: Encodable {
     let proposalId: String
 }
 
-struct IPadSkillProposalInspectResponse: Decodable {
+struct IPadSkillProposalInspectResponse: Decodable, Equatable, Sendable {
     let record: IPadSkillProposalRecord
     let content: String
     let supportFiles: [IPadSkillProposalSupportFile]?
 }
 
-struct IPadSkillProposalRecord: Decodable {
+struct IPadSkillProposalRecord: Decodable, Equatable, Sendable {
     let id: String
     let kind: String
     let status: String
@@ -1107,17 +1428,17 @@ struct IPadSkillProposalRecord: Decodable {
     let target: IPadSkillProposalTarget
 }
 
-struct IPadSkillProposalTarget: Decodable {
+struct IPadSkillProposalTarget: Decodable, Equatable, Sendable {
     let skillName: String
     let skillKey: String
 }
 
-struct IPadSkillProposalSupportFile: Decodable {
+struct IPadSkillProposalSupportFile: Decodable, Equatable, Sendable {
     let path: String
     let content: String?
 }
 
-struct IPadSkillProposal: Identifiable {
+struct IPadSkillProposal: Equatable, Identifiable, Sendable {
     let id: String
     let kind: String
     let status: String
@@ -1189,3 +1510,5 @@ struct IPadSkillProposal: Identifiable {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
+
+// swiftformat:enable redundantSendable

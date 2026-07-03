@@ -430,7 +430,8 @@ struct RootTabs: View {
         case .skillWorkshop:
             IPadSkillWorkshopScreen(
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                store: IPadSkillWorkshopStoreFactory.live(appModel: self.appModel))
         case .agents:
             AgentProTab(
                 directRoute: .agents,

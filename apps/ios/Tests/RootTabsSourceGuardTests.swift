@@ -440,8 +440,8 @@ struct RootTabsSourceGuardTests {
                 of: /method: "workboard\.cards\.dispatch"[\s\S]*?IPadWorkboardListParams\(boardId: selectedBoardParam\)/)
             .count == 1)
         #expect(source.contains("private var agentScopeMenu: some View"))
-        #expect(source.contains("IPadSkillProposalListParams(agentId: selectedAgentParam)"))
-        #expect(source.contains("agentId: selectedAgentParam"))
+        #expect(source.contains("IPadSkillProposalListParams(agentId: agentID)"))
+        #expect(source.contains("agentId: agentID"))
         #expect(!source
             .contains(
                 "params: EmptyParams(),\n                timeoutSeconds: 20)\n            let response = try JSONDecoder().decode(IPadSkillProposalManifest.self"))
@@ -459,8 +459,8 @@ struct RootTabsSourceGuardTests {
         #expect(source.components(separatedBy: ".contextMenu {").count - 1 >= 2)
         #expect(source.components(separatedBy: ".swipeActions(edge: .leading").count - 1 >= 2)
         #expect(source.components(separatedBy: ".swipeActions(edge: .trailing").count - 1 >= 2)
-        #expect(source.contains("@State private var presentedProposalRoute: IPadSkillProposalSheetRoute?"))
-        #expect(source.contains(".sheet(item: self.$presentedProposalRoute)"))
+        #expect(source.contains("var presentedProposalRoute: IPadSkillProposalSheetRoute?"))
+        #expect(source.contains(".sheet(item: self.presentedProposalRouteBinding)"))
         #expect(source.contains("private func selectProposal("))
         #expect(!source.contains("proposalSheetPresented"))
         #expect(source.contains("self.presentedSheet = .card(card)"))
@@ -484,6 +484,8 @@ struct RootTabsSourceGuardTests {
     @Test func `skill workshop uses kanban lanes on wide I pad`() throws {
         let source = try String(contentsOf: Self.iPadSkillWorkshopScreenSourceURL(), encoding: .utf8)
         let previewSource = try String(contentsOf: Self.iPadSidebarFeaturePreviewsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let phoneSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
         let content = try Self.extract(
             source,
             from: "private var proposalContent: some View",
@@ -500,8 +502,17 @@ struct RootTabsSourceGuardTests {
         #expect(board.contains("ScrollView(.horizontal)"))
         #expect(board.contains("IPadSkillProposalKanbanColumn("))
         #expect(source.contains("private struct IPadSkillProposalKanbanCard"))
+        #expect(source.contains("@Reducer\nstruct IPadSkillWorkshopFeature"))
+        #expect(!source.contains("@State private var proposals"))
+        #expect(!source.contains("@State private var selectedProposalID"))
+        #expect(!source.contains("@State private var statusFilter"))
+        #expect(!source.contains("@State private var query"))
+        #expect(source.contains("await self.store.send(.refreshRequested("))
+        #expect(source.contains("await self.store.send(.proposalMutationRequested("))
         #expect(source.contains("static let defaultProposalStatusBoardLanes"))
         #expect(source.contains("private func proposals(forLaneStatus status: String)"))
+        #expect(rootSource.contains("store: IPadSkillWorkshopStoreFactory.live(appModel: self.appModel)"))
+        #expect(phoneSource.contains("store: IPadSkillWorkshopStoreFactory.live(appModel: self.appModel)"))
         #expect(previewSource.contains("#Preview(\n    \"Skill Workshop iPad kanban lanes\""))
         #expect(previewSource.contains("private struct IPadSkillWorkshopKanbanPreview"))
         #expect(previewSource.contains("IPadSkillProposalKanbanColumn("))
