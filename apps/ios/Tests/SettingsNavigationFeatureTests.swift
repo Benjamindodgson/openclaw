@@ -72,4 +72,17 @@ struct SettingsNavigationFeatureTests {
             $0.showGatewayProblemDetails = false
         }
     }
+
+    @Test func `settings presentation opens and dismisses reset onboarding alert`() async {
+        let store = TestStore(initialState: SettingsPresentationFeature.State()) {
+            SettingsPresentationFeature()
+        }
+
+        await store.send(.resetOnboardingButtonTapped) {
+            $0.showResetOnboardingAlert = true
+        }
+        await store.send(.resetOnboardingAlertDismissed) {
+            $0.showResetOnboardingAlert = false
+        }
+    }
 }
