@@ -1081,6 +1081,10 @@ extension SettingsProTab {
         self.locationStore.locationLabel
     }
 
+    var locationColor: Color {
+        self.locationStore.locationColor
+    }
+
     var notificationStatusText: String {
         self.notificationStore.statusText
     }

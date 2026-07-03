@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import OpenClawKit
+import SwiftUI
 
 @Reducer
 struct SettingsLocationFeature {
@@ -21,6 +22,10 @@ struct SettingsLocationFeature {
 
         var privacyDetail: String {
             self.locationMode == .off ? "Location off" : "Location \(self.locationLabel)"
+        }
+
+        var locationColor: Color {
+            self.locationMode == .off ? .secondary : OpenClawBrand.accent
         }
 
         private var locationMode: OpenClawLocationMode {
