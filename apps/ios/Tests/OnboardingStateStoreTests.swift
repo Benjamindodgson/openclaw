@@ -161,6 +161,49 @@ import Testing
         }
     }
 
+    @Test @MainActor func `setup code reducer owns setup text and status`() async {
+        let store = TestStore(initialState: OnboardingSetupCodeFeature.State()) {
+            OnboardingSetupCodeFeature()
+        }
+
+        await store.send(.setupCodeChanged("  oc_setup_123  ")) {
+            $0.setupCode = "  oc_setup_123  "
+        }
+
+        #expect(store.state.trimmedSetupCode == "oc_setup_123")
+        #expect(store.state.canApply)
+
+        await store.send(.applyStarted)
+
+        await store.send(.invalidSetupCodeSubmitted) {
+            $0.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+        }
+
+        await store.send(.statusCleared) {
+            $0.status = nil
+        }
+
+        await store.send(.setupCodeAccepted) {
+            $0.setupCode = ""
+            $0.status = "Setup code applied. Connecting..."
+        }
+
+        await store.send(.setupCodeChanged("  ")) {
+            $0.setupCode = "  "
+        }
+
+        #expect(!store.state.canApply)
+
+        await store.send(.emptyCodeSubmitted) {
+            $0.status = "Paste a setup code to continue."
+        }
+
+        await store.send(.appleReviewDemoCodeAccepted) {
+            $0.setupCode = ""
+            $0.status = "Apple Review demo mode enabled."
+        }
+    }
+
     private struct TestDefaults {
         var suiteName: String
         var defaults: UserDefaults

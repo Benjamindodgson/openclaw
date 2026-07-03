@@ -72,8 +72,12 @@ struct OnboardingWizardView: View {
 
     @State private var lastPairingAutoResumeAttemptAt: Date?
     @State private var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
-    @State private var setupCode: String = ""
-    @State private var setupCodeStatus: String?
+    @State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature> = Store(
+        initialState: OnboardingSetupCodeFeature.State())
+    {
+        OnboardingSetupCodeFeature()
+    }
+
     private static let pairingAutoResumeTicker = Timer.publish(every: 2.0, on: .main, in: .common).autoconnect()
 
     let allowSkip: Bool
@@ -129,6 +133,12 @@ struct OnboardingWizardView: View {
                     self.presentationStore.send(.gatewayProblemDetailsDismissed)
                 }
             })
+    }
+
+    private var setupCodeBinding: Binding<String> {
+        Binding(
+            get: { self.setupCodeStore.setupCode },
+            set: { self.setupCodeStore.send(.setupCodeChanged($0)) })
     }
 
     var body: some View {
@@ -653,7 +663,7 @@ struct OnboardingWizardView: View {
 extension OnboardingWizardView {
     private var setupCodeSection: some View {
         Section {
-            TextField("Paste setup code", text: self.$setupCode)
+            TextField("Paste setup code", text: self.setupCodeBinding)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .onSubmit {
@@ -674,10 +684,10 @@ extension OnboardingWizardView {
                 }
             }
             .disabled(
-                self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                !self.setupCodeStore.canApply
                     || self.connectingGatewayID != nil)
 
-            if let setupCodeStatus, !setupCodeStatus.isEmpty {
+            if let setupCodeStatus = self.setupCodeStore.status, !setupCodeStatus.isEmpty {
                 Text(setupCodeStatus)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -728,29 +738,27 @@ extension OnboardingWizardView {
     }
 
     private func applySetupCodeAndConnect() async {
-        self.setupCodeStatus = nil
-        let raw = self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.setupCodeStore.send(.applyStarted)
+        let raw = self.setupCodeStore.trimmedSetupCode
         guard !raw.isEmpty else {
-            self.setupCodeStatus = "Paste a setup code to continue."
+            self.setupCodeStore.send(.emptyCodeSubmitted)
             return
         }
 
         if AppleReviewDemoMode.isSetupCode(raw) {
-            self.setupCode = ""
-            self.setupCodeStatus = "Apple Review demo mode enabled."
+            self.setupCodeStore.send(.appleReviewDemoCodeAccepted)
             self.handleScannedSetupCode(raw)
             return
         }
 
         guard let link = GatewayConnectDeepLink.fromSetupInput(raw) else {
-            self.setupCodeStatus = "Setup code not recognized or uses an insecure ws:// gateway URL."
+            self.setupCodeStore.send(.invalidSetupCodeSubmitted)
             return
         }
 
         self.connectingGatewayID = "setup-code"
         self.applyGatewayLink(link)
-        self.setupCode = ""
-        self.setupCodeStatus = "Setup code applied. Connecting..."
+        self.setupCodeStore.send(.setupCodeAccepted)
         self.connectMessage = "Connecting via setup code..."
         self.statusLine = "Setup code loaded. Connecting to \(link.host):\(link.port)..."
         self.step = .connect
@@ -759,7 +767,7 @@ extension OnboardingWizardView {
 
     private func handleScannedLink(_ link: GatewayConnectDeepLink) {
         self.applyGatewayLink(link)
-        self.setupCodeStatus = nil
+        self.setupCodeStore.send(.statusCleared)
         self.presentationStore.send(.qrScannerDismissed)
         self.connectMessage = "Connecting via QR code..."
         self.statusLine = "QR loaded. Connecting to \(link.host):\(link.port)..."

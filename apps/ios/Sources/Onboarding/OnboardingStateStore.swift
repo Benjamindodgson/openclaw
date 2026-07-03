@@ -158,6 +158,73 @@ struct OnboardingPresentationFeature {
     }
 }
 
+@Reducer
+struct OnboardingSetupCodeFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var setupCode = ""
+        var status: String?
+
+        var trimmedSetupCode: String {
+            self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        var canApply: Bool {
+            !self.trimmedSetupCode.isEmpty
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case appleReviewDemoCodeAccepted
+        case applyStarted
+        case emptyCodeSubmitted
+        case invalidSetupCodeSubmitted
+        case setupCodeAccepted
+        case setupCodeChanged(String)
+        case statusCleared
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .appleReviewDemoCodeAccepted:
+                state.setupCode = ""
+                state.status = "Apple Review demo mode enabled."
+                return .none
+
+            case .applyStarted:
+                state.status = nil
+                return .none
+
+            case .emptyCodeSubmitted:
+                state.status = "Paste a setup code to continue."
+                return .none
+
+            case .invalidSetupCodeSubmitted:
+                state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+                return .none
+
+            case .setupCodeAccepted:
+                state.setupCode = ""
+                state.status = "Setup code applied. Connecting..."
+                return .none
+
+            case let .setupCodeChanged(setupCode):
+                state.setupCode = setupCode
+                return .none
+
+            case .statusCleared:
+                state.status = nil
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 enum OnboardingStateStore {
     private static let completedDefaultsKey = "onboarding.completed"
     private static let firstRunIntroSeenDefaultsKey = "onboarding.first_run_intro_seen"
