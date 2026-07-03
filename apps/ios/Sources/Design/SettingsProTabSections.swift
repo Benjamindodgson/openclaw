@@ -536,7 +536,7 @@ extension SettingsProTab {
                 title: "Notifications",
                 detail: self.notificationStatusDetail,
                 value: self.notificationStatusText,
-                color: self.notificationStatus.color)
+                color: self.notificationStore.status.color)
 
             ProCard(radius: SettingsLayout.cardRadius) {
                 VStack(alignment: .leading, spacing: 12) {
@@ -545,12 +545,14 @@ extension SettingsProTab {
                     } label: {
                         Label(
                             self.notificationActionText,
-                            systemImage: self.notificationStatus.actionIcon)
+                            systemImage: self.notificationStore.status.actionIcon)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
-                    .disabled(self.notificationStatus == .checking || self.isRequestingNotificationAuthorization)
+                    .disabled(
+                        self.notificationStore.status == .checking
+                            || self.notificationStore.isRequestingAuthorization)
 
                     Text(self.notificationStatusDetail)
                         .font(.caption)

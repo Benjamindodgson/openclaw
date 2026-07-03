@@ -242,6 +242,44 @@ struct SettingsLocationFeature {
     }
 }
 
+@Reducer
+struct SettingsNotificationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var isRequestingAuthorization = false
+        var status: SettingsNotificationStatus = .checking
+    }
+
+    enum Action: Equatable, Sendable {
+        case authorizationRequestFinished(SettingsNotificationStatus)
+        case authorizationRequestStarted
+        case statusChanged(SettingsNotificationStatus)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .authorizationRequestFinished(status):
+                state.isRequestingAuthorization = false
+                state.status = status
+                return .none
+
+            case .authorizationRequestStarted:
+                state.isRequestingAuthorization = true
+                return .none
+
+            case let .statusChanged(status):
+                state.status = status
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -285,14 +323,12 @@ struct SettingsProTab: View {
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State var defaultShareInstruction = ""
     @State var suppressCredentialPersist = false
-    @State var notificationStatus: SettingsNotificationStatus = .checking
     @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
         PushEnrollmentConsentFeature()
     }
 
     @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
 
-    @State var isRequestingNotificationAuthorization = false
     @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
         initialState: SettingsDiagnosticsFeature.State())
     {
@@ -309,6 +345,12 @@ struct SettingsProTab: View {
         initialState: SettingsLocationFeature.State())
     {
         SettingsLocationFeature()
+    }
+
+    @State var notificationStore: StoreOf<SettingsNotificationFeature> = Store(
+        initialState: SettingsNotificationFeature.State())
+    {
+        SettingsNotificationFeature()
     }
 
     @State var presentationStore: StoreOf<SettingsPresentationFeature> = Store(
