@@ -388,8 +388,10 @@ extension SettingsProTab {
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
         self.applyGatewayLink(scannedLink)
-        self.gatewaySetupStatusStore
-            .send(.statusChanged("QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)..."))
+        if let statusText = self.gatewaySetupLinkStore.scannedGatewayLinkStatusText {
+            self.gatewaySetupStatusStore.send(.statusChanged(statusText))
+            self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)
+        }
         Task { await self.connectAfterScannedGatewayLink() }
     }
 

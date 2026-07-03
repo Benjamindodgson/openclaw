@@ -879,12 +879,17 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.scannedGatewayLinkReceived(scannedLink)) {
             $0.applyResult = .gatewayLink(scannedLink)
+            $0.scannedGatewayLinkStatusText = "QR loaded. Connecting to gateway.example.com:443..."
             $0.setupCode = ""
             $0.stagedGatewaySetupLink = nil
         }
 
         await store.send(.applyResultHandled) {
             $0.applyResult = nil
+        }
+
+        await store.send(.scannedGatewayLinkStatusHandled) {
+            $0.scannedGatewayLinkStatusText = nil
         }
     }
 

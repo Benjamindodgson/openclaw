@@ -1054,12 +1054,22 @@ struct RootTabsSourceGuardTests {
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let handleFunction = try Self.extract(
+            settingsActionsSource,
+            from: "func handleScannedGatewayLink(_ link: GatewayConnectDeepLink)",
+            to: "func handleScannedSetupCode")
 
         #expect(settingsSource.contains("case scannedGatewayLinkReceived(GatewayConnectDeepLink)"))
+        #expect(settingsSource.contains("var scannedGatewayLinkStatusText: String?"))
+        #expect(settingsSource.contains("case scannedGatewayLinkStatusHandled"))
+        #expect(settingsSource.contains("Self.scannedGatewayLinkStatusText(link)"))
         #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(link))"))
+        #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.scannedGatewayLinkStatusText"))
+        #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)"))
         #expect(onboardingStateSource.contains("case scannedGatewayLinkReceived(GatewayConnectDeepLink)"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedGatewayLinkReceived(link))"))
+        #expect(!handleFunction.contains("QR loaded. Connecting to"))
         #expect(!settingsActionsSource.contains("""
         self.presentationStore.send(.qrScannerDismissed)
                 self.updateSetupCode("")

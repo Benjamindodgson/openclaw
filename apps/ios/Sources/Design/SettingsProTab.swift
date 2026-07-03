@@ -323,6 +323,7 @@ struct SettingsGatewaySetupLinkFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
+        var scannedGatewayLinkStatusText: String?
         var setupCode = ""
         var setupLinkStatusText: String?
         var stagedGatewaySetupLink: GatewayConnectDeepLink?
@@ -343,6 +344,7 @@ struct SettingsGatewaySetupLinkFeature {
         case applyRequested
         case applyResultHandled
         case scannedGatewayLinkReceived(GatewayConnectDeepLink)
+        case scannedGatewayLinkStatusHandled
         case scannedSetupCodeReceived(String)
         case setupCodeChanged(String)
         case setupCodeSynced(String)
@@ -386,7 +388,12 @@ struct SettingsGatewaySetupLinkFeature {
                 state.applyResult = nil
                 state.setupCode = ""
                 state.stagedGatewaySetupLink = nil
+                state.scannedGatewayLinkStatusText = Self.scannedGatewayLinkStatusText(link)
                 state.applyResult = .gatewayLink(link)
+                return .none
+
+            case .scannedGatewayLinkStatusHandled:
+                state.scannedGatewayLinkStatusText = nil
                 return .none
 
             case let .scannedSetupCodeReceived(code):
@@ -434,6 +441,10 @@ struct SettingsGatewaySetupLinkFeature {
     private static func setupLinkLoadedStatusText(_ link: GatewayConnectDeepLink) -> String {
         let security = link.tls ? "TLS" : "plain"
         return "Setup link loaded for \(link.host):\(link.port) (\(security)). Tap Connect to apply."
+    }
+
+    private static func scannedGatewayLinkStatusText(_ link: GatewayConnectDeepLink) -> String {
+        "QR loaded. Connecting to \(link.host):\(link.port)..."
     }
 
     private static let appleReviewDemoStatusText = "Apple Review demo mode enabled."
