@@ -86,6 +86,20 @@ struct GatewayStatusBuilderTests {
         #expect(fallback.agentBadge == "OC")
     }
 
+    @Test func `chat presentation reducer updates state`() async {
+        let presentation = Self.chatState(.connected, isGatewayUsable: true)
+        let store = TestStore(initialState: ChatProPresentationFeature.State()) {
+            ChatProPresentationFeature()
+        }
+
+        await store.send(.presentationChanged(presentation)) {
+            $0.presentation = presentation
+        }
+
+        #expect(store.state.presentation.gatewayPillTitle == "Connected")
+        #expect(store.state.presentation.messagePlaceholder == "Message Joshtimus Prime...")
+    }
+
     @Test func `reducer refresh updates display state`() async {
         let problem = GatewayConnectionProblem(
             kind: .pairingRequired,
