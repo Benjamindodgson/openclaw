@@ -240,15 +240,15 @@ extension SettingsProTab {
                 .padding(.bottom, OpenClawProMetric.bottomScrollInset)
             }
         }
-        .navigationTitle(self.title(for: route))
+        .navigationTitle(SettingsNavigationFeature.State.title(for: route))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(self.headerLeadingAction == nil ? .visible : .hidden, for: .navigationBar)
     }
 
     func routeHeader(for route: SettingsRoute) -> some View {
         OpenClawAdaptiveHeaderRow(
-            title: self.title(for: route),
-            subtitle: self.subtitle(for: route),
+            title: SettingsNavigationFeature.State.title(for: route),
+            subtitle: SettingsNavigationFeature.State.subtitle(for: route),
             titleFont: .title3.weight(.semibold),
             subtitleFont: .callout)
         {
