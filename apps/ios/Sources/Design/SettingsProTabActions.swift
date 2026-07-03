@@ -1041,12 +1041,7 @@ extension SettingsProTab {
     }
 
     var notificationsNeedAttention: Bool {
-        switch self.notificationStore.status {
-        case .allowed, .checking:
-            false
-        case .notAllowed, .notSet, .unknown:
-            true
-        }
+        self.notificationStore.needsAttention
     }
 
     var approvalItems: [SettingsApprovalItem] {
@@ -1108,26 +1103,15 @@ extension SettingsProTab {
     }
 
     var notificationStatusText: String {
-        self.notificationStore.status.text
+        self.notificationStore.statusText
     }
 
     var notificationActionText: String {
-        self.notificationStore.status.actionTitle
+        self.notificationStore.actionText
     }
 
     var notificationStatusDetail: String {
-        switch self.notificationStore.status {
-        case .checking:
-            "Checking iOS notification permission."
-        case .allowed:
-            "OpenClaw can show approval prompts and event alerts when the app is not active."
-        case .notAllowed:
-            "Notifications have been denied. Enable them in iOS Settings."
-        case .notSet:
-            "Enable notifications to receive approval prompts and event alerts outside the app."
-        case .unknown:
-            "OpenClaw cannot determine the current notification permission state."
-        }
+        self.notificationStore.statusDetail
     }
 
     var notificationRelayDetail: String {

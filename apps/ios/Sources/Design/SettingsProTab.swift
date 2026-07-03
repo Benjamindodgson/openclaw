@@ -402,44 +402,6 @@ struct SettingsLocationFeature {
 }
 
 @Reducer
-struct SettingsNotificationFeature {
-    // swiftformat:disable redundantSendable
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var isRequestingAuthorization = false
-        var status: SettingsNotificationStatus = .checking
-    }
-
-    enum Action: Equatable, Sendable {
-        case authorizationRequestFinished(SettingsNotificationStatus)
-        case authorizationRequestStarted
-        case statusChanged(SettingsNotificationStatus)
-    }
-
-    // swiftformat:enable redundantSendable
-
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case let .authorizationRequestFinished(status):
-                state.isRequestingAuthorization = false
-                state.status = status
-                return .none
-
-            case .authorizationRequestStarted:
-                state.isRequestingAuthorization = true
-                return .none
-
-            case let .statusChanged(status):
-                state.status = status
-                return .none
-            }
-        }
-        .autoLogActions()
-    }
-}
-
-@Reducer
 struct SettingsAgentSelectionFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
