@@ -150,7 +150,8 @@ struct RootTabsPhoneControlHub: View {
             IPadActivityScreen(
                 headerLeadingAction: self.phoneDetailBackAction,
                 openChat: { self.openPhoneRootDestination(.chat) },
-                openSettings: { self.openPhoneRootDestination(.gateway) })
+                openSettings: { self.openPhoneRootDestination(.gateway) },
+                store: IPadActivitySessionsStoreFactory.live(appModel: self.appModel))
         case .workboard:
             IPadWorkboardScreen(
                 headerLeadingAction: self.phoneDetailBackAction,

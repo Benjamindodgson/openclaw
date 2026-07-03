@@ -566,7 +566,7 @@ struct RootTabsSourceGuardTests {
         let projectSource = try String(contentsOf: Self.xcodeProjectSourceURL(), encoding: .utf8)
 
         #expect(activitySource.contains("struct IPadActivityScreen: View"))
-        #expect(activitySource.contains("self.appModel.makeChatTransport()"))
+        #expect(activitySource.contains("appModel.makeChatTransport()"))
         #expect(appModelSource.contains("return IOSGatewayChatTransport(gateway: self.operatorSession)"))
         #expect(activitySource.contains("IPadSidebarScreenChrome("))
         #expect(!taskSource.contains("struct IPadActivityScreen"))
