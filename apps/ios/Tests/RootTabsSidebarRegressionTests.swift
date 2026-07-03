@@ -1,8 +1,8 @@
 import Foundation
 import Testing
 
-@Suite struct RootTabsSidebarRegressionTests {
-    @Test func iPadSplitHiddenSidebarUsesHeaderRevealInsteadOfReservedRail() throws {
+struct RootTabsSidebarRegressionTests {
+    @Test func `i pad split hidden sidebar uses header reveal instead of reserved rail`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let splitContent = try Self.extract(
@@ -28,7 +28,7 @@ import Testing
             .contains("static func sidebarIsVisible(splitColumnVisibility: NavigationSplitViewVisibility)"))
     }
 
-    @Test func initialSidebarVisibilitySurvivesFirstLayoutMeasurement() throws {
+    @Test func `initial sidebar visibility survives first layout measurement`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let layoutUpdate = try Self.extract(
             source,
@@ -42,7 +42,7 @@ import Testing
         #expect(layoutUpdate.contains("guard force || !self.sidebarVisibilityUserOverridden else { return }"))
     }
 
-    @Test func drawerDimmingLayerDoesNotStealSidebarTouches() throws {
+    @Test func `drawer dimming layer does not steal sidebar touches`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let drawerContent = try Self.extract(
             source,
@@ -58,7 +58,7 @@ import Testing
         #expect(drawerContent.contains(".zIndex(1)"))
     }
 
-    @Test func sidebarSelectionResetsEmbeddedSettingsNavigationPath() throws {
+    @Test func `sidebar selection resets embedded settings navigation path`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let sidebarDetail = try Self.extract(
             source,
@@ -82,7 +82,7 @@ import Testing
         #expect(resetRange.lowerBound < destinationRange.lowerBound)
     }
 
-    @Test func embeddedOverviewRoutesViewMoreThroughOwningNavigationStack() throws {
+    @Test func `embedded overview routes view more through owning navigation stack`() throws {
         let rootTabsSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
         let phoneHubSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
@@ -90,7 +90,10 @@ import Testing
             rootTabsSource,
             from: "private var sidebarDetail: some View",
             to: "private var sidebarDetailNavigationShell: some View")
-        let iPadOverview = try Self.extract(sidebarDetail, from: "case .overview:", to: "case .activity:")
+        let iPadOverview = try Self.extract(
+            rootTabsSource,
+            from: "private var sidebarOverview: some View",
+            to: "private func selectSidebarDestination")
         let recentSessions = try Self.extract(
             commandCenterSource,
             from: "private var recentSessions: some View",
@@ -101,8 +104,9 @@ import Testing
         #expect(recentSessions.contains("if let openSessions"))
         #expect(recentSessions.contains("Button(action: openSessions)"))
         #expect(recentSessions.contains("NavigationLink"))
+        #expect(sidebarDetail.contains("self.sidebarOverview"))
         #expect(iPadOverview.contains("openSessions: { self.selectSidebarDestination(.sessions) }"))
-        #expect(phoneOverview.contains("openSessions: { self.navigationPath.append(.sessions) }"))
+        #expect(phoneOverview.contains("openSessions: { self.openPhoneDetailDestination(.sessions) }"))
     }
 
     private static func rootTabsSourceURL() -> URL {
