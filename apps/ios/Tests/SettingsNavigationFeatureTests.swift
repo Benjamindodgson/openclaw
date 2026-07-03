@@ -715,6 +715,84 @@ struct SettingsNavigationFeatureTests {
         #expect(state.canApplyGatewaySetup)
     }
 
+    @Test func `settings gateway setup link apply classifies raw setup input`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = SettingsGatewaySetupLinkFeature.State()
+        initialState.setupCode = "  wss://gateway.example.com:443  "
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.applyRequested) {
+            $0.applyResult = .gatewayLink(link)
+        }
+
+        await store.send(.applyResultHandled) {
+            $0.applyResult = nil
+        }
+    }
+
+    @Test func `settings gateway setup link apply consumes staged link`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = SettingsGatewaySetupLinkFeature.State()
+        initialState.stagedGatewaySetupLink = link
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.applyRequested) {
+            $0.applyResult = .gatewayLink(link)
+            $0.stagedGatewaySetupLink = nil
+        }
+    }
+
+    @Test func `settings gateway setup link apply reports invalid inputs`() async {
+        let store = TestStore(initialState: SettingsGatewaySetupLinkFeature.State()) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.applyRequested) {
+            $0.applyResult = .failure("Paste a setup code to continue.")
+        }
+
+        await store.send(.applyResultHandled) {
+            $0.applyResult = nil
+        }
+
+        await store.send(.setupCodeChanged("not a setup code")) {
+            $0.setupCode = "not a setup code"
+        }
+
+        await store.send(.applyRequested) {
+            $0.applyResult = .failure("Setup code not recognized or uses an insecure ws:// gateway URL.")
+        }
+    }
+
+    @Test func `settings gateway setup link apply handles apple review demo code`() async {
+        var initialState = SettingsGatewaySetupLinkFeature.State()
+        initialState.setupCode = "  APPLE-REVIEW-DEMO  "
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.applyRequested) {
+            $0.applyResult = .appleReviewDemo
+            $0.setupCode = ""
+        }
+    }
+
     @Test func `settings gateway credentials load persisted values`() async {
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature()

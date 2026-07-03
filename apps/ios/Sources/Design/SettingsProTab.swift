@@ -322,6 +322,7 @@ struct SettingsGatewaySetupLinkFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var applyResult: ApplyResult?
         var setupCode = ""
         var stagedGatewaySetupLink: GatewayConnectDeepLink?
 
@@ -331,7 +332,15 @@ struct SettingsGatewaySetupLinkFeature {
         }
     }
 
+    enum ApplyResult: Equatable, Sendable {
+        case appleReviewDemo
+        case failure(String)
+        case gatewayLink(GatewayConnectDeepLink)
+    }
+
     enum Action: Equatable, Sendable {
+        case applyRequested
+        case applyResultHandled
         case setupCodeChanged(String)
         case setupCodeSynced(String)
         case setupLinkStaged(GatewayConnectDeepLink?)
@@ -342,6 +351,33 @@ struct SettingsGatewaySetupLinkFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .applyRequested:
+                let raw = state.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
+                let stagedLink = state.stagedGatewaySetupLink
+                guard !raw.isEmpty || stagedLink != nil else {
+                    state.applyResult = .failure("Paste a setup code to continue.")
+                    return .none
+                }
+
+                if AppleReviewDemoMode.isSetupCode(raw) {
+                    state.setupCode = ""
+                    state.stagedGatewaySetupLink = nil
+                    state.applyResult = .appleReviewDemo
+                    return .none
+                }
+
+                guard let link = raw.isEmpty ? stagedLink : GatewayConnectDeepLink.fromSetupInput(raw) else {
+                    state.applyResult = .failure("Setup code not recognized or uses an insecure ws:// gateway URL.")
+                    return .none
+                }
+                state.stagedGatewaySetupLink = nil
+                state.applyResult = .gatewayLink(link)
+                return .none
+
+            case .applyResultHandled:
+                state.applyResult = nil
+                return .none
+
             case let .setupCodeChanged(setupCode):
                 state.setupCode = setupCode
                 if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

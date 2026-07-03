@@ -970,6 +970,20 @@ struct RootTabsSourceGuardTests {
         #expect(channelsSource.contains("Self-hosted chat bot routing."))
     }
 
+    @Test func `settings setup code apply result is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+
+        #expect(settingsSource.contains("enum ApplyResult: Equatable, Sendable"))
+        #expect(settingsSource.contains("case applyRequested"))
+        #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
+        #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyRequested)"))
+        #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
+        #expect(!actionsSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
+        #expect(!actionsSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
+        #expect(!actionsSource.contains("let stagedLink = self.stagedGatewaySetupLink"))
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 
