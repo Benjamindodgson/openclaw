@@ -9,6 +9,7 @@ struct CommandCenterTab: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.scenePhase) private var scenePhase
+    @State private var gatewayStore: StoreOf<CommandCenterGatewayPresentationFeature>
     @State private var recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature>
     var ownsNavigationStack: Bool = true
     var headerTitle: String = "OpenClaw"
@@ -43,6 +44,11 @@ struct CommandCenterTab: View {
         openChat: @escaping () -> Void,
         openSettings: @escaping () -> Void,
         openSessions: (() -> Void)? = nil,
+        gatewayStore: StoreOf<CommandCenterGatewayPresentationFeature> = Store(
+            initialState: CommandCenterGatewayPresentationFeature.State())
+        {
+            CommandCenterGatewayPresentationFeature()
+        },
         recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature> = Store(
             initialState: CommandCenterRecentSessionsFeature.State())
         {
@@ -56,6 +62,7 @@ struct CommandCenterTab: View {
         self.openChat = openChat
         self.openSettings = openSettings
         self.openSessions = openSessions
+        self._gatewayStore = State(wrappedValue: gatewayStore)
         self._recentSessionsStore = State(wrappedValue: recentSessionsStore)
     }
 
@@ -70,7 +77,11 @@ struct CommandCenterTab: View {
             }
         }
         .task(id: self.recentSessionsRefreshID) {
+            self.syncGatewayPresentation()
             await self.refreshRecentSessionsIfNeeded()
+        }
+        .onChange(of: self.currentGatewayPresentation) { _, _ in
+            self.syncGatewayPresentation()
         }
     }
 
@@ -128,7 +139,7 @@ struct CommandCenterTab: View {
     private var header: some View {
         OpenClawAdaptiveHeaderRow(
             title: self.headerTitle,
-            subtitle: self.gatewaySubtitle,
+            subtitle: self.gatewayStore.presentation.gatewaySubtitle,
             titleFont: .title3.weight(.semibold),
             subtitleFont: .caption,
             subtitleLineLimit: 1)
@@ -179,19 +190,19 @@ struct CommandCenterTab: View {
                     self.gatewayFact(
                         icon: "network",
                         title: "Connection",
-                        value: self.gatewayConnectionText,
-                        color: self.gatewayStatusColor)
+                        value: self.gatewayStore.presentation.connectionText,
+                        color: self.gatewayStore.presentation.statusColor)
                     Divider().frame(height: 38)
                     self.gatewayFact(
                         icon: "server.rack",
                         title: "Address",
-                        value: self.gatewayAddressText,
+                        value: self.gatewayStore.presentation.addressText,
                         color: OpenClawBrand.accent)
                     Divider().frame(height: 38)
                     self.gatewayFact(
                         icon: "person.2.fill",
                         title: "Agents",
-                        value: self.gatewayAgentCountText,
+                        value: self.gatewayStore.presentation.agentCountText,
                         color: OpenClawBrand.accentHot)
                 }
                 .padding(.vertical, 7)
@@ -243,10 +254,9 @@ struct CommandCenterTab: View {
 
                 if self.recentSessionPreviewRows.isEmpty {
                     CommandEmptyStateRow(
-                        icon: self.gatewayConnected ? "bubble.left.and.text.bubble.right.fill" : "wifi.slash",
-                        title: self.gatewayConnected ? "No recent sessions" : "Gateway offline",
-                        detail: self
-                            .gatewayConnected ? "Start a chat and it will appear here." : "Connect to the gateway.")
+                        icon: self.gatewayStore.presentation.recentSessionsEmptyIcon,
+                        title: self.gatewayStore.presentation.recentSessionsEmptyTitle,
+                        detail: self.gatewayStore.presentation.recentSessionsEmptyDetail)
                 } else {
                     VStack(spacing: 8) {
                         ForEach(self.recentSessionPreviewRows) { item in
@@ -290,49 +300,20 @@ struct CommandCenterTab: View {
         }
     }
 
-    private var gatewayConnected: Bool {
-        self.gatewayDisplayState == .connected
+    private var currentGatewayPresentation: CommandCenterGatewayPresentationState {
+        CommandCenterGatewayPresentationState(
+            gatewayDisplayState: GatewayStatusBuilder.build(appModel: self.appModel),
+            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress,
+            gatewayServerName: self.appModel.gatewayServerName,
+            gatewayAgentCount: self.appModel.gatewayAgents.count,
+            activeAgentName: self.appModel.activeAgentName,
+            gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText)
     }
 
-    private var gatewayDisplayState: GatewayDisplayState {
-        GatewayStatusBuilder.build(appModel: self.appModel)
-    }
-
-    private var gatewayConnectionText: String {
-        switch self.gatewayDisplayState {
-        case .connected:
-            "Online"
-        case .connecting:
-            "Connecting"
-        case .error:
-            "Attention"
-        case .disconnected:
-            "Offline"
-        }
-    }
-
-    private var gatewayStatusColor: Color {
-        switch self.gatewayDisplayState {
-        case .connected:
-            OpenClawBrand.ok
-        case .connecting:
-            OpenClawBrand.accent
-        case .error:
-            OpenClawBrand.warn
-        case .disconnected:
-            .secondary
-        }
-    }
-
-    private var gatewayAddressText: String {
-        self.normalized(self.appModel.gatewayRemoteAddress)
-            ?? self.normalized(self.appModel.gatewayServerName)
-            ?? "Unknown"
-    }
-
-    private var gatewayAgentCountText: String {
-        guard self.gatewayConnected else { return "—" }
-        return "\(self.appModel.gatewayAgents.count)"
+    private func syncGatewayPresentation() {
+        let presentation = self.currentGatewayPresentation
+        guard self.gatewayStore.presentation != presentation else { return }
+        self.gatewayStore.send(.presentationChanged(presentation))
     }
 
     private var defaultChatWorkItem: WorkItem {
@@ -548,19 +529,103 @@ struct CommandCenterTab: View {
         }
         return String(parts[2]).trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
+}
 
-    private var gatewaySubtitle: String {
-        if let server = normalized(appModel.gatewayServerName) {
-            return "\(self.appModel.activeAgentName) on \(server)"
-        }
-        if let address = normalized(appModel.gatewayRemoteAddress) {
-            return "\(self.appModel.activeAgentName) via \(address)"
-        }
-        return self.appModel.gatewayDisplayStatusText
+@Reducer
+struct CommandCenterGatewayPresentationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var presentation = CommandCenterGatewayPresentationState()
     }
 
-    private func normalized(_ value: String?) -> String? {
-        Self.normalized(value)
+    enum Action: Equatable, Sendable {
+        case presentationChanged(CommandCenterGatewayPresentationState)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .presentationChanged(presentation):
+                state.presentation = presentation
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+struct CommandCenterGatewayPresentationState: Equatable {
+    var gatewayDisplayState: GatewayDisplayState = .disconnected
+    var gatewayRemoteAddress: String?
+    var gatewayServerName: String?
+    var gatewayAgentCount = 0
+    var activeAgentName = "Default Agent"
+    var gatewayDisplayStatusText = "Offline"
+
+    var isConnected: Bool {
+        self.gatewayDisplayState == .connected
+    }
+
+    var connectionText: String {
+        switch self.gatewayDisplayState {
+        case .connected:
+            "Online"
+        case .connecting:
+            "Connecting"
+        case .error:
+            "Attention"
+        case .disconnected:
+            "Offline"
+        }
+    }
+
+    var statusColor: Color {
+        switch self.gatewayDisplayState {
+        case .connected:
+            OpenClawBrand.ok
+        case .connecting:
+            OpenClawBrand.accent
+        case .error:
+            OpenClawBrand.warn
+        case .disconnected:
+            .secondary
+        }
+    }
+
+    var addressText: String {
+        Self.normalized(self.gatewayRemoteAddress)
+            ?? Self.normalized(self.gatewayServerName)
+            ?? "Unknown"
+    }
+
+    var agentCountText: String {
+        guard self.isConnected else { return "—" }
+        return "\(self.gatewayAgentCount)"
+    }
+
+    var gatewaySubtitle: String {
+        if let server = Self.normalized(self.gatewayServerName) {
+            return "\(self.activeAgentName) on \(server)"
+        }
+        if let address = Self.normalized(self.gatewayRemoteAddress) {
+            return "\(self.activeAgentName) via \(address)"
+        }
+        return self.gatewayDisplayStatusText
+    }
+
+    var recentSessionsEmptyIcon: String {
+        self.isConnected ? "bubble.left.and.text.bubble.right.fill" : "wifi.slash"
+    }
+
+    var recentSessionsEmptyTitle: String {
+        self.isConnected ? "No recent sessions" : "Gateway offline"
+    }
+
+    var recentSessionsEmptyDetail: String {
+        self.isConnected ? "Start a chat and it will appear here." : "Connect to the gateway."
     }
 
     private static func normalized(_ value: String?) -> String? {

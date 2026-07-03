@@ -270,7 +270,7 @@ struct RootTabsSourceGuardTests {
         #expect(settingsList.matches(of: /ProCard\(padding: 0/).count == 2)
         #expect(settingsRow.contains(".contentShape(Rectangle())"))
         #expect(!overviewSource.contains("ProCapsule("))
-        #expect(overviewSource.contains("value: self.gatewayConnectionText"))
+        #expect(overviewSource.contains("value: self.gatewayStore.presentation.connectionText"))
         #expect(overviewSource.contains("switch self.gatewayDisplayState"))
         #expect(overviewSource.contains("case .connecting:"))
         #expect(overviewSource.contains("case .error:"))
