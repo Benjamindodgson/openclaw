@@ -189,6 +189,7 @@ struct RootTabs: View {
             SettingsProTab(
                 initialRoute: self.selectedSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
@@ -471,6 +472,7 @@ struct RootTabs: View {
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                    manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
                 SettingsProTab(
@@ -478,6 +480,7 @@ struct RootTabs: View {
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                    manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
         case .gateway:
@@ -487,6 +490,7 @@ struct RootTabs: View {
                 ownsNavigationStack: false,
                 navigateToRoute: self.pushSidebarSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }
     }
@@ -799,6 +803,14 @@ struct RootTabs: View {
     private func makeGatewayTrustPromptStore() -> StoreOf<GatewayTrustPromptFeature> {
         Store(initialState: GatewayTrustPromptFeature.State()) {
             GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsManualGatewayEndpointStore() -> StoreOf<SettingsManualGatewayEndpointFeature> {
+        Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
+            SettingsManualGatewayEndpointFeature(
+                localNetworkAccessClient: .live(gatewayController: self.gatewayController))
         }
     }
 

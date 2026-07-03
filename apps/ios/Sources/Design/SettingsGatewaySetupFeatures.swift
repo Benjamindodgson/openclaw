@@ -2,6 +2,29 @@ import ComposableArchitecture
 import Foundation
 import OpenClawKit
 
+struct SettingsLocalNetworkAccessClient {
+    var requestLocalNetworkAccess: @MainActor @Sendable (_ reason: String) -> Void
+}
+
+extension SettingsLocalNetworkAccessClient: DependencyKey {
+    static let liveValue = SettingsLocalNetworkAccessClient(requestLocalNetworkAccess: { _ in })
+    static let testValue = SettingsLocalNetworkAccessClient(requestLocalNetworkAccess: { _ in })
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        SettingsLocalNetworkAccessClient(requestLocalNetworkAccess: { reason in
+            gatewayController.requestLocalNetworkAccess(reason: reason)
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsLocalNetworkAccess: SettingsLocalNetworkAccessClient {
+        get { self[SettingsLocalNetworkAccessClient.self] }
+        set { self[SettingsLocalNetworkAccessClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct SettingsGatewaySetupStatusFeature {
     // swiftformat:disable redundantSendable
@@ -119,6 +142,12 @@ struct SettingsGatewaySetupStatusFeature {
 
 @Reducer
 struct SettingsManualGatewayEndpointFeature {
+    private let localNetworkAccessClientOverride: SettingsLocalNetworkAccessClient?
+
+    init(localNetworkAccessClient: SettingsLocalNetworkAccessClient? = nil) {
+        self.localNetworkAccessClientOverride = localNetworkAccessClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -184,6 +213,7 @@ struct SettingsManualGatewayEndpointFeature {
         case manualGatewayTLSChanged(Bool)
         case preflightRequested(host: String, hasTailnetIPv4: Bool)
         case preflightResultHandled
+        case localNetworkAccessRequested(reason: String)
         case setupLinkApplied(host: String, tls: Bool)
     }
 
@@ -191,6 +221,9 @@ struct SettingsManualGatewayEndpointFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsLocalNetworkAccess) var dependencyLocalNetworkAccessClient
+            let localNetworkAccessClient = self.localNetworkAccessClientOverride ?? dependencyLocalNetworkAccessClient
+
             switch action {
             case .endpointClearedForOnboardingReset:
                 state.manualGatewayEnabled = false
@@ -242,6 +275,11 @@ struct SettingsManualGatewayEndpointFeature {
             case .preflightResultHandled:
                 state.preflightResult = nil
                 return .none
+
+            case let .localNetworkAccessRequested(reason):
+                return .run { _ in
+                    await localNetworkAccessClient.requestLocalNetworkAccess(reason)
+                }
 
             case let .manualGatewayEnabledChanged(enabled):
                 state.manualGatewayEnabled = enabled

@@ -1826,6 +1826,18 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings manual gateway endpoint requests local network access through client`() async {
+        let probe = SettingsLocalNetworkAccessProbe()
+        let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
+            SettingsManualGatewayEndpointFeature(localNetworkAccessClient: probe.client)
+        }
+
+        await store.send(.localNetworkAccessRequested(reason: "settings_preflight"))
+        await store.finish()
+
+        #expect(probe.requestedReasons == ["settings_preflight"])
+    }
+
     @Test func `settings manual gateway endpoint applies setup link host and tls`() async {
         let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature()
@@ -2379,6 +2391,16 @@ private final class SettingsGatewaySetupAuthPersistenceProbe: @unchecked Sendabl
             saveSetupAuth: { request in
                 self.savedRequests.append(request)
             })
+    }
+}
+
+private final class SettingsLocalNetworkAccessProbe: @unchecked Sendable {
+    var requestedReasons: [String] = []
+
+    var client: SettingsLocalNetworkAccessClient {
+        SettingsLocalNetworkAccessClient(requestLocalNetworkAccess: { reason in
+            self.requestedReasons.append(reason)
+        })
     }
 }
 

@@ -447,7 +447,7 @@ extension SettingsProTab {
             return false
 
         case let .requestLocalNetworkAccess(reason):
-            self.gatewayController.requestLocalNetworkAccess(reason: reason)
+            self.manualGatewayEndpointStore.send(.localNetworkAccessRequested(reason: reason))
             return true
         }
     }
