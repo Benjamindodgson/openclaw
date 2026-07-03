@@ -1,9 +1,188 @@
+import ComposableArchitecture
 import Foundation
 import OpenClawKit
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+enum AgentDreamAction: String, CaseIterable, Equatable, Identifiable, Sendable {
+    case backfill
+    case repair
+    case dedupe
+
+    var id: Self {
+        self
+    }
+
+    var title: String {
+        switch self {
+        case .backfill: "Backfill"
+        case .repair: "Repair"
+        case .dedupe: "Dedupe"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .backfill: "book.pages"
+        case .repair: "wrench.and.screwdriver"
+        case .dedupe: "square.stack.3d.down.right"
+        }
+    }
+
+    var method: String {
+        switch self {
+        case .backfill: "doctor.memory.backfillDreamDiary"
+        case .repair: "doctor.memory.repairDreamingArtifacts"
+        case .dedupe: "doctor.memory.dedupeDreamDiary"
+        }
+    }
+}
+
+// swiftformat:enable redundantSendable
+
+struct AgentDreamingMaintenanceClient {
+    var run: @Sendable @MainActor (_ action: AgentDreamAction) async throws -> String
+}
+
+extension AgentDreamingMaintenanceClient: DependencyKey {
+    static let liveValue = AgentDreamingMaintenanceClient(run: { action in "\(action.title) complete." })
+    static let testValue = AgentDreamingMaintenanceClient(run: { action in "\(action.title) complete." })
+
+    @MainActor
+    static func live(
+        appModel: NodeAppModel,
+        refresh: @escaping @Sendable @MainActor () async -> Void) -> Self
+    {
+        AgentDreamingMaintenanceClient(run: { action in
+            let data = try await appModel.operatorSession.request(
+                method: action.method,
+                paramsJSON: "{}",
+                timeoutSeconds: 30)
+            let summary = Self.summary(action: action, data: data)
+            await refresh()
+            return summary
+        })
+    }
+
+    static func summary(action: AgentDreamAction, data: Data) -> String {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return "\(action.title) complete."
+        }
+        let written = json["written"] as? Int
+        let replaced = json["replaced"] as? Int
+        let removed = json["removedEntries"] as? Int
+        let changed = json["changed"] as? Bool
+        let parts = [
+            written.map { "\($0) written" },
+            replaced.map { "\($0) replaced" },
+            removed.map { "\($0) removed" },
+            changed.map { $0 ? "artifacts repaired" : "no repair needed" },
+        ].compactMap(\.self)
+        if parts.isEmpty {
+            return "\(action.title) complete."
+        }
+        return "\(action.title): \(parts.joined(separator: ", "))."
+    }
+}
+
+extension DependencyValues {
+    var agentDreamingMaintenance: AgentDreamingMaintenanceClient {
+        get { self[AgentDreamingMaintenanceClient.self] }
+        set { self[AgentDreamingMaintenanceClient.self] = newValue }
+    }
+}
+
+// swiftformat:disable redundantSendable
+enum AgentDreamingMaintenanceError: Error, Equatable, Sendable {
+    case failed(String)
+}
+
+// swiftformat:enable redundantSendable
+
+@Reducer
+struct AgentDreamingDestinationFeature {
+    private let clientOverride: AgentDreamingMaintenanceClient?
+
+    init(client: AgentDreamingMaintenanceClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var selectedDreamDiaryDayID: String?
+        var busyAction: AgentDreamAction?
+        var statusText: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case dreamActionTapped(AgentDreamAction, gatewayConnected: Bool)
+        case dreamActionResponse(Result<String, AgentDreamingMaintenanceError>)
+        case dreamDiaryDaySelected(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.agentDreamingMaintenance) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case let .dreamActionTapped(action, gatewayConnected):
+                guard gatewayConnected, state.busyAction == nil else { return .none }
+                state.busyAction = action
+                state.statusText = nil
+                return .run { send in
+                    do {
+                        let summary = try await client.run(action)
+                        await send(.dreamActionResponse(.success(summary)))
+                    } catch {
+                        await send(.dreamActionResponse(.failure(.failed(error.localizedDescription))))
+                    }
+                }
+
+            case let .dreamActionResponse(.success(summary)):
+                state.busyAction = nil
+                state.statusText = summary
+                return .none
+
+            case let .dreamActionResponse(.failure(error)):
+                state.busyAction = nil
+                state.statusText = error.message
+                return .none
+
+            case let .dreamDiaryDaySelected(dayID):
+                state.selectedDreamDiaryDayID = dayID
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+extension AgentDreamingMaintenanceError {
+    var message: String {
+        switch self {
+        case let .failed(message):
+            message
+        }
+    }
+}
+
+enum AgentDreamingDestinationStoreFactory {
+    @MainActor
+    static func live(
+        appModel: NodeAppModel,
+        refresh: @escaping @Sendable @MainActor () async -> Void) -> StoreOf<AgentDreamingDestinationFeature>
+    {
+        Store(initialState: AgentDreamingDestinationFeature.State()) {
+            AgentDreamingDestinationFeature(client: .live(appModel: appModel, refresh: refresh))
+        }
+    }
+}
+
 struct AgentProDreamingDestination: View {
-    @Environment(NodeAppModel.self) private var appModel
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let overview: AgentOverviewSnapshot?
     let gatewayConnected: Bool
@@ -12,9 +191,33 @@ struct AgentProDreamingDestination: View {
     let dreamingDetail: String
     let dreamingColor: Color
     let refresh: () async -> Void
-    @State private var selectedDreamDiaryDayID: String?
-    @State private var dreamActionBusy: DreamAction?
-    @State private var dreamActionStatusText: String?
+    @State private var store: StoreOf<AgentDreamingDestinationFeature>
+
+    init(
+        headerLeadingAction: OpenClawSidebarHeaderAction?,
+        overview: AgentOverviewSnapshot?,
+        gatewayConnected: Bool,
+        overviewLoading: Bool,
+        dreamingValue: String,
+        dreamingDetail: String,
+        dreamingColor: Color,
+        refresh: @escaping () async -> Void,
+        store: StoreOf<AgentDreamingDestinationFeature> = Store(
+            initialState: AgentDreamingDestinationFeature.State())
+        {
+            AgentDreamingDestinationFeature()
+        })
+    {
+        self.headerLeadingAction = headerLeadingAction
+        self.overview = overview
+        self.gatewayConnected = gatewayConnected
+        self.overviewLoading = overviewLoading
+        self.dreamingValue = dreamingValue
+        self.dreamingDetail = dreamingDetail
+        self.dreamingColor = dreamingColor
+        self.refresh = refresh
+        self._store = State(wrappedValue: store)
+    }
 
     var body: some View {
         ZStack {
@@ -73,40 +276,6 @@ struct AgentProDreamingDestination: View {
                 EmptyView()
             }
             .padding(.horizontal, OpenClawProMetric.pagePadding)
-        }
-    }
-
-    private enum DreamAction: String, CaseIterable, Identifiable {
-        case backfill
-        case repair
-        case dedupe
-
-        var id: Self {
-            self
-        }
-
-        var title: String {
-            switch self {
-            case .backfill: "Backfill"
-            case .repair: "Repair"
-            case .dedupe: "Dedupe"
-            }
-        }
-
-        var icon: String {
-            switch self {
-            case .backfill: "book.pages"
-            case .repair: "wrench.and.screwdriver"
-            case .dedupe: "square.stack.3d.down.right"
-            }
-        }
-
-        var method: String {
-            switch self {
-            case .backfill: "doctor.memory.backfillDreamDiary"
-            case .repair: "doctor.memory.repairDreamingArtifacts"
-            case .dedupe: "doctor.memory.dedupeDreamDiary"
-            }
         }
     }
 
@@ -189,19 +358,21 @@ struct AgentProDreamingDestination: View {
                 }
 
                 HStack(spacing: 8) {
-                    ForEach(DreamAction.allCases) { action in
+                    ForEach(AgentDreamAction.allCases) { action in
                         Button {
                             Task { await self.runDreamAction(action) }
                         } label: {
-                            Label(action.title, systemImage: self.dreamActionBusy == action ? "hourglass" : action.icon)
+                            Label(
+                                action.title,
+                                systemImage: self.store.busyAction == action ? "hourglass" : action.icon)
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                        .disabled(!self.gatewayConnected || self.dreamActionBusy != nil)
+                        .disabled(!self.gatewayConnected || self.store.busyAction != nil)
                     }
                 }
 
-                if let dreamActionStatusText {
+                if let dreamActionStatusText = self.store.statusText {
                     Text(dreamActionStatusText)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -273,7 +444,7 @@ struct AgentProDreamingDestination: View {
         Menu {
             ForEach(Array(days.reversed())) { day in
                 Button {
-                    self.selectedDreamDiaryDayID = day.id
+                    self.store.send(.dreamDiaryDaySelected(day.id))
                 } label: {
                     Label(
                         day.title,
@@ -319,7 +490,7 @@ struct AgentProDreamingDestination: View {
     }
 
     private func selectedDreamDiaryDay(from days: [DreamDiaryDay]) -> DreamDiaryDay? {
-        if let selectedDreamDiaryDayID,
+        if let selectedDreamDiaryDayID = self.store.selectedDreamDiaryDayID,
            let match = days.first(where: { $0.id == selectedDreamDiaryDayID })
         {
             return match
@@ -516,42 +687,8 @@ struct AgentProDreamingDestination: View {
     }
 
     @MainActor
-    private func runDreamAction(_ action: DreamAction) async {
-        guard self.gatewayConnected, self.dreamActionBusy == nil else { return }
-        self.dreamActionBusy = action
-        self.dreamActionStatusText = nil
-        defer { self.dreamActionBusy = nil }
-
-        do {
-            let data = try await self.appModel.operatorSession.request(
-                method: action.method,
-                paramsJSON: "{}",
-                timeoutSeconds: 30)
-            self.dreamActionStatusText = Self.dreamActionSummary(action: action, data: data)
-            await self.refresh()
-        } catch {
-            self.dreamActionStatusText = error.localizedDescription
-        }
-    }
-
-    private static func dreamActionSummary(action: DreamAction, data: Data) -> String {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return "\(action.title) complete."
-        }
-        let written = json["written"] as? Int
-        let replaced = json["replaced"] as? Int
-        let removed = json["removedEntries"] as? Int
-        let changed = json["changed"] as? Bool
-        let parts = [
-            written.map { "\($0) written" },
-            replaced.map { "\($0) replaced" },
-            removed.map { "\($0) removed" },
-            changed.map { $0 ? "artifacts repaired" : "no repair needed" },
-        ].compactMap(\.self)
-        if parts.isEmpty {
-            return "\(action.title) complete."
-        }
-        return "\(action.title): \(parts.joined(separator: ", "))."
+    private func runDreamAction(_ action: AgentDreamAction) async {
+        await self.store.send(.dreamActionTapped(action, gatewayConnected: self.gatewayConnected)).finish()
     }
 
     private func normalized(_ value: String?) -> String? {

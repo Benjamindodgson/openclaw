@@ -152,7 +152,12 @@ extension AgentProTab {
             dreamingColor: self.dreamingColor,
             refresh: {
                 await self.refreshOverview(force: true)
-            })
+            },
+            store: AgentDreamingDestinationStoreFactory.live(
+                appModel: self.appModel,
+                refresh: {
+                    await self.refreshOverview(force: true)
+                }))
     }
 
     @ViewBuilder
