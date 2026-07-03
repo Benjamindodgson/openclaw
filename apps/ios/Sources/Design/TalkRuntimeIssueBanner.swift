@@ -34,11 +34,13 @@ struct TalkRuntimeIssueDetailsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var issue: TalkRuntimeIssue
         var copyFeedback: String?
     }
 
     enum Action: Equatable, Sendable {
-        case copyDiagnosticsButtonTapped(String)
+        case copyDiagnosticsButtonTapped
+        case issueChanged(TalkRuntimeIssue)
     }
 
     // swiftformat:enable redundantSendable
@@ -49,11 +51,17 @@ struct TalkRuntimeIssueDetailsFeature {
             let clipboard = self.clipboardOverride ?? dependencyClipboard
 
             switch action {
-            case let .copyDiagnosticsButtonTapped(details):
+            case .copyDiagnosticsButtonTapped:
                 state.copyFeedback = "Copied diagnostics"
+                let details = state.issue.technicalDetails
                 return .run { _ in
                     await clipboard.copy(details)
                 }
+
+            case let .issueChanged(issue):
+                state.issue = issue
+                state.copyFeedback = nil
+                return .none
             }
         }
         .autoLogActions()
@@ -98,15 +106,14 @@ struct TalkRuntimeIssueDetailsSheet: View {
     init(
         issue: TalkRuntimeIssue,
         onOpenSettings: (() -> Void)? = nil,
-        store: StoreOf<TalkRuntimeIssueDetailsFeature> = Store(
-            initialState: TalkRuntimeIssueDetailsFeature.State())
-        {
-            TalkRuntimeIssueDetailsFeature()
-        })
+        store: StoreOf<TalkRuntimeIssueDetailsFeature>? = nil)
     {
         self.issue = issue
         self.onOpenSettings = onOpenSettings
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? Store(initialState: TalkRuntimeIssueDetailsFeature.State(issue: issue)) {
+            TalkRuntimeIssueDetailsFeature()
+        }
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
@@ -114,12 +121,12 @@ struct TalkRuntimeIssueDetailsSheet: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(self.issue.fallbackBannerTitle)
+                        Text(self.store.issue.fallbackBannerTitle)
                             .font(.title3.weight(.semibold))
-                        Text(self.issue.fallbackBannerMessage)
+                        Text(self.store.issue.fallbackBannerMessage)
                             .font(.body)
                             .foregroundStyle(.secondary)
-                        Text(self.issue.displayMessage)
+                        Text(self.store.issue.displayMessage)
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
@@ -128,12 +135,12 @@ struct TalkRuntimeIssueDetailsSheet: View {
                 }
 
                 Section("Technical details") {
-                    Text(verbatim: self.issue.technicalDetails)
+                    Text(verbatim: self.store.issue.technicalDetails)
                         .font(.system(.footnote, design: .monospaced))
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                     Button("Copy diagnostics") {
-                        self.store.send(.copyDiagnosticsButtonTapped(self.issue.technicalDetails))
+                        self.store.send(.copyDiagnosticsButtonTapped)
                     }
                 }
 
@@ -147,6 +154,9 @@ struct TalkRuntimeIssueDetailsSheet: View {
             }
             .navigationTitle("Talk fallback")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: self.issue) { _, newIssue in
+                self.store.send(.issueChanged(newIssue))
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if let onOpenSettings {
