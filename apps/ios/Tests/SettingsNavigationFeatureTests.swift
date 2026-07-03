@@ -500,6 +500,7 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings gateway connection resolves status summary`() {
         #expect(SettingsGatewayConnectionFeature.State().gatewayStatusDetail == "Offline")
         #expect(SettingsGatewayConnectionFeature.State().gatewayStatusValue == "offline")
+        #expect(SettingsGatewayConnectionFeature.State().gatewayStatusColor == .secondary)
         #expect(SettingsGatewayConnectionFeature.State().gatewaySummaryDetail == "Offline • 0 agents")
         #expect(SettingsGatewayConnectionFeature.State().gatewayDiagnosticConnected == false)
         #expect(SettingsGatewayConnectionFeature.State().gatewayAddress == "Waiting for gateway")
@@ -512,6 +513,7 @@ struct SettingsNavigationFeatureTests {
         connectedState.gatewayServerName = "openclaw-gateway"
         #expect(connectedState.gatewayStatusDetail == "Connected")
         #expect(connectedState.gatewayStatusValue == "online")
+        #expect(connectedState.gatewayStatusColor == OpenClawBrand.ok)
         #expect(connectedState.gatewaySummaryDetail == "Connected • 1 agent")
         #expect(connectedState.gatewayDiagnosticConnected)
         #expect(connectedState.gatewayAddress == "100.64.1.2:18789")
@@ -523,6 +525,7 @@ struct SettingsNavigationFeatureTests {
         demoState.gatewayAgentCount = 3
         #expect(demoState.gatewayStatusDetail == "Apple Review demo mode")
         #expect(demoState.gatewayStatusValue == "demo")
+        #expect(demoState.gatewayStatusColor == OpenClawBrand.accent)
         #expect(demoState.gatewaySummaryDetail == "Apple Review demo mode • 3 agents")
         #expect(demoState.gatewayDiagnosticConnected)
     }

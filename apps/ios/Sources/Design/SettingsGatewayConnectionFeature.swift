@@ -1,4 +1,6 @@
 import ComposableArchitecture
+import OpenClawKit
+import SwiftUI
 
 @Reducer
 struct SettingsGatewayConnectionFeature {
@@ -25,6 +27,11 @@ struct SettingsGatewayConnectionFeature {
         var gatewayStatusValue: String {
             if self.isAppleReviewDemoModeEnabled { return "demo" }
             return self.gatewayConnected ? "online" : "offline"
+        }
+
+        var gatewayStatusColor: Color {
+            if self.isAppleReviewDemoModeEnabled { return OpenClawBrand.accent }
+            return self.gatewayConnected ? OpenClawBrand.ok : .secondary
         }
 
         var gatewayDiagnosticConnected: Bool {
