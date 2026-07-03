@@ -5,8 +5,8 @@ import UIKit
 @testable import OpenClaw
 
 @MainActor
-@Suite struct RootTabsPresentationTests {
-    @Test func quickSetupDoesNotPresentWhenGatewayAlreadyConfigured() {
+struct RootTabsPresentationTests {
+    @Test func `quick setup does not present when gateway already configured`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             quickSetupDismissed: false,
             showOnboarding: false,
@@ -18,7 +18,7 @@ import UIKit
         #expect(!shouldPresent)
     }
 
-    @Test func quickSetupPresentsForFreshInstallWithDiscoveredGateway() {
+    @Test func `quick setup presents for fresh install with discovered gateway`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             quickSetupDismissed: false,
             showOnboarding: false,
@@ -30,7 +30,7 @@ import UIKit
         #expect(shouldPresent)
     }
 
-    @Test func quickSetupDoesNotPresentWhenAlreadyConnected() {
+    @Test func `quick setup does not present when already connected`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             quickSetupDismissed: false,
             showOnboarding: false,
@@ -42,7 +42,7 @@ import UIKit
         #expect(!shouldPresent)
     }
 
-    @Test func startupPresentationOpensOnboardingForFreshInstall() {
+    @Test func `startup presentation opens onboarding for fresh install`() {
         #expect(
             RootTabs.startupPresentationRoute(
                 gatewayConnected: false,
@@ -52,7 +52,7 @@ import UIKit
                 shouldPresentOnLaunch: false) == .onboarding)
     }
 
-    @Test func startupPresentationOpensSettingsWhenOnboardingCompleteWithoutConfig() {
+    @Test func `startup presentation opens settings when onboarding complete without config`() {
         #expect(
             RootTabs.startupPresentationRoute(
                 gatewayConnected: false,
@@ -62,7 +62,7 @@ import UIKit
                 shouldPresentOnLaunch: false) == .settings)
     }
 
-    @Test func startupPresentationDoesNotInterruptConnectedGateway() {
+    @Test func `startup presentation does not interrupt connected gateway`() {
         #expect(
             RootTabs.startupPresentationRoute(
                 gatewayConnected: true,
@@ -72,7 +72,7 @@ import UIKit
                 shouldPresentOnLaunch: true) == .none)
     }
 
-    @Test func reducerUpdatesStartupPresentationRoute() async {
+    @Test func `reducer updates startup presentation route`() async {
         let store = TestStore(initialState: RootPresentationFeature.State(
             gatewayConnected: true,
             hasConnectedOnce: true,
@@ -121,7 +121,44 @@ import UIKit
         }
     }
 
-    @Test func cameraFlashOverlayReducerFadesOutAfterDelay() async {
+    @Test func `voice wake toast reducer shows trimmed command and dismisses after delay`() async {
+        let store = TestStore(initialState: RootVoiceWakeToastFeature.State()) {
+            RootVoiceWakeToastFeature(sleeper: RootVoiceWakeToastSleepClient(sleep: {}))
+        }
+
+        await store.send(.commandTriggered("  openclaw do this  ")) {
+            $0.commandText = "openclaw do this"
+        }
+        await store.receive(.dismissDelayElapsed) {
+            $0.commandText = nil
+        }
+    }
+
+    @Test func `voice wake toast reducer ignores empty commands`() async {
+        let store = TestStore(initialState: RootVoiceWakeToastFeature.State()) {
+            RootVoiceWakeToastFeature(sleeper: RootVoiceWakeToastSleepClient(sleep: {}))
+        }
+
+        await store.send(.commandTriggered("   "))
+        await store.finish()
+    }
+
+    @Test func `voice wake toast reducer cancels dismiss on disappear`() async {
+        let probe = RootVoiceWakeToastSleepProbe()
+        let store = TestStore(initialState: RootVoiceWakeToastFeature.State()) {
+            RootVoiceWakeToastFeature(sleeper: probe.client)
+        }
+
+        await store.send(.commandTriggered("openclaw do this")) {
+            $0.commandText = "openclaw do this"
+        }
+        await store.send(.disappeared)
+
+        await store.finish()
+        #expect(probe.wasCancelled)
+    }
+
+    @Test func `camera flash overlay reducer fades out after delay`() async {
         let store = TestStore(initialState: RootCameraFlashOverlayFeature.State()) {
             RootCameraFlashOverlayFeature(sleeper: RootCameraFlashOverlaySleepClient(sleep: {}))
         }
@@ -134,7 +171,7 @@ import UIKit
         }
     }
 
-    @Test func cameraFlashOverlayReducerCancelsFadeOutOnDisappear() async {
+    @Test func `camera flash overlay reducer cancels fade out on disappear`() async {
         let probe = RootCameraFlashOverlaySleepProbe()
         let store = TestStore(initialState: RootCameraFlashOverlayFeature.State()) {
             RootCameraFlashOverlayFeature(sleeper: probe.client)
@@ -147,6 +184,25 @@ import UIKit
 
         await store.finish()
         #expect(probe.wasCancelled)
+    }
+
+    private final class RootVoiceWakeToastSleepProbe: @unchecked Sendable {
+        var wasCancelled = false
+        private var continuation: CheckedContinuation<Void, Error>?
+
+        var client: RootVoiceWakeToastSleepClient {
+            RootVoiceWakeToastSleepClient(sleep: {
+                try await withTaskCancellationHandler {
+                    try await withCheckedThrowingContinuation { continuation in
+                        self.continuation = continuation
+                    }
+                } onCancel: {
+                    self.wasCancelled = true
+                    self.continuation?.resume(throwing: CancellationError())
+                    self.continuation = nil
+                }
+            })
+        }
     }
 
     private final class RootCameraFlashOverlaySleepProbe: @unchecked Sendable {
@@ -167,7 +223,7 @@ import UIKit
         }
     }
 
-    @Test func reducerUpdatesQuickSetupPresentation() async {
+    @Test func `reducer updates quick setup presentation`() async {
         let store = TestStore(initialState: RootPresentationFeature.State(
             quickSetupDismissed: false,
             showOnboarding: false,
@@ -202,28 +258,28 @@ import UIKit
         }
     }
 
-    @Test func sidebarTabsEnabledForIPadRegularWidth() {
+    @Test func `sidebar tabs enabled for I pad regular width`() {
         #expect(
             RootTabs.shouldUseSidebarTabs(
                 idiom: .pad,
                 horizontalSizeClass: .regular))
     }
 
-    @Test func sidebarTabsEnabledForIPadCompactWidth() {
+    @Test func `sidebar tabs enabled for I pad compact width`() {
         #expect(
             RootTabs.shouldUseSidebarTabs(
                 idiom: .pad,
                 horizontalSizeClass: .compact))
     }
 
-    @Test func sidebarTabsDisabledForIPhone() {
+    @Test func `sidebar tabs disabled for I phone`() {
         #expect(
             !RootTabs.shouldUseSidebarTabs(
                 idiom: .phone,
                 horizontalSizeClass: .regular))
     }
 
-    @Test func sidebarGroupsMatchAdaptiveNavigationModel() {
+    @Test func `sidebar groups match adaptive navigation model`() {
         let groups = RootTabs.sidebarGroups
         let destinationIDs = RootTabs.SidebarDestination.allCases.map(\.rawValue)
 
@@ -264,7 +320,7 @@ import UIKit
         #expect(!RootTabs.sidebarGroups.flatMap(\.destinations).contains(.gateway))
     }
 
-    @Test func phoneControlGroupsAvoidDuplicatingTheAgentTab() {
+    @Test func `phone control groups avoid duplicating the agent tab`() {
         let groups = RootTabs.phoneControlGroups
         let destinations = groups.flatMap(\.destinations)
 
@@ -275,13 +331,13 @@ import UIKit
         #expect(destinations.contains(.instances))
     }
 
-    @Test func sidebarUsesCompactLabelsForLongRoutes() {
+    @Test func `sidebar uses compact labels for long routes`() {
         #expect(RootTabs.SidebarDestination.settings.title == "Settings")
         #expect(RootTabs.SidebarDestination.gateway.title == "Settings / Gateway")
         #expect(RootTabs.SidebarDestination.gateway.sidebarTitle == "Connection")
     }
 
-    @Test func phoneHubUsesRootTabsOnlyForNativeChatAgentAndGateway() {
+    @Test func `phone hub uses root tabs only for native chat agent and gateway`() {
         #expect(RootTabs.shouldOpenRootTabFromPhoneHub(.chat))
         #expect(RootTabs.shouldOpenRootTabFromPhoneHub(.talk))
         #expect(RootTabs.shouldOpenRootTabFromPhoneHub(.agents))
@@ -296,13 +352,13 @@ import UIKit
         }
     }
 
-    @Test func appLaunchDefaultsToChatTab() {
+    @Test func `app launch defaults to chat tab`() {
         #expect(RootTabs.initialTab(arguments: ["OpenClaw"]) == .chat)
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-tab"]) == .chat)
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-tab", "unknown"]) == .chat)
     }
 
-    @Test func appLaunchUsesRequestedDestinationBeforeChatFallback() {
+    @Test func `app launch uses requested destination before chat fallback`() {
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-destination", "overview"]) == .control)
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-destination", "chat"]) == .chat)
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-destination", "agents"]) == .agent)
@@ -317,7 +373,7 @@ import UIKit
             ]) == .control)
     }
 
-    @Test func appLaunchRespectsExplicitInitialTabOverride() {
+    @Test func `app launch respects explicit initial tab override`() {
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-tab", "control"]) == .control)
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-tab", "overview"]) == .control)
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-tab", "chat"]) == .chat)
@@ -326,7 +382,7 @@ import UIKit
         #expect(RootTabs.initialTab(arguments: ["OpenClaw", "--openclaw-initial-tab", "settings"]) == .settings)
     }
 
-    @Test func legacyInitialTabsMapToMatchingSidebarDestinations() {
+    @Test func `legacy initial tabs map to matching sidebar destinations`() {
         #expect(RootTabs.defaultSidebarDestination(for: .control) == .overview)
         #expect(RootTabs.defaultSidebarDestination(for: .chat) == .chat)
         #expect(RootTabs.defaultSidebarDestination(for: .talk) == .talk)
@@ -334,20 +390,20 @@ import UIKit
         #expect(RootTabs.defaultSidebarDestination(for: .settings) == .settings)
     }
 
-    @Test func skillWorkshopMutationsRequireAdminScope() {
+    @Test func `skill workshop mutations require admin scope`() {
         #expect(IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: true))
         #expect(!IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: false))
         #expect(!IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: false, hasOperatorAdminScope: true))
     }
 
-    @Test func skillWorkshopHeldFilterIncludesQuarantinedAndStale() {
+    @Test func `skill workshop held filter includes quarantined and stale`() {
         #expect(IPadSkillWorkshopScreen.proposalStatusFilters.contains("held"))
         #expect(IPadSkillWorkshopScreen.proposalStatusMatchesFilter(status: "quarantined", filter: "held"))
         #expect(IPadSkillWorkshopScreen.proposalStatusMatchesFilter(status: "stale", filter: "held"))
         #expect(!IPadSkillWorkshopScreen.proposalStatusMatchesFilter(status: "pending", filter: "held"))
     }
 
-    @Test func skillWorkshopBoardLanesMatchStatusFilter() {
+    @Test func `skill workshop board lanes match status filter`() {
         #expect(
             IPadSkillWorkshopScreen.proposalStatusBoardLanes(
                 filter: "pending",
@@ -373,7 +429,7 @@ import UIKit
         #expect(IPadSkillWorkshopScreen.proposalLaneLabel("manual_QA") == "Manual QA")
     }
 
-    @Test func skillWorkshopSelectionStaysInsideActiveFilter() {
+    @Test func `skill workshop selection stays inside active filter`() {
         let proposals = [
             (id: "applied-1", status: "applied"),
             (id: "pending-1", status: "pending"),
@@ -400,7 +456,7 @@ import UIKit
                 visibleProposalIDs: []) == nil)
     }
 
-    @Test func workboardBoardScopeLabelsStayCompact() {
+    @Test func `workboard board scope labels stay compact`() {
         #expect(IPadWorkboardScreen.normalizedScopeID("  planning ") == "planning")
         #expect(IPadWorkboardScreen.boardScopeLabel(for: "") == "All boards")
         #expect(IPadWorkboardScreen.boardScopeLabel(for: "planning") == "planning")
@@ -413,37 +469,37 @@ import UIKit
             .workboardSubtitle(boardScopeLabel: "planning", selectedStatus: "running") == "planning / Running")
     }
 
-    @Test func workboardCompactUnavailableCopyExplainsRealCapabilityState() {
+    @Test func `workboard compact unavailable copy explains real capability state`() {
         #expect(IPadWorkboardScreen
             .compactWriteUnavailableMessage(canRead: false) ==
             "Connect from Settings to create, move, and dispatch cards.")
         #expect(IPadWorkboardScreen.compactWriteUnavailableMessage(canRead: true) == "Read-only gateway.")
     }
 
-    @Test func skillWorkshopAgentScopeNormalizesGatewayIds() {
+    @Test func `skill workshop agent scope normalizes gateway ids`() {
         #expect(IPadSkillWorkshopScreen.normalizedScopeID("  aiden ") == "aiden")
         #expect(IPadSkillWorkshopScreen.normalizedScopeID(nil) == "")
     }
 
-    @Test func channelLifecycleControlsRequireAdminScope() {
+    @Test func `channel lifecycle controls require admin scope`() {
         #expect(SettingsChannelsDestination.shouldEnableChannelOperation(canRead: true, hasOperatorAdminScope: true))
         #expect(!SettingsChannelsDestination.shouldEnableChannelOperation(canRead: true, hasOperatorAdminScope: false))
         #expect(!SettingsChannelsDestination.shouldEnableChannelOperation(canRead: false, hasOperatorAdminScope: true))
     }
 
-    @Test func clickClackStaysInChannelsIntegrationMetadata() {
+    @Test func `click clack stays in channels integration metadata`() {
         #expect(SettingsChannelsDestination.fallbackLabel("clickclack") == "ClickClack")
         #expect(SettingsChannelsDestination.fallbackDetail("clickclack") == "Self-hosted chat bot routing.")
         #expect(SettingsChannelsDestination.fallbackSystemImage("clickclack") == "bubble.left.and.bubble.right")
     }
 
-    @Test func iPadOverviewCanSuppressStandaloneHeaderBranding() {
+    @Test func `i pad overview can suppress standalone header branding`() {
         #expect(CommandCenterTab.shouldShowHeaderMark(hasLeadingAction: false, showsHeaderMark: true))
         #expect(!CommandCenterTab.shouldShowHeaderMark(hasLeadingAction: true, showsHeaderMark: true))
         #expect(!CommandCenterTab.shouldShowHeaderMark(hasLeadingAction: false, showsHeaderMark: false))
     }
 
-    @Test func commandCenterCanUseParentNavigationStackForEmbeddedRoutes() {
+    @Test func `command center can use parent navigation stack for embedded routes`() {
         let standalone = CommandCenterTab(openChat: {}, openSettings: {})
         let embedded = CommandCenterTab(
             ownsNavigationStack: false,
@@ -462,7 +518,7 @@ import UIKit
         #expect(shellRouted.openSessions != nil)
     }
 
-    @Test func chatSidebarDestinationCanUseRouteHeaderInsteadOfAgentBranding() {
+    @Test func `chat sidebar destination can use route header instead of agent branding`() {
         let standalone = ChatProTab()
         let routed = ChatProTab(
             headerTitle: "Chat",
@@ -484,7 +540,7 @@ import UIKit
         #expect(ChatProTab.defaultHeaderTitle(showsAgentBadge: false, agentDisplayName: "OpenClaw") == "Chat")
     }
 
-    @Test func agentRoutesCanOpenGatewaySettingsFromHeaderPill() {
+    @Test func `agent routes can open gateway settings from header pill`() {
         let standalone = AgentProTab()
         let routed = AgentProTab(
             directRoute: .instances,
@@ -500,7 +556,7 @@ import UIKit
         #expect(routed.openSettings != nil)
     }
 
-    @Test func workboardDispatchSummaryReportsStartedAndFailures() throws {
+    @Test func `workboard dispatch summary reports started and failures`() throws {
         let payload = Data(
             """
             {
@@ -518,7 +574,7 @@ import UIKit
         #expect(summary.summaryText == "2 dispatched: 1 started, 1 failed.")
     }
 
-    @Test func talkSidebarDestinationCanReceiveRevealAction() {
+    @Test func `talk sidebar destination can receive reveal action`() {
         let action = OpenClawSidebarHeaderAction(
             systemName: "sidebar.left",
             accessibilityLabel: "Show Sidebar",
@@ -535,7 +591,7 @@ import UIKit
         #expect(!embedded.ownsNavigationStack)
     }
 
-    @Test func settingsCanUseParentNavigationStackForSidebarRoutes() {
+    @Test func `settings can use parent navigation stack for sidebar routes`() {
         let standalone = SettingsProTab()
         let embedded = SettingsProTab(ownsNavigationStack: false)
 
@@ -543,28 +599,28 @@ import UIKit
         #expect(!embedded.ownsNavigationStack)
     }
 
-    @Test func iPadPortraitUsesHiddenDrawerSidebar() {
+    @Test func `i pad portrait uses hidden drawer sidebar`() {
         let mode = RootTabs.sidebarLayoutMode(containerSize: CGSize(width: 1024, height: 1366))
 
         #expect(mode == .drawer)
         #expect(!RootTabs.preferredSidebarVisibility(layoutMode: mode))
     }
 
-    @Test func iPadWideLandscapeUsesVisibleSplitSidebar() {
+    @Test func `i pad wide landscape uses visible split sidebar`() {
         let mode = RootTabs.sidebarLayoutMode(containerSize: CGSize(width: 1366, height: 1024))
 
         #expect(mode == .split)
         #expect(RootTabs.preferredSidebarVisibility(layoutMode: mode))
     }
 
-    @Test func iPadSplitSidebarWidthStaysUsable() {
+    @Test func `i pad split sidebar width stays usable`() {
         let width = RootTabs.sidebarWidth(containerWidth: 1366, isDrawerLayout: false)
 
         #expect(width >= RootTabs.sidebarSplitIdealWidth)
         #expect(width <= RootTabs.sidebarSplitMaximumWidth)
     }
 
-    @Test func iPadCollapsedSplitSidebarUsesHeaderRevealWithoutReservedRail() {
+    @Test func `i pad collapsed split sidebar uses header reveal without reserved rail`() {
         #expect(
             RootTabs.shouldShowSidebarRevealInDestinationHeader(
                 isSidebarVisible: false,
@@ -583,7 +639,7 @@ import UIKit
                 layoutMode: .drawer))
     }
 
-    @Test func initialSidebarVisibilityParsesLaunchArgument() {
+    @Test func `initial sidebar visibility parses launch argument`() {
         #expect(
             RootTabs.requestedInitialSidebarVisibility(arguments: [
                 "OpenClaw",
@@ -604,46 +660,46 @@ import UIKit
             ]) == nil)
     }
 
-    @Test func sidebarControlsHaveStableAccessibilityIdentifiers() {
+    @Test func `sidebar controls have stable accessibility identifiers`() {
         #expect(RootTabs.sidebarShowButtonAccessibilityIdentifier == "RootTabs.Sidebar.Show")
         #expect(RootTabs.sidebarHideButtonAccessibilityIdentifier == "RootTabs.Sidebar.Hide")
     }
 
-    @Test func iPadDrawerSidebarWidthStaysInsideScreen() {
+    @Test func `i pad drawer sidebar width stays inside screen`() {
         let width = RootTabs.sidebarWidth(containerWidth: 744, isDrawerLayout: true)
 
         #expect(width >= 280)
         #expect(width <= RootTabs.sidebarDrawerMaximumWidth)
     }
 
-    @Test func narrowLandscapeKeepsDrawerSidebar() {
+    @Test func `narrow landscape keeps drawer sidebar`() {
         let mode = RootTabs.sidebarLayoutMode(containerSize: CGSize(width: 900, height: 600))
 
         #expect(mode == .drawer)
         #expect(!RootTabs.preferredSidebarVisibility(layoutMode: mode))
     }
 
-    @Test func drawerSelectionCollapsesSidebarButSplitSelectionDoesNot() {
+    @Test func `drawer selection collapses sidebar but split selection does not`() {
         #expect(RootTabs.shouldCollapseSidebarAfterSelection(layoutMode: .drawer))
         #expect(!RootTabs.shouldCollapseSidebarAfterSelection(layoutMode: .split))
     }
 
-    @Test func hiddenSidebarShowsRevealControl() {
+    @Test func `hidden sidebar shows reveal control`() {
         #expect(RootTabs.shouldShowSidebarRevealControl(isSidebarVisible: false))
     }
 
-    @Test func sidebarRevealControlsHideWhenSidebarIsVisible() {
+    @Test func `sidebar reveal controls hide when sidebar is visible`() {
         #expect(!RootTabs.shouldShowSidebarRevealControl(isSidebarVisible: true))
     }
 
-    @Test func iPadSplitPrefersIntegratedVisibleSidebar() {
+    @Test func `i pad split prefers integrated visible sidebar`() {
         #expect(RootTabs.preferredSidebarVisibility(layoutMode: .split))
         #expect(!RootTabs.shouldCollapseSidebarAfterSelection(layoutMode: .split))
         #expect(!RootTabs.preferredSidebarVisibility(layoutMode: .drawer))
         #expect(RootTabs.shouldCollapseSidebarAfterSelection(layoutMode: .drawer))
     }
 
-    @Test func destinationHeadersOwnHiddenSidebarRevealControl() {
+    @Test func `destination headers own hidden sidebar reveal control`() {
         #expect(
             RootTabs.shouldShowSidebarRevealInDestinationHeader(
                 isSidebarVisible: false,
@@ -662,7 +718,7 @@ import UIKit
                 layoutMode: .split))
     }
 
-    @Test func workboardAndSkillWorkshopUseCompactTaskFlowOnPhoneSizes() {
+    @Test func `workboard and skill workshop use compact task flow on phone sizes`() {
         #expect(
             IPadWorkboardScreen.usesCompactTaskFlow(
                 horizontalSizeClass: .compact,
@@ -681,7 +737,7 @@ import UIKit
                 verticalSizeClass: .compact))
     }
 
-    @Test func workboardAndSkillWorkshopKeepRegularTaskFlowOnWideIPadSizes() {
+    @Test func `workboard and skill workshop keep regular task flow on wide I pad sizes`() {
         #expect(
             !IPadWorkboardScreen.usesCompactTaskFlow(
                 horizontalSizeClass: .regular,
@@ -692,7 +748,7 @@ import UIKit
                 verticalSizeClass: .regular))
     }
 
-    @Test func phoneHubLeavesRoomForFloatingTabBar() {
+    @Test func `phone hub leaves room for floating tab bar`() {
         #expect(RootTabsPhoneControlHub.bottomScrollInset(verticalSizeClass: .regular) == 112)
         #expect(RootTabsPhoneControlHub.bottomScrollInset(verticalSizeClass: .compact) == 72)
     }
