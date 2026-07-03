@@ -1325,19 +1325,23 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings voice controls summarize active modes`() {
         var state = SettingsVoiceControlFeature.State()
         #expect(state.detailText == "Off")
+        #expect(state.detailColor == .secondary)
         #expect(state.voiceWakeValue == "off")
         #expect(state.voiceWakeColor == .secondary)
 
         state.voiceWakeEnabled = true
         #expect(state.detailText == "Wake on")
+        #expect(state.detailColor == OpenClawBrand.accent)
         #expect(state.voiceWakeValue == "on")
         #expect(state.voiceWakeColor == OpenClawBrand.ok)
 
         state.talkEnabled = true
         #expect(state.detailText == "Talk + Wake")
+        #expect(state.detailColor == OpenClawBrand.accent)
 
         state.voiceWakeEnabled = false
         #expect(state.detailText == "Talk on")
+        #expect(state.detailColor == OpenClawBrand.accent)
     }
 
     @Test func `settings talk preferences sync persisted values`() async {
