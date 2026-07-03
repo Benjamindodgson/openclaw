@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import Foundation
 import OpenClawKit
+import SwiftUI
 
 @Reducer
 struct SettingsTalkPreferencesFeature {
@@ -44,6 +45,11 @@ struct SettingsTalkPreferencesFeature {
         var gatewayTalkConfigValue: String {
             if self.isAppleReviewDemoModeEnabled { return "demo" }
             return self.gatewayTalkConfigLoaded ? "loaded" : "missing"
+        }
+
+        var gatewayTalkConfigColor: Color {
+            if self.isAppleReviewDemoModeEnabled { return .secondary }
+            return self.gatewayTalkConfigLoaded ? OpenClawBrand.ok : .secondary
         }
 
         var gatewayTalkActiveVoiceDetail: String {

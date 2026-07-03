@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import OpenClawKit
+import SwiftUI
 import Testing
 @testable import OpenClaw
 
@@ -1454,18 +1455,21 @@ struct SettingsNavigationFeatureTests {
         #expect(state.gatewayDiagnosticTalkConfigLoaded == false)
         #expect(state.gatewayTalkConfigDetail == "Not loaded")
         #expect(state.gatewayTalkConfigValue == "missing")
+        #expect(state.gatewayTalkConfigColor == .secondary)
 
         state.gatewayTalkConfigLoaded = true
         state.gatewayTalkTransportLabel = "Gateway Relay"
         #expect(state.gatewayDiagnosticTalkConfigLoaded)
         #expect(state.gatewayTalkConfigDetail == "Gateway Relay")
         #expect(state.gatewayTalkConfigValue == "loaded")
+        #expect(state.gatewayTalkConfigColor == OpenClawBrand.ok)
 
         state.isAppleReviewDemoModeEnabled = true
         state.gatewayTalkConfigLoaded = false
         #expect(state.gatewayDiagnosticTalkConfigLoaded)
         #expect(state.gatewayTalkConfigDetail == "Demo mode only")
         #expect(state.gatewayTalkConfigValue == "demo")
+        #expect(state.gatewayTalkConfigColor == .secondary)
     }
 
     @Test func `settings talk preferences summarize gateway runtime details`() {
