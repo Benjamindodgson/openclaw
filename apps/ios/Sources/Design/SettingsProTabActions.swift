@@ -1090,16 +1090,11 @@ extension SettingsProTab {
     }
 
     var privacyDetail: String {
-        let location = OpenClawLocationMode(rawValue: self.locationModeRaw) ?? .off
-        return location == .off ? "Location off" : "Location \(self.locationLabel)"
+        self.locationStore.privacyDetail
     }
 
     var locationLabel: String {
-        switch OpenClawLocationMode(rawValue: self.locationModeRaw) ?? .off {
-        case .off: "Off"
-        case .whileUsing: "While Using"
-        case .always: "Always"
-        }
+        self.locationStore.locationLabel
     }
 
     var notificationStatusText: String {
