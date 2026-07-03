@@ -16,10 +16,7 @@ struct AgentProTab: View {
     @State var skillMutationBusyKeys: Set<String> = []
     @State var skillMutationErrorText: String?
     @State var skillMutationStatusText: String?
-    @State var skillConfigBusyKeys: Set<String> = []
-    @State var skillConfigMessages: [String: SkillEditorMessage] = [:]
-    @State var skillAPIKeyDrafts: [String: String] = [:]
-    @State var skillEditorSelection: SkillEditorSelection?
+    @State var skillEditorStore: StoreOf<AgentSkillEditorFeature>
     @State var clawHubStore: StoreOf<AgentClawHubSearchFeature>
     @State var cronActionStore: StoreOf<AgentCronActionFeature>
 
@@ -91,15 +88,15 @@ struct AgentProTab: View {
         }
     }
 
-    struct SkillEditorSelection: Identifiable {
+    struct SkillEditorSelection: Equatable, Identifiable {
         let id: String
     }
 
-    struct SkillEditorMessage {
+    struct SkillEditorMessage: Equatable {
         let kind: Kind
         let text: String
 
-        enum Kind {
+        enum Kind: Equatable {
             case success
             case error
         }
@@ -130,6 +127,11 @@ struct AgentProTab: View {
         {
             AgentSkillFilterFeature()
         },
+        skillEditorStore: StoreOf<AgentSkillEditorFeature> = Store(
+            initialState: AgentSkillEditorFeature.State())
+        {
+            AgentSkillEditorFeature()
+        },
         cronActionStore: StoreOf<AgentCronActionFeature> = Store(
             initialState: AgentCronActionFeature.State())
         {
@@ -149,6 +151,7 @@ struct AgentProTab: View {
         self._overviewStore = State(wrappedValue: overviewStore)
         self._clawHubStore = State(wrappedValue: clawHubStore)
         self._skillFilterStore = State(wrappedValue: skillFilterStore)
+        self._skillEditorStore = State(wrappedValue: skillEditorStore)
         self._cronActionStore = State(wrappedValue: cronActionStore)
         self._filterStore = State(wrappedValue: filterStore)
     }
@@ -164,7 +167,7 @@ struct AgentProTab: View {
         .task(id: self.overviewTaskID) {
             await self.refreshOverview(force: false)
         }
-        .sheet(item: self.$skillEditorSelection) { selection in
+        .sheet(item: self.skillEditorSelectionBinding) { selection in
             if let skill = self.skillByKey(selection.id) {
                 self.skillEditorSheet(skill)
             } else {
@@ -231,6 +234,20 @@ struct AgentProTab: View {
             set: { self.skillFilterStore.send(.statusFilterChanged($0)) })
     }
 
+    var skillConfigBusyKeys: Set<String> {
+        self.skillEditorStore.busyKeys
+    }
+
+    var skillConfigMessages: [String: SkillEditorMessage] {
+        self.skillEditorStore.messages
+    }
+
+    var skillEditorSelectionBinding: Binding<SkillEditorSelection?> {
+        Binding(
+            get: { self.skillEditorStore.selection },
+            set: { self.skillEditorStore.send(.selectionChanged($0)) })
+    }
+
     var cronActionBusyIDs: Set<String> {
         self.cronActionStore.busyIDs
     }
@@ -276,6 +293,77 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+@Reducer
+struct AgentSkillEditorFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var apiKeyDrafts: [String: String] = [:]
+        var busyKeys: Set<String> = []
+        var messages: [String: AgentProTab.SkillEditorMessage] = [:]
+        var selection: AgentProTab.SkillEditorSelection?
+    }
+
+    enum Action: Equatable, Sendable {
+        case apiKeyDraftChanged(key: String, value: String)
+        case apiKeyDraftCleared(key: String)
+        case editorDismissed
+        case editorOpened(id: String)
+        case mutationFailed(key: String, message: String)
+        case mutationFinished(key: String)
+        case mutationStarted(key: String)
+        case mutationSucceeded(key: String, message: String)
+        case selectionChanged(AgentProTab.SkillEditorSelection?)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .apiKeyDraftChanged(key, value):
+                state.apiKeyDrafts[key] = value
+                return .none
+
+            case let .apiKeyDraftCleared(key):
+                state.apiKeyDrafts[key] = nil
+                return .none
+
+            case .editorDismissed:
+                state.selection = nil
+                return .none
+
+            case let .editorOpened(id):
+                state.selection = AgentProTab.SkillEditorSelection(id: id)
+                return .none
+
+            case let .selectionChanged(selection):
+                state.selection = selection
+                return .none
+
+            case let .mutationStarted(key):
+                state.busyKeys.insert(key)
+                state.messages[key] = nil
+                return .none
+
+            case let .mutationSucceeded(key, message):
+                state.messages[key] = AgentProTab.SkillEditorMessage(kind: .success, text: message)
+                return .none
+
+            case let .mutationFinished(key):
+                state.busyKeys.remove(key)
+                return .none
+
+            case let .mutationFailed(key, message):
+                state.busyKeys.remove(key)
+                state.messages[key] = AgentProTab.SkillEditorMessage(kind: .error, text: message)
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }
 

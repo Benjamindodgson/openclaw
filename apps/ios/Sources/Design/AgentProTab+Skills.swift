@@ -366,13 +366,15 @@ extension AgentProTab {
     }
 
     func openSkillEditor(_ skill: SkillStatusEntryLite) {
-        self.skillEditorSelection = SkillEditorSelection(id: skill.effectiveSkillKey)
+        self.skillEditorStore.send(.editorOpened(id: skill.effectiveSkillKey))
     }
 
     func skillAPIKeyBinding(for skill: SkillStatusEntryLite) -> Binding<String> {
         Binding(
-            get: { self.skillAPIKeyDrafts[skill.effectiveSkillKey] ?? "" },
-            set: { self.skillAPIKeyDrafts[skill.effectiveSkillKey] = $0 })
+            get: { self.skillEditorStore.apiKeyDrafts[skill.effectiveSkillKey] ?? "" },
+            set: { self.skillEditorStore.send(.apiKeyDraftChanged(
+                key: skill.effectiveSkillKey,
+                value: $0)) })
     }
 
     var missingSkillEditorSheet: some View {
@@ -382,7 +384,7 @@ extension AgentProTab {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Close") {
-                            self.skillEditorSelection = nil
+                            self.skillEditorStore.send(.editorDismissed)
                         }
                     }
                 }
@@ -408,7 +410,7 @@ extension AgentProTab {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
-                        self.skillEditorSelection = nil
+                        self.skillEditorStore.send(.editorDismissed)
                     }
                 }
             }
@@ -653,10 +655,10 @@ extension AgentProTab {
     @MainActor
     func saveSkillAPIKey(_ skill: SkillStatusEntryLite) async {
         await self.runSkillConfigMutation(skill) {
-            let apiKey = self.skillAPIKeyDrafts[skill.effectiveSkillKey] ?? ""
+            let apiKey = self.skillEditorStore.apiKeyDrafts[skill.effectiveSkillKey] ?? ""
             let params = SkillUpdateParams(skillKey: skill.effectiveSkillKey, apiKey: apiKey)
             _ = try await self.requestGateway(method: "skills.update", params: params, timeoutSeconds: 20)
-            self.skillAPIKeyDrafts[skill.effectiveSkillKey] = ""
+            self.skillEditorStore.send(.apiKeyDraftCleared(key: skill.effectiveSkillKey))
             return apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? "API key cleared."
                 : "API key saved."
@@ -717,19 +719,18 @@ extension AgentProTab {
     {
         guard self.liveGatewayConnected else { return }
         let key = skill.effectiveSkillKey
-        self.skillConfigBusyKeys.insert(key)
-        self.skillConfigMessages[key] = nil
-        defer { self.skillConfigBusyKeys.remove(key) }
+        self.skillEditorStore.send(.mutationStarted(key: key))
 
         do {
             let message = try await action()
-            self.skillConfigMessages[key] = SkillEditorMessage(kind: .success, text: message)
+            self.skillEditorStore.send(.mutationSucceeded(key: key, message: message))
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
+            self.skillEditorStore.send(.mutationFinished(key: key))
         } catch {
-            self.skillConfigMessages[key] = SkillEditorMessage(
-                kind: .error,
-                text: Self.skillMutationMessage(error))
+            self.skillEditorStore.send(.mutationFailed(
+                key: key,
+                message: Self.skillMutationMessage(error)))
         }
     }
 
