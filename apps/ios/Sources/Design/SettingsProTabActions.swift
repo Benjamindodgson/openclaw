@@ -141,14 +141,10 @@ extension SettingsProTab {
     @MainActor
     func runDiagnostics() async {
         guard !self.gatewayActivityStore.isRefreshingGateway else { return }
-        self.gatewayActivityStore.send(.refreshStarted)
-        defer { self.gatewayActivityStore.send(.refreshFinished) }
-
-        if !self.appModel.isAppleReviewDemoModeEnabled {
-            self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
-            self.gatewayController.restartDiscovery()
-            await self.appModel.refreshGatewayOverviewIfConnected()
-        }
+        let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled
+        await self.gatewayActivityStore
+            .send(.diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))
+            .finish()
         self.syncGatewayConnectionStatusState()
         self.syncDiagnosticsContextState()
         await self.notificationStore.send(.statusRefreshRequested).finish()
