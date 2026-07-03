@@ -164,8 +164,7 @@ struct RootTabsPresentationTests {
             $0.didAutoOpenSettings = true
             $0.startupRoute = .settings
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                reason: "root_appear",
-                dismissPresentedSheet: false)
+                reason: "root_appear")
         }
 
         await store.send(.presentationCommandHandled) {
@@ -189,8 +188,7 @@ struct RootTabsPresentationTests {
             $0.startupRoute = .settings
             $0.didAutoOpenSettings = true
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                reason: "auto_open_settings",
-                dismissPresentedSheet: false)
+                reason: "auto_open_settings")
         }
 
         await store.send(.autoOpenSettingsRequested(
@@ -201,7 +199,10 @@ struct RootTabsPresentationTests {
     }
 
     @Test func `reducer handles gateway setup request once`() async {
-        let store = TestStore(initialState: RootPresentationFeature.State(showOnboarding: true)) {
+        let store = TestStore(initialState: RootPresentationFeature.State(
+            showOnboarding: true,
+            presentedSheet: .quickSetup))
+        {
             RootPresentationFeature()
         }
 
@@ -209,9 +210,9 @@ struct RootTabsPresentationTests {
             $0.showOnboarding = false
             $0.didAutoOpenSettings = true
             $0.handledGatewaySetupRequestID = 42
+            $0.presentedSheet = nil
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                reason: "gateway_setup_deeplink",
-                dismissPresentedSheet: true)
+                reason: "gateway_setup_deeplink")
         }
 
         await store.send(.gatewaySetupRequestChanged(42))
@@ -442,7 +443,6 @@ struct RootTabsPresentationTests {
         let store = TestStore(initialState: RootPresentationFeature.State(
             quickSetupDismissed: false,
             showOnboarding: false,
-            hasPresentedSheet: false,
             discoveredGatewayCount: 0))
         {
             RootPresentationFeature()
@@ -451,19 +451,22 @@ struct RootTabsPresentationTests {
         await store.send(.quickSetupSnapshotChanged(
             quickSetupDismissed: false,
             showOnboarding: false,
-            hasPresentedSheet: false,
             gatewayConnected: false,
             hasExistingGatewayConfig: false,
             discoveredGatewayCount: 1))
         {
             $0.discoveredGatewayCount = 1
+            $0.presentedSheet = .quickSetup
+        }
+
+        await store.send(.presentedSheetChanged(nil)) {
+            $0.presentedSheet = nil
             $0.shouldPresentQuickSetup = true
         }
 
         await store.send(.quickSetupSnapshotChanged(
             quickSetupDismissed: false,
             showOnboarding: true,
-            hasPresentedSheet: false,
             gatewayConnected: false,
             hasExistingGatewayConfig: false,
             discoveredGatewayCount: 1))
