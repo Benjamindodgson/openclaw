@@ -1137,7 +1137,7 @@ struct RootTabsSourceGuardTests {
         let requestFunction = try Self.extract(
             actionsSource,
             from: "func handleLocationModeRequest",
-            to: "@MainActor\n    func applyLocationMode")
+            to: "func handleLocationModeApplyResult")
 
         #expect(locationSource.contains("struct LocationModeRequest: Equatable, Sendable"))
         #expect(locationSource.contains("case locationModeChangeRequested(String)"))
@@ -1145,9 +1145,35 @@ struct RootTabsSourceGuardTests {
         #expect(locationSource.contains("state.locationModeRequest = LocationModeRequest("))
         #expect(settingsSource.contains("self.locationStore.send(.locationModeChangeRequested(newValue))"))
         #expect(settingsSource.contains("self.handleLocationModeRequest(self.locationStore.locationModeRequest)"))
-        #expect(actionsSource.contains("self.locationStore.send(.locationModeRequestHandled)"))
+        #expect(actionsSource.contains("self.locationStore.send(.locationModeApplyRequested(request))"))
         #expect(requestFunction.contains("OpenClawLocationMode(rawValue:") == false)
         #expect(requestFunction.contains("previousLocationModeRaw") == false)
+    }
+
+    @Test func `settings location apply request is reducer effect owned`() throws {
+        let locationSource = try String(contentsOf: Self.settingsLocationFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let requestFunction = try Self.extract(
+            actionsSource,
+            from: "func handleLocationModeRequest",
+            to: "func handleLocationModeApplyResult")
+        let resultFunction = try Self.extract(
+            actionsSource,
+            from: "func handleLocationModeApplyResult",
+            to: "func refreshNotificationSettings")
+
+        #expect(locationSource.contains("struct SettingsLocationPermissionClient: Sendable"))
+        #expect(locationSource.contains("case locationModeApplyRequested(LocationModeRequest)"))
+        #expect(locationSource.contains("case locationModeApplyFinished(LocationModeApplyResult)"))
+        #expect(locationSource.contains("await permissionClient.requestPermission(request.mode)"))
+        #expect(locationSource.contains("return .run { send in"))
+        #expect(settingsSource.contains(".onChange(of: self.locationStore.locationModeApplyResult)"))
+        #expect(actionsSource.contains("self.locationStore.send(.locationModeApplyResultHandled)"))
+        #expect(requestFunction.contains("Task {") == false)
+        #expect(requestFunction.contains("requestLocationPermissions") == false)
+        #expect(resultFunction.contains("requestLocationPermissions") == false)
+        #expect(actionsSource.contains("func applyLocationMode") == false)
     }
 
     @Test func `home canvas payload state is reducer owned`() throws {

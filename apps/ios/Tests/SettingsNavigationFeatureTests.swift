@@ -935,31 +935,66 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
-    @Test func `settings location tracks change lifecycle`() async {
+    @Test func `settings location applies off mode without permission client`() async {
+        let probe = SettingsLocationPermissionProbe(granted: false)
         var initialState = SettingsLocationFeature.State()
-        initialState.statusText = "Location permission was not granted."
+        initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         let store = TestStore(initialState: initialState) {
-            SettingsLocationFeature()
+            SettingsLocationFeature(permissionClient: probe.client)
+        }
+        let request = SettingsLocationFeature.LocationModeRequest(
+            mode: .off,
+            previousRawValue: OpenClawLocationMode.whileUsing.rawValue,
+            rawValue: OpenClawLocationMode.off.rawValue)
+
+        await store.send(.locationModeApplyRequested(request)) {
+            $0.locationModeApplyResult = .applied(rawValue: OpenClawLocationMode.off.rawValue)
+            $0.locationModeRaw = OpenClawLocationMode.off.rawValue
+            $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
+        }
+        await store.send(.locationModeApplyResultHandled) {
+            $0.locationModeApplyResult = nil
         }
 
-        await store.send(.locationChangeStarted) {
-            $0.isChangingLocationMode = true
-            $0.statusText = nil
-        }
-        await store.send(.locationChangeFinished) {
-            $0.isChangingLocationMode = false
-        }
+        #expect(probe.requestCount == 0)
     }
 
-    @Test func `settings location records applied mode`() async {
-        let store = TestStore(initialState: SettingsLocationFeature.State()) {
-            SettingsLocationFeature()
+    @Test func `settings location requests permissions through client`() async {
+        let probe = SettingsLocationPermissionProbe(granted: true)
+        var initialState = SettingsLocationFeature.State()
+        initialState.locationModeApplyResult = .denied(previousRawValue: OpenClawLocationMode.off.rawValue)
+        initialState.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
+            mode: .always,
+            previousRawValue: OpenClawLocationMode.off.rawValue,
+            rawValue: OpenClawLocationMode.always.rawValue)
+        initialState.statusText = "Location permission was not granted."
+        let store = TestStore(initialState: initialState) {
+            SettingsLocationFeature(permissionClient: probe.client)
         }
+        let request = SettingsLocationFeature.LocationModeRequest(
+            mode: .always,
+            previousRawValue: OpenClawLocationMode.off.rawValue,
+            rawValue: OpenClawLocationMode.always.rawValue)
 
-        await store.send(.locationModeApplied(OpenClawLocationMode.always.rawValue)) {
+        await store.send(.locationModeApplyRequested(request)) {
+            $0.isChangingLocationMode = true
+            $0.locationModeApplyResult = nil
+            $0.locationModeRequest = nil
+            $0.statusText = nil
+        }
+        await store.receive(.locationModeApplyFinished(.applied(rawValue: OpenClawLocationMode.always.rawValue))) {
+            $0.isChangingLocationMode = false
+            $0.locationModeApplyResult = .applied(rawValue: OpenClawLocationMode.always.rawValue)
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
         }
+        await store.send(.locationModeApplyResultHandled) {
+            $0.locationModeApplyResult = nil
+        }
+        await store.finish()
+
+        #expect(probe.requestCount == 1)
+        #expect(probe.requestedModes == [.always])
     }
 
     @Test func `settings location syncs persisted mode`() async {
@@ -1006,9 +1041,6 @@ struct SettingsNavigationFeatureTests {
                 mode: .always,
                 previousRawValue: OpenClawLocationMode.off.rawValue,
                 rawValue: OpenClawLocationMode.always.rawValue)
-        }
-        await store.send(.locationModeRequestHandled) {
-            $0.locationModeRequest = nil
         }
     }
 
@@ -1065,18 +1097,32 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings location records permission denial`() async {
+        let probe = SettingsLocationPermissionProbe(granted: false)
         var initialState = SettingsLocationFeature.State()
         initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
         initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         let store = TestStore(initialState: initialState) {
-            SettingsLocationFeature()
+            SettingsLocationFeature(permissionClient: probe.client)
         }
+        let request = SettingsLocationFeature.LocationModeRequest(
+            mode: .always,
+            previousRawValue: OpenClawLocationMode.off.rawValue,
+            rawValue: OpenClawLocationMode.always.rawValue)
 
-        await store.send(.locationPermissionDenied(previousRawValue: OpenClawLocationMode.off.rawValue)) {
+        await store.send(.locationModeApplyRequested(request)) {
+            $0.isChangingLocationMode = true
+        }
+        await store.receive(.locationModeApplyFinished(.denied(previousRawValue: OpenClawLocationMode.off.rawValue))) {
+            $0.isChangingLocationMode = false
+            $0.locationModeApplyResult = .denied(previousRawValue: OpenClawLocationMode.off.rawValue)
             $0.locationModeRaw = OpenClawLocationMode.off.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
             $0.statusText = "Location permission was not granted."
         }
+        await store.finish()
+
+        #expect(probe.requestCount == 1)
+        #expect(probe.requestedModes == [.always])
     }
 
     @Test func `settings notifications record permission status`() async {
@@ -1895,6 +1941,25 @@ private final class SettingsNotificationAuthorizationProbe: @unchecked Sendable 
             requestAuthorization: {
                 self.requestCount += 1
                 return self.result
+            })
+    }
+}
+
+private final class SettingsLocationPermissionProbe: @unchecked Sendable {
+    var requestCount = 0
+    var requestedModes: [OpenClawLocationMode] = []
+    var granted: Bool
+
+    init(granted: Bool) {
+        self.granted = granted
+    }
+
+    var client: SettingsLocationPermissionClient {
+        SettingsLocationPermissionClient(
+            requestPermission: { mode in
+                self.requestCount += 1
+                self.requestedModes.append(mode)
+                return self.granted
             })
     }
 }

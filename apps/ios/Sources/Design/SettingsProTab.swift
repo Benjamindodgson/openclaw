@@ -1178,6 +1178,9 @@ struct SettingsProTab: View {
                 self.deviceCapabilityStore.send(.locationModeChanged(newValue))
                 self.handleLocationModeRequest(self.locationStore.locationModeRequest)
             }
+            .onChange(of: self.locationStore.locationModeApplyResult) { _, result in
+                self.handleLocationModeApplyResult(result)
+            }
             .onChange(of: self.manualGatewayPortStore.manualGatewayPort) { _, newValue in
                 self.storedManualGatewayPort = newValue
             }
