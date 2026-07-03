@@ -21,6 +21,7 @@ struct SettingsGatewaySetupStatusFeature {
 
     enum Action: Equatable, Sendable {
         case gatewayStatusSynced(problemMessage: String?, gatewayStatusText: String)
+        case qrScannerErrorReceived(String)
         case qrScannerOpeningStarted
         case setupConnectionStarted
         case statusChanged(String?)
@@ -34,6 +35,10 @@ struct SettingsGatewaySetupStatusFeature {
             case let .gatewayStatusSynced(problemMessage, gatewayStatusText):
                 state.gatewayProblemMessage = problemMessage
                 state.gatewayStatusText = gatewayStatusText
+                return .none
+
+            case let .qrScannerErrorReceived(error):
+                state.statusText = Self.qrScannerErrorStatusText(error)
                 return .none
 
             case .qrScannerOpeningStarted:
@@ -106,6 +111,10 @@ struct SettingsGatewaySetupStatusFeature {
 
     private static let setupConnectionStartedStatusText = "Setup code applied. Connecting..."
     private static let qrScannerOpeningStartedStatusText = "Opening QR scanner..."
+
+    private static func qrScannerErrorStatusText(_ error: String) -> String {
+        "Scanner error: \(error)"
+    }
 }
 
 @Reducer
