@@ -6,9 +6,14 @@ import SwiftUI
 @Reducer
 struct SettingsGatewayConnectionFeature {
     private let persistenceClientOverride: SettingsDiscoveredGatewayPersistenceClient?
+    private let disconnectClientOverride: SettingsGatewayDisconnectClient?
 
-    init(persistenceClient: SettingsDiscoveredGatewayPersistenceClient? = nil) {
+    init(
+        persistenceClient: SettingsDiscoveredGatewayPersistenceClient? = nil,
+        disconnectClient: SettingsGatewayDisconnectClient? = nil)
+    {
         self.persistenceClientOverride = persistenceClient
+        self.disconnectClientOverride = disconnectClient
     }
 
     // swiftformat:disable redundantSendable
@@ -83,6 +88,7 @@ struct SettingsGatewayConnectionFeature {
     enum Action: Equatable, Sendable {
         case connectionFinished
         case connectionStarted(String)
+        case disconnectRequested
         case discoveredGatewayPersistenceRequested(stableID: String)
         case gatewayStatusSynced(
             isAppleReviewDemoModeEnabled: Bool,
@@ -98,7 +104,9 @@ struct SettingsGatewayConnectionFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.settingsDiscoveredGatewayPersistence) var dependencyPersistenceClient
+            @Dependency(\.settingsGatewayDisconnect) var dependencyDisconnectClient
             let persistenceClient = self.persistenceClientOverride ?? dependencyPersistenceClient
+            let disconnectClient = self.disconnectClientOverride ?? dependencyDisconnectClient
 
             switch action {
             case .connectionFinished:
@@ -108,6 +116,12 @@ struct SettingsGatewayConnectionFeature {
             case let .connectionStarted(gatewayID):
                 state.connectingGatewayID = gatewayID
                 return .none
+
+            case .disconnectRequested:
+                state.connectingGatewayID = nil
+                return .run { _ in
+                    await disconnectClient.disconnect()
+                }
 
             case let .discoveredGatewayPersistenceRequested(stableID):
                 let trimmedStableID = stableID.trimmingCharacters(in: .whitespacesAndNewlines)

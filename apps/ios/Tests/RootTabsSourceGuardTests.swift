@@ -849,7 +849,7 @@ struct RootTabsSourceGuardTests {
         #expect(sectionsSource.contains("title: \"Diagnose\""))
         #expect(sectionsSource.contains("Task { await self.runDiagnostics() }"))
         #expect(sectionsSource.contains("title: \"Scan QR\""))
-        #expect(sectionsSource.contains("self.openGatewayQRScanner()"))
+        #expect(sectionsSource.contains("Task { await self.openGatewayQRScanner() }"))
         #expect(sectionsSource.contains("title: \"Connect\""))
         #expect(sectionsSource.contains("Task { await self.applySetupCodeAndConnect() }"))
         #expect(sectionsSource.contains("Task { await self.connect(gateway) }"))
@@ -1060,16 +1060,30 @@ struct RootTabsSourceGuardTests {
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
             encoding: .utf8)
+        let gatewayConnectionSource = try String(
+            contentsOf: Self.settingsGatewayConnectionFeatureSourceURL(),
+            encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let openScannerFunction = try Self.extract(
             actionsSource,
-            from: "func openGatewayQRScanner()",
+            from: "func openGatewayQRScanner() async",
             to: "func handleScannedGatewayLink")
 
+        #expect(supportSource.contains("struct SettingsGatewayDisconnectClient"))
+        #expect(supportSource.contains("var settingsGatewayDisconnect: SettingsGatewayDisconnectClient"))
+        #expect(gatewayConnectionSource.contains("case disconnectRequested"))
+        #expect(gatewayConnectionSource.contains("@Dependency(\\.settingsGatewayDisconnect)"))
+        #expect(gatewayConnectionSource.contains("await disconnectClient.disconnect()"))
+        #expect(openScannerFunction.contains("await self.gatewayConnectionStore.send(.disconnectRequested).finish()"))
         #expect(gatewaySetupFeaturesSource.contains("case qrScannerOpeningStarted"))
         #expect(gatewaySetupFeaturesSource
             .contains("private static let qrScannerOpeningStartedStatusText = \"Opening QR scanner...\""))
         #expect(openScannerFunction.contains("self.gatewaySetupStatusStore.send(.qrScannerOpeningStarted)"))
+        #expect(rootSource.contains("gatewayConnectionStore: self.makeSettingsGatewayConnectionStore()"))
+        #expect(rootSource.contains("SettingsGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))"))
+        #expect(!openScannerFunction.contains("self.appModel.disconnectGateway()"))
         #expect(!openScannerFunction.contains("Opening QR scanner..."))
     }
 

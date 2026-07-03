@@ -1240,6 +1240,11 @@ struct SettingsProTab: View {
         {
             SettingsManualGatewayEndpointFeature()
         },
+        gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
+            initialState: SettingsGatewayConnectionFeature.State())
+        {
+            SettingsGatewayConnectionFeature()
+        },
         gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature> = Store(
             initialState: SettingsGatewayCredentialsFeature.State())
         {
@@ -1269,6 +1274,7 @@ struct SettingsProTab: View {
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
+        self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
         self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
         self._gatewaySetupLinkStore = State(wrappedValue: gatewaySetupLinkStore)
         self._onboardingStateStore = State(wrappedValue: onboardingStateStore)

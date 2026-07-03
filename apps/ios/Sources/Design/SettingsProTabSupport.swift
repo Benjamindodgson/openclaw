@@ -220,6 +220,29 @@ extension DependencyValues {
     }
 }
 
+struct SettingsGatewayDisconnectClient {
+    var disconnect: @MainActor @Sendable () -> Void
+}
+
+extension SettingsGatewayDisconnectClient: DependencyKey {
+    static let liveValue = SettingsGatewayDisconnectClient(disconnect: {})
+    static let testValue = SettingsGatewayDisconnectClient(disconnect: {})
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsGatewayDisconnectClient(disconnect: {
+            appModel.disconnectGateway()
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsGatewayDisconnect: SettingsGatewayDisconnectClient {
+        get { self[SettingsGatewayDisconnectClient.self] }
+        set { self[SettingsGatewayDisconnectClient.self] = newValue }
+    }
+}
+
 struct SettingsApprovalItem: Identifiable {
     let id: String
     let icon: String
