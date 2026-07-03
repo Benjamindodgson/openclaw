@@ -169,6 +169,7 @@ extension SettingsProTab {
         self.pushEnrollmentConsentStore.send(.refresh)
         self.appearanceStore.send(.appearancePreferenceSynced(self.storedAppearancePreferenceRaw))
         self.deviceIdentityStore.send(.displayNameSynced(self.storedDisplayName))
+        self.deviceIdentityStore.send(.instanceIdSynced(self.storedInstanceId))
         self.debugOptionsStore.send(.debugOptionsSynced(
             discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
             canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
@@ -651,6 +652,10 @@ extension SettingsProTab {
     func updateDisplayName(_ displayName: String) {
         self.deviceIdentityStore.send(.displayNameChanged(displayName))
         self.storedDisplayName = displayName
+    }
+
+    var instanceId: String {
+        self.deviceIdentityStore.instanceId
     }
 
     var discoveryDebugLogsBinding: Binding<Bool> {

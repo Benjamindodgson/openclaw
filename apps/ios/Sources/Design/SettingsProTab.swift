@@ -760,11 +760,13 @@ struct SettingsDeviceIdentityFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var displayName = "iOS Node"
+        var instanceId = ""
     }
 
     enum Action: Equatable, Sendable {
         case displayNameChanged(String)
         case displayNameSynced(String)
+        case instanceIdSynced(String)
     }
 
     // swiftformat:enable redundantSendable
@@ -778,6 +780,10 @@ struct SettingsDeviceIdentityFeature {
 
             case let .displayNameSynced(displayName):
                 state.displayName = displayName
+                return .none
+
+            case let .instanceIdSynced(instanceId):
+                state.instanceId = instanceId
                 return .none
             }
         }
@@ -971,7 +977,7 @@ struct SettingsProTab: View {
     @AppStorage(AppAppearancePreference.storageKey) var storedAppearancePreferenceRaw: String =
         AppAppearancePreference.system.rawValue
     @AppStorage("node.displayName") var storedDisplayName: String = "iOS Node"
-    @AppStorage("node.instanceId") var instanceId: String = UUID().uuidString
+    @AppStorage("node.instanceId") var storedInstanceId: String = UUID().uuidString
     @AppStorage("camera.enabled") var storedCameraEnabled: Bool = true
     @AppStorage("location.enabledMode") var storedLocationModeRaw: String = OpenClawLocationMode.off.rawValue
     @AppStorage("screen.preventSleep") var storedPreventSleep: Bool = true
@@ -1233,6 +1239,9 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedDisplayName) { _, newValue in
                 self.deviceIdentityStore.send(.displayNameSynced(newValue))
+            }
+            .onChange(of: self.storedInstanceId) { _, newValue in
+                self.deviceIdentityStore.send(.instanceIdSynced(newValue))
             }
             .onChange(of: self.storedDiscoveryDebugLogsEnabled) { _, newValue in
                 self.debugOptionsStore.send(.discoveryDebugLogsChanged(newValue))

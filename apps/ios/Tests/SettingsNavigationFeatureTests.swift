@@ -167,13 +167,16 @@ struct SettingsNavigationFeatureTests {
         #expect(state.appearancePreference == .system)
     }
 
-    @Test func `settings device identity syncs persisted display name`() async {
+    @Test func `settings device identity syncs persisted values`() async {
         let store = TestStore(initialState: SettingsDeviceIdentityFeature.State()) {
             SettingsDeviceIdentityFeature()
         }
 
         await store.send(.displayNameSynced("Kitchen iPad")) {
             $0.displayName = "Kitchen iPad"
+        }
+        await store.send(.instanceIdSynced("ios-node-123")) {
+            $0.instanceId = "ios-node-123"
         }
     }
 
