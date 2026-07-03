@@ -191,8 +191,7 @@ extension SettingsProTab {
             tls: self.storedManualGatewayTLS))
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(self.storedManualGatewayPort))
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
-        self.shareInstructionStore.send(
-            .defaultShareInstructionLoaded(ShareToAgentSettings.loadDefaultInstruction()))
+        self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)
         self.gatewayCredentialsStore.send(.credentialsLoadRequested(instanceId: self.instanceId))
     }
 

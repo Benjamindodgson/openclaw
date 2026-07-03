@@ -1565,15 +1565,29 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings share instruction loads persisted value`() async {
+        let probe = SettingsShareInstructionPersistenceProbe()
+        probe.defaultInstruction = "Use the research agent."
         var initialState = SettingsShareInstructionFeature.State()
         initialState.defaultShareInstruction = "Previous value"
         let store = TestStore(initialState: initialState) {
-            SettingsShareInstructionFeature()
+            SettingsShareInstructionFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.defaultShareInstructionLoaded("Use the research agent.")) {
+        await store.send(.defaultShareInstructionLoadRequested) {
             $0.defaultShareInstruction = "Use the research agent."
         }
+    }
+
+    @Test func `settings share instruction persists values through client`() async {
+        let probe = SettingsShareInstructionPersistenceProbe()
+        let store = TestStore(initialState: SettingsShareInstructionFeature.State()) {
+            SettingsShareInstructionFeature(persistenceClient: probe.client)
+        }
+
+        await store.send(.defaultShareInstructionPersistenceRequested("Summarize this."))
+        await store.finish()
+
+        #expect(probe.savedInstructions == ["Summarize this."])
     }
 
     @Test func `settings manual gateway port filters text changes`() async {
@@ -2232,6 +2246,21 @@ private final class SettingsNotificationRegistrationProbe: @unchecked Sendable {
             },
             registerForRemoteNotifications: {
                 self.registerCount += 1
+            })
+    }
+}
+
+private final class SettingsShareInstructionPersistenceProbe: @unchecked Sendable {
+    var defaultInstruction = ""
+    var savedInstructions: [String] = []
+
+    var client: SettingsShareInstructionPersistenceClient {
+        SettingsShareInstructionPersistenceClient(
+            loadDefaultInstruction: {
+                self.defaultInstruction
+            },
+            saveDefaultInstruction: { value in
+                self.savedInstructions.append(value)
             })
     }
 }

@@ -57,6 +57,32 @@ extension DependencyValues {
     }
 }
 
+struct SettingsShareInstructionPersistenceClient {
+    var loadDefaultInstruction: @Sendable () -> String
+    var saveDefaultInstruction: @MainActor @Sendable (_ value: String) -> Void
+}
+
+extension SettingsShareInstructionPersistenceClient: DependencyKey {
+    static let liveValue = SettingsShareInstructionPersistenceClient(
+        loadDefaultInstruction: {
+            ShareToAgentSettings.loadDefaultInstruction()
+        },
+        saveDefaultInstruction: { value in
+            ShareToAgentSettings.saveDefaultInstruction(value)
+        })
+
+    static let testValue = SettingsShareInstructionPersistenceClient(
+        loadDefaultInstruction: { "" },
+        saveDefaultInstruction: { _ in })
+}
+
+extension DependencyValues {
+    var settingsShareInstructionPersistence: SettingsShareInstructionPersistenceClient {
+        get { self[SettingsShareInstructionPersistenceClient.self] }
+        set { self[SettingsShareInstructionPersistenceClient.self] = newValue }
+    }
+}
+
 struct SettingsApprovalItem: Identifiable {
     let id: String
     let icon: String
