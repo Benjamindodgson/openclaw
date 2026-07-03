@@ -751,6 +751,7 @@ struct OnboardingConnectionFormFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var manualConnectionRequest: ManualConnectionRequest?
         var selectedMode: OnboardingConnectionMode?
         var manualHost = ""
         var manualPort = 18789
@@ -792,10 +793,18 @@ struct OnboardingConnectionFormFeature {
         }
     }
 
+    struct ManualConnectionRequest: Equatable, Sendable {
+        var host: String
+        var port: Int
+        var useTLS: Bool
+    }
+
     enum Action: Equatable, Sendable {
         case developerModeDisabled
         case gatewayLinkApplied(host: String, port: Int, tls: Bool)
         case initialized(host: String, port: Int, tls: Bool, lastMode: OnboardingConnectionMode?)
+        case manualConnectionRequested
+        case manualConnectionRequestHandled
         case manualHostChanged(String)
         case manualPortTextChanged(String)
         case manualTLSChanged(Bool)
@@ -838,6 +847,22 @@ struct OnboardingConnectionFormFeature {
                     state.manualHost = "localhost"
                     state.manualTLS = false
                 }
+                return .none
+
+            case .manualConnectionRequested:
+                state.manualConnectionRequest = nil
+                let host = state.normalizedManualHost
+                guard !host.isEmpty, state.manualPort > 0, state.manualPort <= 65535 else {
+                    return .none
+                }
+                state.manualConnectionRequest = ManualConnectionRequest(
+                    host: host,
+                    port: state.manualPort,
+                    useTLS: state.manualTLS)
+                return .none
+
+            case .manualConnectionRequestHandled:
+                state.manualConnectionRequest = nil
                 return .none
 
             case let .manualHostChanged(host):
