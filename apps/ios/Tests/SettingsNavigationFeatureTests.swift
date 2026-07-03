@@ -604,6 +604,16 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup status records qr scanner opening`() async {
+        let store = TestStore(initialState: SettingsGatewaySetupStatusFeature.State()) {
+            SettingsGatewaySetupStatusFeature()
+        }
+
+        await store.send(.qrScannerOpeningStarted) {
+            $0.statusText = "Opening QR scanner..."
+        }
+    }
+
     @Test func `settings gateway setup status clears messages`() async {
         var initialState = SettingsGatewaySetupStatusFeature.State()
         initialState.statusText = "Setup code applied. Connecting..."

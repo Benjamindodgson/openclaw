@@ -1031,6 +1031,23 @@ struct RootTabsSourceGuardTests {
         #expect(!applyFunction.contains("Setup code applied. Connecting..."))
     }
 
+    @Test func `settings qr scanner opening status is reducer owned`() throws {
+        let gatewaySetupFeaturesSource = try String(
+            contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
+            encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let openScannerFunction = try Self.extract(
+            actionsSource,
+            from: "func openGatewayQRScanner()",
+            to: "func handleScannedGatewayLink")
+
+        #expect(gatewaySetupFeaturesSource.contains("case qrScannerOpeningStarted"))
+        #expect(gatewaySetupFeaturesSource
+            .contains("private static let qrScannerOpeningStartedStatusText = \"Opening QR scanner...\""))
+        #expect(openScannerFunction.contains("self.gatewaySetupStatusStore.send(.qrScannerOpeningStarted)"))
+        #expect(!openScannerFunction.contains("Opening QR scanner..."))
+    }
+
     @Test func `scanner setup code results are reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)

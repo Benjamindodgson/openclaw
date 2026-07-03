@@ -374,7 +374,7 @@ extension SettingsProTab {
     func openGatewayQRScanner() {
         self.appModel.disconnectGateway()
         self.gatewayConnectionStore.send(.connectionFinished)
-        self.gatewaySetupStatusStore.send(.statusChanged("Opening QR scanner..."))
+        self.gatewaySetupStatusStore.send(.qrScannerOpeningStarted)
         self.presentationStore.send(.qrScannerButtonTapped)
     }
 
