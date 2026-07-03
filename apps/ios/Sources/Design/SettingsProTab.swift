@@ -259,11 +259,13 @@ struct SettingsGatewaySetupLinkFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var setupCode = ""
         var stagedGatewaySetupLink: GatewayConnectDeepLink?
     }
 
     enum Action: Equatable, Sendable {
         case setupCodeChanged(String)
+        case setupCodeSynced(String)
         case setupLinkStaged(GatewayConnectDeepLink?)
     }
 
@@ -273,6 +275,14 @@ struct SettingsGatewaySetupLinkFeature {
         Reduce { state, action in
             switch action {
             case let .setupCodeChanged(setupCode):
+                state.setupCode = setupCode
+                if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    state.stagedGatewaySetupLink = nil
+                }
+                return .none
+
+            case let .setupCodeSynced(setupCode):
+                state.setupCode = setupCode
                 if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     state.stagedGatewaySetupLink = nil
                 }
@@ -280,6 +290,9 @@ struct SettingsGatewaySetupLinkFeature {
 
             case let .setupLinkStaged(link):
                 state.stagedGatewaySetupLink = link
+                if link != nil {
+                    state.setupCode = ""
+                }
                 return .none
             }
         }
@@ -839,7 +852,7 @@ struct SettingsProTab: View {
     @AppStorage("gateway.manual.tls") var storedManualGatewayTLS: Bool = true
     @AppStorage("gateway.discovery.debugLogs") var storedDiscoveryDebugLogsEnabled: Bool = false
     @AppStorage("canvas.debugStatusEnabled") var storedCanvasDebugStatusEnabled: Bool = false
-    @AppStorage("gateway.setupCode") var setupCode: String = ""
+    @AppStorage("gateway.setupCode") var storedSetupCode: String = ""
     @AppStorage("gateway.onboardingComplete") var onboardingComplete: Bool = false
     @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
@@ -1092,8 +1105,8 @@ struct SettingsProTab: View {
                     self.agentSelectionStore.send(.selectedAgentSynced(newValue))
                 }
             }
-            .onChange(of: self.setupCode) { _, newValue in
-                self.gatewaySetupLinkStore.send(.setupCodeChanged(newValue))
+            .onChange(of: self.storedSetupCode) { _, newValue in
+                self.gatewaySetupLinkStore.send(.setupCodeSynced(newValue))
             }
             .onChange(of: self.storedCameraEnabled) { _, newValue in
                 self.deviceCapabilityStore.send(.cameraEnabledChanged(newValue))
