@@ -1066,8 +1066,7 @@ extension SettingsProTab {
     }
 
     var diagnosticsRunColor: Color {
-        guard let diagnosticsIssueCount = self.diagnosticsStore.issueCount else { return .secondary }
-        return diagnosticsIssueCount == 0 ? OpenClawBrand.ok : OpenClawBrand.warn
+        self.diagnosticsStore.runColor
     }
 
     var privacyDetail: String {

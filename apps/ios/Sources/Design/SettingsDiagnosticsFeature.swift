@@ -1,4 +1,6 @@
 import ComposableArchitecture
+import OpenClawKit
+import SwiftUI
 
 @Reducer
 struct SettingsDiagnosticsFeature {
@@ -39,6 +41,11 @@ struct SettingsDiagnosticsFeature {
         var runValue: String {
             guard let issueCount else { return "pending" }
             return issueCount == 0 ? "pass" : "\(issueCount)"
+        }
+
+        var runColor: Color {
+            guard let issueCount else { return .secondary }
+            return issueCount == 0 ? OpenClawBrand.ok : OpenClawBrand.warn
         }
     }
 
