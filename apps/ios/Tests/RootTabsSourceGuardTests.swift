@@ -782,7 +782,7 @@ struct RootTabsSourceGuardTests {
         #expect(controllerSource.contains("await self.tcpReachabilityProbe("))
         #expect(controllerSource.contains("Check Tailscale or LAN."))
         #expect(actionsSource.contains("Tailscale is off on this device. Turn it on, then try again."))
-        #expect(actionsSource.contains("Run /pair approve in your OpenClaw chat"))
+        #expect(settingsSource.contains("Run /pair approve in your OpenClaw chat"))
         #expect(actionsSource.contains("self.resetOnboarding()"))
         #expect(actionsSource.contains("self.gatewayController.trustRotatedGatewayCertificate(from: problem)"))
         #expect(actionsSource.contains("GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem)"))

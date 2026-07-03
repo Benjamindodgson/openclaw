@@ -173,6 +173,7 @@ extension SettingsProTab {
         self.debugOptionsStore.send(.debugOptionsSynced(
             discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
             canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
+        self.syncGatewaySetupStatusContext()
         self.gatewaySetupLinkStore.send(.setupCodeSynced(self.storedSetupCode))
         self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
@@ -218,6 +219,12 @@ extension SettingsProTab {
             hasConnectedOnce: self.storedHasConnectedOnce,
             onboardingComplete: self.storedOnboardingComplete,
             onboardingRequestID: self.storedOnboardingRequestID))
+    }
+
+    func syncGatewaySetupStatusContext() {
+        self.gatewaySetupStatusStore.send(.gatewayStatusSynced(
+            problemMessage: self.appModel.lastGatewayProblem?.message,
+            gatewayStatusText: self.appModel.gatewayStatusText))
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
@@ -815,22 +822,7 @@ extension SettingsProTab {
     }
 
     var setupStatusLine: String? {
-        if let problem = self.appModel.lastGatewayProblem {
-            return problem.message
-        }
-        let trimmedSetup = self.setupStatusText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let gatewayStatus = self.appModel.gatewayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let friendly = self.friendlyGatewayMessage(from: gatewayStatus) { return friendly }
-        if let friendly = self.friendlyGatewayMessage(from: trimmedSetup) { return friendly }
-        if self.isTransientSetupStatus(trimmedSetup),
-           !gatewayStatus.isEmpty,
-           gatewayStatus != "Offline"
-        {
-            return gatewayStatus
-        }
-        if !trimmedSetup.isEmpty { return trimmedSetup }
-        if gatewayStatus.isEmpty || gatewayStatus == "Offline" { return nil }
-        return gatewayStatus
+        self.gatewaySetupStatusStore.setupStatusLine
     }
 
     var setupCode: String {
@@ -857,35 +849,6 @@ extension SettingsProTab {
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !host.isEmpty, Self.isTailnetHostOrIP(host), !Self.hasTailnetIPv4() else { return nil }
         return "This gateway is on your tailnet. Turn on Tailscale on this device, then tap Connect."
-    }
-
-    func friendlyGatewayMessage(from raw: String) -> String? {
-        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if lower.contains("pairing required") {
-            return "Pairing required. Run /pair approve in your OpenClaw chat, then connect again."
-        }
-        if lower.contains("device nonce required") || lower.contains("device nonce mismatch") {
-            return "Secure handshake failed. Check Tailscale, then connect again."
-        }
-        if lower.contains("tls fingerprint verification timed out")
-            || lower.contains("no tls endpoint detected")
-        {
-            return raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        if lower.contains("timed out") {
-            return "Connection timed out. Make sure Tailscale is connected, then try again."
-        }
-        if lower.contains("unauthorized role") {
-            return "Connected, but some controls are restricted for nodes. This is expected."
-        }
-        return nil
-    }
-
-    func isTransientSetupStatus(_ raw: String) -> Bool {
-        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return lower == "setup code applied. connecting..."
-            || lower.hasPrefix("qr loaded. connecting to ")
-            || lower == "checking gateway reachability..."
     }
 
     var shouldShowRealtimeVoicePicker: Bool {
