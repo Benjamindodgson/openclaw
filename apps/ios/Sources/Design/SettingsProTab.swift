@@ -772,6 +772,44 @@ struct SettingsDeviceIdentityFeature {
     }
 }
 
+@Reducer
+struct SettingsDebugOptionsFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var canvasDebugStatusEnabled = false
+        var discoveryDebugLogsEnabled = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case canvasDebugStatusChanged(Bool)
+        case debugOptionsSynced(discoveryDebugLogsEnabled: Bool, canvasDebugStatusEnabled: Bool)
+        case discoveryDebugLogsChanged(Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .canvasDebugStatusChanged(enabled):
+                state.canvasDebugStatusEnabled = enabled
+                return .none
+
+            case let .debugOptionsSynced(discoveryDebugLogsEnabled, canvasDebugStatusEnabled):
+                state.discoveryDebugLogsEnabled = discoveryDebugLogsEnabled
+                state.canvasDebugStatusEnabled = canvasDebugStatusEnabled
+                return .none
+
+            case let .discoveryDebugLogsChanged(enabled):
+                state.discoveryDebugLogsEnabled = enabled
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -799,8 +837,8 @@ struct SettingsProTab: View {
     @AppStorage("gateway.manual.host") var storedManualGatewayHost: String = ""
     @AppStorage("gateway.manual.port") var manualGatewayPort: Int = 18789
     @AppStorage("gateway.manual.tls") var storedManualGatewayTLS: Bool = true
-    @AppStorage("gateway.discovery.debugLogs") var discoveryDebugLogsEnabled: Bool = false
-    @AppStorage("canvas.debugStatusEnabled") var canvasDebugStatusEnabled: Bool = false
+    @AppStorage("gateway.discovery.debugLogs") var storedDiscoveryDebugLogsEnabled: Bool = false
+    @AppStorage("canvas.debugStatusEnabled") var storedCanvasDebugStatusEnabled: Bool = false
     @AppStorage("gateway.setupCode") var setupCode: String = ""
     @AppStorage("gateway.onboardingComplete") var onboardingComplete: Bool = false
     @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
@@ -857,6 +895,12 @@ struct SettingsProTab: View {
         initialState: SettingsDeviceIdentityFeature.State())
     {
         SettingsDeviceIdentityFeature()
+    }
+
+    @State var debugOptionsStore: StoreOf<SettingsDebugOptionsFeature> = Store(
+        initialState: SettingsDebugOptionsFeature.State())
+    {
+        SettingsDebugOptionsFeature()
     }
 
     @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
@@ -1024,6 +1068,13 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedDisplayName) { _, newValue in
                 self.deviceIdentityStore.send(.displayNameSynced(newValue))
+            }
+            .onChange(of: self.storedDiscoveryDebugLogsEnabled) { _, newValue in
+                self.debugOptionsStore.send(.discoveryDebugLogsChanged(newValue))
+                self.gatewayController.setDiscoveryDebugLoggingEnabled(newValue)
+            }
+            .onChange(of: self.storedCanvasDebugStatusEnabled) { _, newValue in
+                self.debugOptionsStore.send(.canvasDebugStatusChanged(newValue))
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChanged(newValue))

@@ -169,6 +169,9 @@ extension SettingsProTab {
         self.pushEnrollmentConsentStore.send(.refresh)
         self.appearanceStore.send(.appearancePreferenceSynced(self.storedAppearancePreferenceRaw))
         self.deviceIdentityStore.send(.displayNameSynced(self.storedDisplayName))
+        self.debugOptionsStore.send(.debugOptionsSynced(
+            discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
+            canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
             preventSleep: self.storedPreventSleep))
@@ -591,6 +594,29 @@ extension SettingsProTab {
     func updateDisplayName(_ displayName: String) {
         self.deviceIdentityStore.send(.displayNameChanged(displayName))
         self.storedDisplayName = displayName
+    }
+
+    var discoveryDebugLogsBinding: Binding<Bool> {
+        Binding(
+            get: { self.debugOptionsStore.discoveryDebugLogsEnabled },
+            set: { self.updateDiscoveryDebugLogsEnabled($0) })
+    }
+
+    var canvasDebugStatusBinding: Binding<Bool> {
+        Binding(
+            get: { self.debugOptionsStore.canvasDebugStatusEnabled },
+            set: { self.updateCanvasDebugStatusEnabled($0) })
+    }
+
+    func updateDiscoveryDebugLogsEnabled(_ enabled: Bool) {
+        self.debugOptionsStore.send(.discoveryDebugLogsChanged(enabled))
+        self.storedDiscoveryDebugLogsEnabled = enabled
+        self.gatewayController.setDiscoveryDebugLoggingEnabled(enabled)
+    }
+
+    func updateCanvasDebugStatusEnabled(_ enabled: Bool) {
+        self.debugOptionsStore.send(.canvasDebugStatusChanged(enabled))
+        self.storedCanvasDebugStatusEnabled = enabled
     }
 
     var locationModeRaw: String {

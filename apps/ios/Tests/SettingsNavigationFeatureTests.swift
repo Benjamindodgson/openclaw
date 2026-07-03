@@ -187,6 +187,33 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings debug options sync persisted values`() async {
+        let store = TestStore(initialState: SettingsDebugOptionsFeature.State()) {
+            SettingsDebugOptionsFeature()
+        }
+
+        await store.send(.debugOptionsSynced(
+            discoveryDebugLogsEnabled: true,
+            canvasDebugStatusEnabled: true))
+        {
+            $0.discoveryDebugLogsEnabled = true
+            $0.canvasDebugStatusEnabled = true
+        }
+    }
+
+    @Test func `settings debug options record toggle changes`() async {
+        let store = TestStore(initialState: SettingsDebugOptionsFeature.State()) {
+            SettingsDebugOptionsFeature()
+        }
+
+        await store.send(.discoveryDebugLogsChanged(true)) {
+            $0.discoveryDebugLogsEnabled = true
+        }
+        await store.send(.canvasDebugStatusChanged(true)) {
+            $0.canvasDebugStatusEnabled = true
+        }
+    }
+
     @Test func `settings gateway activity tracks reconnect lifecycle`() async {
         let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
             SettingsGatewayActivityFeature()
