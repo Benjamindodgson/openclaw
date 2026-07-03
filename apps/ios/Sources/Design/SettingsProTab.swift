@@ -614,6 +614,12 @@ struct SettingsAgentSelectionFeature {
 
 @Reducer
 struct SettingsShareInstructionFeature {
+    private let persistenceClientOverride: SettingsShareInstructionPersistenceClient?
+
+    init(persistenceClient: SettingsShareInstructionPersistenceClient? = nil) {
+        self.persistenceClientOverride = persistenceClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -622,21 +628,30 @@ struct SettingsShareInstructionFeature {
 
     enum Action: Equatable, Sendable {
         case defaultShareInstructionChanged(String)
-        case defaultShareInstructionLoaded(String)
+        case defaultShareInstructionLoadRequested
+        case defaultShareInstructionPersistenceRequested(String)
     }
 
     // swiftformat:enable redundantSendable
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsShareInstructionPersistence) var dependencyPersistenceClient
+            let persistenceClient = self.persistenceClientOverride ?? dependencyPersistenceClient
+
             switch action {
             case let .defaultShareInstructionChanged(instruction):
                 state.defaultShareInstruction = instruction
                 return .none
 
-            case let .defaultShareInstructionLoaded(instruction):
-                state.defaultShareInstruction = instruction
+            case .defaultShareInstructionLoadRequested:
+                state.defaultShareInstruction = persistenceClient.loadDefaultInstruction()
                 return .none
+
+            case let .defaultShareInstructionPersistenceRequested(instruction):
+                return .run { _ in
+                    await persistenceClient.saveDefaultInstruction(instruction)
+                }
             }
         }
         .autoLogActions()
@@ -1359,7 +1374,7 @@ struct SettingsProTab: View {
                 self.syncOnboardingState()
             }
             .onChange(of: self.shareInstructionStore.defaultShareInstruction) { _, newValue in
-                ShareToAgentSettings.saveDefaultInstruction(newValue)
+                self.shareInstructionStore.send(.defaultShareInstructionPersistenceRequested(newValue))
             }
             .onChange(of: self.appModel.gatewaySetupRequestID) { _, _ in
                 self.applyPendingGatewaySetupLinkIfNeeded()

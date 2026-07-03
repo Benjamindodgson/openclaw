@@ -1226,6 +1226,29 @@ struct RootTabsSourceGuardTests {
         #expect(updateCredentialsFunction.contains("GatewaySettingsStore.saveGatewayPassword") == false)
     }
 
+    @Test func `settings share instruction persistence is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let syncSettingsFunction = try Self.extract(
+            actionsSource,
+            from: "func syncSettingsState()",
+            to: "func syncVoiceControlState()")
+
+        #expect(supportSource.contains("struct SettingsShareInstructionPersistenceClient"))
+        #expect(supportSource.contains("ShareToAgentSettings.loadDefaultInstruction()"))
+        #expect(supportSource.contains("ShareToAgentSettings.saveDefaultInstruction(value)"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsShareInstructionPersistence)"))
+        #expect(settingsSource.contains("case defaultShareInstructionLoadRequested"))
+        #expect(settingsSource.contains("case defaultShareInstructionPersistenceRequested(String)"))
+        #expect(settingsSource.contains("persistenceClient.loadDefaultInstruction()"))
+        #expect(settingsSource.contains("await persistenceClient.saveDefaultInstruction(instruction)"))
+        #expect(actionsSource.contains("self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)"))
+        #expect(syncSettingsFunction.contains("ShareToAgentSettings.loadDefaultInstruction") == false)
+        #expect(settingsSource.contains("ShareToAgentSettings.saveDefaultInstruction") == false)
+        #expect(settingsSource.contains("defaultShareInstructionLoaded(") == false)
+    }
+
     @Test func `settings credential loading is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
