@@ -305,6 +305,26 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup link staging clears setup code`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = SettingsGatewaySetupLinkFeature.State()
+        initialState.setupCode = "previous-code"
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.setupLinkStaged(link)) {
+            $0.setupCode = ""
+            $0.stagedGatewaySetupLink = link
+        }
+    }
+
     @Test func `settings gateway setup link clears when setup code is pasted`() async {
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
@@ -320,7 +340,18 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupCodeChanged("setup-code")) {
+            $0.setupCode = "setup-code"
             $0.stagedGatewaySetupLink = nil
+        }
+    }
+
+    @Test func `settings gateway setup link syncs persisted setup code`() async {
+        let store = TestStore(initialState: SettingsGatewaySetupLinkFeature.State()) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.setupCodeSynced("persisted-code")) {
+            $0.setupCode = "persisted-code"
         }
     }
 

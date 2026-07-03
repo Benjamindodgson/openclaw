@@ -172,6 +172,7 @@ extension SettingsProTab {
         self.debugOptionsStore.send(.debugOptionsSynced(
             discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
             canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
+        self.gatewaySetupLinkStore.send(.setupCodeSynced(self.storedSetupCode))
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
             preventSleep: self.storedPreventSleep))
@@ -218,7 +219,7 @@ extension SettingsProTab {
 
     func applyPendingGatewaySetupLinkIfNeeded() {
         guard let link = self.appModel.consumePendingGatewaySetupLink() else { return }
-        self.setupCode = ""
+        self.updateSetupCode("")
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
         self.gatewaySetupLinkStore.send(.setupLinkStaged(link))
         let security = link.tls ? "TLS" : "plain"
@@ -237,7 +238,7 @@ extension SettingsProTab {
 
         if AppleReviewDemoMode.isSetupCode(raw) {
             self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
-            self.setupCode = ""
+            self.updateSetupCode("")
             self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
             self.appModel.enterAppleReviewDemoMode()
             return false
@@ -286,7 +287,7 @@ extension SettingsProTab {
 
     func handleScannedGatewayLink(_ link: GatewayConnectDeepLink) {
         self.presentationStore.send(.qrScannerDismissed)
-        self.setupCode = ""
+        self.updateSetupCode("")
         self.applyGatewayLink(link)
         self.gatewaySetupStatusStore.send(.statusChanged("QR loaded. Connecting to \(link.host):\(link.port)..."))
         Task { await self.connectAfterScannedGatewayLink() }
@@ -295,7 +296,7 @@ extension SettingsProTab {
     func handleScannedSetupCode(_ code: String) {
         guard AppleReviewDemoMode.isSetupCode(code) else { return }
         self.presentationStore.send(.qrScannerDismissed)
-        self.setupCode = ""
+        self.updateSetupCode("")
         self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
         self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
         self.appModel.enterAppleReviewDemoMode()
@@ -351,7 +352,7 @@ extension SettingsProTab {
     func resetOnboarding() {
         self.gatewayConnectionStore.send(.connectionFinished)
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
-        self.setupCode = ""
+        self.updateSetupCode("")
         self.disableGatewayAutoConnectForOnboardingReset()
         self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
         GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
@@ -751,6 +752,21 @@ extension SettingsProTab {
         if !trimmedSetup.isEmpty { return trimmedSetup }
         if gatewayStatus.isEmpty || gatewayStatus == "Offline" { return nil }
         return gatewayStatus
+    }
+
+    var setupCode: String {
+        self.gatewaySetupLinkStore.setupCode
+    }
+
+    var setupCodeBinding: Binding<String> {
+        Binding(
+            get: { self.gatewaySetupLinkStore.setupCode },
+            set: { self.updateSetupCode($0) })
+    }
+
+    func updateSetupCode(_ setupCode: String) {
+        self.gatewaySetupLinkStore.send(.setupCodeChanged(setupCode))
+        self.storedSetupCode = setupCode
     }
 
     var canApplyGatewaySetup: Bool {
