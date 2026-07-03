@@ -319,9 +319,10 @@ extension SettingsProTab {
         self.updateSetupCode("")
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
         self.gatewaySetupLinkStore.send(.setupLinkStaged(link))
-        let security = link.tls ? "TLS" : "plain"
-        self.gatewaySetupStatusStore.send(
-            .statusChanged("Setup link loaded for \(link.host):\(link.port) (\(security)). Tap Connect to apply."))
+        if let statusText = self.gatewaySetupLinkStore.setupLinkStatusText {
+            self.gatewaySetupStatusStore.send(.statusChanged(statusText))
+            self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)
+        }
     }
 
     @discardableResult
