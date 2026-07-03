@@ -497,37 +497,18 @@ extension SettingsProTab {
 
     func handleLocationModeRequest(_ request: SettingsLocationFeature.LocationModeRequest?) {
         guard let request else { return }
-        self.locationStore.send(.locationModeRequestHandled)
-        Task {
-            await self.applyLocationMode(
-                request.mode,
-                rawValue: request.rawValue,
-                previous: request.previousRawValue)
-        }
+        self.locationStore.send(.locationModeApplyRequested(request))
     }
 
-    @MainActor
-    func applyLocationMode(
-        _ mode: OpenClawLocationMode,
-        rawValue: String,
-        previous: String) async
-    {
-        self.locationStore.send(.locationChangeStarted)
-        defer { self.locationStore.send(.locationChangeFinished) }
-
-        if mode == .off {
-            self.locationStore.send(.locationModeApplied(rawValue))
+    func handleLocationModeApplyResult(_ result: SettingsLocationFeature.LocationModeApplyResult?) {
+        guard let result else { return }
+        self.locationStore.send(.locationModeApplyResultHandled)
+        switch result {
+        case .applied:
             self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
-            return
-        }
 
-        let granted = await self.appModel.requestLocationPermissions(mode: mode)
-        if granted {
-            self.locationStore.send(.locationModeApplied(rawValue))
-            self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
-        } else {
-            self.storedLocationModeRaw = previous
-            self.locationStore.send(.locationPermissionDenied(previousRawValue: previous))
+        case let .denied(previousRawValue):
+            self.storedLocationModeRaw = previousRawValue
         }
     }
 
