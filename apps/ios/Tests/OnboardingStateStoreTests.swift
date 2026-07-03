@@ -194,6 +194,126 @@ import Testing
         #expect(store.state.step == .success)
     }
 
+    @Test @MainActor func `status reducer owns progress and active connection state`() async {
+        let store = TestStore(initialState: OnboardingStatusFeature.State()) {
+            OnboardingStatusFeature()
+        }
+
+        #expect(store.state.statusLine == OnboardingStatusFeature.defaultStatusLine)
+
+        await store.send(.qrScannerOpeningStarted) {
+            $0.statusLine = "Opening QR scanner…"
+        }
+
+        await store.send(.scannerErrorReceived("Camera unavailable")) {
+            $0.statusLine = "Scanner error: Camera unavailable"
+        }
+
+        await store.send(.connectionStarted(
+            id: "manual",
+            message: "Connecting to gateway…",
+            statusLine: "Connecting to gateway:18789…",
+            clearsIssue: true))
+        {
+            $0.connectingGatewayID = "manual"
+            $0.connectMessage = "Connecting to gateway…"
+            $0.statusLine = "Connecting to gateway:18789…"
+        }
+
+        await store.send(.connectionActivityStarted(id: "retry-auto")) {
+            $0.connectingGatewayID = "retry-auto"
+        }
+
+        await store.send(.connectionFinished) {
+            $0.connectingGatewayID = nil
+        }
+
+        await store.send(.gatewayConnected(markedCompleted: true)) {
+            $0.didMarkCompleted = true
+            $0.statusLine = "Connected."
+        }
+
+        await store.send(.freshQRScanStarted) {
+            $0.connectMessage = nil
+            $0.issue = .none
+            $0.pairingRequestId = nil
+            $0.shouldShowAuthStep = false
+            $0.statusLine = "Opening QR scanner…"
+        }
+
+        await store.send(.noSavedPairingFound) {
+            $0.statusLine = OnboardingStatusFeature.noSavedPairingStatusLine
+        }
+    }
+
+    @Test @MainActor func `status reducer preserves sticky pairing and auth issues`() async {
+        let store = TestStore(initialState: OnboardingStatusFeature.State()) {
+            OnboardingStatusFeature()
+        }
+
+        await store.send(.connectionIssueDetected(
+            issue: .pairingRequired(requestId: "pair-1"),
+            requestId: "pair-1",
+            pauseReconnect: false,
+            message: "Pairing required",
+            statusText: ""))
+        {
+            $0.connectMessage = "Pairing required"
+            $0.issue = .pairingRequired(requestId: "pair-1")
+            $0.pairingRequestId = "pair-1"
+            $0.shouldShowAuthStep = true
+            $0.statusLine = "Pairing required"
+        }
+
+        await store.send(.connectionIssueDetected(
+            issue: .none,
+            requestId: nil,
+            pauseReconnect: false,
+            message: nil,
+            statusText: "Connecting"))
+        {
+            $0.connectMessage = "Connecting"
+            $0.statusLine = "Connecting"
+        }
+
+        #expect(store.state.issue == .pairingRequired(requestId: "pair-1"))
+        #expect(store.state.shouldShowAuthStep)
+
+        await store.send(.pairingResumeStarted) {
+            $0.connectMessage = "Retrying after approval…"
+            $0.issue = .none
+            $0.shouldShowAuthStep = false
+            $0.statusLine = "Retrying after approval…"
+        }
+
+        await store.send(.connectionIssueDetected(
+            issue: .unauthorized,
+            requestId: nil,
+            pauseReconnect: false,
+            message: nil,
+            statusText: "Unauthorized"))
+        {
+            $0.connectMessage = "Unauthorized"
+            $0.issue = .unauthorized
+            $0.shouldShowAuthStep = true
+            $0.statusLine = "Unauthorized"
+        }
+
+        await store.send(.connectionIssueDetected(
+            issue: .none,
+            requestId: nil,
+            pauseReconnect: false,
+            message: nil,
+            statusText: "Offline"))
+        {
+            $0.connectMessage = "Offline"
+            $0.statusLine = "Offline"
+        }
+
+        #expect(store.state.issue == .unauthorized)
+        #expect(store.state.shouldShowAuthStep)
+    }
+
     @Test @MainActor func `setup code reducer owns setup text and status`() async {
         let store = TestStore(initialState: OnboardingSetupCodeFeature.State()) {
             OnboardingSetupCodeFeature()

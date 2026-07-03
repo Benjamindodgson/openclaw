@@ -16,14 +16,14 @@ struct OnboardingWizardView: View {
     @State private var stepStore: StoreOf<OnboardingStepFeature>
     @State private var gatewayToken: String = ""
     @State private var gatewayPassword: String = ""
-    @State private var connectMessage: String?
-    @State private var statusLine: String = "In your OpenClaw chat, run /pair qr, then scan the code here."
-    @State private var connectingGatewayID: String?
-    @State private var issue: GatewayConnectionIssue = .none
-    @State private var didMarkCompleted = false
-    @State private var pairingRequestId: String?
     @State private var discoveryRestartTask: Task<Void, Never>?
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var statusStore: StoreOf<OnboardingStatusFeature> = Store(
+        initialState: OnboardingStatusFeature.State())
+    {
+        OnboardingStatusFeature()
+    }
+
     @State private var presentationStore: StoreOf<OnboardingPresentationFeature> = Store(
         initialState: OnboardingPresentationFeature.State())
     {
@@ -78,6 +78,22 @@ struct OnboardingWizardView: View {
 
     private var step: OnboardingStep {
         self.stepStore.step
+    }
+
+    private var connectMessage: String? {
+        self.statusStore.connectMessage
+    }
+
+    private var connectingGatewayID: String? {
+        self.statusStore.connectingGatewayID
+    }
+
+    private var issue: GatewayConnectionIssue {
+        self.statusStore.issue
+    }
+
+    private var statusLine: String {
+        self.statusStore.statusLine
     }
 
     private var currentProblem: GatewayConnectionProblem? {
@@ -228,7 +244,7 @@ struct OnboardingWizardView: View {
                             self.handleScannedSetupCode(code)
                         },
                         onError: { error in
-                            self.statusLine = "Scanner error: \(error)"
+                            self.statusStore.send(.scannerErrorReceived(error))
                             self.presentationStore.send(.qrScannerErrorReceived(error))
                         },
                         onDismiss: {
@@ -307,11 +323,11 @@ struct OnboardingWizardView: View {
             .onChange(of: self.appModel.gatewayServerName) { _, newValue in
                 guard newValue != nil else { return }
                 self.presentationStore.send(.qrScannerDismissed)
-                self.statusLine = "Connected."
-                if !self.didMarkCompleted, let selectedMode {
+                let shouldMarkCompleted = !self.statusStore.didMarkCompleted
+                if shouldMarkCompleted, let selectedMode {
                     OnboardingStateStore.markCompleted(mode: selectedMode)
-                    self.didMarkCompleted = true
                 }
+                self.statusStore.send(.gatewayConnected(markedCompleted: shouldMarkCompleted && selectedMode != nil))
                 self.stepStore.send(.stepChanged(.success))
             }
             .onChange(of: self.scenePhase) { _, newValue in
@@ -331,7 +347,7 @@ struct OnboardingWizardView: View {
         OnboardingWelcomeStep(
             statusLine: self.statusLine,
             onScanQRCode: {
-                self.statusLine = "Opening QR scanner…"
+                self.statusStore.send(.qrScannerOpeningStarted)
                 self.presentationStore.send(.qrScannerButtonTapped)
             },
             onManualSetup: {
@@ -741,11 +757,13 @@ extension OnboardingWizardView {
             return
         }
 
-        self.connectingGatewayID = "setup-code"
+        self.statusStore.send(.connectionStarted(
+            id: "setup-code",
+            message: "Connecting via setup code...",
+            statusLine: "Setup code loaded. Connecting to \(link.host):\(link.port)...",
+            clearsIssue: false))
         self.applyGatewayLink(link)
         self.setupCodeStore.send(.setupCodeAccepted)
-        self.connectMessage = "Connecting via setup code..."
-        self.statusLine = "Setup code loaded. Connecting to \(link.host):\(link.port)..."
         self.stepStore.send(.stepChanged(.connect))
         await self.connectManual()
     }
@@ -754,8 +772,9 @@ extension OnboardingWizardView {
         self.applyGatewayLink(link)
         self.setupCodeStore.send(.statusCleared)
         self.presentationStore.send(.qrScannerDismissed)
-        self.connectMessage = "Connecting via QR code..."
-        self.statusLine = "QR loaded. Connecting to \(link.host):\(link.port)..."
+        self.statusStore.send(.connectionStatusUpdated(
+            message: "Connecting via QR code...",
+            statusLine: "QR loaded. Connecting to \(link.host):\(link.port)..."))
         self.stepStore.send(.stepChanged(.connect))
         Task { await self.connectManual() }
     }
@@ -785,9 +804,7 @@ extension OnboardingWizardView {
     private func handleScannedSetupCode(_ code: String) {
         guard AppleReviewDemoMode.isSetupCode(code) else { return }
         self.presentationStore.send(.qrScannerDismissed)
-        self.connectingGatewayID = nil
-        self.connectMessage = "Apple Review demo mode enabled."
-        self.statusLine = "Apple Review demo mode enabled."
+        self.statusStore.send(.appleReviewDemoModeEnabled)
         self.connectionFormStore.send(.selectedModeChanged(.homeNetwork))
         self.appModel.enterAppleReviewDemoMode()
     }
@@ -795,11 +812,7 @@ extension OnboardingWizardView {
     private func openQRScannerFromOnboarding() {
         // Stop active reconnect loops before scanning new credentials.
         self.appModel.disconnectGateway()
-        self.connectingGatewayID = nil
-        self.connectMessage = nil
-        self.issue = .none
-        self.pairingRequestId = nil
-        self.statusLine = "Opening QR scanner…"
+        self.statusStore.send(.freshQRScanStarted)
         self.presentationStore.send(.qrScannerButtonTapped)
     }
 
@@ -811,9 +824,7 @@ extension OnboardingWizardView {
         // Pairing state is sticky to prevent UI flip-flop during reconnect churn.
         // Once the user explicitly resumes after approving, clear the sticky issue
         // so new status/auth errors can surface instead of being masked as pairing.
-        self.issue = .none
-        self.connectMessage = "Retrying after approval…"
-        self.statusLine = "Retrying after approval…"
+        self.statusStore.send(.pairingResumeStarted)
         Task { await self.retryLastAttempt() }
     }
 
@@ -843,38 +854,15 @@ extension OnboardingWizardView {
         let next = GatewayConnectionIssue.detect(problem: problem)
         let fallback = next == .none ? GatewayConnectionIssue.detect(from: statusText) : next
 
-        // Avoid "flip-flopping" the UI by clearing actionable issues when the underlying connection
-        // transitions through intermediate statuses (e.g. Offline/Connecting while reconnect churns).
-        if self.issue.needsPairing, fallback.needsPairing {
-            let mergedRequestId = fallback.requestId ?? self.issue.requestId ?? self.pairingRequestId
-            self.issue = .pairingRequired(requestId: mergedRequestId)
-        } else if self.issue.needsPairing, !fallback.needsPairing {
-            // Ignore non-pairing statuses until the user explicitly retries/scans again, or we connect.
-        } else if self.issue.needsAuthToken, !fallback.needsAuthToken, !fallback.needsPairing {
-            // Same idea for auth: once we learn credentials are missing/rejected, keep that sticky until
-            // the user retries/scans again or we successfully connect.
-        } else {
-            self.issue = fallback
-        }
+        self.statusStore.send(.connectionIssueDetected(
+            issue: fallback,
+            requestId: problem?.requestId ?? fallback.requestId,
+            pauseReconnect: problem?.pauseReconnect == true,
+            message: problem?.message,
+            statusText: statusText))
 
-        if let requestId = problem?.requestId ?? fallback.requestId, !requestId.isEmpty {
-            self.pairingRequestId = requestId
-        }
-
-        if self.issue.needsAuthToken || self.issue.needsPairing || problem?.pauseReconnect == true {
+        if self.statusStore.shouldShowAuthStep {
             self.stepStore.send(.stepChanged(.auth))
-        }
-
-        if let problem {
-            self.connectMessage = problem.message
-            self.statusLine = problem.message
-            return
-        }
-
-        let trimmedStatus = statusText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedStatus.isEmpty {
-            self.connectMessage = trimmedStatus
-            self.statusLine = trimmedStatus
         }
     }
 
@@ -896,7 +884,7 @@ extension OnboardingWizardView {
     private func advanceFromIntro() {
         OnboardingStateStore.markFirstRunIntroSeen()
         self.requestLocalNetworkAccess(reason: "onboarding_continue")
-        self.statusLine = "In your OpenClaw chat, run /pair qr, then scan the code here."
+        self.statusStore.send(.introAdvanced)
         self.stepStore.send(.stepChanged(.welcome))
     }
 
@@ -911,8 +899,7 @@ extension OnboardingWizardView {
 
     private func navigateBack() {
         guard self.step.canGoBack else { return }
-        self.connectingGatewayID = nil
-        self.connectMessage = nil
+        self.statusStore.send(.navigationBackStarted)
         self.stepStore.send(.backButtonTapped)
     }
 
@@ -945,7 +932,7 @@ extension OnboardingWizardView {
         let hasToken = !self.gatewayToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let hasPassword = !self.gatewayPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         if !hasSavedGateway, !hasToken, !hasPassword {
-            self.statusLine = "No saved pairing found. In your OpenClaw chat, run /pair qr, then scan the code here."
+            self.statusStore.send(.noSavedPairingFound)
         }
     }
 
@@ -975,11 +962,12 @@ extension OnboardingWizardView {
     }
 
     private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
-        self.connectingGatewayID = gateway.id
-        self.issue = .none
-        self.connectMessage = "Connecting to \(gateway.name)…"
-        self.statusLine = "Connecting to \(gateway.name)…"
-        defer { self.connectingGatewayID = nil }
+        self.statusStore.send(.connectionStarted(
+            id: gateway.id,
+            message: "Connecting to \(gateway.name)…",
+            statusLine: "Connecting to \(gateway.name)…",
+            clearsIssue: true))
+        defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connect(gateway)
     }
 
@@ -997,11 +985,12 @@ extension OnboardingWizardView {
     private func connectManual() async {
         let host = self.connectionFormStore.normalizedManualHost
         guard !host.isEmpty, self.manualPort > 0, self.manualPort <= 65535 else { return }
-        self.connectingGatewayID = "manual"
-        self.issue = .none
-        self.connectMessage = "Connecting to \(host)…"
-        self.statusLine = "Connecting to \(host):\(self.manualPort)…"
-        defer { self.connectingGatewayID = nil }
+        self.statusStore.send(.connectionStarted(
+            id: "manual",
+            message: "Connecting to \(host)…",
+            statusLine: "Connecting to \(host):\(self.manualPort)…",
+            clearsIssue: true))
+        defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
             token: self.gatewayToken,
             pendingOverride: self.pendingManualAuthOverride,
@@ -1015,13 +1004,18 @@ extension OnboardingWizardView {
     }
 
     private func retryLastAttempt(silent: Bool = false) async {
-        self.connectingGatewayID = silent ? "retry-auto" : "retry"
+        let connectionID = silent ? "retry-auto" : "retry"
         // Keep current auth/pairing issue sticky while retrying to avoid Step 3 UI flip-flop.
         if !silent {
-            self.connectMessage = "Retrying…"
-            self.statusLine = "Retrying last connection…"
+            self.statusStore.send(.connectionStarted(
+                id: connectionID,
+                message: "Retrying…",
+                statusLine: "Retrying last connection…",
+                clearsIssue: false))
+        } else {
+            self.statusStore.send(.connectionActivityStarted(id: connectionID))
         }
-        defer { self.connectingGatewayID = nil }
+        defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connectLastKnown()
     }
 
@@ -1037,20 +1031,18 @@ extension OnboardingWizardView {
             GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
             self.gatewayToken = ""
             self.gatewayPassword = ""
-            self.connectingGatewayID = nil
-            self.connectMessage = nil
-            self.issue = .none
-            self.pairingRequestId = nil
-            self.statusLine = "Scan a fresh setup QR code from this gateway."
+            self.statusStore.send(.gatewayProblemResetScanStarted)
             self.stepStore.send(.stepChanged(.connect))
             self.presentationStore.send(.qrScannerButtonTapped)
             return
         }
         if problem.canTrustRotatedCertificate {
-            self.connectingGatewayID = "trust-certificate"
-            self.connectMessage = "Updating gateway certificate…"
-            self.statusLine = "Updating gateway certificate…"
-            defer { self.connectingGatewayID = nil }
+            self.statusStore.send(.connectionStarted(
+                id: "trust-certificate",
+                message: "Updating gateway certificate…",
+                statusLine: "Updating gateway certificate…",
+                clearsIssue: false))
+            defer { self.statusStore.send(.connectionFinished) }
             _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)
             return
         }
