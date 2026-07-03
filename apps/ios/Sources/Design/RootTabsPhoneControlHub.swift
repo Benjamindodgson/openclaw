@@ -238,7 +238,8 @@ struct RootTabsPhoneControlHub: View {
         case .skillWorkshop:
             IPadSkillWorkshopScreen(
                 headerLeadingAction: self.phoneDetailBackAction,
-                openSettings: { self.openPhoneRootDestination(.gateway) })
+                openSettings: { self.openPhoneRootDestination(.gateway) },
+                store: IPadSkillWorkshopStoreFactory.live(appModel: self.appModel))
         case .instances:
             AgentProTab(
                 directRoute: .instances,
