@@ -24,7 +24,7 @@ extension AgentProTab {
                             label: "Search agents",
                             action: {
                                 withAnimation(.snappy(duration: 0.18)) {
-                                    self.agentSearchPresented.toggle()
+                                    _ = self.filterStore.send(.searchButtonTapped)
                                 }
                             })
                     }
@@ -32,8 +32,8 @@ extension AgentProTab {
                 .padding(.top, 2)
             }
 
-            if self.agentSearchPresented {
-                TextField("Search agents", text: self.$agentSearchText)
+            if self.filterStore.searchPresented {
+                TextField("Search agents", text: self.agentSearchTextBinding)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .font(.subheadline)
@@ -62,7 +62,7 @@ extension AgentProTab {
 
     var agentFilters: some View {
         HStack(spacing: 10) {
-            Picker("Agent status", selection: self.$agentRosterFilter) {
+            Picker("Agent status", selection: self.agentRosterFilterBinding) {
                 ForEach(AgentRosterFilter.allCases) { filter in
                     Text(filter.title).tag(filter)
                 }
@@ -72,8 +72,7 @@ extension AgentProTab {
             if self.agentFiltersActive {
                 Button {
                     withAnimation(.snappy(duration: 0.18)) {
-                        self.agentRosterFilter = .all
-                        self.agentSearchText = ""
+                        _ = self.filterStore.send(.clearFiltersTapped)
                     }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -89,9 +88,20 @@ extension AgentProTab {
         .padding(.horizontal, OpenClawProMetric.pagePadding)
     }
 
+    private var agentRosterFilterBinding: Binding<AgentRosterFilter> {
+        Binding(
+            get: { self.filterStore.rosterFilter },
+            set: { self.filterStore.send(.rosterFilterChanged($0)) })
+    }
+
+    private var agentSearchTextBinding: Binding<String> {
+        Binding(
+            get: { self.filterStore.searchText },
+            set: { self.filterStore.send(.searchTextChanged($0)) })
+    }
+
     var agentFiltersActive: Bool {
-        self.agentRosterFilter != .all
-            || !self.agentSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        self.filterStore.hasActiveFilters
     }
 
     var agentsSection: some View {
@@ -446,9 +456,9 @@ extension AgentProTab {
     }
 
     var filteredAgents: [AgentSummary] {
-        let query = self.agentSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let query = self.filterStore.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return self.sortedAgents.filter { agent in
-            let matchesFilter: Bool = switch self.agentRosterFilter {
+            let matchesFilter: Bool = switch self.filterStore.rosterFilter {
             case .all:
                 true
             case .online:
@@ -489,17 +499,18 @@ extension AgentProTab {
 
     var emptyAgentsTitle: String {
         if !self.gatewayConnected { return "Agents unavailable" }
-        if !self.agentSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "No matches" }
-        if self.agentRosterFilter != .all { return "No \(self.agentRosterFilter.title.lowercased()) agents" }
+        if !self.filterStore.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "No matches" }
+        if self.filterStore
+            .rosterFilter != .all { return "No \(self.filterStore.rosterFilter.title.lowercased()) agents" }
         return "No agents reported"
     }
 
     var emptyAgentsDetail: String {
         if !self.gatewayConnected { return "Connect a gateway to load the live agent roster." }
-        if !self.agentSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if !self.filterStore.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return "Try another search or clear the agent filters."
         }
-        if self.agentRosterFilter != .all { return "Clear the filter to view the full roster." }
+        if self.filterStore.rosterFilter != .all { return "Clear the filter to view the full roster." }
         return "The connected gateway did not return an agent list."
     }
 
