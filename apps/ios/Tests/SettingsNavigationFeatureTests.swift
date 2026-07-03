@@ -715,6 +715,25 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings manual gateway endpoint resolves tailnet warnings`() {
+        var state = SettingsManualGatewayEndpointFeature.State()
+
+        state.manualGatewayHost = "gateway.example.com"
+        #expect(state.tailnetWarningText(hasTailnetIPv4: false) == nil)
+
+        state.manualGatewayHost = "device.sample.ts.net"
+        #expect(state.tailnetWarningText(hasTailnetIPv4: false) ==
+            "This gateway is on your tailnet. Turn on Tailscale on this device, then tap Connect.")
+        #expect(state.tailnetWarningText(hasTailnetIPv4: true) == nil)
+
+        state.manualGatewayHost = "100.64.1.2"
+        #expect(SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(state.manualGatewayHost))
+        #expect(state.tailnetWarningText(hasTailnetIPv4: false) != nil)
+
+        state.manualGatewayHost = "192.168.1.10"
+        #expect(!SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(state.manualGatewayHost))
+    }
+
     @Test func `settings manual gateway endpoint reset clears enabled and host only`() async {
         var initialState = SettingsManualGatewayEndpointFeature.State()
         initialState.manualGatewayEnabled = true
