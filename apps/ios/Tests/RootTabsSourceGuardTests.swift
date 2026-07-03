@@ -765,7 +765,8 @@ struct RootTabsSourceGuardTests {
         #expect(navigationSource.contains("enum PresentedSheet"))
         #expect(navigationSource.contains("var presentedSheet: PresentedSheet?"))
         #expect(rootSource.contains(".sheet(item: self.presentedSheetBinding)"))
-        #expect(rootSource.contains("private var presentedSheetBinding: Binding<RootPresentationFeature.PresentedSheet?>"))
+        #expect(rootSource
+            .contains("private var presentedSheetBinding: Binding<RootPresentationFeature.PresentedSheet?>"))
         #expect(rootSource.contains("self.presentationStore.send(.presentedSheetChanged($0))"))
         #expect(rootSource.matches(of: /SettingsProTab\(\s*initialRoute: self\.selectedSettingsRoute,/).count == 1)
         #expect(rootSource.contains(".id(self.settingsTabViewID)"))
@@ -947,7 +948,8 @@ struct RootTabsSourceGuardTests {
 
         #expect(chatSource.matches(of: /self\.appModel\.makeChatTransport\(\)/).count == 2)
         #expect(chatSource.contains("@Reducer\nstruct ChatViewModelLifecycleFeature"))
-        #expect(chatSource.contains("@State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>"))
+        #expect(chatSource
+            .contains("@State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>"))
         #expect(!chatSource.contains("@State private var viewModelTransportModeID"))
         #expect(chatSource.contains("self.viewModelLifecycleStore.send(.transportModeRecorded(transportModeID))"))
         #expect(appModelSource.contains("return IOSGatewayChatTransport(gateway: self.operatorSession)"))
@@ -959,6 +961,19 @@ struct RootTabsSourceGuardTests {
         #expect(channelsSource.contains("\"clickclack\": SettingsChannelFallbackMetadata"))
         #expect(channelsSource.contains("label: \"ClickClack\""))
         #expect(channelsSource.contains("Self-hosted chat bot routing."))
+    }
+
+    @Test func `home canvas payload state is reducer owned`() throws {
+        let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("@Reducer\nstruct RootHomeCanvasFeature"))
+        #expect(source.contains("@State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>"))
+        #expect(source.contains("self.homeCanvasStore.send(.snapshotChanged(self.makeHomeCanvasSnapshot()))"))
+        #expect(!source.contains("private func makeHomeCanvasPayload() -> RootTabsHomeCanvasPayload"))
+        #expect(!source.contains("private func homeCanvasAgents(activeAgentID: String)"))
+        #expect(!source.contains("private func homeCanvasBadge(for agent: AgentSummary)"))
+        #expect(!source.contains("private struct RootTabsHomeCanvasPayload"))
+        #expect(!source.contains("private struct RootTabsHomeCanvasAgentCard"))
     }
 
     private static func rootTabsSourceURL() -> URL {
