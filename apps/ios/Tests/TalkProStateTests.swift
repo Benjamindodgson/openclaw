@@ -13,6 +13,7 @@ import Testing
             isSpeaking: false,
             isUserSpeechDetected: false,
             permissionState: .unknown,
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: nil,
             agentName: "Joshtimus Prime")
 
@@ -35,6 +36,7 @@ import Testing
             isSpeaking: false,
             isUserSpeechDetected: false,
             permissionState: .unknown,
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: nil,
             agentName: "Joshtimus Prime")
 
@@ -56,6 +58,7 @@ import Testing
             isSpeaking: false,
             isUserSpeechDetected: false,
             permissionState: .ready,
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: nil,
             agentName: "Joshtimus Prime")
 
@@ -75,6 +78,7 @@ import Testing
             isSpeaking: false,
             isUserSpeechDetected: false,
             permissionState: .missingScope("operator.talk.secrets"),
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: nil,
             agentName: "Joshtimus Prime")
 
@@ -96,6 +100,7 @@ import Testing
             isSpeaking: true,
             isUserSpeechDetected: true,
             permissionState: .ready,
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: nil,
             agentName: "Joshtimus Prime")
 
@@ -120,6 +125,7 @@ import Testing
             isSpeaking: false,
             isUserSpeechDetected: false,
             permissionState: .ready,
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: "  Realtime voice from the gateway  ",
             agentName: "Joshtimus Prime")
 
@@ -135,6 +141,7 @@ import Testing
             isSpeaking: false,
             isUserSpeechDetected: false,
             permissionState: .ready,
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: nil,
             agentName: "Joshtimus Prime")
 
@@ -152,9 +159,64 @@ import Testing
             isSpeaking: false,
             isUserSpeechDetected: false,
             permissionState: .ready,
+            voiceModeTitle: "Not loaded",
             voiceModeSubtitle: "Configured voice",
             agentName: "Joshtimus Prime")
 
         #expect(state.heroSubtitle == "Connect to your gateway to start a voice conversation.")
+    }
+
+    @Test func headerSubtitleUsesAgentWhenModeIsNotLoaded() {
+        let state = TalkProState(
+            gatewayConnected: true,
+            isDemoMode: false,
+            isEnabled: false,
+            statusText: "Ready",
+            isConfigLoaded: true,
+            isListening: false,
+            isSpeaking: false,
+            isUserSpeechDetected: false,
+            permissionState: .ready,
+            voiceModeTitle: "  Not loaded  ",
+            voiceModeSubtitle: nil,
+            agentName: "  Joshtimus Prime  ")
+
+        #expect(state.headerSubtitle == "Joshtimus Prime")
+    }
+
+    @Test func headerSubtitleCombinesAgentAndLoadedMode() {
+        let state = TalkProState(
+            gatewayConnected: true,
+            isDemoMode: false,
+            isEnabled: false,
+            statusText: "Ready",
+            isConfigLoaded: true,
+            isListening: false,
+            isSpeaking: false,
+            isUserSpeechDetected: false,
+            permissionState: .ready,
+            voiceModeTitle: "  Realtime Voice  ",
+            voiceModeSubtitle: nil,
+            agentName: "  Joshtimus Prime  ")
+
+        #expect(state.headerSubtitle == "Joshtimus Prime • Realtime Voice")
+    }
+
+    @Test func headerSubtitleFallsBackToRealtimeVoiceWhenModeAndAgentAreEmpty() {
+        let state = TalkProState(
+            gatewayConnected: true,
+            isDemoMode: false,
+            isEnabled: false,
+            statusText: "Ready",
+            isConfigLoaded: true,
+            isListening: false,
+            isSpeaking: false,
+            isUserSpeechDetected: false,
+            permissionState: .ready,
+            voiceModeTitle: "   ",
+            voiceModeSubtitle: nil,
+            agentName: "   ")
+
+        #expect(state.headerSubtitle == "Realtime voice")
     }
 }
