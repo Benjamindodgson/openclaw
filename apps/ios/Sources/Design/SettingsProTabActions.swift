@@ -771,8 +771,8 @@ extension SettingsProTab {
     }
 
     func advanceOnboardingRequestID() {
-        self.storedOnboardingRequestID += 1
-        self.onboardingStateStore.send(.onboardingRequestIDChanged(self.storedOnboardingRequestID))
+        self.onboardingStateStore.send(.onboardingRequestAdvanced)
+        self.storedOnboardingRequestID = self.onboardingStateStore.onboardingRequestID
     }
 
     var manualGatewayEnabled: Bool {

@@ -1062,6 +1062,17 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("guard !host.isEmpty, self.manualPort > 0, self.manualPort <= 65535"))
     }
 
+    @Test func `settings onboarding request id advancement is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+
+        #expect(settingsSource.contains("case onboardingRequestAdvanced"))
+        #expect(settingsSource.contains("state.onboardingRequestID += 1"))
+        #expect(actionsSource.contains("self.onboardingStateStore.send(.onboardingRequestAdvanced)"))
+        #expect(!actionsSource.contains("self.storedOnboardingRequestID += 1"))
+        #expect(!actionsSource.contains("self.onboardingStateStore.send(.onboardingRequestIDChanged("))
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 
