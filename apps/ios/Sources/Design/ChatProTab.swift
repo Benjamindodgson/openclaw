@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import OpenClawChatUI
 import OpenClawProtocol
 import SwiftUI
@@ -7,6 +8,7 @@ struct ChatProTab: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var viewModel: OpenClawChatViewModel?
     @State private var viewModelTransportModeID = ""
+    @State private var presentationStore: StoreOf<ChatProPresentationFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let headerTitle: String?
     let headerSubtitle: String?
@@ -20,7 +22,12 @@ struct ChatProTab: View {
         headerSubtitle: String? = nil,
         showsAgentBadge: Bool = true,
         ownsNavigationStack: Bool = true,
-        openSettings: (() -> Void)? = nil)
+        openSettings: (() -> Void)? = nil,
+        presentationStore: StoreOf<ChatProPresentationFeature> = Store(
+            initialState: ChatProPresentationFeature.State())
+        {
+            ChatProPresentationFeature()
+        })
     {
         self.headerLeadingAction = headerLeadingAction
         self.headerTitle = headerTitle
@@ -28,6 +35,7 @@ struct ChatProTab: View {
         self.showsAgentBadge = showsAgentBadge
         self.ownsNavigationStack = ownsNavigationStack
         self.openSettings = openSettings
+        self._presentationStore = State(wrappedValue: presentationStore)
     }
 
     var body: some View {
@@ -41,7 +49,11 @@ struct ChatProTab: View {
             }
         }
         .task {
+            self.syncPresentationState()
             self.syncChatViewModel()
+        }
+        .onChange(of: self.currentPresentationState) { _, _ in
+            self.syncPresentationState()
         }
         .onChange(of: self.appModel.chatSessionKey) { _, _ in
             self.syncChatViewModel()
@@ -223,6 +235,14 @@ struct ChatProTab: View {
     }
 
     private var presentationState: ChatProPresentationState {
+        let current = self.currentPresentationState
+        guard self.presentationStore.presentation == current else {
+            return current
+        }
+        return self.presentationStore.presentation
+    }
+
+    private var currentPresentationState: ChatProPresentationState {
         ChatProPresentationState(
             gatewayDisplayState: self.gatewayDisplayState,
             isGatewayUsable: self.gatewayConnected,
@@ -231,6 +251,12 @@ struct ChatProTab: View {
             headerSubtitle: self.headerSubtitle,
             showsAgentBadge: self.showsAgentBadge,
             agentBadgeOverride: self.agentBadgeOverride)
+    }
+
+    private func syncPresentationState() {
+        let presentation = self.currentPresentationState
+        guard self.presentationStore.presentation != presentation else { return }
+        self.presentationStore.send(.presentationChanged(presentation))
     }
 
     private var gatewayConnected: Bool {
@@ -272,14 +298,40 @@ struct ChatProTab: View {
     }
 }
 
+@Reducer
+struct ChatProPresentationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var presentation = ChatProPresentationState()
+    }
+
+    enum Action: Equatable, Sendable {
+        case presentationChanged(ChatProPresentationState)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .presentationChanged(presentation):
+                state.presentation = presentation
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct ChatProPresentationState: Equatable {
-    let gatewayDisplayState: GatewayDisplayState
-    let isGatewayUsable: Bool
-    let agentDisplayName: String
-    let headerTitle: String?
-    let headerSubtitle: String?
-    let showsAgentBadge: Bool
-    let agentBadgeOverride: String?
+    var gatewayDisplayState: GatewayDisplayState = .disconnected
+    var isGatewayUsable = false
+    var agentDisplayName = "OpenClaw"
+    var headerTitle: String?
+    var headerSubtitle: String?
+    var showsAgentBadge = true
+    var agentBadgeOverride: String?
 
     var gatewayPillTitle: String {
         switch self.gatewayDisplayState {
