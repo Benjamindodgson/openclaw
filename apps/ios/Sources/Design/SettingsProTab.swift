@@ -45,8 +45,10 @@ struct SettingsPresentationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var scannerError: String?
         var showGatewayProblemDetails = false
         var showNotificationRelayDisclosure = false
+        var showQRScanner = false
         var showResetOnboardingAlert = false
         var showTalkIssueDetails = false
     }
@@ -56,6 +58,10 @@ struct SettingsPresentationFeature {
         case gatewayProblemDetailsDismissed
         case notificationRelayDisclosureRequested
         case notificationRelayDisclosureDismissed
+        case qrScannerButtonTapped
+        case qrScannerDismissed
+        case qrScannerErrorDismissed
+        case qrScannerErrorReceived(String)
         case resetOnboardingButtonTapped
         case resetOnboardingAlertDismissed
         case talkIssueDetailsButtonTapped
@@ -81,6 +87,23 @@ struct SettingsPresentationFeature {
 
             case .notificationRelayDisclosureDismissed:
                 state.showNotificationRelayDisclosure = false
+                return .none
+
+            case .qrScannerButtonTapped:
+                state.showQRScanner = true
+                return .none
+
+            case .qrScannerDismissed:
+                state.showQRScanner = false
+                return .none
+
+            case .qrScannerErrorDismissed:
+                state.scannerError = nil
+                return .none
+
+            case let .qrScannerErrorReceived(error):
+                state.showQRScanner = false
+                state.scannerError = error
                 return .none
 
             case .resetOnboardingButtonTapped:
@@ -149,8 +172,6 @@ struct SettingsProTab: View {
     @State var stagedGatewaySetupLink: GatewayConnectDeepLink?
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State var defaultShareInstruction = ""
-    @State var showQRScanner = false
-    @State var scannerError: String?
     @State var suppressCredentialPersist = false
     @State var locationStatusText: String?
     @State var previousLocationModeRaw: String = OpenClawLocationMode.off.rawValue
@@ -328,7 +349,7 @@ struct SettingsProTab: View {
                     TalkRuntimeIssueDetailsSheet(issue: issue)
                 }
             }
-            .sheet(isPresented: self.$showQRScanner) {
+            .sheet(isPresented: self.qrScannerBinding) {
                 NavigationStack {
                     QRScannerView(
                         onGatewayLink: { link in
@@ -338,19 +359,18 @@ struct SettingsProTab: View {
                             self.handleScannedSetupCode(code)
                         },
                         onError: { error in
-                            self.showQRScanner = false
+                            self.presentationStore.send(.qrScannerErrorReceived(error))
                             self.setupStatusText = "Scanner error: \(error)"
-                            self.scannerError = error
                         },
                         onDismiss: {
-                            self.showQRScanner = false
+                            self.presentationStore.send(.qrScannerDismissed)
                         })
                         .ignoresSafeArea()
                         .navigationTitle("Scan QR Code")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
-                                Button("Cancel") { self.showQRScanner = false }
+                                Button("Cancel") { self.presentationStore.send(.qrScannerDismissed) }
                             }
                         }
                 }
@@ -370,13 +390,11 @@ struct SettingsProTab: View {
             }
             .alert(
                 "QR Scanner Unavailable",
-                isPresented: Binding(
-                    get: { self.scannerError != nil },
-                    set: { if !$0 { self.scannerError = nil } }))
+                isPresented: self.qrScannerErrorBinding)
             {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text(self.scannerError ?? "")
+                Text(self.presentationStore.scannerError ?? "")
             }
     }
 
@@ -448,6 +466,28 @@ extension SettingsProTab {
                     self.presentationStore.send(.notificationRelayDisclosureRequested)
                 } else {
                     self.presentationStore.send(.notificationRelayDisclosureDismissed)
+                }
+            })
+    }
+
+    private var qrScannerBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showQRScanner },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.qrScannerButtonTapped)
+                } else {
+                    self.presentationStore.send(.qrScannerDismissed)
+                }
+            })
+    }
+
+    private var qrScannerErrorBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.scannerError != nil },
+            set: { isPresented in
+                if !isPresented {
+                    self.presentationStore.send(.qrScannerErrorDismissed)
                 }
             })
     }

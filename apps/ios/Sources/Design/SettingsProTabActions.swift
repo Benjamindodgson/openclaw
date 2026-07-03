@@ -266,11 +266,11 @@ extension SettingsProTab {
         self.appModel.disconnectGateway()
         self.connectingGatewayID = nil
         self.setupStatusText = "Opening QR scanner..."
-        self.showQRScanner = true
+        self.presentationStore.send(.qrScannerButtonTapped)
     }
 
     func handleScannedGatewayLink(_ link: GatewayConnectDeepLink) {
-        self.showQRScanner = false
+        self.presentationStore.send(.qrScannerDismissed)
         self.setupCode = ""
         self.applyGatewayLink(link)
         self.setupStatusText = "QR loaded. Connecting to \(link.host):\(link.port)..."
@@ -279,7 +279,7 @@ extension SettingsProTab {
 
     func handleScannedSetupCode(_ code: String) {
         guard AppleReviewDemoMode.isSetupCode(code) else { return }
-        self.showQRScanner = false
+        self.presentationStore.send(.qrScannerDismissed)
         self.setupCode = ""
         self.stagedGatewaySetupLink = nil
         self.setupStatusText = "Apple Review demo mode enabled."

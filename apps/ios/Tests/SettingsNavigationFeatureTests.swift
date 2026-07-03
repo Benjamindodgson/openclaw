@@ -98,4 +98,33 @@ struct SettingsNavigationFeatureTests {
             $0.showNotificationRelayDisclosure = false
         }
     }
+
+    @Test func `settings presentation opens and dismisses QR scanner`() async {
+        let store = TestStore(initialState: SettingsPresentationFeature.State()) {
+            SettingsPresentationFeature()
+        }
+
+        await store.send(.qrScannerButtonTapped) {
+            $0.showQRScanner = true
+        }
+        await store.send(.qrScannerDismissed) {
+            $0.showQRScanner = false
+        }
+    }
+
+    @Test func `settings presentation records and dismisses QR scanner error`() async {
+        var initialState = SettingsPresentationFeature.State()
+        initialState.showQRScanner = true
+        let store = TestStore(initialState: initialState) {
+            SettingsPresentationFeature()
+        }
+
+        await store.send(.qrScannerErrorReceived("Camera unavailable")) {
+            $0.showQRScanner = false
+            $0.scannerError = "Camera unavailable"
+        }
+        await store.send(.qrScannerErrorDismissed) {
+            $0.scannerError = nil
+        }
+    }
 }
