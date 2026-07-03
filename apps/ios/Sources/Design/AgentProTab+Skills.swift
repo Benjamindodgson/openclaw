@@ -61,13 +61,13 @@ extension AgentProTab {
                     Image(systemName: "magnifyingglass")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
-                    TextField("Search skills", text: self.$skillFilter)
+                    TextField("Search skills", text: self.skillFilterBinding)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .font(.subheadline)
                     if !self.skillFilter.isEmpty {
                         Button {
-                            self.skillFilter = ""
+                            self.skillFilterStore.send(.clearSearchTapped)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.secondary)
@@ -75,7 +75,7 @@ extension AgentProTab {
                         .buttonStyle(.plain)
                     }
                 }
-                Picker("Status", selection: self.$skillStatusFilter) {
+                Picker("Status", selection: self.skillStatusFilterBinding) {
                     ForEach(SkillStatusFilter.allCases) { filter in
                         Text(filter.title).tag(filter)
                     }

@@ -12,8 +12,7 @@ struct AgentProTab: View {
     @State private var navigationStore: StoreOf<AgentNavigationFeature>
     @State var filterStore: StoreOf<AgentOverviewFilterFeature>
     @State var overviewStore: StoreOf<AgentOverviewLoadFeature>
-    @State var skillFilter: String = ""
-    @State var skillStatusFilter: SkillStatusFilter = .all
+    @State var skillFilterStore: StoreOf<AgentSkillFilterFeature>
     @State var skillMutationBusyKeys: Set<String> = []
     @State var skillMutationErrorText: String?
     @State var skillMutationStatusText: String?
@@ -127,6 +126,11 @@ struct AgentProTab: View {
         {
             AgentClawHubSearchFeature()
         },
+        skillFilterStore: StoreOf<AgentSkillFilterFeature> = Store(
+            initialState: AgentSkillFilterFeature.State())
+        {
+            AgentSkillFilterFeature()
+        },
         filterStore: StoreOf<AgentOverviewFilterFeature> = Store(
             initialState: AgentOverviewFilterFeature.State())
         {
@@ -140,6 +144,7 @@ struct AgentProTab: View {
         self._navigationStore = State(wrappedValue: navigationStore)
         self._overviewStore = State(wrappedValue: overviewStore)
         self._clawHubStore = State(wrappedValue: clawHubStore)
+        self._skillFilterStore = State(wrappedValue: skillFilterStore)
         self._filterStore = State(wrappedValue: filterStore)
     }
 
@@ -201,6 +206,26 @@ struct AgentProTab: View {
         self.clawHubStore.installingSlug
     }
 
+    var skillFilter: String {
+        self.skillFilterStore.searchText
+    }
+
+    var skillFilterBinding: Binding<String> {
+        Binding(
+            get: { self.skillFilterStore.searchText },
+            set: { self.skillFilterStore.send(.searchTextChanged($0)) })
+    }
+
+    var skillStatusFilter: SkillStatusFilter {
+        self.skillFilterStore.statusFilter
+    }
+
+    var skillStatusFilterBinding: Binding<SkillStatusFilter> {
+        Binding(
+            get: { self.skillFilterStore.statusFilter },
+            set: { self.skillFilterStore.send(.statusFilterChanged($0)) })
+    }
+
     private var overviewNavigation: some View {
         NavigationStack(path: self.navigationPathBinding) {
             ZStack {
@@ -238,6 +263,43 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+@Reducer
+struct AgentSkillFilterFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var searchText = ""
+        var statusFilter: AgentProTab.SkillStatusFilter = .all
+    }
+
+    enum Action: Equatable, Sendable {
+        case clearSearchTapped
+        case searchTextChanged(String)
+        case statusFilterChanged(AgentProTab.SkillStatusFilter)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .clearSearchTapped:
+                state.searchText = ""
+                return .none
+
+            case let .searchTextChanged(searchText):
+                state.searchText = searchText
+                return .none
+
+            case let .statusFilterChanged(statusFilter):
+                state.statusFilter = statusFilter
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }
 
