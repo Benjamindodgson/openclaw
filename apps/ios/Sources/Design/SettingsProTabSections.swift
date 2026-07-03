@@ -673,7 +673,7 @@ extension SettingsProTab {
                     }
                 }
 
-                Picker("Location", selection: self.$locationModeRaw) {
+                Picker("Location", selection: self.locationModeBinding) {
                     Text("Off").tag(OpenClawLocationMode.off.rawValue)
                     Text("While Using").tag(OpenClawLocationMode.whileUsing.rawValue)
                     Text("Always").tag(OpenClawLocationMode.always.rawValue)

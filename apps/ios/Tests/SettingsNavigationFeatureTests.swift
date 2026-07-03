@@ -353,18 +353,54 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.locationModeApplied(OpenClawLocationMode.always.rawValue)) {
+            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
+        }
+    }
+
+    @Test func `settings location syncs persisted mode`() async {
+        let store = TestStore(initialState: SettingsLocationFeature.State()) {
+            SettingsLocationFeature()
+        }
+
+        await store.send(.locationModeSynced(OpenClawLocationMode.whileUsing.rawValue)) {
+            $0.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+            $0.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        }
+    }
+
+    @Test func `settings location ignores persisted sync while changing mode`() async {
+        var initialState = SettingsLocationFeature.State()
+        initialState.isChangingLocationMode = true
+        initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
+        initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        let store = TestStore(initialState: initialState) {
+            SettingsLocationFeature()
+        }
+
+        await store.send(.locationModeSynced(OpenClawLocationMode.off.rawValue))
+    }
+
+    @Test func `settings location records picker changes`() async {
+        let store = TestStore(initialState: SettingsLocationFeature.State()) {
+            SettingsLocationFeature()
+        }
+
+        await store.send(.locationModeChanged(OpenClawLocationMode.always.rawValue)) {
+            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
         }
     }
 
     @Test func `settings location records permission denial`() async {
         var initialState = SettingsLocationFeature.State()
+        initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
         initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         let store = TestStore(initialState: initialState) {
             SettingsLocationFeature()
         }
 
         await store.send(.locationPermissionDenied(previousRawValue: OpenClawLocationMode.off.rawValue)) {
+            $0.locationModeRaw = OpenClawLocationMode.off.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
             $0.statusText = "Location permission was not granted."
         }
