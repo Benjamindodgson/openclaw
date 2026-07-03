@@ -6,11 +6,13 @@ struct TalkProTabFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var gatewayConnected = false
         var showPermissionPrompt = false
         var showTalkIssueDetails = false
     }
 
     enum Action: Equatable, Sendable {
+        case gatewayConnectionChanged(Bool)
         case permissionRequired
         case permissionPromptDismissed
         case permissionReady
@@ -23,6 +25,10 @@ struct TalkProTabFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .gatewayConnectionChanged(connected):
+                state.gatewayConnected = connected
+                return .none
+
             case .permissionRequired:
                 state.showPermissionPrompt = true
                 return .none
@@ -74,7 +80,7 @@ struct TalkProTab: View {
 
     private var state: TalkProState {
         TalkProState(
-            gatewayConnected: self.gatewayConnected,
+            gatewayConnected: self.store.gatewayConnected,
             isDemoMode: self.appModel.isAppleReviewDemoModeEnabled,
             isEnabled: self.appModel.talkMode.isEnabled || self.talkEnabled,
             statusText: self.appModel.talkMode.statusText,
@@ -127,7 +133,13 @@ struct TalkProTab: View {
                     .openClawSheetChrome()
             }
         }
-        .onAppear { self.alignPersistedTalkState() }
+        .onAppear {
+            self.syncGatewayConnection()
+            self.alignPersistedTalkState()
+        }
+        .onChange(of: self.currentGatewayConnected) { _, _ in
+            self.syncGatewayConnection()
+        }
     }
 
     private var content: some View {
@@ -250,14 +262,20 @@ struct TalkProTab: View {
             }
     }
 
-    private var gatewayConnected: Bool {
+    private var currentGatewayConnected: Bool {
         !self.appModel.isAppleReviewDemoModeEnabled &&
             GatewayStatusBuilder.build(appModel: self.appModel) == .connected
     }
 
     private var fallbackIssue: TalkRuntimeIssue? {
-        guard self.gatewayConnected else { return nil }
+        guard self.store.gatewayConnected else { return nil }
         return self.appModel.talkMode.gatewayTalkCurrentFallbackIssue
+    }
+
+    private func syncGatewayConnection() {
+        let connected = self.currentGatewayConnected
+        guard self.store.gatewayConnected != connected else { return }
+        self.store.send(.gatewayConnectionChanged(connected))
     }
 
     private func alignPersistedTalkState() {
@@ -312,7 +330,7 @@ struct TalkProTab: View {
     }
 
     private func openPrimarySettings() {
-        if self.gatewayConnected {
+        if self.store.gatewayConnected {
             self.openVoiceSettings()
         } else {
             self.openSettings()

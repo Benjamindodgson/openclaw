@@ -1,7 +1,22 @@
+import ComposableArchitecture
 import Testing
 @testable import OpenClaw
 
 @Suite struct TalkProStateTests {
+    @MainActor
+    @Test func reducerStoresGatewayConnectionSnapshot() async {
+        let store = TestStore(initialState: TalkProTabFeature.State()) {
+            TalkProTabFeature()
+        }
+
+        await store.send(.gatewayConnectionChanged(true)) {
+            $0.gatewayConnected = true
+        }
+        await store.send(.gatewayConnectionChanged(false)) {
+            $0.gatewayConnected = false
+        }
+    }
+
     @Test func disabledTalkWithoutLoadedConfigCanStartAndRetryLoad() {
         let state = TalkProState(
             gatewayConnected: true,
