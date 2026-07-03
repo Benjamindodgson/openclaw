@@ -314,6 +314,41 @@ import Testing
         #expect(store.state.shouldShowAuthStep)
     }
 
+    @Test @MainActor func `credentials reducer owns gateway token and password`() async {
+        let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
+            OnboardingCredentialsFeature()
+        }
+
+        #expect(!store.state.hasGatewayToken)
+        #expect(!store.state.hasGatewayPassword)
+
+        await store.send(.credentialsLoaded(token: " token-1 ", password: " password-1 ")) {
+            $0.gatewayToken = " token-1 "
+            $0.gatewayPassword = " password-1 "
+        }
+
+        #expect(store.state.hasGatewayToken)
+        #expect(store.state.hasGatewayPassword)
+
+        await store.send(.gatewayTokenChanged("token-2")) {
+            $0.gatewayToken = "token-2"
+        }
+
+        await store.send(.gatewayPasswordChanged("   ")) {
+            $0.gatewayPassword = "   "
+        }
+
+        #expect(!store.state.hasGatewayPassword)
+
+        await store.send(.reset) {
+            $0.gatewayToken = ""
+            $0.gatewayPassword = ""
+        }
+
+        #expect(!store.state.hasGatewayToken)
+        #expect(!store.state.hasGatewayPassword)
+    }
+
     @Test @MainActor func `setup code reducer owns setup text and status`() async {
         let store = TestStore(initialState: OnboardingSetupCodeFeature.State()) {
             OnboardingSetupCodeFeature()

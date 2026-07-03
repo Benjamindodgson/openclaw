@@ -14,8 +14,12 @@ struct OnboardingWizardView: View {
     @AppStorage("gateway.discovery.domain") private var discoveryDomain: String = ""
     @AppStorage("onboarding.developerMode") private var developerModeEnabled: Bool = false
     @State private var stepStore: StoreOf<OnboardingStepFeature>
-    @State private var gatewayToken: String = ""
-    @State private var gatewayPassword: String = ""
+    @State private var credentialsStore: StoreOf<OnboardingCredentialsFeature> = Store(
+        initialState: OnboardingCredentialsFeature.State())
+    {
+        OnboardingCredentialsFeature()
+    }
+
     @State private var discoveryRestartTask: Task<Void, Never>?
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var statusStore: StoreOf<OnboardingStatusFeature> = Store(
@@ -94,6 +98,26 @@ struct OnboardingWizardView: View {
 
     private var statusLine: String {
         self.statusStore.statusLine
+    }
+
+    private var gatewayPassword: String {
+        self.credentialsStore.gatewayPassword
+    }
+
+    private var gatewayToken: String {
+        self.credentialsStore.gatewayToken
+    }
+
+    private var gatewayPasswordBinding: Binding<String> {
+        Binding(
+            get: { self.credentialsStore.gatewayPassword },
+            set: { self.credentialsStore.send(.gatewayPasswordChanged($0)) })
+    }
+
+    private var gatewayTokenBinding: Binding<String> {
+        Binding(
+            get: { self.credentialsStore.gatewayToken },
+            set: { self.credentialsStore.send(.gatewayTokenChanged($0)) })
     }
 
     private var currentProblem: GatewayConnectionProblem? {
@@ -544,10 +568,10 @@ struct OnboardingWizardView: View {
     private var authStep: some View {
         Group {
             Section("Authentication") {
-                SecureField("Gateway Auth Token", text: self.$gatewayToken)
+                SecureField("Gateway Auth Token", text: self.gatewayTokenBinding)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                SecureField("Gateway Password", text: self.$gatewayPassword)
+                SecureField("Gateway Password", text: self.gatewayPasswordBinding)
 
                 if let problem = self.currentProblem {
                     GatewayProblemBanner(
@@ -712,10 +736,10 @@ extension OnboardingWizardView {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             if self.selectedMode == .remoteDomain {
-                SecureField("Gateway Auth Token", text: self.$gatewayToken)
+                SecureField("Gateway Auth Token", text: self.gatewayTokenBinding)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                SecureField("Gateway Password", text: self.$gatewayPassword)
+                SecureField("Gateway Password", text: self.gatewayPasswordBinding)
             }
             self.manualConnectButton
         }
@@ -792,10 +816,10 @@ extension OnboardingWizardView {
         }
         self.saveGatewayBootstrapToken(setupAuth.bootstrapToken)
         if setupAuth.shouldApplyTokenField {
-            self.gatewayToken = setupAuth.token
+            self.credentialsStore.send(.gatewayTokenChanged(setupAuth.token))
         }
         if setupAuth.shouldApplyPasswordField {
-            self.gatewayPassword = setupAuth.password
+            self.credentialsStore.send(.gatewayPasswordChanged(setupAuth.password))
         }
         self.pendingManualAuthOverride = setupAuth.manualAuthOverride
         self.saveGatewayCredentials(token: self.gatewayToken, password: self.gatewayPassword)
@@ -924,14 +948,13 @@ extension OnboardingWizardView {
 
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedInstanceId.isEmpty {
-            self.gatewayToken = GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? ""
-            self.gatewayPassword = GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""
+            self.credentialsStore.send(.credentialsLoaded(
+                token: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? "",
+                password: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""))
         }
 
         let hasSavedGateway = GatewaySettingsStore.loadLastGatewayConnection() != nil
-        let hasToken = !self.gatewayToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let hasPassword = !self.gatewayPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        if !hasSavedGateway, !hasToken, !hasPassword {
+        if !hasSavedGateway, !self.credentialsStore.hasGatewayToken, !self.credentialsStore.hasGatewayPassword {
             self.statusStore.send(.noSavedPairingFound)
         }
     }
@@ -1029,8 +1052,7 @@ extension OnboardingWizardView {
     private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
         if problem.suggestsOnboardingReset {
             GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
-            self.gatewayToken = ""
-            self.gatewayPassword = ""
+            self.credentialsStore.send(.reset)
             self.statusStore.send(.gatewayProblemResetScanStarted)
             self.stepStore.send(.stepChanged(.connect))
             self.presentationStore.send(.qrScannerButtonTapped)
