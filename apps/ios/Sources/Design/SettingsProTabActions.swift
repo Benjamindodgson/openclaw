@@ -310,7 +310,7 @@ extension SettingsProTab {
             return
         }
         guard await self.preflightGateway(host: host) else { return }
-        self.gatewaySetupStatusStore.send(.statusChanged("Setup code applied. Connecting..."))
+        self.gatewaySetupStatusStore.send(.setupConnectionStarted)
         await self.connectManual()
     }
 
