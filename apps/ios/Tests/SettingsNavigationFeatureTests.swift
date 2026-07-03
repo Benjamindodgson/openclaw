@@ -1554,6 +1554,33 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings manual gateway endpoint resolves preflight decisions`() async {
+        let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
+            SettingsManualGatewayEndpointFeature()
+        }
+
+        await store.send(.preflightRequested(host: "   ", hasTailnetIPv4: true)) {
+            $0.preflightResult = .blocked(statusText: nil)
+        }
+
+        await store.send(.preflightResultHandled) {
+            $0.preflightResult = nil
+        }
+
+        await store.send(.preflightRequested(host: "device.sample.ts.net", hasTailnetIPv4: false)) {
+            $0.preflightResult = .blocked(
+                statusText: "Tailscale is off on this device. Turn it on, then try again.")
+        }
+
+        await store.send(.preflightResultHandled) {
+            $0.preflightResult = nil
+        }
+
+        await store.send(.preflightRequested(host: " gateway.example.com ", hasTailnetIPv4: false)) {
+            $0.preflightResult = .requestLocalNetworkAccess(reason: "settings_preflight")
+        }
+    }
+
     @Test func `settings manual gateway endpoint applies setup link host and tls`() async {
         let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature()
