@@ -149,6 +149,29 @@ extension DependencyValues {
     }
 }
 
+struct SettingsAppleReviewDemoClient {
+    var enter: @MainActor @Sendable () -> Void
+}
+
+extension SettingsAppleReviewDemoClient: DependencyKey {
+    static let liveValue = SettingsAppleReviewDemoClient(enter: {})
+    static let testValue = SettingsAppleReviewDemoClient(enter: {})
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsAppleReviewDemoClient(enter: {
+            appModel.enterAppleReviewDemoMode()
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsAppleReviewDemo: SettingsAppleReviewDemoClient {
+        get { self[SettingsAppleReviewDemoClient.self] }
+        set { self[SettingsAppleReviewDemoClient.self] = newValue }
+    }
+}
+
 struct SettingsShareInstructionPersistenceClient {
     var loadDefaultInstruction: @Sendable () -> String
     var saveDefaultInstruction: @MainActor @Sendable (_ value: String) -> Void

@@ -988,19 +988,34 @@ struct RootTabsSourceGuardTests {
     @Test func `settings setup code apply result is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let applyFunction = try Self.extract(
+            actionsSource,
+            from: "func applySetupCode() async -> Bool",
+            to: "func applyGatewayLink")
 
+        #expect(supportSource.contains("struct SettingsAppleReviewDemoClient"))
+        #expect(supportSource.contains("var enter: @MainActor @Sendable () -> Void"))
+        #expect(supportSource.contains("var settingsAppleReviewDemo: SettingsAppleReviewDemoClient"))
+        #expect(settingsSource.contains("private let appleReviewDemoClientOverride: SettingsAppleReviewDemoClient?"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsAppleReviewDemo)"))
+        #expect(settingsSource.contains("await appleReviewDemoClient.enter()"))
         #expect(settingsSource.contains("enum ApplyResult: Equatable, Sendable"))
         #expect(settingsSource.contains("case appleReviewDemo(statusText: String)"))
         #expect(settingsSource.contains("case applyRequested"))
         #expect(settingsSource
             .contains("state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)"))
         #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
-        #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyRequested)"))
+        #expect(actionsSource.contains("await self.gatewaySetupLinkStore.send(.applyRequested).finish()"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
         #expect(actionsSource.contains("case let .appleReviewDemo(statusText):"))
         #expect(actionsSource.contains("self.gatewaySetupStatusStore.send(.statusChanged(statusText))"))
+        #expect(rootSource.contains("gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore()"))
+        #expect(rootSource.contains("SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
         #expect(!actionsSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
         #expect(!actionsSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
+        #expect(!applyFunction.contains("self.appModel.enterAppleReviewDemoMode()"))
         #expect(!actionsSource.contains("let stagedLink = self.stagedGatewaySetupLink"))
         #expect(!actionsSource.contains("\"Apple Review demo mode enabled.\""))
     }
@@ -1088,6 +1103,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("case scannedSetupCodeReceived(String)"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedSetupCodeReceived(code))"))
         #expect(!settingsActionsSource.contains("AppleReviewDemoMode.isSetupCode(code)"))
+        #expect(!settingsActionsSource.contains("self.appModel.enterAppleReviewDemoMode()"))
         #expect(!settingsActionsSource.contains("\"Apple Review demo mode enabled.\""))
         #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(code)"))
     }

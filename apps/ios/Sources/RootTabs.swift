@@ -191,6 +191,7 @@ struct RootTabs: View {
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
@@ -476,6 +477,7 @@ struct RootTabs: View {
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                    gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
@@ -486,6 +488,7 @@ struct RootTabs: View {
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                    gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
@@ -498,6 +501,7 @@ struct RootTabs: View {
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }
@@ -834,6 +838,13 @@ struct RootTabs: View {
     private func makeSettingsOnboardingStateStore() -> StoreOf<SettingsOnboardingStateFeature> {
         Store(initialState: SettingsOnboardingStateFeature.State()) {
             SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsGatewaySetupLinkStore() -> StoreOf<SettingsGatewaySetupLinkFeature> {
+        Store(initialState: SettingsGatewaySetupLinkFeature.State()) {
+            SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))
         }
     }
 

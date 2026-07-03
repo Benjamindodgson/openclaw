@@ -859,19 +859,24 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings gateway setup link apply handles apple review demo code`() async {
+        let probe = SettingsAppleReviewDemoProbe()
         var initialState = SettingsGatewaySetupLinkFeature.State()
         initialState.setupCode = "  APPLE-REVIEW-DEMO  "
         let store = TestStore(initialState: initialState) {
-            SettingsGatewaySetupLinkFeature()
+            SettingsGatewaySetupLinkFeature(appleReviewDemoClient: probe.client)
         }
 
         await store.send(.applyRequested) {
             $0.applyResult = .appleReviewDemo(statusText: "Apple Review demo mode enabled.")
             $0.setupCode = ""
         }
+        await store.finish()
+
+        #expect(probe.enterCount == 1)
     }
 
     @Test func `settings gateway setup link classifies scanned apple review setup codes`() async {
+        let probe = SettingsAppleReviewDemoProbe()
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
             port: 443,
@@ -883,7 +888,7 @@ struct SettingsNavigationFeatureTests {
         initialState.setupCode = "stale code"
         initialState.stagedGatewaySetupLink = link
         let store = TestStore(initialState: initialState) {
-            SettingsGatewaySetupLinkFeature()
+            SettingsGatewaySetupLinkFeature(appleReviewDemoClient: probe.client)
         }
 
         await store.send(.scannedSetupCodeReceived("not a demo code"))
@@ -893,6 +898,9 @@ struct SettingsNavigationFeatureTests {
             $0.setupCode = ""
             $0.stagedGatewaySetupLink = nil
         }
+        await store.finish()
+
+        #expect(probe.enterCount == 1)
 
         await store.send(.applyResultHandled) {
             $0.applyResult = nil
@@ -2422,6 +2430,16 @@ private final class SettingsOnboardingResetProbe: @unchecked Sendable {
     var client: SettingsOnboardingResetClient {
         SettingsOnboardingResetClient(reset: { instanceId in
             self.resetInstanceIds.append(instanceId)
+        })
+    }
+}
+
+private final class SettingsAppleReviewDemoProbe: @unchecked Sendable {
+    var enterCount = 0
+
+    var client: SettingsAppleReviewDemoClient {
+        SettingsAppleReviewDemoClient(enter: {
+            self.enterCount += 1
         })
     }
 }

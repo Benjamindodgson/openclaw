@@ -319,6 +319,12 @@ struct SettingsGatewayActivityFeature {
 
 @Reducer
 struct SettingsGatewaySetupLinkFeature {
+    private let appleReviewDemoClientOverride: SettingsAppleReviewDemoClient?
+
+    init(appleReviewDemoClient: SettingsAppleReviewDemoClient? = nil) {
+        self.appleReviewDemoClientOverride = appleReviewDemoClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -356,6 +362,9 @@ struct SettingsGatewaySetupLinkFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsAppleReviewDemo) var dependencyAppleReviewDemoClient
+            let appleReviewDemoClient = self.appleReviewDemoClientOverride ?? dependencyAppleReviewDemoClient
+
             switch action {
             case .applyRequested:
                 let raw = state.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -369,7 +378,9 @@ struct SettingsGatewaySetupLinkFeature {
                     state.setupCode = ""
                     state.stagedGatewaySetupLink = nil
                     state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)
-                    return .none
+                    return .run { _ in
+                        await appleReviewDemoClient.enter()
+                    }
                 }
 
                 guard let link = raw.isEmpty ? stagedLink : GatewayConnectDeepLink.fromSetupInput(raw) else {
@@ -404,7 +415,9 @@ struct SettingsGatewaySetupLinkFeature {
                 state.setupCode = ""
                 state.stagedGatewaySetupLink = nil
                 state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)
-                return .none
+                return .run { _ in
+                    await appleReviewDemoClient.enter()
+                }
 
             case let .setupCodeChanged(setupCode):
                 state.setupCode = setupCode
@@ -1232,6 +1245,11 @@ struct SettingsProTab: View {
         {
             SettingsGatewayCredentialsFeature()
         },
+        gatewaySetupLinkStore: StoreOf<SettingsGatewaySetupLinkFeature> = Store(
+            initialState: SettingsGatewaySetupLinkFeature.State())
+        {
+            SettingsGatewaySetupLinkFeature()
+        },
         onboardingStateStore: StoreOf<SettingsOnboardingStateFeature> = Store(
             initialState: SettingsOnboardingStateFeature.State())
         {
@@ -1252,6 +1270,7 @@ struct SettingsProTab: View {
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
+        self._gatewaySetupLinkStore = State(wrappedValue: gatewaySetupLinkStore)
         self._onboardingStateStore = State(wrappedValue: onboardingStateStore)
         self._navigationStore = State(wrappedValue: navigationStore)
         self.onRouteChange = onRouteChange
