@@ -62,7 +62,7 @@ private func defaultGatewayTLSFingerprintProbe(url: URL) async -> GatewayTLSFing
 @Observable
 final class GatewayConnectionController {
     struct ManualAuthOverride: Equatable {
-        struct SetupAuth {
+        struct SetupAuth: Equatable {
             let token: String
             let bootstrapToken: String
             let password: String

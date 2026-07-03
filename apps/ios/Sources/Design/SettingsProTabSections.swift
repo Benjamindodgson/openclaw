@@ -835,11 +835,11 @@ extension SettingsProTab {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
                 self.settingsButtonToggle("Auto-connect on launch", isOn: self.$gatewayAutoConnect)
-                SecureField("Gateway Auth Token", text: self.$gatewayToken)
+                SecureField("Gateway Auth Token", text: self.gatewayTokenBinding)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .textFieldStyle(.roundedBorder)
-                SecureField("Gateway Password", text: self.$gatewayPassword)
+                SecureField("Gateway Password", text: self.gatewayPasswordBinding)
                     .textFieldStyle(.roundedBorder)
                 Button(role: .destructive) {
                     self.presentationStore.send(.resetOnboardingButtonTapped)

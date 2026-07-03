@@ -173,8 +173,9 @@ extension SettingsProTab {
             .defaultShareInstructionLoaded(ShareToAgentSettings.loadDefaultInstruction()))
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedInstanceId.isEmpty else { return }
-        self.gatewayToken = GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? ""
-        self.gatewayPassword = GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""
+        self.gatewayCredentialsStore.send(.credentialsLoaded(
+            token: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? "",
+            password: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""))
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
@@ -251,18 +252,16 @@ extension SettingsProTab {
             GatewaySettingsStore.saveGatewayBootstrapToken(setupAuth.bootstrapToken, instanceId: instanceId)
         }
         if setupAuth.shouldApplyTokenField {
-            self.gatewayToken = setupAuth.token
             if !instanceId.isEmpty {
                 GatewaySettingsStore.saveGatewayToken(setupAuth.token, instanceId: instanceId)
             }
         }
         if setupAuth.shouldApplyPasswordField {
-            self.gatewayPassword = setupAuth.password
             if !instanceId.isEmpty {
                 GatewaySettingsStore.saveGatewayPassword(setupAuth.password, instanceId: instanceId)
             }
         }
-        self.pendingManualAuthOverride = setupAuth.manualAuthOverride
+        self.gatewayCredentialsStore.send(.setupAuthApplied(setupAuth))
     }
 
     func openGatewayQRScanner() {
@@ -313,10 +312,10 @@ extension SettingsProTab {
         self.manualGatewayEnabled = true
         defer { self.gatewayConnectionStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
-            token: self.gatewayToken,
-            pendingOverride: self.pendingManualAuthOverride,
-            password: self.gatewayPassword)
-        self.pendingManualAuthOverride = nil
+            token: self.gatewayCredentialsStore.gatewayToken,
+            pendingOverride: self.gatewayCredentialsStore.pendingManualAuthOverride,
+            password: self.gatewayCredentialsStore.gatewayPassword)
+        self.gatewayCredentialsStore.send(.pendingManualAuthOverrideConsumed)
         await self.gatewayController.connectManual(
             host: host,
             port: self.manualGatewayPortStore.manualGatewayPort,
@@ -341,10 +340,7 @@ extension SettingsProTab {
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
         self.setupCode = ""
         self.gatewayAutoConnect = false
-        self.suppressCredentialPersist = true
-        defer { self.suppressCredentialPersist = false }
-        self.gatewayToken = ""
-        self.gatewayPassword = ""
+        self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
         GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
         self.onboardingComplete = false
         self.hasConnectedOnce = false
@@ -476,7 +472,6 @@ extension SettingsProTab {
     }
 
     func persistGatewayToken(_ value: String) {
-        guard !self.suppressCredentialPersist else { return }
         let instanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !instanceId.isEmpty else { return }
         GatewaySettingsStore.saveGatewayToken(
@@ -485,7 +480,6 @@ extension SettingsProTab {
     }
 
     func persistGatewayPassword(_ value: String) {
-        guard !self.suppressCredentialPersist else { return }
         let instanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !instanceId.isEmpty else { return }
         GatewaySettingsStore.saveGatewayPassword(
@@ -530,6 +524,28 @@ extension SettingsProTab {
         Binding(
             get: { self.manualGatewayPortStore.manualGatewayPortText },
             set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged($0)) })
+    }
+
+    var gatewayTokenBinding: Binding<String> {
+        Binding(
+            get: { self.gatewayCredentialsStore.gatewayToken },
+            set: { self.updateGatewayToken($0) })
+    }
+
+    var gatewayPasswordBinding: Binding<String> {
+        Binding(
+            get: { self.gatewayCredentialsStore.gatewayPassword },
+            set: { self.updateGatewayPassword($0) })
+    }
+
+    func updateGatewayToken(_ value: String) {
+        self.gatewayCredentialsStore.send(.gatewayTokenChanged(value))
+        self.persistGatewayToken(value)
+    }
+
+    func updateGatewayPassword(_ value: String) {
+        self.gatewayCredentialsStore.send(.gatewayPasswordChanged(value))
+        self.persistGatewayPassword(value)
     }
 
     var manualPortIsValid: Bool {
