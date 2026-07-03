@@ -184,30 +184,31 @@ extension SettingsProTab {
         GatewaySettingsStore.savePreferredGatewayStableID(gateway.stableID)
         GatewaySettingsStore.saveLastDiscoveredGatewayStableID(gateway.stableID)
         if let err = await self.gatewayController.connectWithDiagnostics(gateway) {
-            self.setupStatusText = err
+            self.gatewaySetupStatusStore.send(.statusChanged(err))
         }
     }
 
     func applySetupCodeAndConnect() async {
-        self.setupStatusText = nil
+        self.gatewaySetupStatusStore.send(.statusChanged(nil))
         guard self.applySetupCode() else { return }
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard self.resolvedManualPort(host: host) != nil else {
-            self.setupStatusText = "Failed: invalid port"
+            self.gatewaySetupStatusStore.send(.statusChanged("Failed: invalid port"))
             return
         }
         guard await self.preflightGateway(host: host) else { return }
-        self.setupStatusText = "Setup code applied. Connecting..."
+        self.gatewaySetupStatusStore.send(.statusChanged("Setup code applied. Connecting..."))
         await self.connectManual()
     }
 
     func applyPendingGatewaySetupLinkIfNeeded() {
         guard let link = self.appModel.consumePendingGatewaySetupLink() else { return }
         self.setupCode = ""
-        self.setupStatusText = nil
+        self.gatewaySetupStatusStore.send(.statusChanged(nil))
         self.stagedGatewaySetupLink = link
         let security = link.tls ? "TLS" : "plain"
-        self.setupStatusText = "Setup link loaded for \(link.host):\(link.port) (\(security)). Tap Connect to apply."
+        self.gatewaySetupStatusStore.send(
+            .statusChanged("Setup link loaded for \(link.host):\(link.port) (\(security)). Tap Connect to apply."))
     }
 
     @discardableResult
@@ -215,20 +216,21 @@ extension SettingsProTab {
         let raw = self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
         let stagedLink = self.stagedGatewaySetupLink
         guard !raw.isEmpty || stagedLink != nil else {
-            self.setupStatusText = "Paste a setup code to continue."
+            self.gatewaySetupStatusStore.send(.statusChanged("Paste a setup code to continue."))
             return false
         }
 
         if AppleReviewDemoMode.isSetupCode(raw) {
             self.stagedGatewaySetupLink = nil
             self.setupCode = ""
-            self.setupStatusText = "Apple Review demo mode enabled."
+            self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
             self.appModel.enterAppleReviewDemoMode()
             return false
         }
 
         guard let link = raw.isEmpty ? stagedLink : GatewayConnectDeepLink.fromSetupInput(raw) else {
-            self.setupStatusText = "Setup code not recognized or uses an insecure ws:// gateway URL."
+            self.gatewaySetupStatusStore.send(
+                .statusChanged("Setup code not recognized or uses an insecure ws:// gateway URL."))
             return false
         }
         self.stagedGatewaySetupLink = nil
@@ -266,7 +268,7 @@ extension SettingsProTab {
     func openGatewayQRScanner() {
         self.appModel.disconnectGateway()
         self.gatewayConnectionStore.send(.connectionFinished)
-        self.setupStatusText = "Opening QR scanner..."
+        self.gatewaySetupStatusStore.send(.statusChanged("Opening QR scanner..."))
         self.presentationStore.send(.qrScannerButtonTapped)
     }
 
@@ -274,7 +276,7 @@ extension SettingsProTab {
         self.presentationStore.send(.qrScannerDismissed)
         self.setupCode = ""
         self.applyGatewayLink(link)
-        self.setupStatusText = "QR loaded. Connecting to \(link.host):\(link.port)..."
+        self.gatewaySetupStatusStore.send(.statusChanged("QR loaded. Connecting to \(link.host):\(link.port)..."))
         Task { await self.connectAfterScannedGatewayLink() }
     }
 
@@ -283,14 +285,14 @@ extension SettingsProTab {
         self.presentationStore.send(.qrScannerDismissed)
         self.setupCode = ""
         self.stagedGatewaySetupLink = nil
-        self.setupStatusText = "Apple Review demo mode enabled."
+        self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
         self.appModel.enterAppleReviewDemoMode()
     }
 
     func connectAfterScannedGatewayLink() async {
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard self.resolvedManualPort(host: host) != nil else {
-            self.setupStatusText = "Failed: invalid port"
+            self.gatewaySetupStatusStore.send(.statusChanged("Failed: invalid port"))
             return
         }
         guard await self.preflightGateway(host: host) else { return }
@@ -300,11 +302,11 @@ extension SettingsProTab {
     func connectManual() async {
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !host.isEmpty else {
-            self.setupStatusText = "Failed: host required"
+            self.gatewaySetupStatusStore.send(.statusChanged("Failed: host required"))
             return
         }
         guard self.manualPortIsValid else {
-            self.setupStatusText = "Failed: invalid port"
+            self.gatewaySetupStatusStore.send(.statusChanged("Failed: invalid port"))
             return
         }
         self.gatewayConnectionStore.send(.connectionStarted("manual"))
@@ -326,7 +328,8 @@ extension SettingsProTab {
         let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
         if Self.isTailnetHostOrIP(trimmed), !Self.hasTailnetIPv4() {
-            self.setupStatusText = "Tailscale is off on this device. Turn it on, then try again."
+            self.gatewaySetupStatusStore.send(
+                .statusChanged("Tailscale is off on this device. Turn it on, then try again."))
             return false
         }
         self.gatewayController.requestLocalNetworkAccess(reason: "settings_preflight")
@@ -335,7 +338,7 @@ extension SettingsProTab {
 
     func resetOnboarding() {
         self.gatewayConnectionStore.send(.connectionFinished)
-        self.setupStatusText = nil
+        self.gatewaySetupStatusStore.send(.statusChanged(nil))
         self.setupCode = ""
         self.gatewayAutoConnect = false
         self.suppressCredentialPersist = true

@@ -192,6 +192,28 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup status records messages`() async {
+        let store = TestStore(initialState: SettingsGatewaySetupStatusFeature.State()) {
+            SettingsGatewaySetupStatusFeature()
+        }
+
+        await store.send(.statusChanged("Failed: host required")) {
+            $0.statusText = "Failed: host required"
+        }
+    }
+
+    @Test func `settings gateway setup status clears messages`() async {
+        var initialState = SettingsGatewaySetupStatusFeature.State()
+        initialState.statusText = "Setup code applied. Connecting..."
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupStatusFeature()
+        }
+
+        await store.send(.statusChanged(nil)) {
+            $0.statusText = nil
+        }
+    }
+
     @Test func `settings location tracks change lifecycle`() async {
         var initialState = SettingsLocationFeature.State()
         initialState.statusText = "Location permission was not granted."
