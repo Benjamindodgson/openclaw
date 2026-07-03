@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 
@@ -8,7 +9,7 @@ struct AgentProTab: View {
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let headerTitle: String
     let openSettings: (() -> Void)?
-    @State var navigationPath: [AgentRoute] = []
+    @State private var navigationStore: StoreOf<AgentNavigationFeature>
     @State var overview: AgentOverviewSnapshot?
     @State var overviewErrorText: String?
     @State var overviewLoading: Bool = false
@@ -118,12 +119,18 @@ struct AgentProTab: View {
         directRoute: AgentRoute? = nil,
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         headerTitle: String = "Agents",
-        openSettings: (() -> Void)? = nil)
+        openSettings: (() -> Void)? = nil,
+        navigationStore: StoreOf<AgentNavigationFeature> = Store(
+            initialState: AgentNavigationFeature.State())
+        {
+            AgentNavigationFeature()
+        })
     {
         self.directRoute = directRoute
         self.headerLeadingAction = headerLeadingAction
         self.headerTitle = headerTitle
         self.openSettings = openSettings
+        self._navigationStore = State(wrappedValue: navigationStore)
     }
 
     var body: some View {
@@ -147,7 +154,7 @@ struct AgentProTab: View {
     }
 
     private var overviewNavigation: some View {
-        NavigationStack(path: self.$navigationPath) {
+        NavigationStack(path: self.navigationPathBinding) {
             ZStack {
                 OpenClawProBackground()
                 ScrollView {
@@ -172,10 +179,42 @@ struct AgentProTab: View {
         }
     }
 
+    private var navigationPathBinding: Binding<[AgentRoute]> {
+        Binding(
+            get: { self.navigationStore.navigationPath },
+            set: { self.navigationStore.send(.navigationPathChanged($0)) })
+    }
+
     private func directDestination(for route: AgentRoute) -> some View {
         self.destination(for: route)
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+@Reducer
+struct AgentNavigationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var navigationPath: [AgentProTab.AgentRoute] = []
+    }
+
+    enum Action: Equatable, Sendable {
+        case navigationPathChanged([AgentProTab.AgentRoute])
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .navigationPathChanged(navigationPath):
+                state.navigationPath = navigationPath
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }

@@ -179,6 +179,8 @@ struct RootTabsSourceGuardTests {
         let dreamingSource = try String(contentsOf: Self.agentProDreamingDestinationSourceURL(), encoding: .utf8)
 
         #expect(!source.contains("ToolbarItem"))
+        #expect(source.contains("NavigationStack(path: self.navigationPathBinding)"))
+        #expect(source.contains("set: { self.navigationStore.send(.navigationPathChanged($0)) }"))
         #expect(source
             .contains("route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible"))
         #expect(destinationsSource.contains(".toolbar(.hidden, for: .navigationBar)"))
