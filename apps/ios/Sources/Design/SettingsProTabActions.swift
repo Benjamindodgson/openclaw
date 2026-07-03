@@ -225,7 +225,8 @@ extension SettingsProTab {
     func syncTalkRuntimeState() {
         self.talkPreferencesStore.send(.gatewayTalkConfigSynced(
             configLoaded: self.appModel.talkMode.gatewayTalkConfigLoaded,
-            apiKeyConfigured: self.appModel.talkMode.gatewayTalkApiKeyConfigured))
+            apiKeyConfigured: self.appModel.talkMode.gatewayTalkApiKeyConfigured,
+            usesRealtime: self.appModel.talkMode.gatewayTalkUsesRealtime))
         self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
             transportLabel: self.appModel.talkMode.gatewayTalkTransportLabel))
@@ -890,9 +891,7 @@ extension SettingsProTab {
     }
 
     var shouldShowRealtimeVoicePicker: Bool {
-        SettingsTalkPreferencesFeature.State.shouldShowRealtimeVoicePicker(
-            providerSelectionRaw: self.talkPreferencesStore.providerSelectionRaw,
-            gatewayTalkUsesRealtime: self.appModel.talkMode.gatewayTalkUsesRealtime)
+        self.talkPreferencesStore.shouldShowRealtimeVoicePicker
     }
 
     var talkProviderSelectionBinding: Binding<String> {
