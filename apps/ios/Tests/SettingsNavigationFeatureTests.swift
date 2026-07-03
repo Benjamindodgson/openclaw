@@ -793,6 +793,34 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup link classifies scanned apple review setup codes`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = SettingsGatewaySetupLinkFeature.State()
+        initialState.setupCode = "stale code"
+        initialState.stagedGatewaySetupLink = link
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.scannedSetupCodeReceived("not a demo code"))
+
+        await store.send(.scannedSetupCodeReceived("  APPLE-REVIEW-DEMO  ")) {
+            $0.applyResult = .appleReviewDemo
+            $0.setupCode = ""
+            $0.stagedGatewaySetupLink = nil
+        }
+
+        await store.send(.applyResultHandled) {
+            $0.applyResult = nil
+        }
+    }
+
     @Test func `settings gateway credentials load persisted values`() async {
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature()

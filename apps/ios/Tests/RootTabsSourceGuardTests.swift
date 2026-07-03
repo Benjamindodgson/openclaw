@@ -984,6 +984,21 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("let stagedLink = self.stagedGatewaySetupLink"))
     }
 
+    @Test func `scanner setup code results are reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(settingsSource.contains("case scannedSetupCodeReceived(String)"))
+        #expect(settingsSource.contains("state.applyResult = .appleReviewDemo"))
+        #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(code))"))
+        #expect(onboardingStateSource.contains("case scannedSetupCodeReceived(String)"))
+        #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedSetupCodeReceived(code))"))
+        #expect(!settingsActionsSource.contains("AppleReviewDemoMode.isSetupCode(code)"))
+        #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(code)"))
+    }
+
     @Test func `settings manual connection result is reducer owned`() throws {
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),

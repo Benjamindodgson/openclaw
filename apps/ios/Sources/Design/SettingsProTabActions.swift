@@ -389,10 +389,11 @@ extension SettingsProTab {
     }
 
     func handleScannedSetupCode(_ code: String) {
-        guard AppleReviewDemoMode.isSetupCode(code) else { return }
+        self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(code))
+        guard self.gatewaySetupLinkStore.applyResult == .appleReviewDemo else { return }
+        self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
-        self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
         self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
         self.appModel.enterAppleReviewDemoMode()
     }

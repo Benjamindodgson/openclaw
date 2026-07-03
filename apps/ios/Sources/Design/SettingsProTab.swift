@@ -341,6 +341,7 @@ struct SettingsGatewaySetupLinkFeature {
     enum Action: Equatable, Sendable {
         case applyRequested
         case applyResultHandled
+        case scannedSetupCodeReceived(String)
         case setupCodeChanged(String)
         case setupCodeSynced(String)
         case setupLinkStaged(GatewayConnectDeepLink?)
@@ -376,6 +377,16 @@ struct SettingsGatewaySetupLinkFeature {
 
             case .applyResultHandled:
                 state.applyResult = nil
+                return .none
+
+            case let .scannedSetupCodeReceived(code):
+                state.applyResult = nil
+                guard AppleReviewDemoMode.isSetupCode(code) else {
+                    return .none
+                }
+                state.setupCode = ""
+                state.stagedGatewaySetupLink = nil
+                state.applyResult = .appleReviewDemo
                 return .none
 
             case let .setupCodeChanged(setupCode):
