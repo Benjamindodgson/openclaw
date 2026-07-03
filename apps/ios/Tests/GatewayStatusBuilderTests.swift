@@ -100,6 +100,19 @@ struct GatewayStatusBuilderTests {
         #expect(store.state.presentation.messagePlaceholder == "Message Joshtimus Prime...")
     }
 
+    @Test func `chat view model lifecycle reducer records transport mode`() async {
+        let store = TestStore(initialState: ChatViewModelLifecycleFeature.State()) {
+            ChatViewModelLifecycleFeature()
+        }
+
+        await store.send(.transportModeRecorded("gateway")) {
+            $0.transportModeID = "gateway"
+        }
+        await store.send(.transportModeRecorded("demo")) {
+            $0.transportModeID = "demo"
+        }
+    }
+
     @Test func `reducer refresh updates display state`() async {
         let problem = GatewayConnectionProblem(
             kind: .pairingRequired,

@@ -946,6 +946,10 @@ struct RootTabsSourceGuardTests {
         let appModelSource = try String(contentsOf: Self.nodeAppModelSourceURL(), encoding: .utf8)
 
         #expect(chatSource.matches(of: /self\.appModel\.makeChatTransport\(\)/).count == 2)
+        #expect(chatSource.contains("@Reducer\nstruct ChatViewModelLifecycleFeature"))
+        #expect(chatSource.contains("@State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>"))
+        #expect(!chatSource.contains("@State private var viewModelTransportModeID"))
+        #expect(chatSource.contains("self.viewModelLifecycleStore.send(.transportModeRecorded(transportModeID))"))
         #expect(appModelSource.contains("return IOSGatewayChatTransport(gateway: self.operatorSession)"))
         #expect(settingsSectionsSource.contains("Connected services and message routing"))
         #expect(settingsSectionsSource.contains("SettingsChannelsStoreFactory.live(appModel: self.appModel)"))
