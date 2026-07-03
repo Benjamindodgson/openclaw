@@ -243,6 +243,19 @@ extension SettingsProTab {
             screenRecordActive: self.appModel.screenRecordActive))
     }
 
+    func syncApprovalState() {
+        let pendingApproval = self.appModel.pendingExecApprovalPrompt
+        self.approvalsStore.send(.approvalsSynced(
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
+            gatewayConnected: self.gatewayConnected,
+            notificationsNeedAttention: self.notificationStore.needsAttention,
+            hasPendingApproval: pendingApproval != nil,
+            pendingCommandPreview: pendingApproval?.commandPreview,
+            activeAgentName: self.appModel.activeAgentName,
+            isResolvingPendingApproval: self.appModel.pendingExecApprovalPromptResolving,
+            pendingApprovalAllowsAllowAlways: pendingApproval?.allowsAllowAlways ?? false))
+    }
+
     func syncOnboardingState() {
         self.onboardingStateStore.send(.onboardingStateSynced(
             hasConnectedOnce: self.storedHasConnectedOnce,
@@ -262,6 +275,7 @@ extension SettingsProTab {
             gatewayStatusConnected: GatewayStatusBuilder.build(appModel: self.appModel) == .connected,
             gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
             gatewayAgentCount: self.appModel.gatewayAgents.count))
+        self.syncApprovalState()
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
@@ -536,6 +550,7 @@ extension SettingsProTab {
             await MainActor.run {
                 self.notificationStore.send(.authorizationRequestFinished(
                     SettingsNotificationStatus(settings.authorizationStatus)))
+                self.syncApprovalState()
                 guard granted else { return }
                 self.registerForRemoteNotificationsIfEnrollmentReady()
             }
@@ -552,6 +567,7 @@ extension SettingsProTab {
     @MainActor
     func applyNotificationStatus(_ status: UNAuthorizationStatus) {
         self.notificationStore.send(.statusChanged(SettingsNotificationStatus(status)))
+        self.syncApprovalState()
     }
 
     func persistGatewayToken(_ value: String) {
@@ -1019,13 +1035,7 @@ extension SettingsProTab {
     }
 
     var approvalEmptyDetail: String {
-        if self.appModel.isAppleReviewDemoModeEnabled {
-            return "Live gateway requests are disabled in demo mode."
-        }
-        if self.notificationsNeedAttention {
-            return "Foreground approvals still appear while OpenClaw is connected."
-        }
-        return self.gatewayConnected ? "Gateway requests will appear here." : "Connect to the gateway."
+        self.approvalsStore.approvalEmptyDetail
     }
 
     var gatewayTalkConfigDetail: String {
@@ -1058,34 +1068,15 @@ extension SettingsProTab {
     }
 
     var approvalsDetail: String {
-        if self.notificationsNeedAttention {
-            return self.pendingApproval == nil ? "Notifications off" : "1 waiting, notifications off"
-        }
-        return self.pendingApproval == nil ? "No approvals waiting" : "1 request waiting"
+        self.approvalsStore.approvalsDetail
     }
 
     var notificationsNeedAttention: Bool {
-        self.notificationStore.needsAttention
+        self.approvalsStore.notificationsNeedAttention
     }
 
     var approvalItems: [SettingsApprovalItem] {
-        guard let pendingApproval else { return [] }
-        return [
-            SettingsApprovalItem(
-                id: "pending-real",
-                icon: "terminal.fill",
-                title: pendingApproval.commandPreview ?? "Review gateway action",
-                detail: "Agent: \(self.appModel.activeAgentName)",
-                priority: self.appModel.pendingExecApprovalPromptResolving ? "Resolving" : "High",
-                color: OpenClawBrand.danger),
-            SettingsApprovalItem(
-                id: "pending-context",
-                icon: "doc.text.fill",
-                title: pendingApproval.allowsAllowAlways ? "Permission can be saved" : "One-time approval",
-                detail: "Gateway request",
-                priority: pendingApproval.allowsAllowAlways ? "Medium" : "Review",
-                color: OpenClawBrand.warn),
-        ]
+        self.approvalsStore.approvalItems
     }
 
     var voiceDetail: String {

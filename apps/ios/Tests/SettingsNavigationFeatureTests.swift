@@ -129,6 +129,85 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings approvals sync context`() async {
+        let store = TestStore(initialState: SettingsApprovalsFeature.State()) {
+            SettingsApprovalsFeature()
+        }
+
+        await store.send(.approvalsSynced(
+            isAppleReviewDemoModeEnabled: true,
+            gatewayConnected: true,
+            notificationsNeedAttention: true,
+            hasPendingApproval: true,
+            pendingCommandPreview: "git status",
+            activeAgentName: "Joshtimus Prime",
+            isResolvingPendingApproval: true,
+            pendingApprovalAllowsAllowAlways: true))
+        {
+            $0.isAppleReviewDemoModeEnabled = true
+            $0.gatewayConnected = true
+            $0.notificationsNeedAttention = true
+            $0.hasPendingApproval = true
+            $0.pendingCommandPreview = "git status"
+            $0.activeAgentName = "Joshtimus Prime"
+            $0.isResolvingPendingApproval = true
+            $0.pendingApprovalAllowsAllowAlways = true
+        }
+    }
+
+    @Test func `settings approvals summarize empty states`() {
+        var state = SettingsApprovalsFeature.State()
+
+        #expect(state.approvalBadgeValue == nil)
+        #expect(state.approvalsDetail == "No approvals waiting")
+        #expect(state.approvalEmptyDetail == "Connect to the gateway.")
+        #expect(state.destinationDetail == "No gateway actions are waiting for review.")
+        #expect(state.destinationValue == "clear")
+        #expect(state.approvalItems.isEmpty)
+
+        state.gatewayConnected = true
+        #expect(state.approvalEmptyDetail == "Gateway requests will appear here.")
+
+        state.notificationsNeedAttention = true
+        #expect(state.approvalsDetail == "Notifications off")
+        #expect(state.approvalEmptyDetail == "Foreground approvals still appear while OpenClaw is connected.")
+        #expect(state.destinationDetail == "Out-of-app approval alerts need notification permission.")
+        #expect(state.destinationValue == "Alerts Off")
+
+        state.isAppleReviewDemoModeEnabled = true
+        #expect(state.approvalEmptyDetail == "Live gateway requests are disabled in demo mode.")
+    }
+
+    @Test func `settings approvals summarize pending request`() {
+        var state = SettingsApprovalsFeature.State()
+        state.hasPendingApproval = true
+        state.pendingCommandPreview = "git status"
+        state.activeAgentName = "Joshtimus Prime"
+
+        #expect(state.approvalBadgeValue == "1")
+        #expect(state.approvalsDetail == "1 request waiting")
+        #expect(state.destinationDetail == "Review the pending gateway action.")
+        #expect(state.destinationValue == "1 waiting")
+
+        var items = state.approvalItems
+        #expect(items.count == 2)
+        #expect(items[0].title == "git status")
+        #expect(items[0].detail == "Agent: Joshtimus Prime")
+        #expect(items[0].priority == "High")
+        #expect(items[1].title == "One-time approval")
+        #expect(items[1].priority == "Review")
+
+        state.isResolvingPendingApproval = true
+        state.pendingApprovalAllowsAllowAlways = true
+        state.notificationsNeedAttention = true
+
+        #expect(state.approvalsDetail == "1 waiting, notifications off")
+        items = state.approvalItems
+        #expect(items[0].priority == "Resolving")
+        #expect(items[1].title == "Permission can be saved")
+        #expect(items[1].priority == "Medium")
+    }
+
     @Test func `settings diagnostics completion records last run summary`() async {
         let store = TestStore(initialState: SettingsDiagnosticsFeature.State()) {
             SettingsDiagnosticsFeature()
