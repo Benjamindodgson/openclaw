@@ -842,6 +842,11 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.requestLocalNetworkAccess(reason: \"onboarding_continue\")"))
         #expect(onboardingSource.contains("self.requestLocalNetworkAccessIfPastIntro(reason: \"onboarding_appear\")"))
         #expect(!onboardingSource.contains("@State private var pendingManualAuthOverride"))
+        #expect(!onboardingSource.contains("discoveryRestartTask"))
+        #expect(onboardingSource.contains("@State private var discoveryRestartStore"))
+        #expect(onboardingSource.contains("self.discoveryRestartStore.send(.disappeared)"))
+        #expect(onboardingSource.contains("self.discoveryRestartStore.send(.discoveryDomainChanged)"))
+        #expect(onboardingSource.contains("self.discoveryRestartStore.restartRequestID"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.setupAuthApplied(setupAuth))"))
         #expect(onboardingSource.contains("pendingOverride: self.credentialsStore.pendingManualAuthOverride"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.pendingManualAuthOverrideConsumed)"))
@@ -849,6 +854,8 @@ struct RootTabsSourceGuardTests {
             .contains("var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?"))
         #expect(onboardingStateSource
             .contains("case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)"))
+        #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartFeature"))
+        #expect(onboardingStateSource.contains(".cancellable(id: CancelID.restart, cancelInFlight: true)"))
         #expect(actionsSource
             .contains("self.gatewayController.requestLocalNetworkAccess(reason: \"settings_preflight\")"))
     }

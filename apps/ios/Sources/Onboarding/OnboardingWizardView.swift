@@ -20,7 +20,6 @@ struct OnboardingWizardView: View {
         OnboardingCredentialsFeature()
     }
 
-    @State private var discoveryRestartTask: Task<Void, Never>?
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var statusStore: StoreOf<OnboardingStatusFeature> = Store(
         initialState: OnboardingStatusFeature.State())
@@ -32,6 +31,12 @@ struct OnboardingWizardView: View {
         initialState: OnboardingPresentationFeature.State())
     {
         OnboardingPresentationFeature()
+    }
+
+    @State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature> = Store(
+        initialState: OnboardingDiscoveryRestartFeature.State())
+    {
+        OnboardingDiscoveryRestartFeature()
     }
 
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature> = Store(
@@ -324,11 +329,13 @@ struct OnboardingWizardView: View {
                 self.requestLocalNetworkAccessIfPastIntro(reason: "onboarding_appear")
             }
             .onDisappear {
-                self.discoveryRestartTask?.cancel()
-                self.discoveryRestartTask = nil
+                self.discoveryRestartStore.send(.disappeared)
             }
             .onChange(of: self.discoveryDomain) { _, _ in
                 self.scheduleDiscoveryRestart()
+            }
+            .onChange(of: self.discoveryRestartStore.restartRequestID) { _, _ in
+                self.gatewayController.restartDiscovery()
             }
             .onChange(of: self.gatewayToken) { _, newValue in
                 self.saveGatewayCredentials(token: newValue, password: self.gatewayPassword)
@@ -946,12 +953,7 @@ extension OnboardingWizardView {
     }
 
     private func scheduleDiscoveryRestart() {
-        self.discoveryRestartTask?.cancel()
-        self.discoveryRestartTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            guard !Task.isCancelled else { return }
-            self.gatewayController.restartDiscovery()
-        }
+        self.discoveryRestartStore.send(.discoveryDomainChanged)
     }
 
     private func saveGatewayCredentials(token: String, password: String) {
