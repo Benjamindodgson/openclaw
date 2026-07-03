@@ -1019,8 +1019,7 @@ extension SettingsProTab {
     }
 
     var gatewayTalkConfigColor: Color {
-        if self.talkPreferencesStore.isAppleReviewDemoModeEnabled { return .secondary }
-        return self.talkPreferencesStore.gatewayTalkConfigLoaded ? OpenClawBrand.ok : .secondary
+        self.talkPreferencesStore.gatewayTalkConfigColor
     }
 
     var gatewayAddress: String {
