@@ -990,6 +990,34 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings talk preferences sync gateway config status`() async {
+        let store = TestStore(initialState: SettingsTalkPreferencesFeature.State()) {
+            SettingsTalkPreferencesFeature()
+        }
+
+        await store.send(.gatewayTalkConfigSynced(configLoaded: true, apiKeyConfigured: false)) {
+            $0.gatewayTalkConfigLoaded = true
+            $0.gatewayTalkApiKeyConfigured = false
+        }
+        await store.send(.gatewayTalkConfigSynced(configLoaded: true, apiKeyConfigured: true)) {
+            $0.gatewayTalkConfigLoaded = true
+            $0.gatewayTalkApiKeyConfigured = true
+        }
+    }
+
+    @Test func `settings talk preferences summarize api key status`() {
+        var state = SettingsTalkPreferencesFeature.State()
+
+        #expect(state.talkApiKeyStatus == "Not loaded")
+        state.gatewayTalkConfigLoaded = true
+        #expect(state.talkApiKeyStatus == "Not configured")
+        state.gatewayTalkApiKeyConfigured = true
+        #expect(state.talkApiKeyStatus == "Configured")
+        #expect(SettingsTalkPreferencesFeature.State.talkApiKeyStatus(
+            configLoaded: true,
+            apiKeyConfigured: false) == "Not configured")
+    }
+
     @Test func `settings talk preferences show realtime picker for local or gateway realtime`() {
         var state = SettingsTalkPreferencesFeature.State()
 
