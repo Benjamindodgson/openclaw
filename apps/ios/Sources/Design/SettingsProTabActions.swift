@@ -976,18 +976,6 @@ extension SettingsProTab {
         self.talkPreferencesStore.gatewayTalkLastIssueDetail
     }
 
-    func gatewayDetailLines(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) -> [String] {
-        var lines: [String] = []
-        if let lanHost = gateway.lanHost { lines.append("LAN: \(lanHost)") }
-        if let tailnet = gateway.tailnetDns { lines.append("Tailnet: \(tailnet)") }
-        let gw = gateway.gatewayPort.map(String.init)
-        let canvas = gateway.canvasPort.map(String.init)
-        if gw != nil || canvas != nil {
-            lines.append("Ports: gateway \(gw ?? "-") / canvas \(canvas ?? "-")")
-        }
-        return lines.isEmpty ? [gateway.debugID] : lines
-    }
-
     var gatewayConnected: Bool {
         self.gatewayConnectionStore.gatewayConnected
     }
