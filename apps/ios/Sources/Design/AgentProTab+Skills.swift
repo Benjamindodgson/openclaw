@@ -111,7 +111,7 @@ extension AgentProTab {
                     .accessibilityLabel("Search ClawHub")
                 }
 
-                TextField("Search ClawHub", text: self.$clawHubQuery)
+                TextField("Search ClawHub", text: self.clawHubQueryBinding)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .font(.subheadline)
@@ -681,32 +681,32 @@ extension AgentProTab {
     @MainActor
     func installClawHubSkill(_ result: ClawHubSearchResultLite) async {
         guard self.liveGatewayConnected else { return }
-        self.clawHubInstallSlug = result.slug
-        self.clawHubErrorText = nil
-        defer { self.clawHubInstallSlug = nil }
+        self.clawHubStore.send(.installRequested(slug: result.slug))
         do {
             let params = ClawHubInstallParams(slug: result.slug)
             _ = try await self.requestGateway(method: "skills.install", params: params, timeoutSeconds: 125)
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
+            self.clawHubStore.send(.installFinished(slug: result.slug))
         } catch {
-            self.clawHubErrorText = Self.skillMutationMessage(error)
+            self.clawHubStore.send(.installFailed(
+                slug: result.slug,
+                message: Self.skillMutationMessage(error)))
         }
     }
 
     @MainActor
     func searchClawHubSkills() async {
         guard self.liveGatewayConnected else { return }
-        self.clawHubLoading = true
-        self.clawHubErrorText = nil
-        defer { self.clawHubLoading = false }
+        self.clawHubStore.send(.searchRequested)
         do {
             let query = self.clawHubQuery.trimmingCharacters(in: .whitespacesAndNewlines)
             let params = ClawHubSearchParams(query: query.isEmpty ? nil : query, limit: 20)
             let data = try await self.requestGateway(method: "skills.search", params: params, timeoutSeconds: 20)
-            self.clawHubResults = try JSONDecoder().decode(ClawHubSearchResponseLite.self, from: data).results
+            let results = try JSONDecoder().decode(ClawHubSearchResponseLite.self, from: data).results
+            self.clawHubStore.send(.searchFinished(results))
         } catch {
-            self.clawHubErrorText = Self.skillMutationMessage(error)
+            self.clawHubStore.send(.searchFailed(Self.skillMutationMessage(error)))
         }
     }
 

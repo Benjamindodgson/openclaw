@@ -176,11 +176,13 @@ struct RootTabsSourceGuardTests {
         let source = try String(contentsOf: Self.agentProTabSourceURL(), encoding: .utf8)
         let gatewayDataSource = try String(contentsOf: Self.agentProTabGatewayDataSourceURL(), encoding: .utf8)
         let overviewSource = try String(contentsOf: Self.agentProTabOverviewSourceURL(), encoding: .utf8)
+        let skillsSource = try String(contentsOf: Self.agentProTabSkillsSourceURL(), encoding: .utf8)
         let destinationsSource = try String(contentsOf: Self.agentProTabDestinationsSourceURL(), encoding: .utf8)
         let nodesSource = try String(contentsOf: Self.agentProNodesDestinationSourceURL(), encoding: .utf8)
         let dreamingSource = try String(contentsOf: Self.agentProDreamingDestinationSourceURL(), encoding: .utf8)
 
         #expect(!source.contains("ToolbarItem"))
+        #expect(source.contains("@Reducer\nstruct AgentClawHubSearchFeature"))
         #expect(source.contains("@Reducer\nstruct AgentOverviewFilterFeature"))
         #expect(source.contains("@Reducer\nstruct AgentOverviewLoadFeature"))
         #expect(!source.contains("@State var agentRosterFilter"))
@@ -189,9 +191,19 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("@State var overviewErrorText"))
         #expect(!source.contains("@State var overviewLoading"))
         #expect(source.contains("@State var overviewStore: StoreOf<AgentOverviewLoadFeature>"))
+        #expect(!source.contains("@State var clawHubQuery"))
+        #expect(!source.contains("@State var clawHubResults"))
+        #expect(!source.contains("@State var clawHubLoading"))
+        #expect(!source.contains("@State var clawHubErrorText"))
+        #expect(!source.contains("@State var clawHubInstallSlug"))
+        #expect(source.contains("@State var clawHubStore: StoreOf<AgentClawHubSearchFeature>"))
         #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshRequested("))
         #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshLaunched(requestID: requestID))"))
         #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshFinished(snapshot, requestID: requestID))"))
+        #expect(skillsSource.contains("text: self.clawHubQueryBinding"))
+        #expect(skillsSource.contains("self.clawHubStore.send(.searchRequested)"))
+        #expect(skillsSource.contains("self.clawHubStore.send(.searchFinished("))
+        #expect(skillsSource.contains("self.clawHubStore.send(.installRequested(slug: result.slug))"))
         #expect(overviewSource.contains("selection: self.agentRosterFilterBinding"))
         #expect(overviewSource.contains("text: self.agentSearchTextBinding"))
         #expect(overviewSource.contains("self.filterStore.send(.clearFiltersTapped)"))
@@ -967,6 +979,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/AgentProTab+GatewayData.swift")
+    }
+
+    private static func agentProTabSkillsSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/AgentProTab+Skills.swift")
     }
 
     private static func agentProTabDestinationsSourceURL() -> URL {

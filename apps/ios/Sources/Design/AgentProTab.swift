@@ -21,11 +21,7 @@ struct AgentProTab: View {
     @State var skillConfigMessages: [String: SkillEditorMessage] = [:]
     @State var skillAPIKeyDrafts: [String: String] = [:]
     @State var skillEditorSelection: SkillEditorSelection?
-    @State var clawHubQuery: String = ""
-    @State var clawHubResults: [ClawHubSearchResultLite] = []
-    @State var clawHubLoading: Bool = false
-    @State var clawHubErrorText: String?
-    @State var clawHubInstallSlug: String?
+    @State var clawHubStore: StoreOf<AgentClawHubSearchFeature>
     @State var cronActionBusyIDs: Set<String> = []
     @State var cronActionStatusText: String?
 
@@ -126,6 +122,11 @@ struct AgentProTab: View {
         {
             AgentOverviewLoadFeature()
         },
+        clawHubStore: StoreOf<AgentClawHubSearchFeature> = Store(
+            initialState: AgentClawHubSearchFeature.State())
+        {
+            AgentClawHubSearchFeature()
+        },
         filterStore: StoreOf<AgentOverviewFilterFeature> = Store(
             initialState: AgentOverviewFilterFeature.State())
         {
@@ -138,6 +139,7 @@ struct AgentProTab: View {
         self.openSettings = openSettings
         self._navigationStore = State(wrappedValue: navigationStore)
         self._overviewStore = State(wrappedValue: overviewStore)
+        self._clawHubStore = State(wrappedValue: clawHubStore)
         self._filterStore = State(wrappedValue: filterStore)
     }
 
@@ -171,6 +173,32 @@ struct AgentProTab: View {
 
     var overviewLoading: Bool {
         self.overviewStore.isLoading
+    }
+
+    var clawHubQuery: String {
+        self.clawHubStore.query
+    }
+
+    var clawHubQueryBinding: Binding<String> {
+        Binding(
+            get: { self.clawHubStore.query },
+            set: { self.clawHubStore.send(.queryChanged($0)) })
+    }
+
+    var clawHubResults: [ClawHubSearchResultLite] {
+        self.clawHubStore.results
+    }
+
+    var clawHubLoading: Bool {
+        self.clawHubStore.isLoading
+    }
+
+    var clawHubErrorText: String? {
+        self.clawHubStore.errorText
+    }
+
+    var clawHubInstallSlug: String? {
+        self.clawHubStore.installingSlug
     }
 
     private var overviewNavigation: some View {
@@ -210,6 +238,75 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+@Reducer
+struct AgentClawHubSearchFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var query = ""
+        var results: [ClawHubSearchResultLite] = []
+        var isLoading = false
+        var errorText: String?
+        var installingSlug: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case installFailed(slug: String, message: String)
+        case installFinished(slug: String)
+        case installRequested(slug: String)
+        case queryChanged(String)
+        case searchFailed(String)
+        case searchFinished([ClawHubSearchResultLite])
+        case searchRequested
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .queryChanged(query):
+                state.query = query
+                return .none
+
+            case .searchRequested:
+                state.isLoading = true
+                state.errorText = nil
+                return .none
+
+            case let .searchFinished(results):
+                state.results = results
+                state.isLoading = false
+                return .none
+
+            case let .searchFailed(message):
+                state.errorText = message
+                state.isLoading = false
+                return .none
+
+            case let .installRequested(slug):
+                state.installingSlug = slug
+                state.errorText = nil
+                return .none
+
+            case let .installFinished(slug):
+                if state.installingSlug == slug {
+                    state.installingSlug = nil
+                }
+                return .none
+
+            case let .installFailed(slug, message):
+                state.errorText = message
+                if state.installingSlug == slug {
+                    state.installingSlug = nil
+                }
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }
 
