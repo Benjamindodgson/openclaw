@@ -167,7 +167,7 @@ extension SettingsProTab {
 
     func syncSettingsState() {
         self.pushEnrollmentConsentStore.send(.refresh)
-        self.manualGatewayPortText = self.manualGatewayPort > 0 ? String(self.manualGatewayPort) : ""
+        self.manualGatewayPortStore.send(.manualGatewayPortSynced(self.manualGatewayPort))
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
         self.shareInstructionStore.send(
             .defaultShareInstructionLoaded(ShareToAgentSettings.loadDefaultInstruction()))
@@ -238,8 +238,7 @@ extension SettingsProTab {
 
     func applyGatewayLink(_ link: GatewayConnectDeepLink) {
         self.manualGatewayHost = link.host
-        self.manualGatewayPort = link.port
-        self.manualGatewayPortText = String(link.port)
+        self.manualGatewayPortStore.send(.manualGatewayPortSynced(link.port))
         self.manualGatewayTLS = link.tls
         let instanceId = GatewaySettingsStore.currentInstanceID()
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
@@ -318,7 +317,7 @@ extension SettingsProTab {
         self.pendingManualAuthOverride = nil
         await self.gatewayController.connectManual(
             host: host,
-            port: self.manualGatewayPort,
+            port: self.manualGatewayPortStore.manualGatewayPort,
             useTLS: self.manualGatewayTLS,
             authOverride: authOverride)
     }
@@ -526,29 +525,19 @@ extension SettingsProTab {
 
     var manualPortBinding: Binding<String> {
         Binding(
-            get: { self.manualGatewayPortText },
-            set: { newValue in
-                let filtered = newValue.filter(\.isNumber)
-                self.manualGatewayPortText = filtered
-                self.manualGatewayPort = Int(filtered) ?? 0
-            })
+            get: { self.manualGatewayPortStore.manualGatewayPortText },
+            set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged($0)) })
     }
 
     var manualPortIsValid: Bool {
-        if self.manualGatewayPortText.isEmpty { return true }
-        return self.manualGatewayPort >= 1 && self.manualGatewayPort <= 65535
+        self.manualGatewayPortStore.isManualPortValid
     }
 
     func resolvedManualPort(host: String) -> Int? {
-        if self.manualGatewayPort > 0 {
-            return self.manualGatewayPort <= 65535 ? self.manualGatewayPort : nil
-        }
-        let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        if self.manualGatewayTLS, trimmed.lowercased().hasSuffix(".ts.net") {
-            return 443
-        }
-        return 18789
+        SettingsManualGatewayPortFeature.State.resolvedManualPort(
+            manualGatewayPort: self.manualGatewayPortStore.manualGatewayPort,
+            host: host,
+            useTLS: self.manualGatewayTLS)
     }
 
     var setupStatusLine: String? {
