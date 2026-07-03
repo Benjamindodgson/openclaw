@@ -150,15 +150,16 @@ extension AgentProTab {
         action: () async throws -> Void) async
     {
         guard self.liveGatewayConnected else { return }
-        self.cronActionBusyIDs.insert(job.id)
-        self.cronActionStatusText = nil
-        defer { self.cronActionBusyIDs.remove(job.id) }
+        self.cronActionStore.send(.actionStarted(id: job.id))
         do {
             try await action()
-            self.cronActionStatusText = success
+            self.cronActionStore.send(.actionSucceeded(message: success))
             await self.refreshOverview(force: true)
+            self.cronActionStore.send(.actionFinished(id: job.id))
         } catch {
-            self.cronActionStatusText = Self.skillMutationMessage(error)
+            self.cronActionStore.send(.actionFailed(
+                id: job.id,
+                message: Self.skillMutationMessage(error)))
         }
     }
 
