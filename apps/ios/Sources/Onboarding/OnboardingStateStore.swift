@@ -192,7 +192,9 @@ struct OnboardingStatusFeature {
         var connectingGatewayID: String?
         var didMarkCompleted = false
         var issue: GatewayConnectionIssue = .none
+        var lastPairingAutoResumeAttemptAt: Date?
         var pairingRequestId: String?
+        var shouldResumePairingAutomatically = false
         var shouldShowAuthStep = false
         var statusLine: String
 
@@ -202,6 +204,7 @@ struct OnboardingStatusFeature {
     }
 
     enum Action: Equatable, Sendable {
+        case automaticPairingResumeRequested(now: Date)
         case appleReviewDemoModeEnabled
         case connectionFinished
         case connectionIssueDetected(
@@ -229,6 +232,16 @@ struct OnboardingStatusFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .automaticPairingResumeRequested(now):
+                state.shouldResumePairingAutomatically = false
+                guard state.issue.needsPairing, state.connectingGatewayID == nil else { return .none }
+                if let last = state.lastPairingAutoResumeAttemptAt, now.timeIntervalSince(last) < 6 {
+                    return .none
+                }
+                state.lastPairingAutoResumeAttemptAt = now
+                state.shouldResumePairingAutomatically = true
+                return .none
+
             case .appleReviewDemoModeEnabled:
                 state.connectingGatewayID = nil
                 state.connectMessage = "Apple Review demo mode enabled."
@@ -284,7 +297,9 @@ struct OnboardingStatusFeature {
                 state.connectingGatewayID = nil
                 state.connectMessage = nil
                 state.issue = .none
+                state.lastPairingAutoResumeAttemptAt = nil
                 state.pairingRequestId = nil
+                state.shouldResumePairingAutomatically = false
                 state.shouldShowAuthStep = false
                 state.statusLine = "Opening QR scanner…"
                 return .none
@@ -300,7 +315,9 @@ struct OnboardingStatusFeature {
                 state.connectingGatewayID = nil
                 state.connectMessage = nil
                 state.issue = .none
+                state.lastPairingAutoResumeAttemptAt = nil
                 state.pairingRequestId = nil
+                state.shouldResumePairingAutomatically = false
                 state.shouldShowAuthStep = false
                 state.statusLine = "Scan a fresh setup QR code from this gateway."
                 return .none
@@ -320,6 +337,7 @@ struct OnboardingStatusFeature {
 
             case .pairingResumeStarted:
                 state.issue = .none
+                state.shouldResumePairingAutomatically = false
                 state.shouldShowAuthStep = false
                 state.connectMessage = "Retrying after approval…"
                 state.statusLine = "Retrying after approval…"

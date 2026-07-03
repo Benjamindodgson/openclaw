@@ -34,7 +34,6 @@ struct OnboardingWizardView: View {
         OnboardingPresentationFeature()
     }
 
-    @State private var lastPairingAutoResumeAttemptAt: Date?
     @State private var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature> = Store(
         initialState: OnboardingConnectionFormFeature.State())
@@ -863,14 +862,8 @@ extension OnboardingWizardView {
     private func attemptAutomaticPairingResumeIfNeeded() {
         guard self.scenePhase == .active else { return }
         guard self.step == .auth else { return }
-        guard self.issue.needsPairing else { return }
-        guard self.connectingGatewayID == nil else { return }
-
-        let now = Date()
-        if let last = self.lastPairingAutoResumeAttemptAt, now.timeIntervalSince(last) < 6 {
-            return
-        }
-        self.lastPairingAutoResumeAttemptAt = now
+        self.statusStore.send(.automaticPairingResumeRequested(now: Date()))
+        guard self.statusStore.shouldResumePairingAutomatically else { return }
         self.resumeAfterPairingApprovalInBackground()
     }
 

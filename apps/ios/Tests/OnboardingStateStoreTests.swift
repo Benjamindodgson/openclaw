@@ -314,6 +314,53 @@ import Testing
         #expect(store.state.shouldShowAuthStep)
     }
 
+    @Test @MainActor func `status reducer throttles automatic pairing resume attempts`() async {
+        let store = TestStore(initialState: OnboardingStatusFeature.State()) {
+            OnboardingStatusFeature()
+        }
+        let firstAttempt = Date(timeIntervalSince1970: 100)
+
+        await store.send(.automaticPairingResumeRequested(now: firstAttempt))
+        #expect(!store.state.shouldResumePairingAutomatically)
+
+        await store.send(.connectionIssueDetected(
+            issue: .pairingRequired(requestId: "pair-1"),
+            requestId: "pair-1",
+            pauseReconnect: false,
+            message: "Pairing required",
+            statusText: ""))
+        {
+            $0.connectMessage = "Pairing required"
+            $0.issue = .pairingRequired(requestId: "pair-1")
+            $0.pairingRequestId = "pair-1"
+            $0.shouldShowAuthStep = true
+            $0.statusLine = "Pairing required"
+        }
+
+        await store.send(.automaticPairingResumeRequested(now: firstAttempt)) {
+            $0.lastPairingAutoResumeAttemptAt = firstAttempt
+            $0.shouldResumePairingAutomatically = true
+        }
+
+        await store.send(.automaticPairingResumeRequested(now: firstAttempt.addingTimeInterval(3))) {
+            $0.shouldResumePairingAutomatically = false
+        }
+
+        let laterAttempt = firstAttempt.addingTimeInterval(7)
+        await store.send(.automaticPairingResumeRequested(now: laterAttempt)) {
+            $0.lastPairingAutoResumeAttemptAt = laterAttempt
+            $0.shouldResumePairingAutomatically = true
+        }
+
+        await store.send(.connectionActivityStarted(id: "retry-auto")) {
+            $0.connectingGatewayID = "retry-auto"
+        }
+
+        await store.send(.automaticPairingResumeRequested(now: laterAttempt.addingTimeInterval(7))) {
+            $0.shouldResumePairingAutomatically = false
+        }
+    }
+
     @Test @MainActor func `credentials reducer owns gateway token and password`() async {
         let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
             OnboardingCredentialsFeature()
