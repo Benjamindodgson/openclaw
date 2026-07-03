@@ -63,10 +63,13 @@ struct OnboardingWizardView: View {
     @State private var didMarkCompleted = false
     @State private var pairingRequestId: String?
     @State private var discoveryRestartTask: Task<Void, Never>?
-    @State private var showQRScanner: Bool = false
-    @State private var scannerError: String?
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var showGatewayProblemDetails: Bool = false
+    @State private var presentationStore: StoreOf<OnboardingPresentationFeature> = Store(
+        initialState: OnboardingPresentationFeature.State())
+    {
+        OnboardingPresentationFeature()
+    }
+
     @State private var lastPairingAutoResumeAttemptAt: Date?
     @State private var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State private var setupCode: String = ""
@@ -102,6 +105,30 @@ struct OnboardingWizardView: View {
 
     private var currentProblem: GatewayConnectionProblem? {
         self.appModel.lastGatewayProblem
+    }
+
+    private var qrScannerPresentation: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showQRScanner },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.qrScannerButtonTapped)
+                } else {
+                    self.presentationStore.send(.qrScannerDismissed)
+                }
+            })
+    }
+
+    private var gatewayProblemDetailsPresentation: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showGatewayProblemDetails },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
+                } else {
+                    self.presentationStore.send(.gatewayProblemDetailsDismissed)
+                }
+            })
     }
 
     var body: some View {
@@ -171,14 +198,14 @@ struct OnboardingWizardView: View {
         }
         .gatewayTrustPromptAlert(store: self.makeGatewayTrustPromptStore())
         .alert("QR Scanner Unavailable", isPresented: Binding(
-            get: { self.scannerError != nil },
-            set: { if !$0 { self.scannerError = nil } }))
+            get: { self.presentationStore.scannerError != nil },
+            set: { if !$0 { self.presentationStore.send(.qrScannerErrorDismissed) } }))
         {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(self.scannerError ?? "")
+            Text(self.presentationStore.scannerError ?? "")
         }
-        .sheet(isPresented: self.$showQRScanner) {
+        .sheet(isPresented: self.qrScannerPresentation) {
                 NavigationStack {
                     QRScannerView(
                         onGatewayLink: { link in
@@ -188,19 +215,18 @@ struct OnboardingWizardView: View {
                             self.handleScannedSetupCode(code)
                         },
                         onError: { error in
-                            self.showQRScanner = false
                             self.statusLine = "Scanner error: \(error)"
-                            self.scannerError = error
+                            self.presentationStore.send(.qrScannerErrorReceived(error))
                         },
                         onDismiss: {
-                            self.showQRScanner = false
+                            self.presentationStore.send(.qrScannerDismissed)
                         })
                         .ignoresSafeArea()
                         .navigationTitle("Scan QR Code")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
-                                Button("Cancel") { self.showQRScanner = false }
+                                Button("Cancel") { self.presentationStore.send(.qrScannerDismissed) }
                             }
                             ToolbarItem(placement: .topBarTrailing) {
                                 PhotosPicker(selection: self.$selectedPhoto, matching: .images) {
@@ -214,8 +240,7 @@ struct OnboardingWizardView: View {
                     self.selectedPhoto = nil
                     Task {
                         guard let data = try? await item.loadTransferable(type: Data.self) else {
-                            self.showQRScanner = false
-                            self.scannerError = "Could not load the selected image."
+                            self.presentationStore.send(.qrScannerErrorReceived("Could not load the selected image."))
                             return
                         }
                         if let message = self.detectQRCode(from: data) {
@@ -228,12 +253,12 @@ struct OnboardingWizardView: View {
                                 return
                             }
                         }
-                        self.showQRScanner = false
-                        self.scannerError = "No valid QR code found in the selected image."
+                        self.presentationStore.send(.qrScannerErrorReceived(
+                            "No valid QR code found in the selected image."))
                     }
                 }
             }
-            .sheet(isPresented: self.$showGatewayProblemDetails) {
+            .sheet(isPresented: self.gatewayProblemDetailsPresentation) {
                 if let currentProblem = self.currentProblem {
                     GatewayProblemDetailsSheet(
                         problem: currentProblem,
@@ -286,7 +311,7 @@ struct OnboardingWizardView: View {
             }
             .onChange(of: self.appModel.gatewayServerName) { _, newValue in
                 guard newValue != nil else { return }
-                self.showQRScanner = false
+                self.presentationStore.send(.qrScannerDismissed)
                 self.statusLine = "Connected."
                 if !self.didMarkCompleted, let selectedMode {
                     OnboardingStateStore.markCompleted(mode: selectedMode)
@@ -312,7 +337,7 @@ struct OnboardingWizardView: View {
             statusLine: self.statusLine,
             onScanQRCode: {
                 self.statusLine = "Opening QR scanner…"
-                self.showQRScanner = true
+                self.presentationStore.send(.qrScannerButtonTapped)
             },
             onManualSetup: {
                 self.step = .mode
@@ -521,7 +546,7 @@ struct OnboardingWizardView: View {
                             Task { await self.handleGatewayProblemPrimaryAction(problem) }
                         },
                         onShowDetails: {
-                            self.showGatewayProblemDetails = true
+                            self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
                         })
                 } else if self.issue.needsAuthToken {
                     Text("Gateway rejected credentials. Scan a fresh QR code or update token/password.")
@@ -735,7 +760,7 @@ extension OnboardingWizardView {
     private func handleScannedLink(_ link: GatewayConnectDeepLink) {
         self.applyGatewayLink(link)
         self.setupCodeStatus = nil
-        self.showQRScanner = false
+        self.presentationStore.send(.qrScannerDismissed)
         self.connectMessage = "Connecting via QR code..."
         self.statusLine = "QR loaded. Connecting to \(link.host):\(link.port)..."
         self.step = .connect
@@ -769,7 +794,7 @@ extension OnboardingWizardView {
 
     private func handleScannedSetupCode(_ code: String) {
         guard AppleReviewDemoMode.isSetupCode(code) else { return }
-        self.showQRScanner = false
+        self.presentationStore.send(.qrScannerDismissed)
         self.connectingGatewayID = nil
         self.connectMessage = "Apple Review demo mode enabled."
         self.statusLine = "Apple Review demo mode enabled."
@@ -785,7 +810,7 @@ extension OnboardingWizardView {
         self.issue = .none
         self.pairingRequestId = nil
         self.statusLine = "Opening QR scanner…"
-        self.showQRScanner = true
+        self.presentationStore.send(.qrScannerButtonTapped)
     }
 
     private func resumeAfterPairingApproval() {
@@ -1063,7 +1088,7 @@ extension OnboardingWizardView {
             self.pairingRequestId = nil
             self.statusLine = "Scan a fresh setup QR code from this gateway."
             self.step = .connect
-            self.showQRScanner = true
+            self.presentationStore.send(.qrScannerButtonTapped)
             return
         }
         if problem.canTrustRotatedCertificate {

@@ -134,6 +134,33 @@ import Testing
         }
     }
 
+    @Test @MainActor func `presentation reducer owns scanner and problem detail state`() async {
+        let store = TestStore(initialState: OnboardingPresentationFeature.State()) {
+            OnboardingPresentationFeature()
+        }
+
+        await store.send(.qrScannerButtonTapped) {
+            $0.showQRScanner = true
+        }
+
+        await store.send(.qrScannerErrorReceived("Camera unavailable")) {
+            $0.scannerError = "Camera unavailable"
+            $0.showQRScanner = false
+        }
+
+        await store.send(.qrScannerErrorDismissed) {
+            $0.scannerError = nil
+        }
+
+        await store.send(.gatewayProblemDetailsButtonTapped) {
+            $0.showGatewayProblemDetails = true
+        }
+
+        await store.send(.gatewayProblemDetailsDismissed) {
+            $0.showGatewayProblemDetails = false
+        }
+    }
+
     private struct TestDefaults {
         var suiteName: String
         var defaults: UserDefaults

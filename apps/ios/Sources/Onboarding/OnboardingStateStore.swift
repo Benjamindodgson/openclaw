@@ -104,6 +104,60 @@ struct OnboardingStateFeature {
     }
 }
 
+@Reducer
+struct OnboardingPresentationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var scannerError: String?
+        var showGatewayProblemDetails = false
+        var showQRScanner = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case gatewayProblemDetailsButtonTapped
+        case gatewayProblemDetailsDismissed
+        case qrScannerButtonTapped
+        case qrScannerDismissed
+        case qrScannerErrorDismissed
+        case qrScannerErrorReceived(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .gatewayProblemDetailsButtonTapped:
+                state.showGatewayProblemDetails = true
+                return .none
+
+            case .gatewayProblemDetailsDismissed:
+                state.showGatewayProblemDetails = false
+                return .none
+
+            case .qrScannerButtonTapped:
+                state.showQRScanner = true
+                return .none
+
+            case .qrScannerDismissed:
+                state.showQRScanner = false
+                return .none
+
+            case .qrScannerErrorDismissed:
+                state.scannerError = nil
+                return .none
+
+            case let .qrScannerErrorReceived(error):
+                state.showQRScanner = false
+                state.scannerError = error
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 enum OnboardingStateStore {
     private static let completedDefaultsKey = "onboarding.completed"
     private static let firstRunIntroSeenDefaultsKey = "onboarding.first_run_intro_seen"
