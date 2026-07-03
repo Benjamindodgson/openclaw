@@ -936,6 +936,34 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway credentials derive setup auth from link`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: "bootstrap-6",
+            token: "token-6",
+            password: "password-6")
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature()
+        }
+
+        await store.send(.setupLinkApplied(link)) {
+            $0.gatewayToken = "token-6"
+            $0.gatewayPassword = "password-6"
+            $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+                token: "token-6",
+                bootstrapToken: "bootstrap-6",
+                password: "password-6")
+            $0.setupAuthPersistenceRequest = setupAuth
+        }
+
+        await store.send(.setupAuthPersistenceRequestHandled) {
+            $0.setupAuthPersistenceRequest = nil
+        }
+    }
+
     @Test func `settings gateway credentials clear consumed pending override`() async {
         var initialState = SettingsGatewayCredentialsFeature.State()
         initialState.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(

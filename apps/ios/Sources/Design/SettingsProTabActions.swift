@@ -350,8 +350,11 @@ extension SettingsProTab {
     func applyGatewayLink(_ link: GatewayConnectDeepLink) {
         self.applyManualGatewaySetupLink(host: link.host, tls: link.tls)
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(link.port))
+        self.gatewayCredentialsStore.send(.setupLinkApplied(link))
+        guard let setupAuth = self.gatewayCredentialsStore.setupAuthPersistenceRequest else { return }
+        defer { self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled) }
+
         let instanceId = GatewaySettingsStore.currentInstanceID()
-        let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
         if setupAuth.hasBootstrapToken {
             GatewayOnboardingReset.prepareForBootstrapPairing(appModel: self.appModel, instanceId: instanceId)
         }
@@ -368,7 +371,6 @@ extension SettingsProTab {
                 GatewaySettingsStore.saveGatewayPassword(setupAuth.password, instanceId: instanceId)
             }
         }
-        self.gatewayCredentialsStore.send(.setupAuthApplied(setupAuth))
     }
 
     func openGatewayQRScanner() {
