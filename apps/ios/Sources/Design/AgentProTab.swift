@@ -10,12 +10,10 @@ struct AgentProTab: View {
     let headerTitle: String
     let openSettings: (() -> Void)?
     @State private var navigationStore: StoreOf<AgentNavigationFeature>
+    @State var filterStore: StoreOf<AgentOverviewFilterFeature>
     @State var overview: AgentOverviewSnapshot?
     @State var overviewErrorText: String?
     @State var overviewLoading: Bool = false
-    @State var agentRosterFilter: AgentRosterFilter = .all
-    @State var agentSearchPresented = false
-    @State var agentSearchText = ""
     @State var skillFilter: String = ""
     @State var skillStatusFilter: SkillStatusFilter = .all
     @State var skillMutationBusyKeys: Set<String> = []
@@ -124,6 +122,11 @@ struct AgentProTab: View {
             initialState: AgentNavigationFeature.State())
         {
             AgentNavigationFeature()
+        },
+        filterStore: StoreOf<AgentOverviewFilterFeature> = Store(
+            initialState: AgentOverviewFilterFeature.State())
+        {
+            AgentOverviewFilterFeature()
         })
     {
         self.directRoute = directRoute
@@ -131,6 +134,7 @@ struct AgentProTab: View {
         self.headerTitle = headerTitle
         self.openSettings = openSettings
         self._navigationStore = State(wrappedValue: navigationStore)
+        self._filterStore = State(wrappedValue: filterStore)
     }
 
     var body: some View {
@@ -212,6 +216,55 @@ struct AgentNavigationFeature {
             switch action {
             case let .navigationPathChanged(navigationPath):
                 state.navigationPath = navigationPath
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
+struct AgentOverviewFilterFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var rosterFilter: AgentProTab.AgentRosterFilter = .all
+        var searchPresented = false
+        var searchText = ""
+
+        var hasActiveFilters: Bool {
+            self.rosterFilter != .all
+                || !self.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case clearFiltersTapped
+        case rosterFilterChanged(AgentProTab.AgentRosterFilter)
+        case searchButtonTapped
+        case searchTextChanged(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .clearFiltersTapped:
+                state.rosterFilter = .all
+                state.searchText = ""
+                return .none
+
+            case let .rosterFilterChanged(filter):
+                state.rosterFilter = filter
+                return .none
+
+            case .searchButtonTapped:
+                state.searchPresented.toggle()
+                return .none
+
+            case let .searchTextChanged(text):
+                state.searchText = text
                 return .none
             }
         }

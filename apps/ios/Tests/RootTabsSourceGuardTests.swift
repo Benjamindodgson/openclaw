@@ -174,11 +174,18 @@ struct RootTabsSourceGuardTests {
 
     @Test func `agents direct route keeps single sidebar control`() throws {
         let source = try String(contentsOf: Self.agentProTabSourceURL(), encoding: .utf8)
+        let overviewSource = try String(contentsOf: Self.agentProTabOverviewSourceURL(), encoding: .utf8)
         let destinationsSource = try String(contentsOf: Self.agentProTabDestinationsSourceURL(), encoding: .utf8)
         let nodesSource = try String(contentsOf: Self.agentProNodesDestinationSourceURL(), encoding: .utf8)
         let dreamingSource = try String(contentsOf: Self.agentProDreamingDestinationSourceURL(), encoding: .utf8)
 
         #expect(!source.contains("ToolbarItem"))
+        #expect(source.contains("@Reducer\nstruct AgentOverviewFilterFeature"))
+        #expect(!source.contains("@State var agentRosterFilter"))
+        #expect(!source.contains("@State var agentSearchText"))
+        #expect(overviewSource.contains("selection: self.agentRosterFilterBinding"))
+        #expect(overviewSource.contains("text: self.agentSearchTextBinding"))
+        #expect(overviewSource.contains("self.filterStore.send(.clearFiltersTapped)"))
         #expect(source.contains("NavigationStack(path: self.navigationPathBinding)"))
         #expect(source.contains("set: { self.navigationStore.send(.navigationPathChanged($0)) }"))
         #expect(source
