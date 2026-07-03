@@ -568,6 +568,63 @@ import Testing
         }
     }
 
+    @Test @MainActor func `setup code reducer classifies gateway apply requests`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = OnboardingSetupCodeFeature.State()
+        initialState.setupCode = "  wss://gateway.example.com:443  "
+        let store = TestStore(initialState: initialState) {
+            OnboardingSetupCodeFeature()
+        }
+
+        await store.send(.applyRequested) {
+            $0.applyResult = .gatewayLink(link)
+            $0.setupCode = ""
+            $0.status = "Setup code applied. Connecting..."
+        }
+
+        await store.send(.applyResultHandled) {
+            $0.applyResult = nil
+        }
+    }
+
+    @Test @MainActor func `setup code reducer reports failed apply requests`() async {
+        let store = TestStore(initialState: OnboardingSetupCodeFeature.State()) {
+            OnboardingSetupCodeFeature()
+        }
+
+        await store.send(.applyRequested) {
+            $0.status = "Paste a setup code to continue."
+        }
+
+        await store.send(.setupCodeChanged("not a setup code")) {
+            $0.setupCode = "not a setup code"
+        }
+
+        await store.send(.applyRequested) {
+            $0.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+        }
+    }
+
+    @Test @MainActor func `setup code reducer classifies apple review apply requests`() async {
+        var initialState = OnboardingSetupCodeFeature.State()
+        initialState.setupCode = "  APPLE-REVIEW-DEMO  "
+        let store = TestStore(initialState: initialState) {
+            OnboardingSetupCodeFeature()
+        }
+
+        await store.send(.applyRequested) {
+            $0.applyResult = .appleReviewDemoSetupCode("APPLE-REVIEW-DEMO")
+            $0.setupCode = ""
+            $0.status = "Apple Review demo mode enabled."
+        }
+    }
+
     @Test @MainActor func `connection form reducer normalizes ports and mode defaults`() async {
         let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
             OnboardingConnectionFormFeature()

@@ -756,33 +756,24 @@ extension OnboardingWizardView {
     }
 
     private func applySetupCodeAndConnect() async {
-        self.setupCodeStore.send(.applyStarted)
-        let raw = self.setupCodeStore.trimmedSetupCode
-        guard !raw.isEmpty else {
-            self.setupCodeStore.send(.emptyCodeSubmitted)
-            return
-        }
+        self.setupCodeStore.send(.applyRequested)
+        guard let result = self.setupCodeStore.applyResult else { return }
+        self.setupCodeStore.send(.applyResultHandled)
 
-        if AppleReviewDemoMode.isSetupCode(raw) {
-            self.setupCodeStore.send(.appleReviewDemoCodeAccepted)
-            self.handleScannedSetupCode(raw)
-            return
-        }
+        switch result {
+        case let .appleReviewDemoSetupCode(code):
+            self.handleScannedSetupCode(code)
 
-        guard let link = GatewayConnectDeepLink.fromSetupInput(raw) else {
-            self.setupCodeStore.send(.invalidSetupCodeSubmitted)
-            return
+        case let .gatewayLink(link):
+            self.statusStore.send(.connectionStarted(
+                id: "setup-code",
+                message: "Connecting via setup code...",
+                statusLine: "Setup code loaded. Connecting to \(link.host):\(link.port)...",
+                clearsIssue: false))
+            self.applyGatewayLink(link)
+            self.stepStore.send(.stepChanged(.connect))
+            await self.connectManual()
         }
-
-        self.statusStore.send(.connectionStarted(
-            id: "setup-code",
-            message: "Connecting via setup code...",
-            statusLine: "Setup code loaded. Connecting to \(link.host):\(link.port)...",
-            clearsIssue: false))
-        self.applyGatewayLink(link)
-        self.setupCodeStore.send(.setupCodeAccepted)
-        self.stepStore.send(.stepChanged(.connect))
-        await self.connectManual()
     }
 
     private func handleScannedLink(_ link: GatewayConnectDeepLink) {

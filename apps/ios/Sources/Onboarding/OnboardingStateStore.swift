@@ -642,6 +642,7 @@ struct OnboardingSetupCodeFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var applyResult: ApplyResult?
         var setupCode = ""
         var status: String?
 
@@ -654,8 +655,15 @@ struct OnboardingSetupCodeFeature {
         }
     }
 
+    enum ApplyResult: Equatable, Sendable {
+        case appleReviewDemoSetupCode(String)
+        case gatewayLink(GatewayConnectDeepLink)
+    }
+
     enum Action: Equatable, Sendable {
         case appleReviewDemoCodeAccepted
+        case applyRequested
+        case applyResultHandled
         case applyStarted
         case emptyCodeSubmitted
         case invalidSetupCodeSubmitted
@@ -670,23 +678,57 @@ struct OnboardingSetupCodeFeature {
         Reduce { state, action in
             switch action {
             case .appleReviewDemoCodeAccepted:
+                state.applyResult = nil
                 state.setupCode = ""
                 state.status = "Apple Review demo mode enabled."
                 return .none
 
+            case .applyRequested:
+                state.applyResult = nil
+                state.status = nil
+                let raw = state.trimmedSetupCode
+                guard !raw.isEmpty else {
+                    state.status = "Paste a setup code to continue."
+                    return .none
+                }
+
+                if AppleReviewDemoMode.isSetupCode(raw) {
+                    state.setupCode = ""
+                    state.status = "Apple Review demo mode enabled."
+                    state.applyResult = .appleReviewDemoSetupCode(raw)
+                    return .none
+                }
+
+                guard let link = GatewayConnectDeepLink.fromSetupInput(raw) else {
+                    state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+                    return .none
+                }
+                state.setupCode = ""
+                state.status = "Setup code applied. Connecting..."
+                state.applyResult = .gatewayLink(link)
+                return .none
+
+            case .applyResultHandled:
+                state.applyResult = nil
+                return .none
+
             case .applyStarted:
+                state.applyResult = nil
                 state.status = nil
                 return .none
 
             case .emptyCodeSubmitted:
+                state.applyResult = nil
                 state.status = "Paste a setup code to continue."
                 return .none
 
             case .invalidSetupCodeSubmitted:
+                state.applyResult = nil
                 state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
                 return .none
 
             case .setupCodeAccepted:
+                state.applyResult = nil
                 state.setupCode = ""
                 state.status = "Setup code applied. Connecting..."
                 return .none
