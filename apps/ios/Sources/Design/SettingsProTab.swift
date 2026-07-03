@@ -824,6 +824,56 @@ struct SettingsDebugOptionsFeature {
 }
 
 @Reducer
+struct SettingsVoiceControlFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var talkEnabled = false
+        var voiceWakeEnabled = false
+
+        var detailText: String {
+            if self.talkEnabled, self.voiceWakeEnabled { return "Talk + Wake" }
+            if self.talkEnabled { return "Talk on" }
+            if self.voiceWakeEnabled { return "Wake on" }
+            return "Off"
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case controlsSynced(talkEnabled: Bool, voiceWakeEnabled: Bool)
+        case talkDisabledForAppleReview
+        case talkEnabledChanged(Bool)
+        case voiceWakeEnabledChanged(Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .controlsSynced(talkEnabled, voiceWakeEnabled):
+                state.talkEnabled = talkEnabled
+                state.voiceWakeEnabled = voiceWakeEnabled
+                return .none
+
+            case .talkDisabledForAppleReview:
+                state.talkEnabled = false
+                return .none
+
+            case let .talkEnabledChanged(enabled):
+                state.talkEnabled = enabled
+                return .none
+
+            case let .voiceWakeEnabledChanged(enabled):
+                state.voiceWakeEnabled = enabled
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct SettingsTalkPreferencesFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -925,7 +975,7 @@ struct SettingsProTab: View {
     @AppStorage("camera.enabled") var storedCameraEnabled: Bool = true
     @AppStorage("location.enabledMode") var storedLocationModeRaw: String = OpenClawLocationMode.off.rawValue
     @AppStorage("screen.preventSleep") var storedPreventSleep: Bool = true
-    @AppStorage("talk.enabled") var talkEnabled: Bool = false
+    @AppStorage("talk.enabled") var storedTalkEnabled: Bool = false
     @AppStorage(TalkModeProviderSelection.storageKey) var storedTalkProviderSelectionRaw: String =
         TalkModeProviderSelection.gatewayDefault.rawValue
     @AppStorage(TalkModeRealtimeVoiceSelection.storageKey) var storedTalkRealtimeVoiceSelectionRaw: String = ""
@@ -934,7 +984,7 @@ struct SettingsProTab: View {
     @AppStorage("talk.background.enabled") var storedTalkBackgroundEnabled: Bool = false
     @AppStorage(TalkDefaults.speakerphoneEnabledKey) var storedTalkSpeakerphoneEnabled: Bool =
         TalkDefaults.speakerphoneEnabledByDefault
-    @AppStorage(VoiceWakePreferences.enabledKey) var voiceWakeEnabled: Bool = false
+    @AppStorage(VoiceWakePreferences.enabledKey) var storedVoiceWakeEnabled: Bool = false
     @AppStorage("gateway.autoconnect") var storedGatewayAutoConnect: Bool = false
     @AppStorage("gateway.manual.enabled") var storedManualGatewayEnabled: Bool = false
     @AppStorage("gateway.manual.host") var storedManualGatewayHost: String = ""
@@ -1004,6 +1054,12 @@ struct SettingsProTab: View {
         initialState: SettingsDebugOptionsFeature.State())
     {
         SettingsDebugOptionsFeature()
+    }
+
+    @State var voiceControlStore: StoreOf<SettingsVoiceControlFeature> = Store(
+        initialState: SettingsVoiceControlFeature.State())
+    {
+        SettingsVoiceControlFeature()
     }
 
     @State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature> = Store(
@@ -1209,6 +1265,12 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedPreventSleep) { _, newValue in
                 self.deviceCapabilityStore.send(.preventSleepChanged(newValue))
+            }
+            .onChange(of: self.storedTalkEnabled) { _, _ in
+                self.syncVoiceControlState()
+            }
+            .onChange(of: self.storedVoiceWakeEnabled) { _, _ in
+                self.syncVoiceControlState()
             }
             .onChange(of: self.storedTalkProviderSelectionRaw) { _, _ in
                 self.syncTalkPreferencesState()

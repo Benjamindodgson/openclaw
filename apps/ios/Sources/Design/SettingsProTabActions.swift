@@ -176,6 +176,7 @@ extension SettingsProTab {
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
             preventSleep: self.storedPreventSleep))
+        self.syncVoiceControlState()
         self.syncTalkPreferencesState()
         self.locationStore.send(.locationModeSynced(self.storedLocationModeRaw))
         self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
@@ -192,6 +193,12 @@ extension SettingsProTab {
         self.gatewayCredentialsStore.send(.credentialsLoaded(
             token: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? "",
             password: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""))
+    }
+
+    func syncVoiceControlState() {
+        self.voiceControlStore.send(.controlsSynced(
+            talkEnabled: self.storedTalkEnabled,
+            voiceWakeEnabled: self.storedVoiceWakeEnabled))
     }
 
     func syncTalkPreferencesState() {
@@ -564,6 +571,14 @@ extension SettingsProTab {
         self.deviceCapabilityStore.preventSleep
     }
 
+    var talkEnabled: Bool {
+        self.voiceControlStore.talkEnabled
+    }
+
+    var voiceWakeEnabled: Bool {
+        self.voiceControlStore.voiceWakeEnabled
+    }
+
     var cameraEnabledBinding: Binding<Bool> {
         Binding(
             get: { self.deviceCapabilityStore.cameraEnabled },
@@ -584,6 +599,36 @@ extension SettingsProTab {
     func updatePreventSleep(_ enabled: Bool) {
         self.deviceCapabilityStore.send(.preventSleepChanged(enabled))
         self.storedPreventSleep = enabled
+    }
+
+    var talkEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { self.voiceControlStore.talkEnabled },
+            set: { self.updateTalkEnabled($0) })
+    }
+
+    var voiceWakeEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { self.voiceControlStore.voiceWakeEnabled },
+            set: { self.updateVoiceWakeEnabled($0) })
+    }
+
+    func updateTalkEnabled(_ enabled: Bool) {
+        guard !self.appModel.isAppleReviewDemoModeEnabled else {
+            self.voiceControlStore.send(.talkDisabledForAppleReview)
+            self.storedTalkEnabled = false
+            self.appModel.setTalkEnabled(false)
+            return
+        }
+        self.voiceControlStore.send(.talkEnabledChanged(enabled))
+        self.storedTalkEnabled = enabled
+        self.appModel.setTalkEnabled(enabled)
+    }
+
+    func updateVoiceWakeEnabled(_ enabled: Bool) {
+        self.voiceControlStore.send(.voiceWakeEnabledChanged(enabled))
+        self.storedVoiceWakeEnabled = enabled
+        self.appModel.setVoiceWakeEnabled(enabled)
     }
 
     var appearancePreferenceBinding: Binding<String> {
@@ -1036,10 +1081,7 @@ extension SettingsProTab {
     }
 
     var voiceDetail: String {
-        if self.talkEnabled, self.voiceWakeEnabled { return "Talk + Wake" }
-        if self.talkEnabled { return "Talk on" }
-        if self.voiceWakeEnabled { return "Wake on" }
-        return "Off"
+        self.voiceControlStore.detailText
     }
 
     var diagnosticsDetail: String {
