@@ -68,7 +68,12 @@ struct SettingsDiagnosticsFeature {
             discoveredGatewayCount: Int,
             discoveryStatusText: String,
             screenRecordActive: Bool)
-        case diagnosticsCompleted(issueCount: Int, lastRunText: String)
+        case diagnosticsCompletionRequested(
+            gatewayConnected: Bool,
+            discoveredGatewayCount: Int,
+            talkConfigLoaded: Bool,
+            notificationsAllowed: Bool,
+            lastRunText: String)
     }
 
     // swiftformat:enable redundantSendable
@@ -89,8 +94,17 @@ struct SettingsDiagnosticsFeature {
                 state.screenRecordActive = screenRecordActive
                 return .none
 
-            case let .diagnosticsCompleted(issueCount, lastRunText):
-                state.issueCount = issueCount
+            case let .diagnosticsCompletionRequested(
+                gatewayConnected,
+                discoveredGatewayCount,
+                talkConfigLoaded,
+                notificationsAllowed,
+                lastRunText):
+                state.issueCount = SettingsDiagnostics.issueCount(
+                    gatewayConnected: gatewayConnected,
+                    discoveredGatewayCount: discoveredGatewayCount,
+                    talkConfigLoaded: talkConfigLoaded,
+                    notificationsAllowed: notificationsAllowed)
                 state.lastRunText = lastRunText
                 return .none
             }

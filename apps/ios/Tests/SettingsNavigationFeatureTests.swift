@@ -228,14 +228,30 @@ struct SettingsNavigationFeatureTests {
         #expect(items[1].priority == "Medium")
     }
 
-    @Test func `settings diagnostics completion records last run summary`() async {
+    @Test func `settings diagnostics completion computes issue count`() async {
         let store = TestStore(initialState: SettingsDiagnosticsFeature.State()) {
             SettingsDiagnosticsFeature()
         }
 
-        await store.send(.diagnosticsCompleted(issueCount: 2, lastRunText: "4:20 PM")) {
-            $0.issueCount = 2
+        await store.send(.diagnosticsCompletionRequested(
+            gatewayConnected: false,
+            discoveredGatewayCount: 0,
+            talkConfigLoaded: false,
+            notificationsAllowed: false,
+            lastRunText: "4:20 PM"))
+        {
+            $0.issueCount = 3
             $0.lastRunText = "4:20 PM"
+        }
+        await store.send(.diagnosticsCompletionRequested(
+            gatewayConnected: true,
+            discoveredGatewayCount: 1,
+            talkConfigLoaded: true,
+            notificationsAllowed: true,
+            lastRunText: "4:22 PM"))
+        {
+            $0.issueCount = 0
+            $0.lastRunText = "4:22 PM"
         }
     }
 

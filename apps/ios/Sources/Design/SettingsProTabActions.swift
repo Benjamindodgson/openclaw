@@ -157,13 +157,11 @@ extension SettingsProTab {
         self.applyNotificationStatus(notificationSettings.authorizationStatus)
         self.registerForRemoteNotificationsIfEnrollmentReady()
 
-        let issueCount = SettingsDiagnostics.issueCount(
+        self.diagnosticsStore.send(.diagnosticsCompletionRequested(
             gatewayConnected: self.gatewayDiagnosticConnected,
             discoveredGatewayCount: self.gatewayController.gateways.count,
             talkConfigLoaded: self.gatewayDiagnosticTalkConfigLoaded,
-            notificationsAllowed: self.notificationStore.status == .allowed)
-        self.diagnosticsStore.send(.diagnosticsCompleted(
-            issueCount: issueCount,
+            notificationsAllowed: self.notificationStore.status == .allowed,
             lastRunText: SettingsDiagnostics.timestamp(Date())))
     }
 
