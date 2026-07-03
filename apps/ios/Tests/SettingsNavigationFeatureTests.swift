@@ -1523,6 +1523,26 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings voice controls resolve requested talk changes`() async {
+        let store = TestStore(initialState: SettingsVoiceControlFeature.State()) {
+            SettingsVoiceControlFeature()
+        }
+
+        await store.send(.talkEnabledChangeRequested(
+            enabled: true,
+            isAppleReviewDemoModeEnabled: false))
+        {
+            $0.talkEnabled = true
+        }
+
+        await store.send(.talkEnabledChangeRequested(
+            enabled: true,
+            isAppleReviewDemoModeEnabled: true))
+        {
+            $0.talkEnabled = false
+        }
+    }
+
     @Test func `settings voice controls summarize active modes`() {
         var state = SettingsVoiceControlFeature.State()
         #expect(state.detailText == "Off")

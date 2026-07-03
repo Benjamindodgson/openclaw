@@ -837,6 +837,7 @@ struct SettingsVoiceControlFeature {
             voiceWakeStatusText: String)
         case talkDisabledForAppleReview
         case talkEnabledChanged(Bool)
+        case talkEnabledChangeRequested(enabled: Bool, isAppleReviewDemoModeEnabled: Bool)
         case voiceWakeEnabledChanged(Bool)
     }
 
@@ -857,6 +858,10 @@ struct SettingsVoiceControlFeature {
 
             case let .talkEnabledChanged(enabled):
                 state.talkEnabled = enabled
+                return .none
+
+            case let .talkEnabledChangeRequested(enabled, isAppleReviewDemoModeEnabled):
+                state.talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled
                 return .none
 
             case let .voiceWakeEnabledChanged(enabled):
