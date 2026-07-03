@@ -807,15 +807,15 @@ extension SettingsProTab {
     var manualGatewayCard: some View {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                self.settingsButtonToggle("Use Manual Gateway", isOn: self.$manualGatewayEnabled)
-                TextField("Host", text: self.$manualGatewayHost)
+                self.settingsButtonToggle("Use Manual Gateway", isOn: self.manualGatewayEnabledBinding)
+                TextField("Host", text: self.manualGatewayHostBinding)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .textFieldStyle(.roundedBorder)
                 TextField("Port", text: self.manualPortBinding)
                     .keyboardType(.numberPad)
                     .textFieldStyle(.roundedBorder)
-                self.settingsButtonToggle("Use TLS", isOn: self.$manualGatewayTLS)
+                self.settingsButtonToggle("Use TLS", isOn: self.manualGatewayTLSBinding)
                 self.gatewayActionButton(
                     title: "Connect Manual",
                     icon: "network",

@@ -167,6 +167,10 @@ extension SettingsProTab {
 
     func syncSettingsState() {
         self.pushEnrollmentConsentStore.send(.refresh)
+        self.manualGatewayEndpointStore.send(.endpointSynced(
+            enabled: self.storedManualGatewayEnabled,
+            host: self.storedManualGatewayHost,
+            tls: self.storedManualGatewayTLS))
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(self.manualGatewayPort))
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
         self.shareInstructionStore.send(
@@ -181,7 +185,7 @@ extension SettingsProTab {
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
         self.gatewayConnectionStore.send(.connectionStarted(gateway.id))
         defer { self.gatewayConnectionStore.send(.connectionFinished) }
-        self.manualGatewayEnabled = false
+        self.updateManualGatewayEnabled(false)
         GatewaySettingsStore.savePreferredGatewayStableID(gateway.stableID)
         GatewaySettingsStore.saveLastDiscoveredGatewayStableID(gateway.stableID)
         if let err = await self.gatewayController.connectWithDiagnostics(gateway) {
@@ -240,9 +244,8 @@ extension SettingsProTab {
     }
 
     func applyGatewayLink(_ link: GatewayConnectDeepLink) {
-        self.manualGatewayHost = link.host
+        self.applyManualGatewaySetupLink(host: link.host, tls: link.tls)
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(link.port))
-        self.manualGatewayTLS = link.tls
         let instanceId = GatewaySettingsStore.currentInstanceID()
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
         if setupAuth.hasBootstrapToken {
@@ -309,7 +312,7 @@ extension SettingsProTab {
             return
         }
         self.gatewayConnectionStore.send(.connectionStarted("manual"))
-        self.manualGatewayEnabled = true
+        self.updateManualGatewayEnabled(true)
         defer { self.gatewayConnectionStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
             token: self.gatewayCredentialsStore.gatewayToken,
@@ -344,8 +347,7 @@ extension SettingsProTab {
         GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
         self.onboardingComplete = false
         self.hasConnectedOnce = false
-        self.manualGatewayEnabled = false
-        self.manualGatewayHost = ""
+        self.clearManualGatewayEndpointForOnboardingReset()
         self.onboardingRequestID += 1
     }
 
@@ -524,6 +526,63 @@ extension SettingsProTab {
         Binding(
             get: { self.manualGatewayPortStore.manualGatewayPortText },
             set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged($0)) })
+    }
+
+    var manualGatewayEnabled: Bool {
+        self.manualGatewayEndpointStore.manualGatewayEnabled
+    }
+
+    var manualGatewayHost: String {
+        self.manualGatewayEndpointStore.manualGatewayHost
+    }
+
+    var manualGatewayTLS: Bool {
+        self.manualGatewayEndpointStore.manualGatewayTLS
+    }
+
+    var manualGatewayEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { self.manualGatewayEndpointStore.manualGatewayEnabled },
+            set: { self.updateManualGatewayEnabled($0) })
+    }
+
+    var manualGatewayHostBinding: Binding<String> {
+        Binding(
+            get: { self.manualGatewayEndpointStore.manualGatewayHost },
+            set: { self.updateManualGatewayHost($0) })
+    }
+
+    var manualGatewayTLSBinding: Binding<Bool> {
+        Binding(
+            get: { self.manualGatewayEndpointStore.manualGatewayTLS },
+            set: { self.updateManualGatewayTLS($0) })
+    }
+
+    func updateManualGatewayEnabled(_ enabled: Bool) {
+        self.manualGatewayEndpointStore.send(.manualGatewayEnabledChanged(enabled))
+        self.storedManualGatewayEnabled = enabled
+    }
+
+    func updateManualGatewayHost(_ host: String) {
+        self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(host))
+        self.storedManualGatewayHost = host
+    }
+
+    func updateManualGatewayTLS(_ tls: Bool) {
+        self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(tls))
+        self.storedManualGatewayTLS = tls
+    }
+
+    func applyManualGatewaySetupLink(host: String, tls: Bool) {
+        self.manualGatewayEndpointStore.send(.setupLinkApplied(host: host, tls: tls))
+        self.storedManualGatewayHost = host
+        self.storedManualGatewayTLS = tls
+    }
+
+    func clearManualGatewayEndpointForOnboardingReset() {
+        self.manualGatewayEndpointStore.send(.endpointClearedForOnboardingReset)
+        self.storedManualGatewayEnabled = false
+        self.storedManualGatewayHost = ""
     }
 
     var gatewayTokenBinding: Binding<String> {
