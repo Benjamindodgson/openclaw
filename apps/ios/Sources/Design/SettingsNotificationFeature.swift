@@ -7,6 +7,7 @@ struct SettingsNotificationFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var hostedRelayHost = "ios-push-relay.openclaw.ai"
+        var actionRequest: ActionRequest?
         var isRequestingAuthorization = false
         var status: SettingsNotificationStatus = .checking
         var usesOpenClawHostedRelay = false
@@ -62,7 +63,15 @@ struct SettingsNotificationFeature {
         }
     }
 
+    enum ActionRequest: Equatable, Sendable {
+        case openSettings
+        case requestAuthorization
+        case showRelayDisclosure
+    }
+
     enum Action: Equatable, Sendable {
+        case actionButtonTapped
+        case actionRequestHandled
         case authorizationRequestFinished(SettingsNotificationStatus)
         case authorizationRequestStarted
         case relayConfigSynced(usesOpenClawHostedRelay: Bool, hostedRelayHost: String?)
@@ -74,12 +83,27 @@ struct SettingsNotificationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .actionButtonTapped:
+                state.actionRequest = nil
+                if state.status.shouldOpenNotificationSettings {
+                    state.actionRequest = .openSettings
+                    return .none
+                }
+                guard state.status == .notSet, !state.isRequestingAuthorization else { return .none }
+                state.actionRequest = state.usesOpenClawHostedRelay ? .showRelayDisclosure : .requestAuthorization
+                return .none
+
+            case .actionRequestHandled:
+                state.actionRequest = nil
+                return .none
+
             case let .authorizationRequestFinished(status):
                 state.isRequestingAuthorization = false
                 state.status = status
                 return .none
 
             case .authorizationRequestStarted:
+                state.actionRequest = nil
                 state.isRequestingAuthorization = true
                 return .none
 

@@ -1087,6 +1087,25 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains(oldTalkToggleGuard) == false)
     }
 
+    @Test func `settings notification action decision is reducer owned`() throws {
+        let notificationSource = try String(contentsOf: Self.settingsNotificationFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+
+        #expect(notificationSource.contains("enum ActionRequest: Equatable, Sendable"))
+        #expect(notificationSource.contains("case actionButtonTapped"))
+        #expect(notificationSource.contains("case actionRequestHandled"))
+        #expect(notificationSource.contains("state.actionRequest = .openSettings"))
+        #expect(notificationSource
+            .contains(
+                "state.actionRequest = state.usesOpenClawHostedRelay ? .showRelayDisclosure : .requestAuthorization"))
+        #expect(actionsSource.contains("self.notificationStore.send(.actionButtonTapped)"))
+        #expect(actionsSource.contains("self.notificationStore.send(.actionRequestHandled)"))
+        #expect(actionsSource.contains("switch request"))
+        #expect(!actionsSource.contains("if self.notificationStore.status.shouldOpenNotificationSettings"))
+        #expect(!actionsSource.contains("guard self.notificationStore.status == .notSet else"))
+        #expect(!actionsSource.contains("if PushBuildConfig.current.usesOpenClawHostedRelay"))
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 
@@ -1307,6 +1326,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsProTab.swift")
+    }
+
+    private static func settingsNotificationFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsNotificationFeature.swift")
     }
 
     private static func settingsGatewaySetupFeaturesSourceURL() -> URL {

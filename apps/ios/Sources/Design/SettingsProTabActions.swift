@@ -541,17 +541,20 @@ extension SettingsProTab {
     }
 
     func handleNotificationAction() {
-        if self.notificationStore.status.shouldOpenNotificationSettings {
-            self.openNotificationSettings()
-            return
-        }
-        guard self.notificationStore.status == .notSet else { return }
+        self.notificationStore.send(.actionButtonTapped)
+        guard let request = self.notificationStore.actionRequest else { return }
+        self.notificationStore.send(.actionRequestHandled)
 
-        if PushBuildConfig.current.usesOpenClawHostedRelay {
+        switch request {
+        case .openSettings:
+            self.openNotificationSettings()
+
+        case .requestAuthorization:
+            self.requestNotificationAuthorizationFromSettings()
+
+        case .showRelayDisclosure:
             self.presentationStore.send(.notificationRelayDisclosureRequested)
-            return
         }
-        self.requestNotificationAuthorizationFromSettings()
     }
 
     func requestNotificationAuthorizationFromSettings() {
