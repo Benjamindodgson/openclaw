@@ -553,6 +553,63 @@ struct SettingsManualGatewayPortFeature {
     }
 }
 
+@Reducer
+struct SettingsManualGatewayEndpointFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var manualGatewayEnabled = false
+        var manualGatewayHost = ""
+        var manualGatewayTLS = true
+    }
+
+    enum Action: Equatable, Sendable {
+        case endpointClearedForOnboardingReset
+        case endpointSynced(enabled: Bool, host: String, tls: Bool)
+        case manualGatewayEnabledChanged(Bool)
+        case manualGatewayHostChanged(String)
+        case manualGatewayTLSChanged(Bool)
+        case setupLinkApplied(host: String, tls: Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .endpointClearedForOnboardingReset:
+                state.manualGatewayEnabled = false
+                state.manualGatewayHost = ""
+                return .none
+
+            case let .endpointSynced(enabled, host, tls):
+                state.manualGatewayEnabled = enabled
+                state.manualGatewayHost = host
+                state.manualGatewayTLS = tls
+                return .none
+
+            case let .manualGatewayEnabledChanged(enabled):
+                state.manualGatewayEnabled = enabled
+                return .none
+
+            case let .manualGatewayHostChanged(host):
+                state.manualGatewayHost = host
+                return .none
+
+            case let .manualGatewayTLSChanged(tls):
+                state.manualGatewayTLS = tls
+                return .none
+
+            case let .setupLinkApplied(host, tls):
+                state.manualGatewayHost = host
+                state.manualGatewayTLS = tls
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -576,10 +633,10 @@ struct SettingsProTab: View {
         TalkDefaults.speakerphoneEnabledByDefault
     @AppStorage(VoiceWakePreferences.enabledKey) var voiceWakeEnabled: Bool = false
     @AppStorage("gateway.autoconnect") var gatewayAutoConnect: Bool = false
-    @AppStorage("gateway.manual.enabled") var manualGatewayEnabled: Bool = false
-    @AppStorage("gateway.manual.host") var manualGatewayHost: String = ""
+    @AppStorage("gateway.manual.enabled") var storedManualGatewayEnabled: Bool = false
+    @AppStorage("gateway.manual.host") var storedManualGatewayHost: String = ""
     @AppStorage("gateway.manual.port") var manualGatewayPort: Int = 18789
-    @AppStorage("gateway.manual.tls") var manualGatewayTLS: Bool = true
+    @AppStorage("gateway.manual.tls") var storedManualGatewayTLS: Bool = true
     @AppStorage("gateway.discovery.debugLogs") var discoveryDebugLogsEnabled: Bool = false
     @AppStorage("canvas.debugStatusEnabled") var canvasDebugStatusEnabled: Bool = false
     @AppStorage("gateway.setupCode") var setupCode: String = ""
@@ -608,6 +665,12 @@ struct SettingsProTab: View {
         initialState: SettingsManualGatewayPortFeature.State())
     {
         SettingsManualGatewayPortFeature()
+    }
+
+    @State var manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature> = Store(
+        initialState: SettingsManualGatewayEndpointFeature.State())
+    {
+        SettingsManualGatewayEndpointFeature()
     }
 
     @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(

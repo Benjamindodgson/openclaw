@@ -488,4 +488,62 @@ struct SettingsNavigationFeatureTests {
         #expect(state.resolvedManualPort(host: "device.sample.ts.net", useTLS: true) == 443)
         #expect(state.resolvedManualPort(host: "device.sample.ts.net", useTLS: false) == 18789)
     }
+
+    @Test func `settings manual gateway endpoint syncs persisted values`() async {
+        let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
+            SettingsManualGatewayEndpointFeature()
+        }
+
+        await store.send(.endpointSynced(
+            enabled: true,
+            host: "gateway.example.com",
+            tls: false))
+        {
+            $0.manualGatewayEnabled = true
+            $0.manualGatewayHost = "gateway.example.com"
+            $0.manualGatewayTLS = false
+        }
+    }
+
+    @Test func `settings manual gateway endpoint records field changes`() async {
+        let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
+            SettingsManualGatewayEndpointFeature()
+        }
+
+        await store.send(.manualGatewayEnabledChanged(true)) {
+            $0.manualGatewayEnabled = true
+        }
+        await store.send(.manualGatewayHostChanged("manual.example.com")) {
+            $0.manualGatewayHost = "manual.example.com"
+        }
+        await store.send(.manualGatewayTLSChanged(false)) {
+            $0.manualGatewayTLS = false
+        }
+    }
+
+    @Test func `settings manual gateway endpoint applies setup link host and tls`() async {
+        let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
+            SettingsManualGatewayEndpointFeature()
+        }
+
+        await store.send(.setupLinkApplied(host: "link.example.com", tls: true)) {
+            $0.manualGatewayHost = "link.example.com"
+            $0.manualGatewayTLS = true
+        }
+    }
+
+    @Test func `settings manual gateway endpoint reset clears enabled and host only`() async {
+        var initialState = SettingsManualGatewayEndpointFeature.State()
+        initialState.manualGatewayEnabled = true
+        initialState.manualGatewayHost = "manual.example.com"
+        initialState.manualGatewayTLS = false
+        let store = TestStore(initialState: initialState) {
+            SettingsManualGatewayEndpointFeature()
+        }
+
+        await store.send(.endpointClearedForOnboardingReset) {
+            $0.manualGatewayEnabled = false
+            $0.manualGatewayHost = ""
+        }
+    }
 }
