@@ -2,6 +2,44 @@ import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 
+@Reducer
+struct SettingsNavigationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var navigationPath: [SettingsRoute] = []
+    }
+
+    enum Action: Equatable, Sendable {
+        case initialRouteRequested(SettingsRoute?)
+        case navigationPathChanged([SettingsRoute])
+        case routeOpened(SettingsRoute)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .initialRouteRequested(route):
+                guard let route else { return .none }
+                guard state.navigationPath != [route] else { return .none }
+                state.navigationPath = [route]
+                return .none
+
+            case let .navigationPathChanged(navigationPath):
+                state.navigationPath = navigationPath
+                return .none
+
+            case let .routeOpened(route):
+                state.navigationPath = [route]
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -66,7 +104,7 @@ struct SettingsProTab: View {
     @State var diagnosticsLastRunText = "Not run"
     @State var diagnosticsIssueCount: Int?
     @State var showTalkIssueDetails = false
-    @State private var navigationPath: [SettingsRoute] = []
+    @State private var navigationStore: StoreOf<SettingsNavigationFeature>
     let initialRoute: SettingsRoute?
     let directRoute: SettingsRoute?
     let headerLeadingAction: OpenClawSidebarHeaderAction?
@@ -85,6 +123,11 @@ struct SettingsProTab: View {
         {
             ExecApprovalPromptFeature()
         },
+        navigationStore: StoreOf<SettingsNavigationFeature> = Store(
+            initialState: SettingsNavigationFeature.State())
+        {
+            SettingsNavigationFeature()
+        },
         onRouteChange: ((SettingsRoute?) -> Void)? = nil)
     {
         self.initialRoute = initialRoute
@@ -93,6 +136,7 @@ struct SettingsProTab: View {
         self.ownsNavigationStack = ownsNavigationStack
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
+        self._navigationStore = State(wrappedValue: navigationStore)
         self.onRouteChange = onRouteChange
     }
 
@@ -120,9 +164,15 @@ struct SettingsProTab: View {
     }
 
     private var settingsNavigationStack: some View {
-        NavigationStack(path: self.$navigationPath) {
+        NavigationStack(path: self.navigationPathBinding) {
             self.settingsNavigationContent
         }
+    }
+
+    private var navigationPathBinding: Binding<[SettingsRoute]> {
+        Binding(
+            get: { self.navigationStore.navigationPath },
+            set: { self.navigationStore.send(.navigationPathChanged($0)) })
     }
 
     private var settingsNavigationContent: some View {
@@ -190,7 +240,7 @@ struct SettingsProTab: View {
             .onChange(of: self.appModel.gatewaySetupRequestID) { _, _ in
                 self.applyPendingGatewaySetupLinkIfNeeded()
             }
-            .onChange(of: self.navigationPath) { _, _ in
+            .onChange(of: self.navigationStore.navigationPath) { _, _ in
                 self.notifyRouteChange()
             }
     }
@@ -270,14 +320,12 @@ struct SettingsProTab: View {
             navigateToRoute(.notifications)
             return
         }
-        self.navigationPath = [.notifications]
+        self.navigationStore.send(.routeOpened(.notifications))
     }
 
     private func applyInitialRouteIfNeeded() {
         guard self.directRoute == nil else { return }
-        guard let initialRoute else { return }
-        guard self.navigationPath != [initialRoute] else { return }
-        self.navigationPath = [initialRoute]
+        self.navigationStore.send(.initialRouteRequested(self.initialRoute))
     }
 
     private func notifyRouteChange() {
@@ -285,7 +333,7 @@ struct SettingsProTab: View {
             self.onRouteChange?(directRoute)
             return
         }
-        self.onRouteChange?(self.navigationPath.last)
+        self.onRouteChange?(self.navigationStore.navigationPath.last)
     }
 }
 
