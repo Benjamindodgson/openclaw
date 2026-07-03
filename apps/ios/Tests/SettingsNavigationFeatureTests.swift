@@ -849,9 +849,14 @@ struct SettingsNavigationFeatureTests {
             SettingsDeviceCapabilityFeature()
         }
 
-        await store.send(.capabilitiesSynced(cameraEnabled: false, preventSleep: true)) {
+        await store.send(.capabilitiesSynced(
+            cameraEnabled: false,
+            preventSleep: true,
+            locationModeRaw: OpenClawLocationMode.always.rawValue))
+        {
             $0.cameraEnabled = false
             $0.preventSleep = true
+            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
         }
     }
 
@@ -866,17 +871,27 @@ struct SettingsNavigationFeatureTests {
         await store.send(.preventSleepChanged(false)) {
             $0.preventSleep = false
         }
+        await store.send(.locationModeChanged(OpenClawLocationMode.always.rawValue)) {
+            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
+        }
     }
 
     @Test func `settings device capabilities count enabled permissions`() async {
         var state = SettingsDeviceCapabilityFeature.State()
         #expect(state.enabledCount == 2)
+        #expect(state.permissionsDetail == "2 enabled")
+
+        state.locationModeRaw = OpenClawLocationMode.always.rawValue
+        #expect(state.enabledCount == 3)
+        #expect(state.permissionsDetail == "3 enabled")
 
         state.cameraEnabled = false
-        #expect(state.enabledCount == 1)
+        #expect(state.enabledCount == 2)
+        #expect(state.permissionsDetail == "2 enabled")
 
         state.preventSleep = false
-        #expect(state.enabledCount == 0)
+        #expect(state.enabledCount == 1)
+        #expect(state.permissionsDetail == "1 enabled")
     }
 
     @Test func `settings voice controls sync persisted values`() async {

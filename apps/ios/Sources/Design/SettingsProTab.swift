@@ -641,51 +641,6 @@ struct SettingsOnboardingStateFeature {
 }
 
 @Reducer
-struct SettingsDeviceCapabilityFeature {
-    // swiftformat:disable redundantSendable
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var cameraEnabled = true
-        var preventSleep = true
-
-        var enabledCount: Int {
-            var count = 0
-            if self.cameraEnabled { count += 1 }
-            if self.preventSleep { count += 1 }
-            return count
-        }
-    }
-
-    enum Action: Equatable, Sendable {
-        case cameraEnabledChanged(Bool)
-        case capabilitiesSynced(cameraEnabled: Bool, preventSleep: Bool)
-        case preventSleepChanged(Bool)
-    }
-
-    // swiftformat:enable redundantSendable
-
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case let .cameraEnabledChanged(enabled):
-                state.cameraEnabled = enabled
-                return .none
-
-            case let .capabilitiesSynced(cameraEnabled, preventSleep):
-                state.cameraEnabled = cameraEnabled
-                state.preventSleep = preventSleep
-                return .none
-
-            case let .preventSleepChanged(enabled):
-                state.preventSleep = enabled
-                return .none
-            }
-        }
-        .autoLogActions()
-    }
-}
-
-@Reducer
 struct SettingsAppearanceFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -1140,6 +1095,7 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChanged(newValue))
+                self.deviceCapabilityStore.send(.locationModeChanged(newValue))
                 self.handleLocationModeChange(newValue)
             }
             .onChange(of: self.manualGatewayPortStore.manualGatewayPort) { _, newValue in
