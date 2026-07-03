@@ -579,22 +579,6 @@ extension SettingsProTab {
             disclosureAccepted: self.pushEnrollmentConsentStore.disclosureAccepted))
     }
 
-    func persistGatewayToken(_ value: String) {
-        let instanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !instanceId.isEmpty else { return }
-        GatewaySettingsStore.saveGatewayToken(
-            value.trimmingCharacters(in: .whitespacesAndNewlines),
-            instanceId: instanceId)
-    }
-
-    func persistGatewayPassword(_ value: String) {
-        let instanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !instanceId.isEmpty else { return }
-        GatewaySettingsStore.saveGatewayPassword(
-            value.trimmingCharacters(in: .whitespacesAndNewlines),
-            instanceId: instanceId)
-    }
-
     var manualPortBinding: Binding<String> {
         Binding(
             get: { self.manualGatewayPortStore.manualGatewayPortText },
@@ -828,12 +812,16 @@ extension SettingsProTab {
 
     func updateGatewayToken(_ value: String) {
         self.gatewayCredentialsStore.send(.gatewayTokenChanged(value))
-        self.persistGatewayToken(value)
+        self.gatewayCredentialsStore.send(.gatewayTokenPersistenceRequested(
+            value: value,
+            instanceId: self.instanceId))
     }
 
     func updateGatewayPassword(_ value: String) {
         self.gatewayCredentialsStore.send(.gatewayPasswordChanged(value))
-        self.persistGatewayPassword(value)
+        self.gatewayCredentialsStore.send(.gatewayPasswordPersistenceRequested(
+            value: value,
+            instanceId: self.instanceId))
     }
 
     var manualPortIsValid: Bool {
