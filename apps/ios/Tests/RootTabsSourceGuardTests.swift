@@ -177,11 +177,13 @@ struct RootTabsSourceGuardTests {
         let gatewayDataSource = try String(contentsOf: Self.agentProTabGatewayDataSourceURL(), encoding: .utf8)
         let overviewSource = try String(contentsOf: Self.agentProTabOverviewSourceURL(), encoding: .utf8)
         let skillsSource = try String(contentsOf: Self.agentProTabSkillsSourceURL(), encoding: .utf8)
+        let cronSource = try String(contentsOf: Self.agentProTabCronSourceURL(), encoding: .utf8)
         let destinationsSource = try String(contentsOf: Self.agentProTabDestinationsSourceURL(), encoding: .utf8)
         let nodesSource = try String(contentsOf: Self.agentProNodesDestinationSourceURL(), encoding: .utf8)
         let dreamingSource = try String(contentsOf: Self.agentProDreamingDestinationSourceURL(), encoding: .utf8)
 
         #expect(!source.contains("ToolbarItem"))
+        #expect(source.contains("@Reducer\nstruct AgentCronActionFeature"))
         #expect(source.contains("@Reducer\nstruct AgentClawHubSearchFeature"))
         #expect(source.contains("@Reducer\nstruct AgentSkillFilterFeature"))
         #expect(source.contains("@Reducer\nstruct AgentOverviewFilterFeature"))
@@ -190,11 +192,14 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("@State var agentSearchText"))
         #expect(!source.contains("@State var skillFilter: String"))
         #expect(!source.contains("@State var skillStatusFilter"))
+        #expect(!source.contains("@State var cronActionBusyIDs"))
+        #expect(!source.contains("@State var cronActionStatusText"))
         #expect(!source.contains("@State var overview: AgentOverviewSnapshot?"))
         #expect(!source.contains("@State var overviewErrorText"))
         #expect(!source.contains("@State var overviewLoading"))
         #expect(source.contains("@State var overviewStore: StoreOf<AgentOverviewLoadFeature>"))
         #expect(source.contains("@State var skillFilterStore: StoreOf<AgentSkillFilterFeature>"))
+        #expect(source.contains("@State var cronActionStore: StoreOf<AgentCronActionFeature>"))
         #expect(!source.contains("@State var clawHubQuery"))
         #expect(!source.contains("@State var clawHubResults"))
         #expect(!source.contains("@State var clawHubLoading"))
@@ -211,6 +216,10 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("text: self.skillFilterBinding"))
         #expect(skillsSource.contains("selection: self.skillStatusFilterBinding"))
         #expect(skillsSource.contains("self.skillFilterStore.send(.clearSearchTapped)"))
+        #expect(cronSource.contains("self.cronActionStore.send(.actionStarted(id: job.id))"))
+        #expect(cronSource.contains("self.cronActionStore.send(.actionSucceeded(message: success))"))
+        #expect(cronSource.contains("self.cronActionStore.send(.actionFinished(id: job.id))"))
+        #expect(cronSource.contains("self.cronActionStore.send(.actionFailed("))
         #expect(overviewSource.contains("selection: self.agentRosterFilterBinding"))
         #expect(overviewSource.contains("text: self.agentSearchTextBinding"))
         #expect(overviewSource.contains("self.filterStore.send(.clearFiltersTapped)"))
@@ -993,6 +1002,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/AgentProTab+Skills.swift")
+    }
+
+    private static func agentProTabCronSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/AgentProTab+Cron.swift")
     }
 
     private static func agentProTabDestinationsSourceURL() -> URL {

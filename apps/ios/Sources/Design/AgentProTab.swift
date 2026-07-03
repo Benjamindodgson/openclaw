@@ -21,8 +21,7 @@ struct AgentProTab: View {
     @State var skillAPIKeyDrafts: [String: String] = [:]
     @State var skillEditorSelection: SkillEditorSelection?
     @State var clawHubStore: StoreOf<AgentClawHubSearchFeature>
-    @State var cronActionBusyIDs: Set<String> = []
-    @State var cronActionStatusText: String?
+    @State var cronActionStore: StoreOf<AgentCronActionFeature>
 
     enum AgentRoute: Hashable {
         case agents
@@ -131,6 +130,11 @@ struct AgentProTab: View {
         {
             AgentSkillFilterFeature()
         },
+        cronActionStore: StoreOf<AgentCronActionFeature> = Store(
+            initialState: AgentCronActionFeature.State())
+        {
+            AgentCronActionFeature()
+        },
         filterStore: StoreOf<AgentOverviewFilterFeature> = Store(
             initialState: AgentOverviewFilterFeature.State())
         {
@@ -145,6 +149,7 @@ struct AgentProTab: View {
         self._overviewStore = State(wrappedValue: overviewStore)
         self._clawHubStore = State(wrappedValue: clawHubStore)
         self._skillFilterStore = State(wrappedValue: skillFilterStore)
+        self._cronActionStore = State(wrappedValue: cronActionStore)
         self._filterStore = State(wrappedValue: filterStore)
     }
 
@@ -226,6 +231,14 @@ struct AgentProTab: View {
             set: { self.skillFilterStore.send(.statusFilterChanged($0)) })
     }
 
+    var cronActionBusyIDs: Set<String> {
+        self.cronActionStore.busyIDs
+    }
+
+    var cronActionStatusText: String? {
+        self.cronActionStore.statusText
+    }
+
     private var overviewNavigation: some View {
         NavigationStack(path: self.navigationPathBinding) {
             ZStack {
@@ -263,6 +276,50 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+@Reducer
+struct AgentCronActionFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var busyIDs: Set<String> = []
+        var statusText: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case actionFinished(id: String)
+        case actionFailed(id: String, message: String)
+        case actionStarted(id: String)
+        case actionSucceeded(message: String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .actionStarted(id):
+                state.busyIDs.insert(id)
+                state.statusText = nil
+                return .none
+
+            case let .actionSucceeded(message):
+                state.statusText = message
+                return .none
+
+            case let .actionFinished(id):
+                state.busyIDs.remove(id)
+                return .none
+
+            case let .actionFailed(id, message):
+                state.busyIDs.remove(id)
+                state.statusText = message
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }
 

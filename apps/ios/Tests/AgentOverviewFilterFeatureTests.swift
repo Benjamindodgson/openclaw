@@ -4,6 +4,61 @@ import Testing
 @testable import OpenClaw
 
 @MainActor
+struct AgentCronActionFeatureTests {
+    @Test func `action start records busy id and clears status`() async {
+        var initialState = AgentCronActionFeature.State()
+        initialState.statusText = "Queued old job."
+        let store = TestStore(initialState: initialState) {
+            AgentCronActionFeature()
+        }
+
+        await store.send(.actionStarted(id: "job-1")) {
+            $0.busyIDs = ["job-1"]
+            $0.statusText = nil
+        }
+    }
+
+    @Test func `action success stores status while busy id remains active`() async {
+        var initialState = AgentCronActionFeature.State()
+        initialState.busyIDs = ["job-1", "job-2"]
+        let store = TestStore(initialState: initialState) {
+            AgentCronActionFeature()
+        }
+
+        await store.send(.actionSucceeded(message: "Queued job.")) {
+            $0.busyIDs = ["job-1", "job-2"]
+            $0.statusText = "Queued job."
+        }
+    }
+
+    @Test func `action finish clears busy id`() async {
+        var initialState = AgentCronActionFeature.State()
+        initialState.busyIDs = ["job-1", "job-2"]
+        initialState.statusText = "Queued job."
+        let store = TestStore(initialState: initialState) {
+            AgentCronActionFeature()
+        }
+
+        await store.send(.actionFinished(id: "job-1")) {
+            $0.busyIDs = ["job-2"]
+        }
+    }
+
+    @Test func `action failure clears busy id and stores error`() async {
+        var initialState = AgentCronActionFeature.State()
+        initialState.busyIDs = ["job-1"]
+        let store = TestStore(initialState: initialState) {
+            AgentCronActionFeature()
+        }
+
+        await store.send(.actionFailed(id: "job-1", message: "Cron failed.")) {
+            $0.busyIDs = []
+            $0.statusText = "Cron failed."
+        }
+    }
+}
+
+@MainActor
 struct AgentSkillFilterFeatureTests {
     @Test func `search text changes update state`() async {
         let store = TestStore(initialState: AgentSkillFilterFeature.State()) {
