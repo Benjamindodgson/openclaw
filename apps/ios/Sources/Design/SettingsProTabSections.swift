@@ -840,7 +840,7 @@ extension SettingsProTab {
                 SecureField("Gateway Password", text: self.$gatewayPassword)
                     .textFieldStyle(.roundedBorder)
                 Button(role: .destructive) {
-                    self.showResetOnboardingAlert = true
+                    self.presentationStore.send(.resetOnboardingButtonTapped)
                 } label: {
                     Label("Reset Onboarding", systemImage: "arrow.counterclockwise")
                         .frame(maxWidth: .infinity)

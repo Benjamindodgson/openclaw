@@ -46,12 +46,15 @@ struct SettingsPresentationFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var showGatewayProblemDetails = false
+        var showResetOnboardingAlert = false
         var showTalkIssueDetails = false
     }
 
     enum Action: Equatable, Sendable {
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
+        case resetOnboardingButtonTapped
+        case resetOnboardingAlertDismissed
         case talkIssueDetailsButtonTapped
         case talkIssueDetailsDismissed
     }
@@ -67,6 +70,14 @@ struct SettingsPresentationFeature {
 
             case .gatewayProblemDetailsDismissed:
                 state.showGatewayProblemDetails = false
+                return .none
+
+            case .resetOnboardingButtonTapped:
+                state.showResetOnboardingAlert = true
+                return .none
+
+            case .resetOnboardingAlertDismissed:
+                state.showResetOnboardingAlert = false
                 return .none
 
             case .talkIssueDetailsButtonTapped:
@@ -129,7 +140,6 @@ struct SettingsProTab: View {
     @State var defaultShareInstruction = ""
     @State var showQRScanner = false
     @State var scannerError: String?
-    @State var showResetOnboardingAlert = false
     @State var suppressCredentialPersist = false
     @State var locationStatusText: String?
     @State var previousLocationModeRaw: String = OpenClawLocationMode.off.rawValue
@@ -340,7 +350,7 @@ struct SettingsProTab: View {
                     message: self.notificationRelayDisclosureMessage,
                     onContinue: self.requestNotificationAuthorizationFromSettings)
             }
-            .alert("Reset Onboarding?", isPresented: self.$showResetOnboardingAlert) {
+            .alert("Reset Onboarding?", isPresented: self.resetOnboardingAlertBinding) {
                 Button("Reset", role: .destructive) {
                     self.resetOnboarding()
                 }
@@ -404,6 +414,18 @@ extension SettingsProTab {
                     self.presentationStore.send(.talkIssueDetailsButtonTapped)
                 } else {
                     self.presentationStore.send(.talkIssueDetailsDismissed)
+                }
+            })
+    }
+
+    private var resetOnboardingAlertBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showResetOnboardingAlert },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.resetOnboardingButtonTapped)
+                } else {
+                    self.presentationStore.send(.resetOnboardingAlertDismissed)
                 }
             })
     }
