@@ -166,6 +166,32 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway connection tracks discovered gateway lifecycle`() async {
+        let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
+            SettingsGatewayConnectionFeature()
+        }
+
+        await store.send(.connectionStarted("gateway-1")) {
+            $0.connectingGatewayID = "gateway-1"
+        }
+        await store.send(.connectionFinished) {
+            $0.connectingGatewayID = nil
+        }
+    }
+
+    @Test func `settings gateway connection tracks manual lifecycle`() async {
+        let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
+            SettingsGatewayConnectionFeature()
+        }
+
+        await store.send(.connectionStarted("manual")) {
+            $0.connectingGatewayID = "manual"
+        }
+        await store.send(.connectionFinished) {
+            $0.connectingGatewayID = nil
+        }
+    }
+
     @Test func `settings location tracks change lifecycle`() async {
         var initialState = SettingsLocationFeature.State()
         initialState.statusText = "Location permission was not granted."
