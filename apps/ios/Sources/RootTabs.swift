@@ -23,13 +23,17 @@ struct RootTabs: View {
     @AppStorage("canvas.debugStatusEnabled") private var canvasDebugStatusEnabled: Bool = false
     @AppStorage(AppAppearancePreference.storageKey) private var appearancePreferenceRaw: String =
         AppAppearancePreference.system.rawValue
-    @State private var selectedTab: AppTab = Self.initialTab
-    @State private var selectedSidebarDestination: SidebarDestination = Self.initialSidebarDestination
-    @State private var selectedSettingsRoute: SettingsRoute? = Self.initialSidebarDestination.settingsRoute
-    @State private var selectedSettingsRouteRequestID: Int = 0
     // Embedded Settings rows push onto the sidebar stack; clear it before
     // changing sidebar roots so stale settings detail screens cannot survive.
     @State private var sidebarNavigationPath: [SettingsRoute] = []
+    @State private var navigationStore: StoreOf<RootNavigationSelectionFeature> = Store(
+        initialState: RootNavigationSelectionFeature.State(
+            selectedTab: Self.initialTab,
+            selectedSidebarDestination: Self.initialSidebarDestination))
+    {
+        RootNavigationSelectionFeature()
+    }
+
     @State private var sidebarStore: StoreOf<RootSidebarFeature> = Store(
         initialState: RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility))
     {
@@ -55,7 +59,6 @@ struct RootTabs: View {
     }
 
     @State private var presentedSheet: PresentedSheet?
-    @State private var suppressedExecApprovalPromptIDForNotificationSettings: String?
 
     private static var initialTab: AppTab {
         Self.initialTab(arguments: ProcessInfo.processInfo.arguments)
@@ -161,7 +164,7 @@ struct RootTabs: View {
     }
 
     private var phoneTabContent: some View {
-        TabView(selection: self.$selectedTab) {
+        TabView(selection: self.selectedTabBinding) {
             ChatProTab(openSettings: { self.selectSidebarDestination(.gateway) })
                 .tabItem { Label("Chat", systemImage: "bubble.left.fill") }
                 .tag(AppTab.chat)
@@ -529,8 +532,7 @@ struct RootTabs: View {
     }
 
     private var activeExecApprovalPromptSuppressionID: String? {
-        guard self.selectedTab == .settings, self.selectedSettingsRoute == .notifications else { return nil }
-        return self.suppressedExecApprovalPromptIDForNotificationSettings
+        self.navigationStore.activeExecApprovalPromptSuppressionID
     }
 
     private var shouldCollapseSidebarAfterSelection: Bool {
@@ -745,9 +747,7 @@ struct RootTabs: View {
                 self.maybeOpenSettingsForGatewaySetup()
             }
             .onChange(of: self.appModel.pendingExecApprovalPrompt?.id) { _, newValue in
-                if newValue != self.suppressedExecApprovalPromptIDForNotificationSettings {
-                    self.suppressedExecApprovalPromptIDForNotificationSettings = nil
-                }
+                self.navigationStore.send(.pendingExecApprovalPromptChanged(newValue))
             }
     }
 
@@ -831,8 +831,7 @@ struct RootTabs: View {
             NotificationPermissionGuidanceFeature(client: .live(
                 appModel: self.appModel,
                 openNotifications: { approvalId in
-                    self.suppressedExecApprovalPromptIDForNotificationSettings = approvalId
-                    self.selectSettingsRoute(.notifications)
+                    self.openNotificationSettings(suppressedApprovalID: approvalId)
                 }))
         }
     }
@@ -975,6 +974,28 @@ struct RootTabs: View {
 }
 
 extension RootTabs {
+    private var selectedTab: AppTab {
+        self.navigationStore.selectedTab
+    }
+
+    private var selectedTabBinding: Binding<AppTab> {
+        Binding(
+            get: { self.navigationStore.selectedTab },
+            set: { self.navigationStore.send(.tabSelected($0)) })
+    }
+
+    private var selectedSidebarDestination: SidebarDestination {
+        self.navigationStore.selectedSidebarDestination
+    }
+
+    private var selectedSettingsRoute: SettingsRoute? {
+        self.navigationStore.selectedSettingsRoute
+    }
+
+    private var selectedSettingsRouteRequestID: Int {
+        self.navigationStore.selectedSettingsRouteRequestID
+    }
+
     private var isSidebarVisible: Bool {
         self.sidebarStore.isVisible
     }
@@ -997,27 +1018,23 @@ extension RootTabs {
 
     private func selectSidebarDestination(_ destination: SidebarDestination) {
         self.sidebarNavigationPath.removeAll()
-        if destination.settingsRoute != .notifications {
-            self.suppressedExecApprovalPromptIDForNotificationSettings = nil
-        }
-        self.selectedSidebarDestination = destination
-        self.selectedSettingsRoute = destination.settingsRoute
-        self.selectedTab = destination.appTab
-        guard self.usesSidebarTabs, self.shouldCollapseSidebarAfterSelection else { return }
-        withAnimation(.easeInOut(duration: 0.22)) {
-            self.setSidebarVisible(false)
-        }
+        self.navigationStore.send(.sidebarDestinationSelected(destination))
+        self.collapseSidebarAfterSelectionIfNeeded()
     }
 
     private func selectSettingsRoute(_ route: SettingsRoute) {
         self.sidebarNavigationPath.removeAll()
-        if route != .notifications {
-            self.suppressedExecApprovalPromptIDForNotificationSettings = nil
-        }
-        self.selectedSettingsRoute = route
-        self.selectedSettingsRouteRequestID &+= 1
-        self.selectedSidebarDestination = .settings
-        self.selectedTab = .settings
+        self.navigationStore.send(.settingsRouteSelected(route))
+        self.collapseSidebarAfterSelectionIfNeeded()
+    }
+
+    private func openNotificationSettings(suppressedApprovalID: String) {
+        self.sidebarNavigationPath.removeAll()
+        self.navigationStore.send(.notificationPermissionSettingsOpened(suppressedApprovalID: suppressedApprovalID))
+        self.collapseSidebarAfterSelectionIfNeeded()
+    }
+
+    private func collapseSidebarAfterSelectionIfNeeded() {
         guard self.usesSidebarTabs, self.shouldCollapseSidebarAfterSelection else { return }
         withAnimation(.easeInOut(duration: 0.22)) {
             self.setSidebarVisible(false)
@@ -1030,14 +1047,7 @@ extension RootTabs {
     }
 
     private func handleSettingsRouteChange(_ route: SettingsRoute?) {
-        guard route != .notifications else { return }
-        if route == nil {
-            self.selectedSettingsRoute = nil
-            if self.selectedTab == .settings {
-                self.selectedSidebarDestination = .settings
-            }
-        }
-        self.suppressedExecApprovalPromptIDForNotificationSettings = nil
+        self.navigationStore.send(.settingsRouteChanged(route))
     }
 
     private func showSidebar() {

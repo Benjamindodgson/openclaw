@@ -605,6 +605,94 @@ struct RootTabsPresentationTests {
         #expect(RootTabs.defaultSidebarDestination(for: .settings) == .settings)
     }
 
+    @Test func `navigation reducer selects sidebar destinations`() async {
+        let store = TestStore(initialState: RootNavigationSelectionFeature.State(
+            selectedTab: .chat,
+            selectedSidebarDestination: .chat))
+        {
+            RootNavigationSelectionFeature()
+        }
+
+        await store.send(.sidebarDestinationSelected(.gateway)) {
+            $0.selectedTab = .settings
+            $0.selectedSidebarDestination = .gateway
+            $0.selectedSettingsRoute = .gateway
+        }
+
+        await store.send(.tabSelected(.talk)) {
+            $0.selectedTab = .talk
+        }
+    }
+
+    @Test func `navigation reducer selects settings routes and bumps request id`() async {
+        let store = TestStore(initialState: RootNavigationSelectionFeature.State(
+            selectedTab: .chat,
+            selectedSidebarDestination: .chat))
+        {
+            RootNavigationSelectionFeature()
+        }
+
+        await store.send(.settingsRouteSelected(.voice)) {
+            $0.selectedTab = .settings
+            $0.selectedSidebarDestination = .settings
+            $0.selectedSettingsRoute = .voice
+            $0.selectedSettingsRouteRequestID = 1
+        }
+
+        await store.send(.settingsRouteSelected(.gateway)) {
+            $0.selectedSettingsRoute = .gateway
+            $0.selectedSettingsRouteRequestID = 2
+        }
+    }
+
+    @Test func `navigation reducer tracks notification suppression only for notification route`() async {
+        let store = TestStore(initialState: RootNavigationSelectionFeature.State(
+            selectedTab: .chat,
+            selectedSidebarDestination: .chat))
+        {
+            RootNavigationSelectionFeature()
+        }
+
+        await store.send(.notificationPermissionSettingsOpened(suppressedApprovalID: "approval-1")) {
+            $0.selectedTab = .settings
+            $0.selectedSidebarDestination = .settings
+            $0.selectedSettingsRoute = .notifications
+            $0.selectedSettingsRouteRequestID = 1
+            $0.suppressedExecApprovalPromptIDForNotificationSettings = "approval-1"
+        }
+        #expect(store.state.activeExecApprovalPromptSuppressionID == "approval-1")
+
+        await store.send(.pendingExecApprovalPromptChanged("approval-1"))
+        #expect(store.state.activeExecApprovalPromptSuppressionID == "approval-1")
+
+        await store.send(.pendingExecApprovalPromptChanged("approval-2")) {
+            $0.suppressedExecApprovalPromptIDForNotificationSettings = nil
+        }
+        #expect(store.state.activeExecApprovalPromptSuppressionID == nil)
+    }
+
+    @Test func `navigation reducer handles embedded settings route changes`() async {
+        let store = TestStore(initialState: RootNavigationSelectionFeature.State(
+            selectedTab: .settings,
+            selectedSidebarDestination: .gateway))
+        {
+            RootNavigationSelectionFeature()
+        }
+
+        await store.send(.settingsRouteSelected(.voice)) {
+            $0.selectedSidebarDestination = .settings
+            $0.selectedSettingsRoute = .voice
+            $0.selectedSettingsRouteRequestID = 1
+        }
+
+        await store.send(.settingsRouteChanged(.notifications))
+
+        await store.send(.settingsRouteChanged(nil)) {
+            $0.selectedSettingsRoute = nil
+            $0.selectedSidebarDestination = .settings
+        }
+    }
+
     @Test func `skill workshop mutations require admin scope`() {
         #expect(IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: true))
         #expect(!IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: false))
