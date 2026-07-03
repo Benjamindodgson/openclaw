@@ -1,9 +1,16 @@
 import ComposableArchitecture
+import Foundation
 import OpenClawKit
 import SwiftUI
 
 @Reducer
 struct SettingsGatewayConnectionFeature {
+    private let persistenceClientOverride: SettingsDiscoveredGatewayPersistenceClient?
+
+    init(persistenceClient: SettingsDiscoveredGatewayPersistenceClient? = nil) {
+        self.persistenceClientOverride = persistenceClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -76,6 +83,7 @@ struct SettingsGatewayConnectionFeature {
     enum Action: Equatable, Sendable {
         case connectionFinished
         case connectionStarted(String)
+        case discoveredGatewayPersistenceRequested(stableID: String)
         case gatewayStatusSynced(
             isAppleReviewDemoModeEnabled: Bool,
             gatewayStatusConnected: Bool,
@@ -89,6 +97,9 @@ struct SettingsGatewayConnectionFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsDiscoveredGatewayPersistence) var dependencyPersistenceClient
+            let persistenceClient = self.persistenceClientOverride ?? dependencyPersistenceClient
+
             switch action {
             case .connectionFinished:
                 state.connectingGatewayID = nil
@@ -97,6 +108,13 @@ struct SettingsGatewayConnectionFeature {
             case let .connectionStarted(gatewayID):
                 state.connectingGatewayID = gatewayID
                 return .none
+
+            case let .discoveredGatewayPersistenceRequested(stableID):
+                let trimmedStableID = stableID.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmedStableID.isEmpty else { return .none }
+                return .run { _ in
+                    await persistenceClient.saveSelectedGatewayStableID(trimmedStableID)
+                }
 
             case let .gatewayStatusSynced(
                 isAppleReviewDemoModeEnabled,

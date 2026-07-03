@@ -1226,6 +1226,26 @@ struct RootTabsSourceGuardTests {
         #expect(updateCredentialsFunction.contains("GatewaySettingsStore.saveGatewayPassword") == false)
     }
 
+    @Test func `settings discovered gateway persistence is reducer effect owned`() throws {
+        let connectionSource = try String(contentsOf: Self.settingsGatewayConnectionFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let connectFunction = try Self.extract(
+            actionsSource,
+            from: "func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async",
+            to: "func applySetupCodeAndConnect() async")
+
+        #expect(supportSource.contains("struct SettingsDiscoveredGatewayPersistenceClient"))
+        #expect(supportSource.contains("GatewaySettingsStore.savePreferredGatewayStableID(stableID)"))
+        #expect(supportSource.contains("GatewaySettingsStore.saveLastDiscoveredGatewayStableID(stableID)"))
+        #expect(connectionSource.contains("case discoveredGatewayPersistenceRequested(stableID: String)"))
+        #expect(connectionSource.contains("@Dependency(\\.settingsDiscoveredGatewayPersistence)"))
+        #expect(connectionSource.contains("await persistenceClient.saveSelectedGatewayStableID(trimmedStableID)"))
+        #expect(actionsSource.contains("self.gatewayConnectionStore.send(.discoveredGatewayPersistenceRequested("))
+        #expect(connectFunction.contains("GatewaySettingsStore.savePreferredGatewayStableID") == false)
+        #expect(connectFunction.contains("GatewaySettingsStore.saveLastDiscoveredGatewayStableID") == false)
+    }
+
     @Test func `settings share instruction persistence is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
@@ -1689,6 +1709,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsNotificationFeature.swift")
+    }
+
+    private static func settingsGatewayConnectionFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsGatewayConnectionFeature.swift")
     }
 
     private static func settingsDiagnosticsFeatureSourceURL() -> URL {
