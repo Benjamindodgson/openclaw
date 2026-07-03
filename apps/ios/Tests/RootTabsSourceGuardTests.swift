@@ -352,7 +352,7 @@ struct RootTabsSourceGuardTests {
         let source = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
 
         #expect(source.contains("private var headerCard: some View"))
-        #expect(source.contains(".accessibilityLabel(\"Gateway \\(self.gatewayStateText)\")"))
+        #expect(source.contains(".accessibilityLabel(\"Gateway \\(presentation.gatewayStateText)\")"))
         #expect(!source.contains("private var gatewayActionRow: some View"))
         #expect(!source.contains("ProValuePill(value: self.gatewayStateText"))
         #expect(!source.contains("destination.subtitle"))
