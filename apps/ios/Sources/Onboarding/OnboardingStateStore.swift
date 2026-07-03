@@ -382,6 +382,7 @@ struct OnboardingCredentialsFeature {
     struct State: Equatable, Sendable {
         var gatewayPassword = ""
         var gatewayToken = ""
+        var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
 
         var hasGatewayPassword: Bool {
             !self.gatewayPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -396,7 +397,9 @@ struct OnboardingCredentialsFeature {
         case credentialsLoaded(token: String, password: String)
         case gatewayPasswordChanged(String)
         case gatewayTokenChanged(String)
+        case pendingManualAuthOverrideConsumed
         case reset
+        case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)
     }
 
     // swiftformat:enable redundantSendable
@@ -417,9 +420,24 @@ struct OnboardingCredentialsFeature {
                 state.gatewayToken = token
                 return .none
 
+            case .pendingManualAuthOverrideConsumed:
+                state.pendingManualAuthOverride = nil
+                return .none
+
             case .reset:
                 state.gatewayToken = ""
                 state.gatewayPassword = ""
+                state.pendingManualAuthOverride = nil
+                return .none
+
+            case let .setupAuthApplied(setupAuth):
+                if setupAuth.shouldApplyTokenField {
+                    state.gatewayToken = setupAuth.token
+                }
+                if setupAuth.shouldApplyPasswordField {
+                    state.gatewayPassword = setupAuth.password
+                }
+                state.pendingManualAuthOverride = setupAuth.manualAuthOverride
                 return .none
             }
         }

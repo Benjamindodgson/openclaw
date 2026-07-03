@@ -34,7 +34,6 @@ struct OnboardingWizardView: View {
         OnboardingPresentationFeature()
     }
 
-    @State private var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature> = Store(
         initialState: OnboardingConnectionFormFeature.State())
     {
@@ -814,13 +813,7 @@ extension OnboardingWizardView {
                 instanceId: GatewaySettingsStore.currentInstanceID())
         }
         self.saveGatewayBootstrapToken(setupAuth.bootstrapToken)
-        if setupAuth.shouldApplyTokenField {
-            self.credentialsStore.send(.gatewayTokenChanged(setupAuth.token))
-        }
-        if setupAuth.shouldApplyPasswordField {
-            self.credentialsStore.send(.gatewayPasswordChanged(setupAuth.password))
-        }
-        self.pendingManualAuthOverride = setupAuth.manualAuthOverride
+        self.credentialsStore.send(.setupAuthApplied(setupAuth))
         self.saveGatewayCredentials(token: self.gatewayToken, password: self.gatewayPassword)
     }
 
@@ -1009,9 +1002,9 @@ extension OnboardingWizardView {
         defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
             token: self.gatewayToken,
-            pendingOverride: self.pendingManualAuthOverride,
+            pendingOverride: self.credentialsStore.pendingManualAuthOverride,
             password: self.gatewayPassword)
-        self.pendingManualAuthOverride = nil
+        self.credentialsStore.send(.pendingManualAuthOverrideConsumed)
         await self.gatewayController.connectManual(
             host: host,
             port: self.manualPort,
