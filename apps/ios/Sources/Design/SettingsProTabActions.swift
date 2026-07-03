@@ -328,29 +328,25 @@ extension SettingsProTab {
 
     @discardableResult
     func applySetupCode() -> Bool {
-        let raw = self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        let stagedLink = self.stagedGatewaySetupLink
-        guard !raw.isEmpty || stagedLink != nil else {
-            self.gatewaySetupStatusStore.send(.statusChanged("Paste a setup code to continue."))
-            return false
-        }
+        self.gatewaySetupLinkStore.send(.applyRequested)
+        guard let result = self.gatewaySetupLinkStore.applyResult else { return false }
+        self.gatewaySetupLinkStore.send(.applyResultHandled)
 
-        if AppleReviewDemoMode.isSetupCode(raw) {
-            self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
+        switch result {
+        case .appleReviewDemo:
             self.updateSetupCode("")
             self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
             self.appModel.enterAppleReviewDemoMode()
             return false
-        }
 
-        guard let link = raw.isEmpty ? stagedLink : GatewayConnectDeepLink.fromSetupInput(raw) else {
-            self.gatewaySetupStatusStore.send(
-                .statusChanged("Setup code not recognized or uses an insecure ws:// gateway URL."))
+        case let .failure(message):
+            self.gatewaySetupStatusStore.send(.statusChanged(message))
             return false
+
+        case let .gatewayLink(link):
+            self.applyGatewayLink(link)
+            return true
         }
-        self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
-        self.applyGatewayLink(link)
-        return true
     }
 
     func applyGatewayLink(_ link: GatewayConnectDeepLink) {
