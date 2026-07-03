@@ -169,7 +169,8 @@ extension SettingsProTab {
         self.pushEnrollmentConsentStore.send(.refresh)
         self.manualGatewayPortText = self.manualGatewayPort > 0 ? String(self.manualGatewayPort) : ""
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
-        self.defaultShareInstruction = ShareToAgentSettings.loadDefaultInstruction()
+        self.shareInstructionStore.send(
+            .defaultShareInstructionLoaded(ShareToAgentSettings.loadDefaultInstruction()))
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedInstanceId.isEmpty else { return }
         self.gatewayToken = GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? ""

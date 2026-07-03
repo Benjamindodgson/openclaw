@@ -253,4 +253,26 @@ struct SettingsNavigationFeatureTests {
             $0.selectedAgentPickerId = ""
         }
     }
+
+    @Test func `settings share instruction records text changes`() async {
+        let store = TestStore(initialState: SettingsShareInstructionFeature.State()) {
+            SettingsShareInstructionFeature()
+        }
+
+        await store.send(.defaultShareInstructionChanged("Summarize this for my agent.")) {
+            $0.defaultShareInstruction = "Summarize this for my agent."
+        }
+    }
+
+    @Test func `settings share instruction loads persisted value`() async {
+        var initialState = SettingsShareInstructionFeature.State()
+        initialState.defaultShareInstruction = "Previous value"
+        let store = TestStore(initialState: initialState) {
+            SettingsShareInstructionFeature()
+        }
+
+        await store.send(.defaultShareInstructionLoaded("Use the research agent.")) {
+            $0.defaultShareInstruction = "Use the research agent."
+        }
+    }
 }
