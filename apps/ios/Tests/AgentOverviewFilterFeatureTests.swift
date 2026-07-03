@@ -4,6 +4,82 @@ import Testing
 @testable import OpenClaw
 
 @MainActor
+struct AgentClawHubSearchFeatureTests {
+    @Test func `query changes update search text`() async {
+        let store = TestStore(initialState: AgentClawHubSearchFeature.State()) {
+            AgentClawHubSearchFeature()
+        }
+
+        await store.send(.queryChanged("memory")) {
+            $0.query = "memory"
+        }
+    }
+
+    @Test func `search lifecycle stores results`() async {
+        let result = Self.result(slug: "memory-plus")
+        let store = TestStore(initialState: AgentClawHubSearchFeature.State()) {
+            AgentClawHubSearchFeature()
+        }
+
+        await store.send(.searchRequested) {
+            $0.isLoading = true
+        }
+        await store.send(.searchFinished([result])) {
+            $0.results = [result]
+            $0.isLoading = false
+        }
+    }
+
+    @Test func `search failure keeps existing results and stores error`() async {
+        var initialState = AgentClawHubSearchFeature.State()
+        initialState.results = [Self.result(slug: "existing")]
+        initialState.isLoading = true
+        let store = TestStore(initialState: initialState) {
+            AgentClawHubSearchFeature()
+        }
+
+        await store.send(.searchFailed("Search failed.")) {
+            $0.errorText = "Search failed."
+            $0.isLoading = false
+        }
+    }
+
+    @Test func `install lifecycle owns busy slug`() async {
+        let store = TestStore(initialState: AgentClawHubSearchFeature.State()) {
+            AgentClawHubSearchFeature()
+        }
+
+        await store.send(.installRequested(slug: "memory-plus")) {
+            $0.installingSlug = "memory-plus"
+        }
+        await store.send(.installFinished(slug: "memory-plus")) {
+            $0.installingSlug = nil
+        }
+    }
+
+    @Test func `install failure clears matching slug and records error`() async {
+        var initialState = AgentClawHubSearchFeature.State()
+        initialState.installingSlug = "memory-plus"
+        let store = TestStore(initialState: initialState) {
+            AgentClawHubSearchFeature()
+        }
+
+        await store.send(.installFailed(slug: "memory-plus", message: "Install failed.")) {
+            $0.errorText = "Install failed."
+            $0.installingSlug = nil
+        }
+    }
+
+    private static func result(slug: String) -> ClawHubSearchResultLite {
+        ClawHubSearchResultLite(
+            slug: slug,
+            displayName: "Memory Plus",
+            summary: "Adds memory tools",
+            version: "1.0.0")
+    }
+}
+
+@MainActor
 struct AgentOverviewLoadFeatureTests {
     @Test func `connected refresh starts one shot load request`() async {
         let store = TestStore(initialState: AgentOverviewLoadFeature.State()) {

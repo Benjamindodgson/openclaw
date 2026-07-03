@@ -235,7 +235,7 @@ struct ClawHubSearchResponseLite: Decodable {
     let results: [ClawHubSearchResultLite]
 }
 
-struct ClawHubSearchResultLite: Decodable {
+struct ClawHubSearchResultLite: Decodable, Equatable {
     let slug: String
     let displayName: String
     let summary: String?
