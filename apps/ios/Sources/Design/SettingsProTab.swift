@@ -328,6 +328,11 @@ struct SettingsGatewaySetupLinkFeature {
     struct State: Equatable, Sendable {
         var setupCode = ""
         var stagedGatewaySetupLink: GatewayConnectDeepLink?
+
+        var canApplyGatewaySetup: Bool {
+            !self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || self.stagedGatewaySetupLink != nil
+        }
     }
 
     enum Action: Equatable, Sendable {

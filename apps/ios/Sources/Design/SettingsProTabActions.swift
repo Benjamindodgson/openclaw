@@ -841,8 +841,7 @@ extension SettingsProTab {
     }
 
     var canApplyGatewaySetup: Bool {
-        !self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            || self.stagedGatewaySetupLink != nil
+        self.gatewaySetupLinkStore.canApplyGatewaySetup
     }
 
     var tailnetWarningText: String? {

@@ -397,6 +397,25 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup link resolves apply availability`() {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var state = SettingsGatewaySetupLinkFeature.State()
+
+        #expect(!state.canApplyGatewaySetup)
+        state.setupCode = "  setup-code  "
+        #expect(state.canApplyGatewaySetup)
+        state.setupCode = "   "
+        #expect(!state.canApplyGatewaySetup)
+        state.stagedGatewaySetupLink = link
+        #expect(state.canApplyGatewaySetup)
+    }
+
     @Test func `settings gateway credentials load persisted values`() async {
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature()
