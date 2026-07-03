@@ -996,7 +996,7 @@ extension SettingsProTab {
                     Task { await self.handleGatewayProblemPrimaryAction(problem) }
                 },
                 onShowDetails: {
-                    self.showGatewayProblemDetails = true
+                    self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
                 })
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)

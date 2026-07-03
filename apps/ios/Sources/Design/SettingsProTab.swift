@@ -45,10 +45,13 @@ struct SettingsPresentationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var showGatewayProblemDetails = false
         var showTalkIssueDetails = false
     }
 
     enum Action: Equatable, Sendable {
+        case gatewayProblemDetailsButtonTapped
+        case gatewayProblemDetailsDismissed
         case talkIssueDetailsButtonTapped
         case talkIssueDetailsDismissed
     }
@@ -58,6 +61,14 @@ struct SettingsPresentationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .gatewayProblemDetailsButtonTapped:
+                state.showGatewayProblemDetails = true
+                return .none
+
+            case .gatewayProblemDetailsDismissed:
+                state.showGatewayProblemDetails = false
+                return .none
+
             case .talkIssueDetailsButtonTapped:
                 state.showTalkIssueDetails = true
                 return .none
@@ -116,7 +127,6 @@ struct SettingsProTab: View {
     @State var stagedGatewaySetupLink: GatewayConnectDeepLink?
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State var defaultShareInstruction = ""
-    @State var showGatewayProblemDetails = false
     @State var showQRScanner = false
     @State var scannerError: String?
     @State var showResetOnboardingAlert = false
@@ -283,7 +293,7 @@ struct SettingsProTab: View {
 
     private func settingsModalPresentation(_ content: some View) -> some View {
         content
-            .sheet(isPresented: self.$showGatewayProblemDetails) {
+            .sheet(isPresented: self.gatewayProblemDetailsBinding) {
                 if let gatewayProblem = self.appModel.lastGatewayProblem {
                     GatewayProblemDetailsSheet(
                         problem: gatewayProblem,
@@ -374,6 +384,18 @@ struct SettingsProTab: View {
 }
 
 extension SettingsProTab {
+    private var gatewayProblemDetailsBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showGatewayProblemDetails },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
+                } else {
+                    self.presentationStore.send(.gatewayProblemDetailsDismissed)
+                }
+            })
+    }
+
     private var talkIssueDetailsBinding: Binding<Bool> {
         Binding(
             get: { self.presentationStore.showTalkIssueDetails },
