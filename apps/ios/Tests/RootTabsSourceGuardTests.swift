@@ -868,7 +868,7 @@ struct RootTabsSourceGuardTests {
         #expect(controllerSource.contains("Check Tailscale or LAN."))
         #expect(gatewaySetupFeaturesSource.contains("Tailscale is off on this device. Turn it on, then try again."))
         #expect(gatewaySetupFeaturesSource.contains("Run /pair approve in your OpenClaw chat"))
-        #expect(actionsSource.contains("self.resetOnboarding()"))
+        #expect(actionsSource.contains("await self.resetOnboarding()"))
         #expect(actionsSource.contains("self.gatewayController.trustRotatedGatewayCertificate(from: problem)"))
         #expect(actionsSource.contains("GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem)"))
         #expect(actionsSource.contains("await self.retryGatewayConnectionFromProblem()"))
@@ -1170,7 +1170,7 @@ struct RootTabsSourceGuardTests {
         let preflightFunction = try Self.extract(
             actionsSource,
             from: "func preflightGateway(host: String) async -> Bool",
-            to: "func resetOnboarding()")
+            to: "func resetOnboarding() async")
 
         #expect(gatewaySetupFeaturesSource.contains("enum GatewayPreflightResult: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("case preflightRequested(host: String, hasTailnetIPv4: Bool)"))
@@ -1351,13 +1351,32 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("guard !host.isEmpty, self.manualPort > 0, self.manualPort <= 65535"))
     }
 
-    @Test func `settings onboarding request id advancement is reducer owned`() throws {
+    @Test func `settings onboarding reset is reducer effect owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let resetFunction = try Self.extract(
+            actionsSource,
+            from: "func resetOnboarding() async",
+            to: "func retryGatewayConnectionFromProblem()")
 
-        #expect(settingsSource.contains("case onboardingRequestAdvanced"))
+        #expect(settingsSource.contains("case onboardingResetRequested(instanceId: String)"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsOnboardingReset)"))
         #expect(settingsSource.contains("state.onboardingRequestID += 1"))
-        #expect(actionsSource.contains("self.onboardingStateStore.send(.onboardingRequestAdvanced)"))
+        #expect(settingsSource.contains("await resetClient.reset(instanceId)"))
+        #expect(supportSource.contains("struct SettingsOnboardingResetClient"))
+        #expect(supportSource.contains("GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId)"))
+        #expect(rootSource.contains("self.makeSettingsOnboardingStateStore()"))
+        #expect(rootSource.contains("SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))"))
+        #expect(actionsSource
+            .contains("await self.onboardingStateStore.send(.onboardingResetRequested(instanceId: self.instanceId)).finish()"))
+        #expect(actionsSource.contains("self.syncStoredOnboardingResetState()"))
+        #expect(settingsSource.contains("Task { await self.resetOnboarding() }"))
+        #expect(actionsSource.contains("await self.resetOnboarding()"))
+        #expect(!resetFunction.contains("GatewayOnboardingReset.reset"))
+        #expect(!actionsSource.contains("self.onboardingStateStore.send(.onboardingRequestAdvanced)"))
+        #expect(!actionsSource.contains("self.onboardingStateStore.send(.completionStateReset)"))
         #expect(!actionsSource.contains("self.storedOnboardingRequestID += 1"))
         #expect(!actionsSource.contains("self.onboardingStateStore.send(.onboardingRequestIDChanged("))
     }

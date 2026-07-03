@@ -126,6 +126,29 @@ extension DependencyValues {
     }
 }
 
+struct SettingsOnboardingResetClient {
+    var reset: @MainActor @Sendable (_ instanceId: String) -> Void
+}
+
+extension SettingsOnboardingResetClient: DependencyKey {
+    static let liveValue = SettingsOnboardingResetClient(reset: { _ in })
+    static let testValue = SettingsOnboardingResetClient(reset: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsOnboardingResetClient(reset: { instanceId in
+            GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId)
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsOnboardingReset: SettingsOnboardingResetClient {
+        get { self[SettingsOnboardingResetClient.self] }
+        set { self[SettingsOnboardingResetClient.self] = newValue }
+    }
+}
+
 struct SettingsShareInstructionPersistenceClient {
     var loadDefaultInstruction: @Sendable () -> String
     var saveDefaultInstruction: @MainActor @Sendable (_ value: String) -> Void

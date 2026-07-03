@@ -1956,19 +1956,24 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
-    @Test func `settings onboarding state resets completion flags`() async {
+    @Test func `settings onboarding state resets through client`() async {
+        let resetProbe = SettingsOnboardingResetProbe()
         var initialState = SettingsOnboardingStateFeature.State()
         initialState.hasConnectedOnce = true
         initialState.onboardingComplete = true
         initialState.onboardingRequestID = 4
         let store = TestStore(initialState: initialState) {
-            SettingsOnboardingStateFeature()
+            SettingsOnboardingStateFeature(resetClient: resetProbe.client)
         }
 
-        await store.send(.completionStateReset) {
+        await store.send(.onboardingResetRequested(instanceId: "instance-reset")) {
             $0.hasConnectedOnce = false
             $0.onboardingComplete = false
+            $0.onboardingRequestID = 5
         }
+        await store.finish()
+
+        #expect(resetProbe.resetInstanceIds == ["instance-reset"])
     }
 
     @Test func `settings onboarding state records request id changes`() async {
@@ -1977,18 +1982,6 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.onboardingRequestIDChanged(5)) {
-            $0.onboardingRequestID = 5
-        }
-    }
-
-    @Test func `settings onboarding state advances request id`() async {
-        var initialState = SettingsOnboardingStateFeature.State()
-        initialState.onboardingRequestID = 4
-        let store = TestStore(initialState: initialState) {
-            SettingsOnboardingStateFeature()
-        }
-
-        await store.send(.onboardingRequestAdvanced) {
             $0.onboardingRequestID = 5
         }
     }
@@ -2420,6 +2413,16 @@ private final class SettingsGatewaySetupAuthPersistenceProbe: @unchecked Sendabl
                 self.savedRequests.append(request)
                 self.events.append("save:\(request.instanceId)")
             })
+    }
+}
+
+private final class SettingsOnboardingResetProbe: @unchecked Sendable {
+    var resetInstanceIds: [String] = []
+
+    var client: SettingsOnboardingResetClient {
+        SettingsOnboardingResetClient(reset: { instanceId in
+            self.resetInstanceIds.append(instanceId)
+        })
     }
 }
 
