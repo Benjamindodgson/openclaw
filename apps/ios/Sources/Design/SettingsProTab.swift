@@ -342,6 +342,65 @@ struct SettingsShareInstructionFeature {
     }
 }
 
+@Reducer
+struct SettingsManualGatewayPortFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var manualGatewayPort = 18789
+        var manualGatewayPortText = "18789"
+
+        var isManualPortValid: Bool {
+            if self.manualGatewayPortText.isEmpty { return true }
+            return self.manualGatewayPort >= 1 && self.manualGatewayPort <= 65535
+        }
+
+        func resolvedManualPort(host: String, useTLS: Bool) -> Int? {
+            Self.resolvedManualPort(
+                manualGatewayPort: self.manualGatewayPort,
+                host: host,
+                useTLS: useTLS)
+        }
+
+        static func resolvedManualPort(manualGatewayPort: Int, host: String, useTLS: Bool) -> Int? {
+            if manualGatewayPort > 0 {
+                return manualGatewayPort <= 65535 ? manualGatewayPort : nil
+            }
+            let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return nil }
+            if useTLS, trimmed.lowercased().hasSuffix(".ts.net") {
+                return 443
+            }
+            return 18789
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case manualGatewayPortSynced(Int)
+        case manualGatewayPortTextChanged(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .manualGatewayPortSynced(port):
+                state.manualGatewayPort = port
+                state.manualGatewayPortText = port > 0 ? String(port) : ""
+                return .none
+
+            case let .manualGatewayPortTextChanged(text):
+                let filtered = text.filter(\.isNumber)
+                state.manualGatewayPortText = filtered
+                state.manualGatewayPort = Int(filtered) ?? 0
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -378,7 +437,6 @@ struct SettingsProTab: View {
     @State var connectingGatewayID: String?
     @State var gatewayToken = ""
     @State var gatewayPassword = ""
-    @State var manualGatewayPortText = ""
     @State var setupStatusText: String?
     @State var stagedGatewaySetupLink: GatewayConnectDeepLink?
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
@@ -399,6 +457,12 @@ struct SettingsProTab: View {
         initialState: SettingsShareInstructionFeature.State())
     {
         SettingsShareInstructionFeature()
+    }
+
+    @State var manualGatewayPortStore: StoreOf<SettingsManualGatewayPortFeature> = Store(
+        initialState: SettingsManualGatewayPortFeature.State())
+    {
+        SettingsManualGatewayPortFeature()
     }
 
     @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
@@ -540,6 +604,9 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.locationModeRaw) { _, newValue in
                 self.handleLocationModeChange(newValue)
+            }
+            .onChange(of: self.manualGatewayPortStore.manualGatewayPort) { _, newValue in
+                self.manualGatewayPort = newValue
             }
             .onChange(of: self.agentSelectionStore.selectedAgentPickerId) { _, newValue in
                 let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)

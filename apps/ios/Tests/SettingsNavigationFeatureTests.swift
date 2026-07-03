@@ -275,4 +275,52 @@ struct SettingsNavigationFeatureTests {
             $0.defaultShareInstruction = "Use the research agent."
         }
     }
+
+    @Test func `settings manual gateway port filters text changes`() async {
+        let store = TestStore(initialState: SettingsManualGatewayPortFeature.State()) {
+            SettingsManualGatewayPortFeature()
+        }
+
+        await store.send(.manualGatewayPortTextChanged("44a3")) {
+            $0.manualGatewayPortText = "443"
+            $0.manualGatewayPort = 443
+        }
+        await store.send(.manualGatewayPortTextChanged("")) {
+            $0.manualGatewayPortText = ""
+            $0.manualGatewayPort = 0
+        }
+    }
+
+    @Test func `settings manual gateway port syncs external values`() async {
+        let store = TestStore(initialState: SettingsManualGatewayPortFeature.State()) {
+            SettingsManualGatewayPortFeature()
+        }
+
+        await store.send(.manualGatewayPortSynced(443)) {
+            $0.manualGatewayPortText = "443"
+            $0.manualGatewayPort = 443
+        }
+        await store.send(.manualGatewayPortSynced(0)) {
+            $0.manualGatewayPortText = ""
+            $0.manualGatewayPort = 0
+        }
+    }
+
+    @Test func `settings manual gateway port validates and resolves defaults`() {
+        var state = SettingsManualGatewayPortFeature.State()
+        state.manualGatewayPort = 65_536
+        state.manualGatewayPortText = "65536"
+
+        #expect(!state.isManualPortValid)
+        #expect(state.resolvedManualPort(host: "gateway.example.com", useTLS: true) == nil)
+
+        state.manualGatewayPort = 0
+        state.manualGatewayPortText = ""
+
+        #expect(state.isManualPortValid)
+        #expect(state.resolvedManualPort(host: "", useTLS: true) == nil)
+        #expect(state.resolvedManualPort(host: "gateway.example.com", useTLS: true) == 18789)
+        #expect(state.resolvedManualPort(host: "device.sample.ts.net", useTLS: true) == 443)
+        #expect(state.resolvedManualPort(host: "device.sample.ts.net", useTLS: false) == 18789)
+    }
 }
