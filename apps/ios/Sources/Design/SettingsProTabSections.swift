@@ -895,7 +895,7 @@ extension SettingsProTab {
                     issue: issue,
                     onOpenSettings: nil,
                     onShowDetails: {
-                        self.showTalkIssueDetails = true
+                        self.presentationStore.send(.talkIssueDetailsButtonTapped)
                     })
             }
             ProCard(radius: SettingsLayout.cardRadius) {

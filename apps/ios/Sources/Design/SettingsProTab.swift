@@ -40,6 +40,37 @@ struct SettingsNavigationFeature {
     }
 }
 
+@Reducer
+struct SettingsPresentationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var showTalkIssueDetails = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case talkIssueDetailsButtonTapped
+        case talkIssueDetailsDismissed
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .talkIssueDetailsButtonTapped:
+                state.showTalkIssueDetails = true
+                return .none
+
+            case .talkIssueDetailsDismissed:
+                state.showTalkIssueDetails = false
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -103,7 +134,12 @@ struct SettingsProTab: View {
     @State var showNotificationRelayDisclosure = false
     @State var diagnosticsLastRunText = "Not run"
     @State var diagnosticsIssueCount: Int?
-    @State var showTalkIssueDetails = false
+    @State var presentationStore: StoreOf<SettingsPresentationFeature> = Store(
+        initialState: SettingsPresentationFeature.State())
+    {
+        SettingsPresentationFeature()
+    }
+
     @State private var navigationStore: StoreOf<SettingsNavigationFeature>
     let initialRoute: SettingsRoute?
     let directRoute: SettingsRoute?
@@ -257,7 +293,7 @@ struct SettingsProTab: View {
                         })
                 }
             }
-            .sheet(isPresented: self.$showTalkIssueDetails) {
+            .sheet(isPresented: self.talkIssueDetailsBinding) {
                 if let issue = self.appModel.talkMode.gatewayTalkCurrentFallbackIssue {
                     TalkRuntimeIssueDetailsSheet(issue: issue)
                 }
@@ -334,6 +370,20 @@ struct SettingsProTab: View {
             return
         }
         self.onRouteChange?(self.navigationStore.navigationPath.last)
+    }
+}
+
+extension SettingsProTab {
+    private var talkIssueDetailsBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showTalkIssueDetails },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.talkIssueDetailsButtonTapped)
+                } else {
+                    self.presentationStore.send(.talkIssueDetailsDismissed)
+                }
+            })
     }
 }
 
