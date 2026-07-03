@@ -328,16 +328,7 @@ struct RootTabs: View {
     }
 
     private var sidebarGatewayStatusTitle: String {
-        switch self.gatewayStatus {
-        case .connected:
-            "Online"
-        case .connecting:
-            "Connecting"
-        case .error:
-            "Needs attention"
-        case .disconnected:
-            "Offline"
-        }
+        self.presentationStore.sidebarGatewayStatusTitle
     }
 
     private var sidebarList: some View {
@@ -370,16 +361,7 @@ struct RootTabs: View {
     }
 
     private var sidebarGatewayStatusColor: Color {
-        switch self.gatewayStatus {
-        case .connected:
-            OpenClawBrand.ok
-        case .connecting:
-            OpenClawBrand.accent
-        case .error:
-            OpenClawBrand.warn
-        case .disconnected:
-            .secondary
-        }
+        self.presentationStore.sidebarGatewayStatusColor
     }
 
     private func sidebarDestinationButton(
@@ -723,6 +705,8 @@ struct RootTabs: View {
 
     private func rootGatewayLifecycle(_ content: some View) -> some View {
         content
+            .onAppear { self.syncSidebarGatewayStatus() }
+            .onChange(of: self.gatewayStatus) { _, _ in self.syncSidebarGatewayStatus() }
             .onChange(of: self.canvasDebugStatusEnabled) { _, _ in self.updateCanvasDebugStatus() }
             .onChange(of: self.gatewayController.gateways.count) { _, _ in self.maybeShowQuickSetup() }
             .onChange(of: self.appModel.gatewayServerName) { _, newValue in
@@ -864,6 +848,12 @@ struct RootTabs: View {
 
     private var gatewayStatus: GatewayDisplayState {
         GatewayStatusBuilder.build(appModel: self.appModel)
+    }
+
+    private func syncSidebarGatewayStatus() {
+        let status = self.gatewayStatus
+        guard self.presentationStore.sidebarGatewayStatus != status else { return }
+        self.presentationStore.send(.sidebarGatewayStatusChanged(status))
     }
 
     private func updateIdleTimer() {

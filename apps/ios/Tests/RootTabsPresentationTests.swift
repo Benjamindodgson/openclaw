@@ -134,6 +134,30 @@ struct RootTabsPresentationTests {
         }
     }
 
+    @Test func `reducer owns sidebar gateway status presentation`() async {
+        let store = TestStore(initialState: RootPresentationFeature.State()) {
+            RootPresentationFeature()
+        }
+
+        await store.send(.sidebarGatewayStatusChanged(.connected)) {
+            $0.sidebarGatewayStatus = .connected
+        }
+        #expect(store.state.sidebarGatewayStatusTitle == "Online")
+        #expect(store.state.sidebarGatewayStatusColor == OpenClawBrand.ok)
+
+        await store.send(.sidebarGatewayStatusChanged(.error)) {
+            $0.sidebarGatewayStatus = .error
+        }
+        #expect(store.state.sidebarGatewayStatusTitle == "Needs attention")
+        #expect(store.state.sidebarGatewayStatusColor == OpenClawBrand.warn)
+
+        await store.send(.sidebarGatewayStatusChanged(.disconnected)) {
+            $0.sidebarGatewayStatus = .disconnected
+        }
+        #expect(store.state.sidebarGatewayStatusTitle == "Offline")
+        #expect(store.state.sidebarGatewayStatusColor == .secondary)
+    }
+
     @Test func `voice wake toast reducer shows trimmed command and dismisses after delay`() async {
         let store = TestStore(initialState: RootVoiceWakeToastFeature.State()) {
             RootVoiceWakeToastFeature(sleeper: RootVoiceWakeToastSleepClient(sleep: {}))
