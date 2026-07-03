@@ -1130,6 +1130,26 @@ struct RootTabsSourceGuardTests {
         #expect(requestFunction.contains("Task {") == false)
     }
 
+    @Test func `settings location mode request decision is reducer owned`() throws {
+        let locationSource = try String(contentsOf: Self.settingsLocationFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let requestFunction = try Self.extract(
+            actionsSource,
+            from: "func handleLocationModeRequest",
+            to: "@MainActor\n    func applyLocationMode")
+
+        #expect(locationSource.contains("struct LocationModeRequest: Equatable, Sendable"))
+        #expect(locationSource.contains("case locationModeChangeRequested(String)"))
+        #expect(locationSource.contains("guard let mode = OpenClawLocationMode(rawValue: rawValue) else"))
+        #expect(locationSource.contains("state.locationModeRequest = LocationModeRequest("))
+        #expect(settingsSource.contains("self.locationStore.send(.locationModeChangeRequested(newValue))"))
+        #expect(settingsSource.contains("self.handleLocationModeRequest(self.locationStore.locationModeRequest)"))
+        #expect(actionsSource.contains("self.locationStore.send(.locationModeRequestHandled)"))
+        #expect(requestFunction.contains("OpenClawLocationMode(rawValue:") == false)
+        #expect(requestFunction.contains("previousLocationModeRaw") == false)
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 
@@ -1357,6 +1377,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsNotificationFeature.swift")
+    }
+
+    private static func settingsLocationFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsLocationFeature.swift")
     }
 
     private static func settingsGatewaySetupFeaturesSourceURL() -> URL {

@@ -1174,9 +1174,9 @@ struct SettingsProTab: View {
                 self.debugOptionsStore.send(.canvasDebugStatusChanged(newValue))
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
-                self.locationStore.send(.locationModeChanged(newValue))
+                self.locationStore.send(.locationModeChangeRequested(newValue))
                 self.deviceCapabilityStore.send(.locationModeChanged(newValue))
-                self.handleLocationModeChange(newValue)
+                self.handleLocationModeRequest(self.locationStore.locationModeRequest)
             }
             .onChange(of: self.manualGatewayPortStore.manualGatewayPort) { _, newValue in
                 self.storedManualGatewayPort = newValue

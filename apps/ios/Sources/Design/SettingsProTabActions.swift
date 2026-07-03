@@ -495,13 +495,14 @@ extension SettingsProTab {
         await self.retryGatewayConnectionFromProblem()
     }
 
-    func handleLocationModeChange(_ newValue: String) {
-        guard !self.locationStore.isChangingLocationMode else { return }
-        guard newValue != self.locationStore.previousLocationModeRaw else { return }
-        guard let mode = OpenClawLocationMode(rawValue: newValue) else { return }
-        let previous = self.locationStore.previousLocationModeRaw
+    func handleLocationModeRequest(_ request: SettingsLocationFeature.LocationModeRequest?) {
+        guard let request else { return }
+        self.locationStore.send(.locationModeRequestHandled)
         Task {
-            await self.applyLocationMode(mode, rawValue: newValue, previous: previous)
+            await self.applyLocationMode(
+                request.mode,
+                rawValue: request.rawValue,
+                previous: request.previousRawValue)
         }
     }
 
