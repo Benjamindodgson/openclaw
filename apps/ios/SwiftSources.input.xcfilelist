@@ -19,6 +19,7 @@ Sources/Design/OpenClawProComponents.swift
 Sources/Design/SettingsProTab.swift
 Sources/Design/SettingsDiagnosticsFeature.swift
 Sources/Design/SettingsDeviceCapabilityFeature.swift
+Sources/Design/SettingsGatewayConnectionFeature.swift
 Sources/Design/SettingsGatewaySetupFeatures.swift
 Sources/Design/SettingsLocationFeature.swift
 Sources/Design/SettingsNotificationFeature.swift

@@ -81,12 +81,6 @@ extension SettingsProTab {
         }
     }
 
-    var gatewaySummaryDetail: String {
-        let agentCount = self.appModel.gatewayAgents.count
-        let agents = agentCount == 1 ? "1 agent" : "\(agentCount) agents"
-        return "\(self.gatewayStatusDetail) • \(agents)"
-    }
-
     var gatewayActions: some View {
         HStack(spacing: 10) {
             self.gatewayActionButton(

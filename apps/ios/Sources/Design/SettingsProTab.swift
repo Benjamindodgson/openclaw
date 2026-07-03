@@ -170,37 +170,6 @@ struct SettingsGatewayActivityFeature {
 }
 
 @Reducer
-struct SettingsGatewayConnectionFeature {
-    // swiftformat:disable redundantSendable
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var connectingGatewayID: String?
-    }
-
-    enum Action: Equatable, Sendable {
-        case connectionFinished
-        case connectionStarted(String)
-    }
-
-    // swiftformat:enable redundantSendable
-
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case .connectionFinished:
-                state.connectingGatewayID = nil
-                return .none
-
-            case let .connectionStarted(gatewayID):
-                state.connectingGatewayID = gatewayID
-                return .none
-            }
-        }
-        .autoLogActions()
-    }
-}
-
-@Reducer
 struct SettingsGatewaySetupLinkFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -1044,9 +1013,26 @@ struct SettingsProTab: View {
         content
             .onChange(of: self.appModel.lastGatewayProblem?.message) { _, _ in
                 self.syncGatewaySetupStatusContext()
+                self.syncGatewayConnectionStatusState()
+            }
+            .onChange(of: self.appModel.lastGatewayProblem?.statusText) { _, _ in
+                self.syncGatewayConnectionStatusState()
+            }
+            .onChange(of: self.appModel.lastGatewayProblem?.pauseReconnect) { _, _ in
+                self.syncGatewayConnectionStatusState()
             }
             .onChange(of: self.appModel.gatewayStatusText) { _, _ in
                 self.syncGatewaySetupStatusContext()
+                self.syncGatewayConnectionStatusState()
+            }
+            .onChange(of: self.appModel.gatewayServerName) { _, _ in
+                self.syncGatewayConnectionStatusState()
+            }
+            .onChange(of: self.appModel.isAppleReviewDemoModeEnabled) { _, _ in
+                self.syncGatewayConnectionStatusState()
+            }
+            .onChange(of: self.appModel.gatewayAgents.count) { _, _ in
+                self.syncGatewayConnectionStatusState()
             }
     }
 
