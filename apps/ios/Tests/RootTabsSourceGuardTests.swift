@@ -911,11 +911,18 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.credentialsStore.send(.setupAuthApplied(setupAuth))"))
         #expect(onboardingSource.contains("pendingOverride: self.credentialsStore.pendingManualAuthOverride"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.pendingManualAuthOverrideConsumed)"))
+        #expect(onboardingSource.contains("@State private var photoImportStore"))
+        #expect(onboardingSource.contains("self.photoImportStore.send(.importStarted)"))
+        #expect(onboardingSource
+            .contains("self.photoImportStore.send(.qrMessageDetected(self.detectQRCode(from: data)))"))
+        #expect(onboardingSource.contains("self.handlePhotoImportResult()"))
+        #expect(!onboardingSource.contains("GatewayConnectDeepLink.fromSetupInput(message)"))
         #expect(onboardingStateSource
             .contains("var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?"))
         #expect(onboardingStateSource
             .contains("case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)"))
         #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartFeature"))
+        #expect(onboardingStateSource.contains("struct OnboardingQRPhotoImportFeature"))
         #expect(onboardingStateSource.contains(".cancellable(id: CancelID.restart, cancelInFlight: true)"))
         #expect(actionsSource
             .contains("self.gatewayController.requestLocalNetworkAccess(reason: \"settings_preflight\")"))

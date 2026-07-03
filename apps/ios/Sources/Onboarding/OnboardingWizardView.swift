@@ -51,6 +51,12 @@ struct OnboardingWizardView: View {
         OnboardingSetupCodeFeature()
     }
 
+    @State private var photoImportStore: StoreOf<OnboardingQRPhotoImportFeature> = Store(
+        initialState: OnboardingQRPhotoImportFeature.State())
+    {
+        OnboardingQRPhotoImportFeature()
+    }
+
     private static let pairingAutoResumeTicker = Timer.publish(every: 2.0, on: .main, in: .common).autoconnect()
 
     let allowSkip: Bool
@@ -288,30 +294,12 @@ struct OnboardingWizardView: View {
                                 PhotosPicker(selection: self.$selectedPhoto, matching: .images) {
                                     Label("Photos", systemImage: "photo")
                                 }
+                                .disabled(self.photoImportStore.isImporting)
                             }
                         }
                 }
                 .onChange(of: self.selectedPhoto) { _, newValue in
-                    guard let item = newValue else { return }
-                    self.selectedPhoto = nil
-                    Task {
-                        guard let data = try? await item.loadTransferable(type: Data.self) else {
-                            self.presentationStore.send(.qrScannerErrorReceived("Could not load the selected image."))
-                            return
-                        }
-                        if let message = self.detectQRCode(from: data) {
-                            if let link = GatewayConnectDeepLink.fromSetupInput(message) {
-                                self.handleScannedLink(link)
-                                return
-                            }
-                            if AppleReviewDemoMode.isSetupCode(message) {
-                                self.handleScannedSetupCode(message)
-                                return
-                            }
-                        }
-                        self.presentationStore.send(.qrScannerErrorReceived(
-                            "No valid QR code found in the selected image."))
-                    }
+                    self.handleSelectedPhoto(newValue)
                 }
             }
             .sheet(isPresented: self.gatewayProblemDetailsPresentation) {
@@ -830,6 +818,35 @@ extension OnboardingWizardView {
         self.statusStore.send(.appleReviewDemoModeEnabled)
         self.connectionFormStore.send(.selectedModeChanged(.homeNetwork))
         self.appModel.enterAppleReviewDemoMode()
+    }
+
+    private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
+        guard let item else { return }
+        self.selectedPhoto = nil
+        self.photoImportStore.send(.importStarted)
+        Task {
+            guard let data = try? await item.loadTransferable(type: Data.self) else {
+                self.photoImportStore.send(.imageLoadFailed)
+                self.handlePhotoImportResult()
+                return
+            }
+            self.photoImportStore.send(.qrMessageDetected(self.detectQRCode(from: data)))
+            self.handlePhotoImportResult()
+        }
+    }
+
+    private func handlePhotoImportResult() {
+        guard let result = self.photoImportStore.result else { return }
+        self.photoImportStore.send(.resultHandled)
+
+        switch result {
+        case let .gatewayLink(link):
+            self.handleScannedLink(link)
+        case let .appleReviewSetupCode(code):
+            self.handleScannedSetupCode(code)
+        case let .failure(message):
+            self.presentationStore.send(.qrScannerErrorReceived(message))
+        }
     }
 
     private func openQRScannerFromOnboarding() {

@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Foundation
+import OpenClawKit
 
 enum OnboardingStep: Int, CaseIterable {
     case intro
@@ -566,6 +567,73 @@ extension DependencyValues {
     var onboardingDiscoveryRestartSleep: OnboardingDiscoveryRestartSleepClient {
         get { self[OnboardingDiscoveryRestartSleepClient.self] }
         set { self[OnboardingDiscoveryRestartSleepClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct OnboardingQRPhotoImportFeature {
+    static let imageLoadFailureMessage = "Could not load the selected image."
+    static let invalidQRCodeMessage = "No valid QR code found in the selected image."
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var isImporting = false
+        var result: ImportResult?
+    }
+
+    enum ImportResult: Equatable, Sendable {
+        case appleReviewSetupCode(String)
+        case failure(String)
+        case gatewayLink(GatewayConnectDeepLink)
+    }
+
+    enum Action: Equatable, Sendable {
+        case imageLoadFailed
+        case importStarted
+        case qrMessageDetected(String?)
+        case resultHandled
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .imageLoadFailed:
+                state.isImporting = false
+                state.result = .failure(Self.imageLoadFailureMessage)
+                return .none
+
+            case .importStarted:
+                state.isImporting = true
+                state.result = nil
+                return .none
+
+            case let .qrMessageDetected(message):
+                state.isImporting = false
+                state.result = Self.importResult(message: message)
+                return .none
+
+            case .resultHandled:
+                state.result = nil
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    private static func importResult(message: String?) -> ImportResult {
+        guard let message else {
+            return .failure(self.invalidQRCodeMessage)
+        }
+        if let link = GatewayConnectDeepLink.fromSetupInput(message) {
+            return .gatewayLink(link)
+        }
+        if AppleReviewDemoMode.isSetupCode(message) {
+            return .appleReviewSetupCode(message)
+        }
+        return .failure(Self.invalidQRCodeMessage)
     }
 }
 

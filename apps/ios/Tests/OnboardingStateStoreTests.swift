@@ -162,6 +162,79 @@ import Testing
         }
     }
 
+    @Test @MainActor func `photo import reducer classifies gateway and demo QR messages`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        let store = TestStore(initialState: OnboardingQRPhotoImportFeature.State()) {
+            OnboardingQRPhotoImportFeature()
+        }
+
+        await store.send(.importStarted) {
+            $0.isImporting = true
+        }
+
+        await store.send(.qrMessageDetected("wss://gateway.example.com:443")) {
+            $0.isImporting = false
+            $0.result = .gatewayLink(link)
+        }
+
+        await store.send(.resultHandled) {
+            $0.result = nil
+        }
+
+        await store.send(.importStarted) {
+            $0.isImporting = true
+        }
+
+        await store.send(.qrMessageDetected("  APPLE-REVIEW-DEMO  ")) {
+            $0.isImporting = false
+            $0.result = .appleReviewSetupCode("  APPLE-REVIEW-DEMO  ")
+        }
+    }
+
+    @Test @MainActor func `photo import reducer reports load and invalid QR failures`() async {
+        let store = TestStore(initialState: OnboardingQRPhotoImportFeature.State()) {
+            OnboardingQRPhotoImportFeature()
+        }
+
+        await store.send(.importStarted) {
+            $0.isImporting = true
+        }
+
+        await store.send(.imageLoadFailed) {
+            $0.isImporting = false
+            $0.result = .failure(OnboardingQRPhotoImportFeature.imageLoadFailureMessage)
+        }
+
+        await store.send(.resultHandled) {
+            $0.result = nil
+        }
+
+        await store.send(.importStarted) {
+            $0.isImporting = true
+        }
+
+        await store.send(.qrMessageDetected(nil)) {
+            $0.isImporting = false
+            $0.result = .failure(OnboardingQRPhotoImportFeature.invalidQRCodeMessage)
+        }
+
+        await store.send(.importStarted) {
+            $0.isImporting = true
+            $0.result = nil
+        }
+
+        await store.send(.qrMessageDetected("not a setup code")) {
+            $0.isImporting = false
+            $0.result = .failure(OnboardingQRPhotoImportFeature.invalidQRCodeMessage)
+        }
+    }
+
     @Test @MainActor func `discovery restart reducer schedules restart request`() async {
         let store = TestStore(initialState: OnboardingDiscoveryRestartFeature.State()) {
             OnboardingDiscoveryRestartFeature()
