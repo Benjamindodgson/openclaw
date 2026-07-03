@@ -557,6 +557,25 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings location summarizes privacy detail`() {
+        var state = SettingsLocationFeature.State()
+
+        #expect(state.locationLabel == "Off")
+        #expect(state.privacyDetail == "Location off")
+
+        state.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        #expect(state.locationLabel == "While Using")
+        #expect(state.privacyDetail == "Location While Using")
+
+        state.locationModeRaw = OpenClawLocationMode.always.rawValue
+        #expect(state.locationLabel == "Always")
+        #expect(state.privacyDetail == "Location Always")
+
+        state.locationModeRaw = "unexpected"
+        #expect(state.locationLabel == "Off")
+        #expect(state.privacyDetail == "Location off")
+    }
+
     @Test func `settings location records permission denial`() async {
         var initialState = SettingsLocationFeature.State()
         initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
