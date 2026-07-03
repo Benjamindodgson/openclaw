@@ -138,4 +138,30 @@ struct SettingsNavigationFeatureTests {
             $0.lastRunText = "4:20 PM"
         }
     }
+
+    @Test func `settings gateway activity tracks reconnect lifecycle`() async {
+        let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
+            SettingsGatewayActivityFeature()
+        }
+
+        await store.send(.reconnectStarted) {
+            $0.isReconnectingGateway = true
+        }
+        await store.send(.reconnectFinished) {
+            $0.isReconnectingGateway = false
+        }
+    }
+
+    @Test func `settings gateway activity tracks refresh lifecycle`() async {
+        let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
+            SettingsGatewayActivityFeature()
+        }
+
+        await store.send(.refreshStarted) {
+            $0.isRefreshingGateway = true
+        }
+        await store.send(.refreshFinished) {
+            $0.isRefreshingGateway = false
+        }
+    }
 }

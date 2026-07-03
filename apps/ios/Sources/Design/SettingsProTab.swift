@@ -155,6 +155,48 @@ struct SettingsDiagnosticsFeature {
     }
 }
 
+@Reducer
+struct SettingsGatewayActivityFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var isReconnectingGateway = false
+        var isRefreshingGateway = false
+    }
+
+    enum Action: Equatable, Sendable {
+        case reconnectFinished
+        case reconnectStarted
+        case refreshFinished
+        case refreshStarted
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .reconnectFinished:
+                state.isReconnectingGateway = false
+                return .none
+
+            case .reconnectStarted:
+                state.isReconnectingGateway = true
+                return .none
+
+            case .refreshFinished:
+                state.isRefreshingGateway = false
+                return .none
+
+            case .refreshStarted:
+                state.isRefreshingGateway = true
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -188,8 +230,6 @@ struct SettingsProTab: View {
     @AppStorage("gateway.onboardingComplete") var onboardingComplete: Bool = false
     @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
-    @State var isReconnectingGateway = false
-    @State var isRefreshingGateway = false
     @State var isChangingLocationMode = false
     @State var connectingGatewayID: String?
     @State var selectedAgentPickerId = ""
@@ -215,6 +255,12 @@ struct SettingsProTab: View {
         initialState: SettingsDiagnosticsFeature.State())
     {
         SettingsDiagnosticsFeature()
+    }
+
+    @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
+        initialState: SettingsGatewayActivityFeature.State())
+    {
+        SettingsGatewayActivityFeature()
     }
 
     @State var presentationStore: StoreOf<SettingsPresentationFeature> = Store(
