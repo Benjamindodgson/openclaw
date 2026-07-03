@@ -1073,6 +1073,20 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("self.onboardingStateStore.send(.onboardingRequestIDChanged("))
     }
 
+    @Test func `settings talk toggle apple review decision is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let oldTalkToggleGuard = "func updateTalkEnabled(_ enabled: Bool) {\n"
+            + "        guard !self.appModel.isAppleReviewDemoModeEnabled else"
+
+        #expect(settingsSource
+            .contains("case talkEnabledChangeRequested(enabled: Bool, isAppleReviewDemoModeEnabled: Bool)"))
+        #expect(settingsSource.contains("state.talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled"))
+        #expect(actionsSource.contains("self.voiceControlStore.send(.talkEnabledChangeRequested("))
+        #expect(actionsSource.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
+        #expect(actionsSource.contains(oldTalkToggleGuard) == false)
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 

@@ -672,15 +672,11 @@ extension SettingsProTab {
     }
 
     func updateTalkEnabled(_ enabled: Bool) {
-        guard !self.appModel.isAppleReviewDemoModeEnabled else {
-            self.voiceControlStore.send(.talkDisabledForAppleReview)
-            self.storedTalkEnabled = false
-            self.appModel.setTalkEnabled(false)
-            return
-        }
-        self.voiceControlStore.send(.talkEnabledChanged(enabled))
-        self.storedTalkEnabled = enabled
-        self.appModel.setTalkEnabled(enabled)
+        self.voiceControlStore.send(.talkEnabledChangeRequested(
+            enabled: enabled,
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled))
+        self.storedTalkEnabled = self.voiceControlStore.talkEnabled
+        self.appModel.setTalkEnabled(self.voiceControlStore.talkEnabled)
     }
 
     func updateVoiceWakeEnabled(_ enabled: Bool) {
