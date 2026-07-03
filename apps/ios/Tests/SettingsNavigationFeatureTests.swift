@@ -861,18 +861,22 @@ struct SettingsNavigationFeatureTests {
 
         #expect(state.locationLabel == "Off")
         #expect(state.privacyDetail == "Location off")
+        #expect(state.locationColor == .secondary)
 
         state.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         #expect(state.locationLabel == "While Using")
         #expect(state.privacyDetail == "Location While Using")
+        #expect(state.locationColor == OpenClawBrand.accent)
 
         state.locationModeRaw = OpenClawLocationMode.always.rawValue
         #expect(state.locationLabel == "Always")
         #expect(state.privacyDetail == "Location Always")
+        #expect(state.locationColor == OpenClawBrand.accent)
 
         state.locationModeRaw = "unexpected"
         #expect(state.locationLabel == "Off")
         #expect(state.privacyDetail == "Location off")
+        #expect(state.locationColor == .secondary)
     }
 
     @Test func `settings location records permission denial`() async {

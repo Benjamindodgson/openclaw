@@ -644,8 +644,7 @@ extension SettingsProTab {
                 HStack(spacing: 12) {
                     ProIconBadge(
                         systemName: "location",
-                        color: self.locationModeRaw == OpenClawLocationMode.off.rawValue ? .secondary : OpenClawBrand
-                            .accent)
+                        color: self.locationColor)
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Location")
                             .font(.subheadline.weight(.semibold))
