@@ -760,6 +760,10 @@ struct SettingsVoiceControlFeature {
         var voiceWakeValue: String {
             self.voiceWakeEnabled ? "on" : "off"
         }
+
+        var voiceWakeColor: Color {
+            self.voiceWakeEnabled ? OpenClawBrand.ok : .secondary
+        }
     }
 
     enum Action: Equatable, Sendable {
