@@ -34,6 +34,12 @@ struct RootTabs: View {
     @State private var sidebarVisibilityUserOverridden: Bool = Self.initialSidebarVisibility != nil
     @State private var isSidebarDrawerLayout: Bool = false
     @State private var didResolveSidebarLayout: Bool = false
+    @State private var launchStore: StoreOf<RootLaunchFeature> = Store(
+        initialState: RootLaunchFeature.State())
+    {
+        RootLaunchFeature()
+    }
+
     @State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature> = Store(
         initialState: RootVoiceWakeToastFeature.State())
     {
@@ -47,8 +53,6 @@ struct RootTabs: View {
     }
 
     @State private var presentedSheet: PresentedSheet?
-    @State private var didApplyInitialAppearance: Bool = false
-    @State private var didApplyInitialChatSession: Bool = false
     @State private var suppressedExecApprovalPromptIDForNotificationSettings: String?
 
     private static var initialTab: AppTab {
@@ -1156,16 +1160,13 @@ extension RootTabs {
     }
 
     private func applyInitialChatSessionIfNeeded() {
-        guard !self.didApplyInitialChatSession else { return }
-        self.didApplyInitialChatSession = true
-        self.appModel.focusChatSession(Self.initialChatSessionKey)
+        self.launchStore.send(.initialChatSessionRequested(Self.initialChatSessionKey))
+        self.handleLaunchCommand()
     }
 
     private func applyInitialAppearanceIfNeeded() {
-        guard !self.didApplyInitialAppearance else { return }
-        self.didApplyInitialAppearance = true
-        guard let preference = AppAppearancePreference.launchArgumentPreference else { return }
-        self.appearancePreferenceRaw = preference.rawValue
+        self.launchStore.send(.initialAppearanceRequested(AppAppearancePreference.launchArgumentPreference?.rawValue))
+        self.handleLaunchCommand()
     }
 
     private func maybeShowQuickSetup() {
@@ -1182,6 +1183,19 @@ extension RootTabs {
 }
 
 extension RootTabs {
+    private func handleLaunchCommand() {
+        guard let command = self.launchStore.command else { return }
+        self.launchStore.send(.commandHandled)
+
+        switch command {
+        case let .applyAppearance(rawValue):
+            self.appearancePreferenceRaw = rawValue
+
+        case let .focusChatSession(sessionKey):
+            self.appModel.focusChatSession(sessionKey)
+        }
+    }
+
     private var onboardingPresentedBinding: Binding<Bool> {
         Binding(
             get: { self.presentationStore.showOnboarding },
@@ -1245,6 +1259,54 @@ private struct RootTabsHomeCanvasAgentCard: Codable {
     var badge: String
     var caption: String
     var isActive: Bool
+}
+
+@Reducer
+struct RootLaunchFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var didApplyInitialAppearance = false
+        var didApplyInitialChatSession = false
+        var command: Command?
+    }
+
+    enum Command: Equatable, Sendable {
+        case applyAppearance(rawValue: String)
+        case focusChatSession(String?)
+    }
+
+    enum Action: Equatable, Sendable {
+        case initialAppearanceRequested(String?)
+        case initialChatSessionRequested(String?)
+        case commandHandled
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .initialAppearanceRequested(rawValue):
+                guard !state.didApplyInitialAppearance else { return .none }
+                state.didApplyInitialAppearance = true
+                guard let rawValue else { return .none }
+                state.command = .applyAppearance(rawValue: rawValue)
+                return .none
+
+            case let .initialChatSessionRequested(sessionKey):
+                guard !state.didApplyInitialChatSession else { return .none }
+                state.didApplyInitialChatSession = true
+                state.command = .focusChatSession(sessionKey)
+                return .none
+
+            case .commandHandled:
+                state.command = nil
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
 }
 
 @Reducer
