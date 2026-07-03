@@ -4,6 +4,42 @@ import Testing
 @testable import OpenClaw
 
 @MainActor
+struct AgentSkillFilterFeatureTests {
+    @Test func `search text changes update state`() async {
+        let store = TestStore(initialState: AgentSkillFilterFeature.State()) {
+            AgentSkillFilterFeature()
+        }
+
+        await store.send(.searchTextChanged("gateway")) {
+            $0.searchText = "gateway"
+        }
+    }
+
+    @Test func `status filter changes update state`() async {
+        let store = TestStore(initialState: AgentSkillFilterFeature.State()) {
+            AgentSkillFilterFeature()
+        }
+
+        await store.send(.statusFilterChanged(.setup)) {
+            $0.statusFilter = .setup
+        }
+    }
+
+    @Test func `clear search leaves selected status filter alone`() async {
+        var initialState = AgentSkillFilterFeature.State()
+        initialState.searchText = "memory"
+        initialState.statusFilter = .blocked
+        let store = TestStore(initialState: initialState) {
+            AgentSkillFilterFeature()
+        }
+
+        await store.send(.clearSearchTapped) {
+            $0.searchText = ""
+        }
+    }
+}
+
+@MainActor
 struct AgentClawHubSearchFeatureTests {
     @Test func `query changes update search text`() async {
         let store = TestStore(initialState: AgentClawHubSearchFeature.State()) {
