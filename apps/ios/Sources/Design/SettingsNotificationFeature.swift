@@ -3,6 +3,7 @@ import SwiftUI
 import UserNotifications
 
 struct SettingsNotificationAuthorizationClient {
+    var fetchStatus: @Sendable () async -> SettingsNotificationStatus
     var requestAuthorization: @Sendable () async -> SettingsNotificationAuthorizationResult
 }
 
@@ -13,6 +14,10 @@ struct SettingsNotificationAuthorizationResult: Equatable {
 
 extension SettingsNotificationAuthorizationClient: DependencyKey {
     static let liveValue = SettingsNotificationAuthorizationClient(
+        fetchStatus: {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            return SettingsNotificationStatus(settings.authorizationStatus)
+        },
         requestAuthorization: {
             let granted = await (try? UNUserNotificationCenter.current().requestAuthorization(options: [
                 .alert,
@@ -26,6 +31,9 @@ extension SettingsNotificationAuthorizationClient: DependencyKey {
         })
 
     static let testValue = SettingsNotificationAuthorizationClient(
+        fetchStatus: {
+            .unknown
+        },
         requestAuthorization: {
             SettingsNotificationAuthorizationResult(granted: false, status: .unknown)
         })
@@ -54,6 +62,7 @@ struct SettingsNotificationFeature {
         var authorizationRequestResult: SettingsNotificationAuthorizationResult?
         var isRequestingAuthorization = false
         var status: SettingsNotificationStatus = .checking
+        var statusRefreshResult: SettingsNotificationStatus?
         var usesOpenClawHostedRelay = false
 
         var actionText: String {
@@ -120,6 +129,9 @@ struct SettingsNotificationFeature {
         case authorizationRequestRequested
         case authorizationRequestResultHandled
         case relayConfigSynced(usesOpenClawHostedRelay: Bool, hostedRelayHost: String?)
+        case statusRefreshFinished(SettingsNotificationStatus)
+        case statusRefreshRequested
+        case statusRefreshResultHandled
         case statusChanged(SettingsNotificationStatus)
     }
 
@@ -168,6 +180,21 @@ struct SettingsNotificationFeature {
             case let .relayConfigSynced(usesOpenClawHostedRelay, hostedRelayHost):
                 state.usesOpenClawHostedRelay = usesOpenClawHostedRelay
                 state.hostedRelayHost = hostedRelayHost ?? "ios-push-relay.openclaw.ai"
+                return .none
+
+            case let .statusRefreshFinished(status):
+                state.status = status
+                state.statusRefreshResult = status
+                return .none
+
+            case .statusRefreshRequested:
+                return .run { send in
+                    let status = await authorizationClient.fetchStatus()
+                    await send(.statusRefreshFinished(status))
+                }
+
+            case .statusRefreshResultHandled:
+                state.statusRefreshResult = nil
                 return .none
 
             case let .statusChanged(status):

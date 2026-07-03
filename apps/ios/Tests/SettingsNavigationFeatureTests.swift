@@ -1174,6 +1174,28 @@ struct SettingsNavigationFeatureTests {
         #expect(state.needsAttention == true)
     }
 
+    @Test func `settings notifications refresh status through client`() async {
+        let probe = SettingsNotificationAuthorizationProbe(
+            result: SettingsNotificationAuthorizationResult(granted: false, status: .notAllowed),
+            status: .allowed)
+        let store = TestStore(initialState: SettingsNotificationFeature.State()) {
+            SettingsNotificationFeature(authorizationClient: probe.client)
+        }
+
+        await store.send(.statusRefreshRequested)
+        await store.receive(.statusRefreshFinished(.allowed)) {
+            $0.status = .allowed
+            $0.statusRefreshResult = .allowed
+        }
+        await store.send(.statusRefreshResultHandled) {
+            $0.statusRefreshResult = nil
+        }
+        await store.finish()
+
+        #expect(probe.fetchStatusCount == 1)
+        #expect(probe.requestCount == 0)
+    }
+
     @Test func `settings notifications request authorization through client`() async {
         let result = SettingsNotificationAuthorizationResult(granted: true, status: .allowed)
         let probe = SettingsNotificationAuthorizationProbe(result: result)
@@ -1929,15 +1951,25 @@ struct SettingsNavigationFeatureTests {
 }
 
 private final class SettingsNotificationAuthorizationProbe: @unchecked Sendable {
+    var fetchStatusCount = 0
     var requestCount = 0
     var result: SettingsNotificationAuthorizationResult
+    var status: SettingsNotificationStatus
 
-    init(result: SettingsNotificationAuthorizationResult) {
+    init(
+        result: SettingsNotificationAuthorizationResult,
+        status: SettingsNotificationStatus = .unknown)
+    {
         self.result = result
+        self.status = status
     }
 
     var client: SettingsNotificationAuthorizationClient {
         SettingsNotificationAuthorizationClient(
+            fetchStatus: {
+                self.fetchStatusCount += 1
+                return self.status
+            },
             requestAuthorization: {
                 self.requestCount += 1
                 return self.result

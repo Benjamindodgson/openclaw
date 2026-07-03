@@ -1130,6 +1130,32 @@ struct RootTabsSourceGuardTests {
         #expect(requestFunction.contains("Task {") == false)
     }
 
+    @Test func `settings notification status refresh is reducer effect owned`() throws {
+        let notificationSource = try String(contentsOf: Self.settingsNotificationFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let refreshFunction = try Self.extract(
+            actionsSource,
+            from: "func refreshNotificationSettings()",
+            to: "func handleNotificationAction")
+        let resultFunction = try Self.extract(
+            actionsSource,
+            from: "func handleNotificationStatusRefreshResult",
+            to: "@MainActor\n    func registerForRemoteNotificationsIfEnrollmentReady")
+
+        #expect(notificationSource.contains("var fetchStatus: @Sendable () async -> SettingsNotificationStatus"))
+        #expect(notificationSource.contains("case statusRefreshRequested"))
+        #expect(notificationSource.contains("case statusRefreshFinished(SettingsNotificationStatus)"))
+        #expect(notificationSource.contains("await authorizationClient.fetchStatus()"))
+        #expect(notificationSource.contains("return .run { send in"))
+        #expect(settingsSource.contains(".onChange(of: self.notificationStore.statusRefreshResult)"))
+        #expect(actionsSource.contains("self.notificationStore.send(.statusRefreshRequested)"))
+        #expect(actionsSource.contains("self.notificationStore.send(.statusRefreshResultHandled)"))
+        #expect(refreshFunction.contains("UNUserNotificationCenter.current().getNotificationSettings") == false)
+        #expect(refreshFunction.contains("Task {") == false)
+        #expect(resultFunction.contains("UNUserNotificationCenter") == false)
+    }
+
     @Test func `settings location mode request decision is reducer owned`() throws {
         let locationSource = try String(contentsOf: Self.settingsLocationFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
