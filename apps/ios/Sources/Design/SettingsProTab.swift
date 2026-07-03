@@ -431,6 +431,7 @@ struct SettingsGatewayCredentialsFeature {
         var gatewayToken = ""
         var gatewayPassword = ""
         var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
+        var setupAuthPersistenceRequest: GatewayConnectionController.ManualAuthOverride.SetupAuth?
     }
 
     enum Action: Equatable, Sendable {
@@ -440,6 +441,8 @@ struct SettingsGatewayCredentialsFeature {
         case gatewayTokenChanged(String)
         case pendingManualAuthOverrideConsumed
         case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)
+        case setupAuthPersistenceRequestHandled
+        case setupLinkApplied(GatewayConnectDeepLink)
     }
 
     // swiftformat:enable redundantSendable
@@ -471,17 +474,34 @@ struct SettingsGatewayCredentialsFeature {
                 return .none
 
             case let .setupAuthApplied(setupAuth):
-                if setupAuth.shouldApplyTokenField {
-                    state.gatewayToken = setupAuth.token
-                }
-                if setupAuth.shouldApplyPasswordField {
-                    state.gatewayPassword = setupAuth.password
-                }
-                state.pendingManualAuthOverride = setupAuth.manualAuthOverride
+                Self.applySetupAuth(setupAuth, to: &state)
+                return .none
+
+            case .setupAuthPersistenceRequestHandled:
+                state.setupAuthPersistenceRequest = nil
+                return .none
+
+            case let .setupLinkApplied(link):
+                let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
+                Self.applySetupAuth(setupAuth, to: &state)
+                state.setupAuthPersistenceRequest = setupAuth
                 return .none
             }
         }
         .autoLogActions()
+    }
+
+    private static func applySetupAuth(
+        _ setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth,
+        to state: inout State)
+    {
+        if setupAuth.shouldApplyTokenField {
+            state.gatewayToken = setupAuth.token
+        }
+        if setupAuth.shouldApplyPasswordField {
+            state.gatewayPassword = setupAuth.password
+        }
+        state.pendingManualAuthOverride = setupAuth.manualAuthOverride
     }
 }
 

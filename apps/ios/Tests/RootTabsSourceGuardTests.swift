@@ -1035,6 +1035,28 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("guard self.manualPortIsValid else"))
     }
 
+    @Test func `settings setup auth derivation is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let applyGatewayLinkFunction = try Self.extract(
+            actionsSource,
+            from: "func applyGatewayLink(_ link: GatewayConnectDeepLink)",
+            to: "func openGatewayQRScanner()")
+
+        #expect(settingsSource
+            .contains("var setupAuthPersistenceRequest: GatewayConnectionController.ManualAuthOverride.SetupAuth?"))
+        #expect(settingsSource.contains("case setupLinkApplied(GatewayConnectDeepLink)"))
+        #expect(settingsSource.contains("case setupAuthPersistenceRequestHandled"))
+        #expect(settingsSource
+            .contains("let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)"))
+        #expect(settingsSource.contains("state.setupAuthPersistenceRequest = setupAuth"))
+        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupLinkApplied(link))"))
+        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled)"))
+        #expect(!applyGatewayLinkFunction
+            .contains("GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)"))
+        #expect(!applyGatewayLinkFunction.contains(".setupAuthApplied(setupAuth)"))
+    }
+
     @Test func `onboarding setup code apply result is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
