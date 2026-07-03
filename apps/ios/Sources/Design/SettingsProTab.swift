@@ -1044,6 +1044,12 @@ struct SettingsProTab: View {
             .onChange(of: self.appModel.talkMode.gatewayTalkApiKeyConfigured) { _, _ in
                 self.syncTalkRuntimeState()
             }
+            .onChange(of: self.appModel.talkMode.gatewayTalkTransportLabel) { _, _ in
+                self.syncTalkRuntimeState()
+            }
+            .onChange(of: self.appModel.isAppleReviewDemoModeEnabled) { _, _ in
+                self.syncTalkRuntimeState()
+            }
             .onChange(of: self.appModel.talkMode.gatewayTalkActiveModeTitle) { _, _ in
                 self.syncTalkRuntimeState()
             }

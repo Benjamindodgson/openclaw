@@ -15,6 +15,8 @@ struct SettingsTalkPreferencesFeature {
         var talkSpeakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
         var gatewayTalkConfigLoaded = false
         var gatewayTalkApiKeyConfigured = false
+        var gatewayTalkTransportLabel = "Not loaded"
+        var isAppleReviewDemoModeEnabled = false
         var gatewayTalkActiveModeTitle = "Not active"
         var gatewayTalkActiveModeSubtitle: String?
         var gatewayTalkLastIssueText: String?
@@ -27,6 +29,20 @@ struct SettingsTalkPreferencesFeature {
             Self.talkApiKeyStatus(
                 configLoaded: self.gatewayTalkConfigLoaded,
                 apiKeyConfigured: self.gatewayTalkApiKeyConfigured)
+        }
+
+        var gatewayDiagnosticTalkConfigLoaded: Bool {
+            self.isAppleReviewDemoModeEnabled || self.gatewayTalkConfigLoaded
+        }
+
+        var gatewayTalkConfigDetail: String {
+            if self.isAppleReviewDemoModeEnabled { return "Demo mode only" }
+            return self.gatewayTalkTransportLabel
+        }
+
+        var gatewayTalkConfigValue: String {
+            if self.isAppleReviewDemoModeEnabled { return "demo" }
+            return self.gatewayTalkConfigLoaded ? "loaded" : "missing"
         }
 
         var gatewayTalkActiveVoiceDetail: String {
@@ -74,7 +90,13 @@ struct SettingsTalkPreferencesFeature {
 
     enum Action: Equatable, Sendable {
         case gatewayTalkConfigSynced(configLoaded: Bool, apiKeyConfigured: Bool)
-        case gatewayTalkRuntimeSynced(activeModeTitle: String, activeModeSubtitle: String?, lastIssueText: String?)
+        case gatewayTalkDisplayContextSynced(
+            isAppleReviewDemoModeEnabled: Bool,
+            transportLabel: String)
+        case gatewayTalkRuntimeSynced(
+            activeModeTitle: String,
+            activeModeSubtitle: String?,
+            lastIssueText: String?)
         case preferencesSynced(
             providerSelectionRaw: String,
             realtimeVoiceSelectionRaw: String,
@@ -98,6 +120,11 @@ struct SettingsTalkPreferencesFeature {
             case let .gatewayTalkConfigSynced(configLoaded, apiKeyConfigured):
                 state.gatewayTalkConfigLoaded = configLoaded
                 state.gatewayTalkApiKeyConfigured = apiKeyConfigured
+                return .none
+
+            case let .gatewayTalkDisplayContextSynced(isAppleReviewDemoModeEnabled, transportLabel):
+                state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
+                state.gatewayTalkTransportLabel = transportLabel
                 return .none
 
             case let .gatewayTalkRuntimeSynced(activeModeTitle, activeModeSubtitle, lastIssueText):
