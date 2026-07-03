@@ -810,10 +810,7 @@ struct RootTabs: View {
             .execApprovalPromptDialog(
                 suppressedApprovalID: self.activeExecApprovalPromptSuppressionID,
                 store: self.makeExecApprovalPromptStore())
-            .notificationPermissionGuidanceDialog(openNotifications: { approvalId in
-                self.suppressedExecApprovalPromptIDForNotificationSettings = approvalId
-                self.selectSettingsRoute(.notifications)
-            })
+            .notificationPermissionGuidanceDialog(store: self.makeNotificationPermissionGuidanceStore())
     }
 
     @MainActor
@@ -843,6 +840,18 @@ struct RootTabs: View {
     private func makeExecApprovalPromptStore() -> StoreOf<ExecApprovalPromptFeature> {
         Store(initialState: ExecApprovalPromptFeature.State()) {
             ExecApprovalPromptFeature(client: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
+    private func makeNotificationPermissionGuidanceStore() -> StoreOf<NotificationPermissionGuidanceFeature> {
+        Store(initialState: NotificationPermissionGuidanceFeature.State()) {
+            NotificationPermissionGuidanceFeature(client: .live(
+                appModel: self.appModel,
+                openNotifications: { approvalId in
+                    self.suppressedExecApprovalPromptIDForNotificationSettings = approvalId
+                    self.selectSettingsRoute(.notifications)
+                }))
         }
     }
 
