@@ -1330,6 +1330,18 @@ struct SettingsNavigationFeatureTests {
         #expect(probe.requestCount == 0)
     }
 
+    @Test func `settings notifications open ios settings through client`() async {
+        let probe = SettingsNotificationRegistrationProbe()
+        let store = TestStore(initialState: SettingsNotificationFeature.State()) {
+            SettingsNotificationFeature(registrationClient: probe.client)
+        }
+
+        await store.send(.notificationSettingsOpenRequested)
+        await store.finish()
+
+        #expect(probe.openSettingsCount == 1)
+    }
+
     @Test func `settings notifications register remote notifications when enrollment is ready`() async {
         let probe = SettingsNotificationRegistrationProbe()
         var initialState = SettingsNotificationFeature.State()
@@ -2154,10 +2166,14 @@ private final class SettingsNotificationAuthorizationProbe: @unchecked Sendable 
 }
 
 private final class SettingsNotificationRegistrationProbe: @unchecked Sendable {
+    var openSettingsCount = 0
     var registerCount = 0
 
     var client: SettingsNotificationRegistrationClient {
         SettingsNotificationRegistrationClient(
+            openNotificationSettings: {
+                self.openSettingsCount += 1
+            },
             registerForRemoteNotifications: {
                 self.registerCount += 1
             })

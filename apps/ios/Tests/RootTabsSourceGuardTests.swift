@@ -1266,9 +1266,14 @@ struct RootTabsSourceGuardTests {
         #expect(notificationSource
             .contains(
                 "state.actionRequest = state.usesOpenClawHostedRelay ? .showRelayDisclosure : .requestAuthorization"))
+        #expect(notificationSource.contains("case notificationSettingsOpenRequested"))
+        #expect(notificationSource.contains("await registrationClient.openNotificationSettings()"))
         #expect(actionsSource.contains("self.notificationStore.send(.actionButtonTapped)"))
         #expect(actionsSource.contains("self.notificationStore.send(.actionRequestHandled)"))
+        #expect(actionsSource.contains("self.notificationStore.send(.notificationSettingsOpenRequested)"))
         #expect(actionsSource.contains("switch request"))
+        #expect(actionsSource.contains("func openNotificationSettings") == false)
+        #expect(actionsSource.contains("UIApplication.openNotificationSettingsURLString") == false)
         #expect(!actionsSource.contains("if self.notificationStore.status.shouldOpenNotificationSettings"))
         #expect(!actionsSource.contains("guard self.notificationStore.status == .notSet else"))
         #expect(!actionsSource.contains("if PushBuildConfig.current.usesOpenClawHostedRelay"))

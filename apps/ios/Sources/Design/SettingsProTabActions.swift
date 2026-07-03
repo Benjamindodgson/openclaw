@@ -1,7 +1,6 @@
 import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
-import UIKit
 
 extension SettingsProTab {
     func detailStatusCard(
@@ -543,7 +542,7 @@ extension SettingsProTab {
 
         switch request {
         case .openSettings:
-            self.openNotificationSettings()
+            self.notificationStore.send(.notificationSettingsOpenRequested)
 
         case .requestAuthorization:
             self.requestNotificationAuthorizationFromSettings()
@@ -594,11 +593,6 @@ extension SettingsProTab {
         GatewaySettingsStore.saveGatewayPassword(
             value.trimmingCharacters(in: .whitespacesAndNewlines),
             instanceId: instanceId)
-    }
-
-    func openNotificationSettings() {
-        guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else { return }
-        UIApplication.shared.open(url)
     }
 
     var manualPortBinding: Binding<String> {
