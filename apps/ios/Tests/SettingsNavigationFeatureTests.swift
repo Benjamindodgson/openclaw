@@ -998,5 +998,8 @@ struct SettingsNavigationFeatureTests {
 
         state.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
         #expect(state.shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: false) == true)
+        #expect(SettingsTalkPreferencesFeature.State.shouldShowRealtimeVoicePicker(
+            providerSelectionRaw: TalkModeProviderSelection.openAIRealtime.rawValue,
+            gatewayTalkUsesRealtime: false) == true)
     }
 }

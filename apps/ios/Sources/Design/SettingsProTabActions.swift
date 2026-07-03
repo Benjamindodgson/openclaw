@@ -851,8 +851,9 @@ extension SettingsProTab {
     }
 
     var shouldShowRealtimeVoicePicker: Bool {
-        let providerSelection = TalkModeProviderSelection.resolved(self.talkPreferencesStore.providerSelectionRaw)
-        return providerSelection == .openAIRealtime || self.appModel.talkMode.gatewayTalkUsesRealtime
+        SettingsTalkPreferencesFeature.State.shouldShowRealtimeVoicePicker(
+            providerSelectionRaw: self.talkPreferencesStore.providerSelectionRaw,
+            gatewayTalkUsesRealtime: self.appModel.talkMode.gatewayTalkUsesRealtime)
     }
 
     var talkProviderSelectionBinding: Binding<String> {
