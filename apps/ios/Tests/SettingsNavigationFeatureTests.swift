@@ -46,4 +46,17 @@ struct SettingsNavigationFeatureTests {
             $0.navigationPath = [.gateway, .voice]
         }
     }
+
+    @Test func `settings presentation opens and dismisses talk issue details`() async {
+        let store = TestStore(initialState: SettingsPresentationFeature.State()) {
+            SettingsPresentationFeature()
+        }
+
+        await store.send(.talkIssueDetailsButtonTapped) {
+            $0.showTalkIssueDetails = true
+        }
+        await store.send(.talkIssueDetailsDismissed) {
+            $0.showTalkIssueDetails = false
+        }
+    }
 }
