@@ -984,6 +984,20 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("let stagedLink = self.stagedGatewaySetupLink"))
     }
 
+    @Test func `onboarding setup code apply result is reducer owned`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("enum ApplyResult: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case applyRequested"))
+        #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(link)"))
+        #expect(onboardingSource.contains("self.setupCodeStore.send(.applyRequested)"))
+        #expect(onboardingSource.contains("self.setupCodeStore.send(.applyResultHandled)"))
+        #expect(!onboardingSource.contains("let raw = self.setupCodeStore.trimmedSetupCode"))
+        #expect(!onboardingSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
+        #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 
