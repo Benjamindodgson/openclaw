@@ -285,7 +285,9 @@ extension SettingsProTab {
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
             gatewayStatusConnected: GatewayStatusBuilder.build(appModel: self.appModel) == .connected,
             gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
-            gatewayAgentCount: self.appModel.gatewayAgents.count))
+            gatewayAgentCount: self.appModel.gatewayAgents.count,
+            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress,
+            gatewayServerName: self.appModel.gatewayServerName))
         self.syncApprovalState()
     }
 
@@ -1023,11 +1025,11 @@ extension SettingsProTab {
     }
 
     var gatewayAddress: String {
-        self.appModel.gatewayRemoteAddress ?? "Waiting for gateway"
+        self.gatewayConnectionStore.gatewayAddress
     }
 
     var gatewayServer: String {
-        self.appModel.gatewayServerName ?? "OpenClaw Gateway"
+        self.gatewayConnectionStore.gatewayServer
     }
 
     var permissionsDetail: String {

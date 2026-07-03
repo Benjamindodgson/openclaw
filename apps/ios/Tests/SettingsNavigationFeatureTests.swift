@@ -459,7 +459,9 @@ struct SettingsNavigationFeatureTests {
             isAppleReviewDemoModeEnabled: false,
             gatewayStatusConnected: false,
             gatewayDisplayStatusText: "Pairing required",
-            gatewayAgentCount: 0))
+            gatewayAgentCount: 0,
+            gatewayRemoteAddress: nil,
+            gatewayServerName: nil))
         {
             $0.gatewayDisplayStatusText = "Pairing required"
         }
@@ -467,22 +469,30 @@ struct SettingsNavigationFeatureTests {
             isAppleReviewDemoModeEnabled: false,
             gatewayStatusConnected: true,
             gatewayDisplayStatusText: "Connected",
-            gatewayAgentCount: 2))
+            gatewayAgentCount: 2,
+            gatewayRemoteAddress: "100.64.1.2:18789",
+            gatewayServerName: "openclaw-gateway"))
         {
             $0.gatewayDisplayStatusText = "Connected"
             $0.gatewayStatusConnected = true
             $0.gatewayAgentCount = 2
+            $0.gatewayRemoteAddress = "100.64.1.2:18789"
+            $0.gatewayServerName = "openclaw-gateway"
         }
         await store.send(.gatewayStatusSynced(
             isAppleReviewDemoModeEnabled: true,
             gatewayStatusConnected: false,
             gatewayDisplayStatusText: "Offline",
-            gatewayAgentCount: 3))
+            gatewayAgentCount: 3,
+            gatewayRemoteAddress: nil,
+            gatewayServerName: nil))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayStatusConnected = false
             $0.gatewayDisplayStatusText = "Offline"
             $0.gatewayAgentCount = 3
+            $0.gatewayRemoteAddress = nil
+            $0.gatewayServerName = nil
         }
     }
 
@@ -491,14 +501,20 @@ struct SettingsNavigationFeatureTests {
         #expect(SettingsGatewayConnectionFeature.State().gatewayStatusValue == "offline")
         #expect(SettingsGatewayConnectionFeature.State().gatewaySummaryDetail == "Offline • 0 agents")
         #expect(SettingsGatewayConnectionFeature.State().gatewayDiagnosticConnected == false)
+        #expect(SettingsGatewayConnectionFeature.State().gatewayAddress == "Waiting for gateway")
+        #expect(SettingsGatewayConnectionFeature.State().gatewayServer == "OpenClaw Gateway")
 
         var connectedState = SettingsGatewayConnectionFeature.State()
         connectedState.gatewayStatusConnected = true
         connectedState.gatewayAgentCount = 1
+        connectedState.gatewayRemoteAddress = "100.64.1.2:18789"
+        connectedState.gatewayServerName = "openclaw-gateway"
         #expect(connectedState.gatewayStatusDetail == "Connected")
         #expect(connectedState.gatewayStatusValue == "online")
         #expect(connectedState.gatewaySummaryDetail == "Connected • 1 agent")
         #expect(connectedState.gatewayDiagnosticConnected)
+        #expect(connectedState.gatewayAddress == "100.64.1.2:18789")
+        #expect(connectedState.gatewayServer == "openclaw-gateway")
 
         var demoState = SettingsGatewayConnectionFeature.State()
         demoState.isAppleReviewDemoModeEnabled = true

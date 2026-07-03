@@ -8,6 +8,8 @@ struct SettingsGatewayConnectionFeature {
         var connectingGatewayID: String?
         var gatewayAgentCount = 0
         var gatewayDisplayStatusText = "Offline"
+        var gatewayRemoteAddress: String?
+        var gatewayServerName: String?
         var gatewayStatusConnected = false
         var isAppleReviewDemoModeEnabled = false
 
@@ -31,6 +33,14 @@ struct SettingsGatewayConnectionFeature {
 
         var gatewaySummaryDetail: String {
             "\(self.gatewayStatusDetail) • \(Self.agentSummary(count: self.gatewayAgentCount))"
+        }
+
+        var gatewayAddress: String {
+            self.gatewayRemoteAddress ?? "Waiting for gateway"
+        }
+
+        var gatewayServer: String {
+            self.gatewayServerName ?? "OpenClaw Gateway"
         }
 
         static func agentSummary(count: Int) -> String {
@@ -63,7 +73,9 @@ struct SettingsGatewayConnectionFeature {
             isAppleReviewDemoModeEnabled: Bool,
             gatewayStatusConnected: Bool,
             gatewayDisplayStatusText: String,
-            gatewayAgentCount: Int)
+            gatewayAgentCount: Int,
+            gatewayRemoteAddress: String?,
+            gatewayServerName: String?)
     }
 
     // swiftformat:enable redundantSendable
@@ -83,11 +95,15 @@ struct SettingsGatewayConnectionFeature {
                 isAppleReviewDemoModeEnabled,
                 gatewayStatusConnected,
                 gatewayDisplayStatusText,
-                gatewayAgentCount):
+                gatewayAgentCount,
+                gatewayRemoteAddress,
+                gatewayServerName):
                 state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
                 state.gatewayStatusConnected = gatewayStatusConnected
                 state.gatewayDisplayStatusText = gatewayDisplayStatusText
                 state.gatewayAgentCount = gatewayAgentCount
+                state.gatewayRemoteAddress = gatewayRemoteAddress
+                state.gatewayServerName = gatewayServerName
                 return .none
             }
         }
