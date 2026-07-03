@@ -435,7 +435,7 @@ extension SettingsProTab {
         guard self.notificationStatus == .notSet else { return }
 
         if PushBuildConfig.current.usesOpenClawHostedRelay {
-            self.showNotificationRelayDisclosure = true
+            self.presentationStore.send(.notificationRelayDisclosureRequested)
             return
         }
         self.requestNotificationAuthorizationFromSettings()
