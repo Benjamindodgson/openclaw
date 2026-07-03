@@ -17,6 +17,8 @@ Sources/Design/CommandCenterTab.swift
 Sources/Design/TalkProTab.swift
 Sources/Design/OpenClawProComponents.swift
 Sources/Design/SettingsProTab.swift
+Sources/Design/SettingsGatewaySetupFeatures.swift
+Sources/Design/SettingsTalkPreferencesFeature.swift
 Sources/Design/SettingsProTabSupport.swift
 Sources/Design/SettingsProTabSections.swift
 Sources/Design/SettingsProTabActions.swift
