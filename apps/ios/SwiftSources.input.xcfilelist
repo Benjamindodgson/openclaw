@@ -17,6 +17,7 @@ Sources/Design/CommandCenterTab.swift
 Sources/Design/TalkProTab.swift
 Sources/Design/OpenClawProComponents.swift
 Sources/Design/SettingsProTab.swift
+Sources/Design/SettingsDiagnosticsFeature.swift
 Sources/Design/SettingsDeviceCapabilityFeature.swift
 Sources/Design/SettingsGatewaySetupFeatures.swift
 Sources/Design/SettingsLocationFeature.swift

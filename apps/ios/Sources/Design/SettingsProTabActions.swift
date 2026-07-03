@@ -1069,7 +1069,7 @@ extension SettingsProTab {
     }
 
     var diagnosticsDetail: String {
-        "System checks"
+        self.diagnosticsStore.detailText
     }
 
     var diagnosticsHealthValue: String {
@@ -1080,8 +1080,7 @@ extension SettingsProTab {
     }
 
     var diagnosticsRunValue: String {
-        guard let diagnosticsIssueCount = self.diagnosticsStore.issueCount else { return "pending" }
-        return diagnosticsIssueCount == 0 ? "pass" : "\(diagnosticsIssueCount)"
+        self.diagnosticsStore.runValue
     }
 
     var diagnosticsRunColor: Color {
