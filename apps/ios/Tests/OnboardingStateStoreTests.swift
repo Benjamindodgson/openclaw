@@ -162,6 +162,31 @@ import Testing
         }
     }
 
+    @Test @MainActor func `discovery restart reducer schedules restart request`() async {
+        let store = TestStore(initialState: OnboardingDiscoveryRestartFeature.State()) {
+            OnboardingDiscoveryRestartFeature()
+        }
+
+        await store.send(.discoveryDomainChanged)
+
+        await store.receive(.restartDelayElapsed) {
+            $0.restartRequestID = 1
+        }
+    }
+
+    @Test @MainActor func `discovery restart reducer cancels pending restart on disappear`() async {
+        let probe = OnboardingDiscoveryRestartSleepProbe()
+        let store = TestStore(initialState: OnboardingDiscoveryRestartFeature.State()) {
+            OnboardingDiscoveryRestartFeature(sleeper: probe.client)
+        }
+
+        await store.send(.discoveryDomainChanged)
+        await store.send(.disappeared)
+
+        await store.finish()
+        #expect(probe.wasCancelled)
+    }
+
     @Test @MainActor func `step reducer navigates wizard steps`() async {
         let store = TestStore(initialState: OnboardingStepFeature.State(step: .intro)) {
             OnboardingStepFeature()
@@ -544,5 +569,24 @@ import Testing
 
     private func reset(_ defaults: TestDefaults) {
         defaults.defaults.removePersistentDomain(forName: defaults.suiteName)
+    }
+
+    private final class OnboardingDiscoveryRestartSleepProbe: @unchecked Sendable {
+        var wasCancelled = false
+        private var continuation: CheckedContinuation<Void, Error>?
+
+        var client: OnboardingDiscoveryRestartSleepClient {
+            OnboardingDiscoveryRestartSleepClient(sleep: {
+                try await withTaskCancellationHandler {
+                    try await withCheckedThrowingContinuation { continuation in
+                        self.continuation = continuation
+                    }
+                } onCancel: {
+                    self.wasCancelled = true
+                    self.continuation?.resume(throwing: CancellationError())
+                    self.continuation = nil
+                }
+            })
+        }
     }
 }

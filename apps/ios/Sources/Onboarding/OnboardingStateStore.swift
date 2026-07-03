@@ -500,6 +500,76 @@ struct OnboardingPresentationFeature {
 }
 
 @Reducer
+struct OnboardingDiscoveryRestartFeature {
+    private let sleepOverride: OnboardingDiscoveryRestartSleepClient?
+
+    private enum CancelID {
+        case restart
+    }
+
+    init(sleeper: OnboardingDiscoveryRestartSleepClient? = nil) {
+        self.sleepOverride = sleeper
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var restartRequestID = 0
+    }
+
+    enum Action: Equatable, Sendable {
+        case disappeared
+        case discoveryDomainChanged
+        case restartDelayElapsed
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.onboardingDiscoveryRestartSleep) var dependencySleeper
+            let sleeper = self.sleepOverride ?? dependencySleeper
+
+            switch action {
+            case .discoveryDomainChanged:
+                return .run { send in
+                    try await sleeper.sleep()
+                    await send(.restartDelayElapsed)
+                }
+                .cancellable(id: CancelID.restart, cancelInFlight: true)
+
+            case .restartDelayElapsed:
+                state.restartRequestID &+= 1
+                return .none
+
+            case .disappeared:
+                return .cancel(id: CancelID.restart)
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+struct OnboardingDiscoveryRestartSleepClient {
+    var sleep: @Sendable () async throws -> Void
+}
+
+extension OnboardingDiscoveryRestartSleepClient: DependencyKey {
+    static let liveValue = OnboardingDiscoveryRestartSleepClient(sleep: {
+        try await Task.sleep(nanoseconds: 350_000_000)
+    })
+
+    static let testValue = OnboardingDiscoveryRestartSleepClient(sleep: {})
+}
+
+extension DependencyValues {
+    var onboardingDiscoveryRestartSleep: OnboardingDiscoveryRestartSleepClient {
+        get { self[OnboardingDiscoveryRestartSleepClient.self] }
+        set { self[OnboardingDiscoveryRestartSleepClient.self] = newValue }
+    }
+}
+
+@Reducer
 struct OnboardingSetupCodeFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
