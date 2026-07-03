@@ -276,12 +276,15 @@ struct SettingsNavigationFeatureTests {
 
         #expect(state.detailText == "System checks")
         #expect(state.runValue == "pending")
+        #expect(state.runColor == .secondary)
 
         state.issueCount = 0
         #expect(state.runValue == "pass")
+        #expect(state.runColor == OpenClawBrand.ok)
 
         state.issueCount = 3
         #expect(state.runValue == "3")
+        #expect(state.runColor == OpenClawBrand.warn)
     }
 
     @Test func `settings diagnostics summarize health state`() {
