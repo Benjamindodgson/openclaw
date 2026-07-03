@@ -381,10 +381,14 @@ extension SettingsProTab {
     }
 
     func handleScannedGatewayLink(_ link: GatewayConnectDeepLink) {
+        self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(link))
+        guard case let .gatewayLink(scannedLink)? = self.gatewaySetupLinkStore.applyResult else { return }
+        self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
-        self.applyGatewayLink(link)
-        self.gatewaySetupStatusStore.send(.statusChanged("QR loaded. Connecting to \(link.host):\(link.port)..."))
+        self.applyGatewayLink(scannedLink)
+        self.gatewaySetupStatusStore
+            .send(.statusChanged("QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)..."))
         Task { await self.connectAfterScannedGatewayLink() }
     }
 

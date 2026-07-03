@@ -821,6 +821,39 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup link classifies scanned gateway links`() async {
+        let scannedLink = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        let stagedLink = GatewayConnectDeepLink(
+            host: "staged.example.com",
+            port: 18789,
+            tls: false,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = SettingsGatewaySetupLinkFeature.State()
+        initialState.setupCode = "stale code"
+        initialState.stagedGatewaySetupLink = stagedLink
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.scannedGatewayLinkReceived(scannedLink)) {
+            $0.applyResult = .gatewayLink(scannedLink)
+            $0.setupCode = ""
+            $0.stagedGatewaySetupLink = nil
+        }
+
+        await store.send(.applyResultHandled) {
+            $0.applyResult = nil
+        }
+    }
+
     @Test func `settings gateway credentials load persisted values`() async {
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature()

@@ -341,6 +341,7 @@ struct SettingsGatewaySetupLinkFeature {
     enum Action: Equatable, Sendable {
         case applyRequested
         case applyResultHandled
+        case scannedGatewayLinkReceived(GatewayConnectDeepLink)
         case scannedSetupCodeReceived(String)
         case setupCodeChanged(String)
         case setupCodeSynced(String)
@@ -377,6 +378,13 @@ struct SettingsGatewaySetupLinkFeature {
 
             case .applyResultHandled:
                 state.applyResult = nil
+                return .none
+
+            case let .scannedGatewayLinkReceived(link):
+                state.applyResult = nil
+                state.setupCode = ""
+                state.stagedGatewaySetupLink = nil
+                state.applyResult = .gatewayLink(link)
                 return .none
 
             case let .scannedSetupCodeReceived(code):
