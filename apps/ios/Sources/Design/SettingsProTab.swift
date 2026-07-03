@@ -229,99 +229,6 @@ struct SettingsGatewayConnectionFeature {
 }
 
 @Reducer
-struct SettingsGatewaySetupStatusFeature {
-    // swiftformat:disable redundantSendable
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var gatewayProblemMessage: String?
-        var gatewayStatusText = ""
-        var statusText: String?
-
-        var setupStatusLine: String? {
-            SettingsGatewaySetupStatusFeature.setupStatusLine(
-                problemMessage: self.gatewayProblemMessage,
-                setupStatusText: self.statusText,
-                gatewayStatusText: self.gatewayStatusText)
-        }
-    }
-
-    enum Action: Equatable, Sendable {
-        case gatewayStatusSynced(problemMessage: String?, gatewayStatusText: String)
-        case statusChanged(String?)
-    }
-
-    // swiftformat:enable redundantSendable
-
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case let .gatewayStatusSynced(problemMessage, gatewayStatusText):
-                state.gatewayProblemMessage = problemMessage
-                state.gatewayStatusText = gatewayStatusText
-                return .none
-
-            case let .statusChanged(statusText):
-                state.statusText = statusText
-                return .none
-            }
-        }
-        .autoLogActions()
-    }
-
-    static func setupStatusLine(
-        problemMessage: String?,
-        setupStatusText: String?,
-        gatewayStatusText: String) -> String?
-    {
-        if let problemMessage {
-            return problemMessage
-        }
-        let trimmedSetup = setupStatusText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let gatewayStatus = gatewayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let friendly = Self.friendlyGatewayMessage(from: gatewayStatus) { return friendly }
-        if let friendly = Self.friendlyGatewayMessage(from: trimmedSetup) { return friendly }
-        if Self.isTransientSetupStatus(trimmedSetup),
-           !gatewayStatus.isEmpty,
-           gatewayStatus != "Offline"
-        {
-            return gatewayStatus
-        }
-        if !trimmedSetup.isEmpty { return trimmedSetup }
-        if gatewayStatus.isEmpty || gatewayStatus == "Offline" { return nil }
-        return gatewayStatus
-    }
-
-    static func friendlyGatewayMessage(from raw: String) -> String? {
-        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if lower.contains("pairing required") {
-            return "Pairing required. Run /pair approve in your OpenClaw chat, then connect again."
-        }
-        if lower.contains("device nonce required") || lower.contains("device nonce mismatch") {
-            return "Secure handshake failed. Check Tailscale, then connect again."
-        }
-        if lower.contains("tls fingerprint verification timed out")
-            || lower.contains("no tls endpoint detected")
-        {
-            return raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        if lower.contains("timed out") {
-            return "Connection timed out. Make sure Tailscale is connected, then try again."
-        }
-        if lower.contains("unauthorized role") {
-            return "Connected, but some controls are restricted for nodes. This is expected."
-        }
-        return nil
-    }
-
-    static func isTransientSetupStatus(_ raw: String) -> Bool {
-        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return lower == "setup code applied. connecting..."
-            || lower.hasPrefix("qr loaded. connecting to ")
-            || lower == "checking gateway reachability..."
-    }
-}
-
-@Reducer
 struct SettingsGatewaySetupLinkFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -654,92 +561,6 @@ struct SettingsManualGatewayPortFeature {
 }
 
 @Reducer
-struct SettingsManualGatewayEndpointFeature {
-    // swiftformat:disable redundantSendable
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var manualGatewayEnabled = false
-        var manualGatewayHost = ""
-        var manualGatewayTLS = true
-
-        func tailnetWarningText(hasTailnetIPv4: Bool) -> String? {
-            Self.tailnetWarningText(
-                host: self.manualGatewayHost,
-                hasTailnetIPv4: hasTailnetIPv4)
-        }
-
-        static func tailnetWarningText(host: String, hasTailnetIPv4: Bool) -> String? {
-            let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty, Self.isTailnetHostOrIP(trimmed), !hasTailnetIPv4 else { return nil }
-            return "This gateway is on your tailnet. Turn on Tailscale on this device, then tap Connect."
-        }
-
-        static func isTailnetHostOrIP(_ host: String) -> Bool {
-            let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            if trimmed.hasSuffix(".ts.net") || trimmed.hasSuffix(".ts.net.") { return true }
-            return self.isTailnetIPv4(trimmed)
-        }
-
-        static func isTailnetIPv4(_ ip: String) -> Bool {
-            let parts = ip.split(separator: ".")
-            guard parts.count == 4 else { return false }
-            let octets = parts.compactMap { Int($0) }
-            guard octets.count == 4 else { return false }
-            let a = octets[0]
-            let b = octets[1]
-            guard (0...255).contains(a), (0...255).contains(b) else { return false }
-            return a == 100 && b >= 64 && b <= 127
-        }
-    }
-
-    enum Action: Equatable, Sendable {
-        case endpointClearedForOnboardingReset
-        case endpointSynced(enabled: Bool, host: String, tls: Bool)
-        case manualGatewayEnabledChanged(Bool)
-        case manualGatewayHostChanged(String)
-        case manualGatewayTLSChanged(Bool)
-        case setupLinkApplied(host: String, tls: Bool)
-    }
-
-    // swiftformat:enable redundantSendable
-
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case .endpointClearedForOnboardingReset:
-                state.manualGatewayEnabled = false
-                state.manualGatewayHost = ""
-                return .none
-
-            case let .endpointSynced(enabled, host, tls):
-                state.manualGatewayEnabled = enabled
-                state.manualGatewayHost = host
-                state.manualGatewayTLS = tls
-                return .none
-
-            case let .manualGatewayEnabledChanged(enabled):
-                state.manualGatewayEnabled = enabled
-                return .none
-
-            case let .manualGatewayHostChanged(host):
-                state.manualGatewayHost = host
-                return .none
-
-            case let .manualGatewayTLSChanged(tls):
-                state.manualGatewayTLS = tls
-                return .none
-
-            case let .setupLinkApplied(host, tls):
-                state.manualGatewayHost = host
-                state.manualGatewayTLS = tls
-                return .none
-            }
-        }
-        .autoLogActions()
-    }
-}
-
-@Reducer
 struct SettingsGatewayAutoConnectFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -1021,125 +842,6 @@ struct SettingsVoiceControlFeature {
             }
         }
         .autoLogActions()
-    }
-}
-
-@Reducer
-struct SettingsTalkPreferencesFeature {
-    // swiftformat:disable redundantSendable
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
-        var realtimeVoiceSelectionRaw = ""
-        var speechLocale = TalkSpeechLocale.automaticID
-        var talkButtonEnabled = true
-        var talkBackgroundEnabled = false
-        var talkSpeakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
-        var gatewayTalkConfigLoaded = false
-        var gatewayTalkApiKeyConfigured = false
-
-        var providerSelection: TalkModeProviderSelection {
-            TalkModeProviderSelection.resolved(self.providerSelectionRaw)
-        }
-
-        var talkApiKeyStatus: String {
-            Self.talkApiKeyStatus(
-                configLoaded: self.gatewayTalkConfigLoaded,
-                apiKeyConfigured: self.gatewayTalkApiKeyConfigured)
-        }
-
-        func shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: Bool) -> Bool {
-            Self.shouldShowRealtimeVoicePicker(
-                providerSelectionRaw: self.providerSelectionRaw,
-                gatewayTalkUsesRealtime: gatewayTalkUsesRealtime)
-        }
-
-        static func shouldShowRealtimeVoicePicker(
-            providerSelectionRaw: String,
-            gatewayTalkUsesRealtime: Bool) -> Bool
-        {
-            TalkModeProviderSelection.resolved(providerSelectionRaw) == .openAIRealtime
-                || gatewayTalkUsesRealtime
-        }
-
-        static func talkApiKeyStatus(configLoaded: Bool, apiKeyConfigured: Bool) -> String {
-            guard configLoaded else { return "Not loaded" }
-            return apiKeyConfigured ? "Configured" : "Not configured"
-        }
-    }
-
-    enum Action: Equatable, Sendable {
-        case gatewayTalkConfigSynced(configLoaded: Bool, apiKeyConfigured: Bool)
-        case preferencesSynced(
-            providerSelectionRaw: String,
-            realtimeVoiceSelectionRaw: String,
-            speechLocale: String,
-            talkButtonEnabled: Bool,
-            talkBackgroundEnabled: Bool,
-            talkSpeakerphoneEnabled: Bool)
-        case providerSelectionChanged(String)
-        case realtimeVoiceSelectionChanged(String)
-        case speechLocaleChanged(String)
-        case talkBackgroundEnabledChanged(Bool)
-        case talkButtonEnabledChanged(Bool)
-        case talkSpeakerphoneEnabledChanged(Bool)
-    }
-
-    // swiftformat:enable redundantSendable
-
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case let .gatewayTalkConfigSynced(configLoaded, apiKeyConfigured):
-                state.gatewayTalkConfigLoaded = configLoaded
-                state.gatewayTalkApiKeyConfigured = apiKeyConfigured
-                return .none
-
-            case let .preferencesSynced(
-                providerSelectionRaw,
-                realtimeVoiceSelectionRaw,
-                speechLocale,
-                talkButtonEnabled,
-                talkBackgroundEnabled,
-                talkSpeakerphoneEnabled):
-                state.providerSelectionRaw = TalkModeProviderSelection.resolved(providerSelectionRaw).rawValue
-                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(realtimeVoiceSelectionRaw)
-                state.speechLocale = speechLocale
-                state.talkButtonEnabled = talkButtonEnabled
-                state.talkBackgroundEnabled = talkBackgroundEnabled
-                state.talkSpeakerphoneEnabled = talkSpeakerphoneEnabled
-                return .none
-
-            case let .providerSelectionChanged(rawValue):
-                state.providerSelectionRaw = TalkModeProviderSelection.resolved(rawValue).rawValue
-                return .none
-
-            case let .realtimeVoiceSelectionChanged(rawValue):
-                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(rawValue)
-                return .none
-
-            case let .speechLocaleChanged(speechLocale):
-                state.speechLocale = speechLocale
-                return .none
-
-            case let .talkBackgroundEnabledChanged(enabled):
-                state.talkBackgroundEnabled = enabled
-                return .none
-
-            case let .talkButtonEnabledChanged(enabled):
-                state.talkButtonEnabled = enabled
-                return .none
-
-            case let .talkSpeakerphoneEnabledChanged(enabled):
-                state.talkSpeakerphoneEnabled = enabled
-                return .none
-            }
-        }
-        .autoLogActions()
-    }
-
-    private static func normalizedRealtimeVoice(_ rawValue: String) -> String {
-        TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
     }
 }
 
@@ -1524,6 +1226,15 @@ struct SettingsProTab: View {
                 self.syncTalkRuntimeState()
             }
             .onChange(of: self.appModel.talkMode.gatewayTalkApiKeyConfigured) { _, _ in
+                self.syncTalkRuntimeState()
+            }
+            .onChange(of: self.appModel.talkMode.gatewayTalkActiveModeTitle) { _, _ in
+                self.syncTalkRuntimeState()
+            }
+            .onChange(of: self.appModel.talkMode.gatewayTalkActiveModeSubtitle) { _, _ in
+                self.syncTalkRuntimeState()
+            }
+            .onChange(of: self.appModel.talkMode.gatewayTalkLastIssueText) { _, _ in
                 self.syncTalkRuntimeState()
             }
     }

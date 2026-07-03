@@ -1005,6 +1005,22 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings talk preferences sync gateway runtime details`() async {
+        let store = TestStore(initialState: SettingsTalkPreferencesFeature.State()) {
+            SettingsTalkPreferencesFeature()
+        }
+
+        await store.send(.gatewayTalkRuntimeSynced(
+            activeModeTitle: "Ready",
+            activeModeSubtitle: "Listening starts from this phone",
+            lastIssueText: "Fallback active"))
+        {
+            $0.gatewayTalkActiveModeTitle = "Ready"
+            $0.gatewayTalkActiveModeSubtitle = "Listening starts from this phone"
+            $0.gatewayTalkLastIssueText = "Fallback active"
+        }
+    }
+
     @Test func `settings talk preferences summarize api key status`() {
         var state = SettingsTalkPreferencesFeature.State()
 
@@ -1016,6 +1032,27 @@ struct SettingsNavigationFeatureTests {
         #expect(SettingsTalkPreferencesFeature.State.talkApiKeyStatus(
             configLoaded: true,
             apiKeyConfigured: false) == "Not configured")
+    }
+
+    @Test func `settings talk preferences summarize gateway runtime details`() {
+        var state = SettingsTalkPreferencesFeature.State()
+
+        #expect(state.gatewayTalkActiveVoiceDetail == "Not active")
+        #expect(state.gatewayTalkLastIssueDetail == nil)
+
+        state.gatewayTalkActiveModeTitle = " Ready "
+        #expect(state.gatewayTalkActiveVoiceDetail == "Ready")
+
+        state.gatewayTalkActiveModeSubtitle = " Listening starts from this phone "
+        #expect(state.gatewayTalkActiveVoiceDetail == "Ready • Listening starts from this phone")
+
+        state.gatewayTalkActiveModeTitle = "   "
+        #expect(state.gatewayTalkActiveVoiceDetail == "Not active")
+
+        state.gatewayTalkLastIssueText = "  Fallback active  "
+        #expect(state.gatewayTalkLastIssueDetail == "Fallback active")
+        state.gatewayTalkLastIssueText = "  "
+        #expect(state.gatewayTalkLastIssueDetail == nil)
     }
 
     @Test func `settings talk preferences show realtime picker for local or gateway realtime`() {

@@ -219,6 +219,10 @@ extension SettingsProTab {
         self.talkPreferencesStore.send(.gatewayTalkConfigSynced(
             configLoaded: self.appModel.talkMode.gatewayTalkConfigLoaded,
             apiKeyConfigured: self.appModel.talkMode.gatewayTalkApiKeyConfigured))
+        self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(
+            activeModeTitle: self.appModel.talkMode.gatewayTalkActiveModeTitle,
+            activeModeSubtitle: self.appModel.talkMode.gatewayTalkActiveModeSubtitle,
+            lastIssueText: self.appModel.talkMode.gatewayTalkLastIssueText))
     }
 
     func syncOnboardingState() {
@@ -939,18 +943,11 @@ extension SettingsProTab {
     }
 
     var gatewayTalkActiveVoiceDetail: String {
-        let title = self.appModel.talkMode.gatewayTalkActiveModeTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        let subtitle = (self.appModel.talkMode.gatewayTalkActiveModeSubtitle ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if title.isEmpty { return "Not active" }
-        if subtitle.isEmpty { return title }
-        return "\(title) • \(subtitle)"
+        self.talkPreferencesStore.gatewayTalkActiveVoiceDetail
     }
 
     var gatewayTalkLastIssueDetail: String? {
-        let detail = (self.appModel.talkMode.gatewayTalkLastIssueText ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return detail.isEmpty ? nil : detail
+        self.talkPreferencesStore.gatewayTalkLastIssueDetail
     }
 
     func gatewayDetailLines(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) -> [String] {

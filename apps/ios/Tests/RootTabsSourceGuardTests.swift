@@ -749,6 +749,9 @@ struct RootTabsSourceGuardTests {
 
     @Test func `gateway settings keeps pairing trust diagnostics and tailscale actions`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let gatewaySetupFeaturesSource = try String(
+            contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
+            encoding: .utf8)
         let sectionsSource = try String(contentsOf: Self.settingsProTabSectionsSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let trustSource = try String(contentsOf: Self.gatewayTrustPromptAlertSourceURL(), encoding: .utf8)
@@ -782,7 +785,7 @@ struct RootTabsSourceGuardTests {
         #expect(controllerSource.contains("await self.tcpReachabilityProbe("))
         #expect(controllerSource.contains("Check Tailscale or LAN."))
         #expect(actionsSource.contains("Tailscale is off on this device. Turn it on, then try again."))
-        #expect(settingsSource.contains("Run /pair approve in your OpenClaw chat"))
+        #expect(gatewaySetupFeaturesSource.contains("Run /pair approve in your OpenClaw chat"))
         #expect(actionsSource.contains("self.resetOnboarding()"))
         #expect(actionsSource.contains("self.gatewayController.trustRotatedGatewayCertificate(from: problem)"))
         #expect(actionsSource.contains("GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem)"))
@@ -1046,6 +1049,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsProTab.swift")
+    }
+
+    private static func settingsGatewaySetupFeaturesSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsGatewaySetupFeatures.swift")
     }
 
     private static func onboardingWizardSourceURL() -> URL {
