@@ -1500,6 +1500,32 @@ struct SettingsNavigationFeatureTests {
         #expect(state.resolvedManualPort(host: "device.sample.ts.net", useTLS: false) == 18789)
     }
 
+    @Test func `settings manual gateway port reports resolution results`() async {
+        var initialState = SettingsManualGatewayPortFeature.State()
+        initialState.manualGatewayPort = 65_536
+        initialState.manualGatewayPortText = "65536"
+        let store = TestStore(initialState: initialState) {
+            SettingsManualGatewayPortFeature()
+        }
+
+        await store.send(.manualGatewayPortResolutionRequested(host: "gateway.example.com", useTLS: true)) {
+            $0.manualGatewayPortResolutionResult = .failure("Failed: invalid port")
+        }
+
+        await store.send(.manualGatewayPortResolutionResultHandled) {
+            $0.manualGatewayPortResolutionResult = nil
+        }
+
+        await store.send(.manualGatewayPortSynced(0)) {
+            $0.manualGatewayPort = 0
+            $0.manualGatewayPortText = ""
+        }
+
+        await store.send(.manualGatewayPortResolutionRequested(host: "device.sample.ts.net", useTLS: true)) {
+            $0.manualGatewayPortResolutionResult = .resolved
+        }
+    }
+
     @Test func `settings manual gateway endpoint syncs persisted values`() async {
         let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature()

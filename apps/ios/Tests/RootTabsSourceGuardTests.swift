@@ -1095,6 +1095,30 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("guard self.manualPortIsValid else"))
     }
 
+    @Test func `settings manual port resolution status is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let applyFunction = try Self.extract(
+            actionsSource,
+            from: "func applySetupCodeAndConnect() async",
+            to: "func applyPendingGatewaySetupLinkIfNeeded()")
+        let scannedConnectFunction = try Self.extract(
+            actionsSource,
+            from: "func connectAfterScannedGatewayLink() async",
+            to: "func connectManual()")
+
+        #expect(settingsSource.contains("enum ManualGatewayPortResolutionResult: Equatable, Sendable"))
+        #expect(settingsSource.contains("case manualGatewayPortResolutionRequested(host: String, useTLS: Bool)"))
+        #expect(settingsSource.contains("state.manualGatewayPortResolutionResult = .failure(\"Failed: invalid port\")"))
+        #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested("))
+        #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)"))
+        #expect(applyFunction.contains("self.resolveManualPortForConnection(host: host)"))
+        #expect(scannedConnectFunction.contains("self.resolveManualPortForConnection(host: host)"))
+        #expect(!actionsSource.contains("func resolvedManualPort(host: String)"))
+        #expect(!applyFunction.contains("Failed: invalid port"))
+        #expect(!scannedConnectFunction.contains("Failed: invalid port"))
+    }
+
     @Test func `settings gateway preflight decision is reducer owned`() throws {
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
