@@ -513,13 +513,7 @@ extension SettingsProTab {
     }
 
     func refreshNotificationSettings() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            let status = settings.authorizationStatus
-            Task { @MainActor in
-                self.applyNotificationStatus(status)
-                self.registerForRemoteNotificationsIfEnrollmentReady()
-            }
-        }
+        self.notificationStore.send(.statusRefreshRequested)
     }
 
     func handleNotificationAction() {
@@ -550,6 +544,13 @@ extension SettingsProTab {
         self.notificationStore.send(.authorizationRequestResultHandled)
         self.syncApprovalState()
         guard result.granted else { return }
+        self.registerForRemoteNotificationsIfEnrollmentReady()
+    }
+
+    func handleNotificationStatusRefreshResult(_ status: SettingsNotificationStatus?) {
+        guard status != nil else { return }
+        self.notificationStore.send(.statusRefreshResultHandled)
+        self.syncApprovalState()
         self.registerForRemoteNotificationsIfEnrollmentReady()
     }
 

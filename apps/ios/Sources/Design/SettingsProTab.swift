@@ -1260,6 +1260,9 @@ struct SettingsProTab: View {
             .onChange(of: self.notificationStore.authorizationRequestResult) { _, result in
                 self.handleNotificationAuthorizationResult(result)
             }
+            .onChange(of: self.notificationStore.statusRefreshResult) { _, status in
+                self.handleNotificationStatusRefreshResult(status)
+            }
             .onChange(of: self.appModel.pendingExecApprovalPrompt?.id) { _, _ in
                 self.syncApprovalState()
             }
