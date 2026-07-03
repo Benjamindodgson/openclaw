@@ -696,7 +696,7 @@ extension SettingsProTab {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Default Agent")
                     .font(.subheadline.weight(.semibold))
-                Picker("Agent", selection: self.$selectedAgentPickerId) {
+                Picker("Agent", selection: self.agentSelectionBinding) {
                     Text("Default").tag("")
                     let defaultId = (self.appModel.gatewayDefaultAgentId ?? "")
                         .trimmingCharacters(in: .whitespacesAndNewlines)
