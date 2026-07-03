@@ -453,9 +453,14 @@ struct SettingsGatewaySetupLinkFeature {
 @Reducer
 struct SettingsGatewayCredentialsFeature {
     private let persistenceClientOverride: SettingsGatewayCredentialsPersistenceClient?
+    private let setupAuthPersistenceClientOverride: SettingsGatewaySetupAuthPersistenceClient?
 
-    init(persistenceClient: SettingsGatewayCredentialsPersistenceClient? = nil) {
+    init(
+        persistenceClient: SettingsGatewayCredentialsPersistenceClient? = nil,
+        setupAuthPersistenceClient: SettingsGatewaySetupAuthPersistenceClient? = nil)
+    {
         self.persistenceClientOverride = persistenceClient
+        self.setupAuthPersistenceClientOverride = setupAuthPersistenceClient
     }
 
     // swiftformat:disable redundantSendable
@@ -464,7 +469,7 @@ struct SettingsGatewayCredentialsFeature {
         var gatewayToken = ""
         var gatewayPassword = ""
         var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
-        var setupAuthPersistenceRequest: GatewayConnectionController.ManualAuthOverride.SetupAuth?
+        var setupAuthPersistenceRequest: SettingsGatewaySetupAuthPersistenceRequest?
     }
 
     enum Action: Equatable, Sendable {
@@ -477,6 +482,7 @@ struct SettingsGatewayCredentialsFeature {
         case gatewayTokenPersistenceRequested(value: String, instanceId: String)
         case pendingManualAuthOverrideConsumed
         case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)
+        case setupAuthPersistenceRequested(SettingsGatewaySetupAuthPersistenceRequest)
         case setupAuthPersistenceRequestHandled
         case setupLinkApplied(GatewayConnectDeepLink)
     }
@@ -486,7 +492,10 @@ struct SettingsGatewayCredentialsFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.settingsGatewayCredentialsPersistence) var dependencyPersistenceClient
+            @Dependency(\.settingsGatewaySetupAuthPersistence) var dependencySetupAuthPersistenceClient
             let persistenceClient = self.persistenceClientOverride ?? dependencyPersistenceClient
+            let setupAuthPersistenceClient = self.setupAuthPersistenceClientOverride
+                ?? dependencySetupAuthPersistenceClient
 
             switch action {
             case .credentialsClearedForOnboardingReset:
@@ -536,6 +545,12 @@ struct SettingsGatewayCredentialsFeature {
                 Self.applySetupAuth(setupAuth, to: &state)
                 return .none
 
+            case let .setupAuthPersistenceRequested(request):
+                guard Self.trimmedInstanceId(request.instanceId) != nil else { return .none }
+                return .run { _ in
+                    await setupAuthPersistenceClient.saveSetupAuth(request)
+                }
+
             case .setupAuthPersistenceRequestHandled:
                 state.setupAuthPersistenceRequest = nil
                 return .none
@@ -543,7 +558,9 @@ struct SettingsGatewayCredentialsFeature {
             case let .setupLinkApplied(link):
                 let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
                 Self.applySetupAuth(setupAuth, to: &state)
-                state.setupAuthPersistenceRequest = setupAuth
+                state.setupAuthPersistenceRequest = SettingsGatewaySetupAuthPersistenceRequest(
+                    setupAuth: setupAuth,
+                    instanceId: setupAuthPersistenceClient.currentInstanceID())
                 return .none
             }
         }

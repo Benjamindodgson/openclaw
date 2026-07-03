@@ -1184,23 +1184,37 @@ struct RootTabsSourceGuardTests {
     @Test func `settings setup auth derivation is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let applyGatewayLinkFunction = try Self.extract(
             actionsSource,
             from: "func applyGatewayLink(_ link: GatewayConnectDeepLink)",
             to: "func openGatewayQRScanner()")
 
-        #expect(settingsSource
-            .contains("var setupAuthPersistenceRequest: GatewayConnectionController.ManualAuthOverride.SetupAuth?"))
+        #expect(supportSource.contains("struct SettingsGatewaySetupAuthPersistenceRequest: Equatable"))
+        #expect(settingsSource.contains("var setupAuthPersistenceRequest: SettingsGatewaySetupAuthPersistenceRequest?"))
         #expect(settingsSource.contains("case setupLinkApplied(GatewayConnectDeepLink)"))
+        #expect(settingsSource.contains("case setupAuthPersistenceRequested(SettingsGatewaySetupAuthPersistenceRequest)"))
         #expect(settingsSource.contains("case setupAuthPersistenceRequestHandled"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsGatewaySetupAuthPersistence)"))
         #expect(settingsSource
             .contains("let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)"))
-        #expect(settingsSource.contains("state.setupAuthPersistenceRequest = setupAuth"))
+        #expect(settingsSource.contains("setupAuthPersistenceClient.currentInstanceID()"))
+        #expect(settingsSource.contains("await setupAuthPersistenceClient.saveSetupAuth(request)"))
+        #expect(supportSource.contains("struct SettingsGatewaySetupAuthPersistenceClient"))
+        #expect(supportSource.contains("GatewaySettingsStore.currentInstanceID()"))
+        #expect(supportSource.contains("GatewaySettingsStore.saveGatewayBootstrapToken("))
+        #expect(supportSource.contains("GatewaySettingsStore.saveGatewayToken("))
+        #expect(supportSource.contains("GatewaySettingsStore.saveGatewayPassword("))
         #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupLinkApplied(link))"))
+        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request))"))
         #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled)"))
         #expect(!applyGatewayLinkFunction
             .contains("GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)"))
         #expect(!applyGatewayLinkFunction.contains(".setupAuthApplied(setupAuth)"))
+        #expect(!applyGatewayLinkFunction.contains("GatewaySettingsStore.currentInstanceID"))
+        #expect(!applyGatewayLinkFunction.contains("GatewaySettingsStore.saveGatewayBootstrapToken"))
+        #expect(!applyGatewayLinkFunction.contains("GatewaySettingsStore.saveGatewayToken"))
+        #expect(!applyGatewayLinkFunction.contains("GatewaySettingsStore.saveGatewayPassword"))
     }
 
     @Test func `settings manual credential persistence is reducer effect owned`() throws {

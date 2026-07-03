@@ -1060,6 +1060,8 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings gateway credentials derive setup auth from link`() async {
+        let setupAuthProbe = SettingsGatewaySetupAuthPersistenceProbe()
+        setupAuthProbe.instanceId = "instance-6"
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
             port: 443,
@@ -1069,7 +1071,7 @@ struct SettingsNavigationFeatureTests {
             password: "password-6")
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
-            SettingsGatewayCredentialsFeature()
+            SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
         }
 
         await store.send(.setupLinkApplied(link)) {
@@ -1079,12 +1081,52 @@ struct SettingsNavigationFeatureTests {
                 token: "token-6",
                 bootstrapToken: "bootstrap-6",
                 password: "password-6")
-            $0.setupAuthPersistenceRequest = setupAuth
+            $0.setupAuthPersistenceRequest = SettingsGatewaySetupAuthPersistenceRequest(
+                setupAuth: setupAuth,
+                instanceId: "instance-6")
         }
 
         await store.send(.setupAuthPersistenceRequestHandled) {
             $0.setupAuthPersistenceRequest = nil
         }
+    }
+
+    @Test func `settings gateway credentials persist setup auth through client`() async {
+        let setupAuthProbe = SettingsGatewaySetupAuthPersistenceProbe()
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.SetupAuth(
+            token: "token-7",
+            bootstrapToken: "bootstrap-7",
+            password: "password-7")
+        let request = SettingsGatewaySetupAuthPersistenceRequest(
+            setupAuth: setupAuth,
+            instanceId: " instance-7 ")
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
+        }
+
+        await store.send(.setupAuthPersistenceRequested(request))
+        await store.finish()
+
+        #expect(setupAuthProbe.savedRequests == [request])
+    }
+
+    @Test func `settings gateway credentials ignore setup auth persistence without instance id`() async {
+        let setupAuthProbe = SettingsGatewaySetupAuthPersistenceProbe()
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.SetupAuth(
+            token: "token-8",
+            bootstrapToken: "bootstrap-8",
+            password: "password-8")
+        let request = SettingsGatewaySetupAuthPersistenceRequest(
+            setupAuth: setupAuth,
+            instanceId: " ")
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
+        }
+
+        await store.send(.setupAuthPersistenceRequested(request))
+        await store.finish()
+
+        #expect(setupAuthProbe.savedRequests.isEmpty)
     }
 
     @Test func `settings gateway credentials clear consumed pending override`() async {
@@ -2321,6 +2363,21 @@ private final class SettingsGatewayCredentialsPersistenceProbe: @unchecked Senda
             },
             saveGatewayToken: { value, instanceId in
                 self.savedTokens.append("\(instanceId):\(value)")
+            })
+    }
+}
+
+private final class SettingsGatewaySetupAuthPersistenceProbe: @unchecked Sendable {
+    var instanceId = ""
+    var savedRequests: [SettingsGatewaySetupAuthPersistenceRequest] = []
+
+    var client: SettingsGatewaySetupAuthPersistenceClient {
+        SettingsGatewaySetupAuthPersistenceClient(
+            currentInstanceID: {
+                self.instanceId
+            },
+            saveSetupAuth: { request in
+                self.savedRequests.append(request)
             })
     }
 }
