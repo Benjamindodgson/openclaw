@@ -134,17 +134,17 @@ extension SettingsProTab {
 
     func reconnectGateway() async {
         guard !self.appModel.isAppleReviewDemoModeEnabled else { return }
-        guard !self.isReconnectingGateway else { return }
-        self.isReconnectingGateway = true
-        defer { self.isReconnectingGateway = false }
+        guard !self.gatewayActivityStore.isReconnectingGateway else { return }
+        self.gatewayActivityStore.send(.reconnectStarted)
+        defer { self.gatewayActivityStore.send(.reconnectFinished) }
         await self.gatewayController.connectLastKnown()
     }
 
     @MainActor
     func runDiagnostics() async {
-        guard !self.isRefreshingGateway else { return }
-        self.isRefreshingGateway = true
-        defer { self.isRefreshingGateway = false }
+        guard !self.gatewayActivityStore.isRefreshingGateway else { return }
+        self.gatewayActivityStore.send(.refreshStarted)
+        defer { self.gatewayActivityStore.send(.refreshFinished) }
 
         if !self.appModel.isAppleReviewDemoModeEnabled {
             self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
