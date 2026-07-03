@@ -82,7 +82,9 @@ struct TalkProTab: View {
             isListening: self.appModel.talkMode.isListening,
             isSpeaking: self.appModel.talkMode.isSpeaking,
             isUserSpeechDetected: self.appModel.talkMode.isUserSpeechDetected,
-            permissionState: self.appModel.talkMode.gatewayTalkPermissionState)
+            permissionState: self.appModel.talkMode.gatewayTalkPermissionState,
+            voiceModeSubtitle: self.appModel.talkMode.gatewayTalkVoiceModeSubtitle,
+            agentName: self.appModel.chatAgentName)
     }
 
     var body: some View {
@@ -183,7 +185,7 @@ struct TalkProTab: View {
                     Text(self.state.title)
                         .font(.title3.weight(.bold))
                         .multilineTextAlignment(.center)
-                    Text(self.heroSubtitle)
+                    Text(self.state.heroSubtitle)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -263,20 +265,6 @@ struct TalkProTab: View {
         if mode.isEmpty || mode == "Not loaded" { return agent.isEmpty ? "Realtime voice" : agent }
         if agent.isEmpty { return mode }
         return "\(agent) • \(mode)"
-    }
-
-    private var heroSubtitle: String {
-        if self.state
-            .prefersPermissionCopy { return "Gateway approval is required before this phone can capture voice." }
-        if self.appModel.isAppleReviewDemoModeEnabled { return "Voice is disabled in Apple Review demo mode." }
-        if !self.gatewayConnected { return "Connect to your gateway to start a voice conversation." }
-        if !self.appModel.talkMode.gatewayTalkConfigLoaded {
-            return "Open Voice settings after the gateway loads Talk configuration."
-        }
-        let subtitle = (self.appModel.talkMode.gatewayTalkVoiceModeSubtitle ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if !subtitle.isEmpty { return subtitle }
-        return "Routes voice to \(self.appModel.chatAgentName)."
     }
 
     private func alignPersistedTalkState() {
@@ -385,6 +373,8 @@ struct TalkProState: Equatable {
     let isSpeaking: Bool
     let isUserSpeechDetected: Bool
     let permissionState: TalkGatewayPermissionState
+    let voiceModeSubtitle: String?
+    let agentName: String
 
     private var normalizedStatus: String {
         self.statusText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -519,6 +509,21 @@ struct TalkProState: Equatable {
         default:
             Color(uiColor: .systemBlue)
         }
+    }
+
+    var heroSubtitle: String {
+        if self.prefersPermissionCopy {
+            return "Gateway approval is required before this phone can capture voice."
+        }
+        if self.isDemoMode { return "Voice is disabled in Apple Review demo mode." }
+        if !self.gatewayConnected { return "Connect to your gateway to start a voice conversation." }
+        if !self.isConfigLoaded {
+            return "Open Voice settings after the gateway loads Talk configuration."
+        }
+        let subtitle = (self.voiceModeSubtitle ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !subtitle.isEmpty { return subtitle }
+        return "Routes voice to \(self.agentName)."
     }
 
     var prefersPermissionCopy: Bool {
