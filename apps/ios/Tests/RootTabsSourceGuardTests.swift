@@ -998,6 +998,19 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
     }
 
+    @Test func `onboarding manual connection request is reducer owned`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("struct ManualConnectionRequest: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case manualConnectionRequested"))
+        #expect(onboardingStateSource.contains("state.manualConnectionRequest = ManualConnectionRequest("))
+        #expect(onboardingSource.contains("self.connectionFormStore.send(.manualConnectionRequested)"))
+        #expect(onboardingSource.contains("self.connectionFormStore.send(.manualConnectionRequestHandled)"))
+        #expect(!onboardingSource.contains("let host = self.connectionFormStore.normalizedManualHost"))
+        #expect(!onboardingSource.contains("guard !host.isEmpty, self.manualPort > 0, self.manualPort <= 65535"))
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 

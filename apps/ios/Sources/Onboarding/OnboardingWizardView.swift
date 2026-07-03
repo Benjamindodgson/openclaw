@@ -1002,12 +1002,14 @@ extension OnboardingWizardView {
     }
 
     private func connectManual() async {
-        let host = self.connectionFormStore.normalizedManualHost
-        guard !host.isEmpty, self.manualPort > 0, self.manualPort <= 65535 else { return }
+        self.connectionFormStore.send(.manualConnectionRequested)
+        guard let request = self.connectionFormStore.manualConnectionRequest else { return }
+        self.connectionFormStore.send(.manualConnectionRequestHandled)
+
         self.statusStore.send(.connectionStarted(
             id: "manual",
-            message: "Connecting to \(host)…",
-            statusLine: "Connecting to \(host):\(self.manualPort)…",
+            message: "Connecting to \(request.host)…",
+            statusLine: "Connecting to \(request.host):\(request.port)…",
             clearsIssue: true))
         defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
@@ -1016,9 +1018,9 @@ extension OnboardingWizardView {
             password: self.gatewayPassword)
         self.credentialsStore.send(.pendingManualAuthOverrideConsumed)
         await self.gatewayController.connectManual(
-            host: host,
-            port: self.manualPort,
-            useTLS: self.manualTLS,
+            host: request.host,
+            port: request.port,
+            useTLS: request.useTLS,
             authOverride: authOverride)
     }
 

@@ -653,6 +653,8 @@ import Testing
 
         #expect(!store.state.canConnectManual)
 
+        await store.send(.manualConnectionRequested)
+
         await store.send(.modeSelected(.remoteDomain)) {
             $0.selectedMode = .remoteDomain
             $0.manualHost = ""
@@ -672,6 +674,17 @@ import Testing
             $0.manualPort = 19000
             $0.manualPortText = "19000"
             $0.manualTLS = false
+        }
+
+        await store.send(.manualConnectionRequested) {
+            $0.manualConnectionRequest = OnboardingConnectionFormFeature.ManualConnectionRequest(
+                host: "studio.local",
+                port: 19000,
+                useTLS: false)
+        }
+
+        await store.send(.manualConnectionRequestHandled) {
+            $0.manualConnectionRequest = nil
         }
 
         await store.send(.developerModeDisabled)
