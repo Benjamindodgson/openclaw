@@ -1096,6 +1096,63 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings notifications action button opens ios settings for managed statuses`() async {
+        var initialState = SettingsNotificationFeature.State()
+        initialState.status = .allowed
+        let store = TestStore(initialState: initialState) {
+            SettingsNotificationFeature()
+        }
+
+        await store.send(.actionButtonTapped) {
+            $0.actionRequest = .openSettings
+        }
+        await store.send(.actionRequestHandled) {
+            $0.actionRequest = nil
+        }
+    }
+
+    @Test func `settings notifications action button requests relay disclosure when hosted relay is active`() async {
+        var initialState = SettingsNotificationFeature.State()
+        initialState.status = .notSet
+        initialState.usesOpenClawHostedRelay = true
+        let store = TestStore(initialState: initialState) {
+            SettingsNotificationFeature()
+        }
+
+        await store.send(.actionButtonTapped) {
+            $0.actionRequest = .showRelayDisclosure
+        }
+    }
+
+    @Test func `settings notifications action button requests authorization without hosted relay`() async {
+        var initialState = SettingsNotificationFeature.State()
+        initialState.status = .notSet
+        let store = TestStore(initialState: initialState) {
+            SettingsNotificationFeature()
+        }
+
+        await store.send(.actionButtonTapped) {
+            $0.actionRequest = .requestAuthorization
+        }
+    }
+
+    @Test func `settings notifications action button ignores checking and in flight authorization`() async {
+        let checkingStore = TestStore(initialState: SettingsNotificationFeature.State()) {
+            SettingsNotificationFeature()
+        }
+
+        await checkingStore.send(.actionButtonTapped)
+
+        var requestingState = SettingsNotificationFeature.State()
+        requestingState.status = .notSet
+        requestingState.isRequestingAuthorization = true
+        let requestingStore = TestStore(initialState: requestingState) {
+            SettingsNotificationFeature()
+        }
+
+        await requestingStore.send(.actionButtonTapped)
+    }
+
     @Test func `settings notifications sync relay config`() async {
         let store = TestStore(initialState: SettingsNotificationFeature.State()) {
             SettingsNotificationFeature()
