@@ -180,6 +180,184 @@ struct OnboardingStepFeature {
 }
 
 @Reducer
+struct OnboardingStatusFeature {
+    static let defaultStatusLine = "In your OpenClaw chat, run /pair qr, then scan the code here."
+    static let noSavedPairingStatusLine =
+        "No saved pairing found. In your OpenClaw chat, run /pair qr, then scan the code here."
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var connectMessage: String?
+        var connectingGatewayID: String?
+        var didMarkCompleted = false
+        var issue: GatewayConnectionIssue = .none
+        var pairingRequestId: String?
+        var shouldShowAuthStep = false
+        var statusLine: String
+
+        init(statusLine: String = OnboardingStatusFeature.defaultStatusLine) {
+            self.statusLine = statusLine
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case appleReviewDemoModeEnabled
+        case connectionFinished
+        case connectionIssueDetected(
+            issue: GatewayConnectionIssue,
+            requestId: String?,
+            pauseReconnect: Bool,
+            message: String?,
+            statusText: String)
+        case connectionStarted(id: String, message: String, statusLine: String, clearsIssue: Bool)
+        case connectionActivityStarted(id: String)
+        case connectionStatusUpdated(message: String?, statusLine: String)
+        case freshQRScanStarted
+        case gatewayConnected(markedCompleted: Bool)
+        case gatewayProblemResetScanStarted
+        case introAdvanced
+        case navigationBackStarted
+        case noSavedPairingFound
+        case pairingResumeStarted
+        case qrScannerOpeningStarted
+        case scannerErrorReceived(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .appleReviewDemoModeEnabled:
+                state.connectingGatewayID = nil
+                state.connectMessage = "Apple Review demo mode enabled."
+                state.statusLine = "Apple Review demo mode enabled."
+                return .none
+
+            case .connectionFinished:
+                state.connectingGatewayID = nil
+                return .none
+
+            case let .connectionIssueDetected(issue, requestId, pauseReconnect, message, statusText):
+                state.issue = Self.stickyIssue(
+                    current: state.issue,
+                    detected: issue,
+                    pairingRequestId: state.pairingRequestId)
+                if let requestId, !requestId.isEmpty {
+                    state.pairingRequestId = requestId
+                }
+                state.shouldShowAuthStep = state.issue.needsAuthToken || state.issue.needsPairing || pauseReconnect
+
+                if let message {
+                    state.connectMessage = message
+                    state.statusLine = message
+                } else {
+                    let trimmedStatus = statusText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmedStatus.isEmpty {
+                        state.connectMessage = trimmedStatus
+                        state.statusLine = trimmedStatus
+                    }
+                }
+                return .none
+
+            case let .connectionStarted(id, message, statusLine, clearsIssue):
+                state.connectingGatewayID = id
+                if clearsIssue {
+                    state.issue = .none
+                    state.shouldShowAuthStep = false
+                }
+                state.connectMessage = message
+                state.statusLine = statusLine
+                return .none
+
+            case let .connectionActivityStarted(id):
+                state.connectingGatewayID = id
+                return .none
+
+            case let .connectionStatusUpdated(message, statusLine):
+                state.connectMessage = message
+                state.statusLine = statusLine
+                return .none
+
+            case .freshQRScanStarted:
+                state.connectingGatewayID = nil
+                state.connectMessage = nil
+                state.issue = .none
+                state.pairingRequestId = nil
+                state.shouldShowAuthStep = false
+                state.statusLine = "Opening QR scanner…"
+                return .none
+
+            case let .gatewayConnected(markedCompleted):
+                state.statusLine = "Connected."
+                if markedCompleted {
+                    state.didMarkCompleted = true
+                }
+                return .none
+
+            case .gatewayProblemResetScanStarted:
+                state.connectingGatewayID = nil
+                state.connectMessage = nil
+                state.issue = .none
+                state.pairingRequestId = nil
+                state.shouldShowAuthStep = false
+                state.statusLine = "Scan a fresh setup QR code from this gateway."
+                return .none
+
+            case .introAdvanced:
+                state.statusLine = Self.defaultStatusLine
+                return .none
+
+            case .navigationBackStarted:
+                state.connectingGatewayID = nil
+                state.connectMessage = nil
+                return .none
+
+            case .noSavedPairingFound:
+                state.statusLine = Self.noSavedPairingStatusLine
+                return .none
+
+            case .pairingResumeStarted:
+                state.issue = .none
+                state.shouldShowAuthStep = false
+                state.connectMessage = "Retrying after approval…"
+                state.statusLine = "Retrying after approval…"
+                return .none
+
+            case .qrScannerOpeningStarted:
+                state.statusLine = "Opening QR scanner…"
+                return .none
+
+            case let .scannerErrorReceived(error):
+                state.statusLine = "Scanner error: \(error)"
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    private static func stickyIssue(
+        current: GatewayConnectionIssue,
+        detected: GatewayConnectionIssue,
+        pairingRequestId: String?)
+        -> GatewayConnectionIssue
+    {
+        if current.needsPairing, detected.needsPairing {
+            let mergedRequestId = detected.requestId ?? current.requestId ?? pairingRequestId
+            return .pairingRequired(requestId: mergedRequestId)
+        }
+        if current.needsPairing, !detected.needsPairing {
+            return current
+        }
+        if current.needsAuthToken, !detected.needsAuthToken, !detected.needsPairing {
+            return current
+        }
+        return detected
+    }
+}
+
+@Reducer
 struct OnboardingPresentationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
