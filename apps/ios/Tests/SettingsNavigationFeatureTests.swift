@@ -465,6 +465,30 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway connection persists discovered gateway selection through client`() async {
+        let probe = SettingsDiscoveredGatewayPersistenceProbe()
+        let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
+            SettingsGatewayConnectionFeature(persistenceClient: probe.client)
+        }
+
+        await store.send(.discoveredGatewayPersistenceRequested(stableID: " gateway-stable-1 "))
+        await store.finish()
+
+        #expect(probe.savedStableIDs == ["gateway-stable-1"])
+    }
+
+    @Test func `settings gateway connection ignores discovered gateway persistence without stable id`() async {
+        let probe = SettingsDiscoveredGatewayPersistenceProbe()
+        let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
+            SettingsGatewayConnectionFeature(persistenceClient: probe.client)
+        }
+
+        await store.send(.discoveredGatewayPersistenceRequested(stableID: " "))
+        await store.finish()
+
+        #expect(probe.savedStableIDs.isEmpty)
+    }
+
     @Test func `settings gateway connection tracks manual lifecycle`() async {
         let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
             SettingsGatewayConnectionFeature()
@@ -2262,6 +2286,16 @@ private final class SettingsShareInstructionPersistenceProbe: @unchecked Sendabl
             saveDefaultInstruction: { value in
                 self.savedInstructions.append(value)
             })
+    }
+}
+
+private final class SettingsDiscoveredGatewayPersistenceProbe: @unchecked Sendable {
+    var savedStableIDs: [String] = []
+
+    var client: SettingsDiscoveredGatewayPersistenceClient {
+        SettingsDiscoveredGatewayPersistenceClient(saveSelectedGatewayStableID: { stableID in
+            self.savedStableIDs.append(stableID)
+        })
     }
 }
 

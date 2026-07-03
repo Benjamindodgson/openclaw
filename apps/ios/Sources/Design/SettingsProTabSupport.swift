@@ -83,6 +83,28 @@ extension DependencyValues {
     }
 }
 
+struct SettingsDiscoveredGatewayPersistenceClient {
+    var saveSelectedGatewayStableID: @MainActor @Sendable (_ stableID: String) -> Void
+}
+
+extension SettingsDiscoveredGatewayPersistenceClient: DependencyKey {
+    static let liveValue = SettingsDiscoveredGatewayPersistenceClient(
+        saveSelectedGatewayStableID: { stableID in
+            GatewaySettingsStore.savePreferredGatewayStableID(stableID)
+            GatewaySettingsStore.saveLastDiscoveredGatewayStableID(stableID)
+        })
+
+    static let testValue = SettingsDiscoveredGatewayPersistenceClient(
+        saveSelectedGatewayStableID: { _ in })
+}
+
+extension DependencyValues {
+    var settingsDiscoveredGatewayPersistence: SettingsDiscoveredGatewayPersistenceClient {
+        get { self[SettingsDiscoveredGatewayPersistenceClient.self] }
+        set { self[SettingsDiscoveredGatewayPersistenceClient.self] = newValue }
+    }
+}
+
 struct SettingsApprovalItem: Identifiable {
     let id: String
     let icon: String
