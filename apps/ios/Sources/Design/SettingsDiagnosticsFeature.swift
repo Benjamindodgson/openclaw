@@ -5,11 +5,21 @@ struct SettingsDiagnosticsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var discoveredGatewayCount = 0
+        var gatewayConnected = false
         var issueCount: Int?
+        var isAppleReviewDemoModeEnabled = false
         var lastRunText = "Not run"
 
         var detailText: String {
             "System checks"
+        }
+
+        var healthValue: String {
+            if self.isAppleReviewDemoModeEnabled { return "demo" }
+            if self.gatewayConnected { return "ready" }
+            if self.discoveredGatewayCount == 0 { return "check" }
+            return "partial"
         }
 
         var runValue: String {
@@ -19,6 +29,10 @@ struct SettingsDiagnosticsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        case diagnosticsContextSynced(
+            isAppleReviewDemoModeEnabled: Bool,
+            gatewayConnected: Bool,
+            discoveredGatewayCount: Int)
         case diagnosticsCompleted(issueCount: Int, lastRunText: String)
     }
 
@@ -27,6 +41,15 @@ struct SettingsDiagnosticsFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .diagnosticsContextSynced(
+                isAppleReviewDemoModeEnabled,
+                gatewayConnected,
+                discoveredGatewayCount):
+                state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
+                state.gatewayConnected = gatewayConnected
+                state.discoveredGatewayCount = discoveredGatewayCount
+                return .none
+
             case let .diagnosticsCompleted(issueCount, lastRunText):
                 state.issueCount = issueCount
                 state.lastRunText = lastRunText

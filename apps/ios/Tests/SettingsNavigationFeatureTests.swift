@@ -140,6 +140,30 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings diagnostics sync context`() async {
+        let store = TestStore(initialState: SettingsDiagnosticsFeature.State()) {
+            SettingsDiagnosticsFeature()
+        }
+
+        await store.send(.diagnosticsContextSynced(
+            isAppleReviewDemoModeEnabled: false,
+            gatewayConnected: true,
+            discoveredGatewayCount: 2))
+        {
+            $0.gatewayConnected = true
+            $0.discoveredGatewayCount = 2
+        }
+        await store.send(.diagnosticsContextSynced(
+            isAppleReviewDemoModeEnabled: true,
+            gatewayConnected: false,
+            discoveredGatewayCount: 0))
+        {
+            $0.isAppleReviewDemoModeEnabled = true
+            $0.gatewayConnected = false
+            $0.discoveredGatewayCount = 0
+        }
+    }
+
     @Test func `settings diagnostics summarize run state`() {
         var state = SettingsDiagnosticsFeature.State()
 
@@ -151,6 +175,22 @@ struct SettingsNavigationFeatureTests {
 
         state.issueCount = 3
         #expect(state.runValue == "3")
+    }
+
+    @Test func `settings diagnostics summarize health state`() {
+        var state = SettingsDiagnosticsFeature.State()
+
+        #expect(state.healthValue == "check")
+
+        state.discoveredGatewayCount = 1
+        #expect(state.healthValue == "partial")
+
+        state.gatewayConnected = true
+        #expect(state.healthValue == "ready")
+
+        state.isAppleReviewDemoModeEnabled = true
+        state.gatewayConnected = false
+        #expect(state.healthValue == "demo")
     }
 
     @Test func `settings appearance syncs persisted preference`() async {
