@@ -1,8 +1,120 @@
+import ComposableArchitecture
 import SwiftUI
+
+// swiftformat:disable redundantSendable
+enum ExecApprovalPromptDecision: String, Equatable, Sendable {
+    case allowOnce = "allow-once"
+    case allowAlways = "allow-always"
+    case deny
+}
+
+// swiftformat:enable redundantSendable
+
+struct ExecApprovalPromptClient {
+    var resolvePendingExecApprovalPrompt: @Sendable @MainActor (ExecApprovalPromptDecision) async -> Void
+    var dismissPendingExecApprovalPrompt: @Sendable @MainActor () async -> Void
+}
+
+extension ExecApprovalPromptClient: DependencyKey {
+    static let liveValue = ExecApprovalPromptClient(
+        resolvePendingExecApprovalPrompt: { _ in },
+        dismissPendingExecApprovalPrompt: {})
+
+    static let testValue = ExecApprovalPromptClient(
+        resolvePendingExecApprovalPrompt: { _ in },
+        dismissPendingExecApprovalPrompt: {})
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        ExecApprovalPromptClient(
+            resolvePendingExecApprovalPrompt: { decision in
+                await appModel.resolvePendingExecApprovalPrompt(decision: decision.rawValue)
+            },
+            dismissPendingExecApprovalPrompt: {
+                appModel.dismissPendingExecApprovalPrompt()
+            })
+    }
+}
+
+extension DependencyValues {
+    var execApprovalPrompt: ExecApprovalPromptClient {
+        get { self[ExecApprovalPromptClient.self] }
+        set { self[ExecApprovalPromptClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct ExecApprovalPromptFeature {
+    private let clientOverride: ExecApprovalPromptClient?
+
+    init(client: ExecApprovalPromptClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case allowAlwaysButtonTapped
+        case allowOnceButtonTapped
+        case cancelButtonTapped
+        case denyButtonTapped
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.execApprovalPrompt) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case .allowAlwaysButtonTapped:
+                return self.resolve(.allowAlways, client: client)
+
+            case .allowOnceButtonTapped:
+                return self.resolve(.allowOnce, client: client)
+
+            case .cancelButtonTapped:
+                return .run { _ in
+                    await client.dismissPendingExecApprovalPrompt()
+                }
+
+            case .denyButtonTapped:
+                return self.resolve(.deny, client: client)
+            }
+        }
+        .autoLogActions()
+    }
+
+    private func resolve(
+        _ decision: ExecApprovalPromptDecision,
+        client: ExecApprovalPromptClient)
+        -> Effect<Action>
+    {
+        .run { _ in
+            await client.resolvePendingExecApprovalPrompt(decision)
+        }
+    }
+}
 
 private struct ExecApprovalPromptDialogModifier: ViewModifier {
     @Environment(NodeAppModel.self) private var appModel: NodeAppModel
     let suppressedApprovalID: String?
+    @State private var store: StoreOf<ExecApprovalPromptFeature>
+
+    init(
+        suppressedApprovalID: String? = nil,
+        store: StoreOf<ExecApprovalPromptFeature> = Store(
+            initialState: ExecApprovalPromptFeature.State())
+        {
+            ExecApprovalPromptFeature()
+        })
+    {
+        self.suppressedApprovalID = suppressedApprovalID
+        self._store = State(wrappedValue: store)
+    }
 
     func body(content: Content) -> some View {
         content
@@ -19,22 +131,16 @@ private struct ExecApprovalPromptDialogModifier: ViewModifier {
                             isResolving: self.appModel.pendingExecApprovalPromptResolving,
                             errorText: self.appModel.pendingExecApprovalPromptErrorText,
                             onAllowOnce: {
-                                Task {
-                                    await self.appModel.resolvePendingExecApprovalPrompt(decision: "allow-once")
-                                }
+                                self.store.send(.allowOnceButtonTapped)
                             },
                             onAllowAlways: {
-                                Task {
-                                    await self.appModel.resolvePendingExecApprovalPrompt(decision: "allow-always")
-                                }
+                                self.store.send(.allowAlwaysButtonTapped)
                             },
                             onDeny: {
-                                Task {
-                                    await self.appModel.resolvePendingExecApprovalPrompt(decision: "deny")
-                                }
+                                self.store.send(.denyButtonTapped)
                             },
                             onCancel: {
-                                self.appModel.dismissPendingExecApprovalPrompt()
+                                self.store.send(.cancelButtonTapped)
                             })
                             .padding(.horizontal, 20)
                             .frame(maxWidth: 460)
@@ -191,7 +297,14 @@ private struct ExecApprovalPromptMetadataRow: View {
 }
 
 extension View {
-    func execApprovalPromptDialog(suppressedApprovalID: String? = nil) -> some View {
-        self.modifier(ExecApprovalPromptDialogModifier(suppressedApprovalID: suppressedApprovalID))
+    func execApprovalPromptDialog(
+        suppressedApprovalID: String? = nil,
+        store: StoreOf<ExecApprovalPromptFeature> = Store(
+            initialState: ExecApprovalPromptFeature.State())
+        {
+            ExecApprovalPromptFeature()
+        }) -> some View
+    {
+        self.modifier(ExecApprovalPromptDialogModifier(suppressedApprovalID: suppressedApprovalID, store: store))
     }
 }

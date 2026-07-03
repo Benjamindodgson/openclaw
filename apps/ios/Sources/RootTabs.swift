@@ -184,6 +184,7 @@ struct RootTabs: View {
 
             SettingsProTab(
                 initialRoute: self.selectedSettingsRoute,
+                execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
@@ -486,12 +487,14 @@ struct RootTabs: View {
                     headerLeadingAction: self.sidebarHeaderLeadingAction,
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
+                    execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
                 SettingsProTab(
                     headerLeadingAction: self.sidebarHeaderLeadingAction,
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
+                    execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
         case .gateway:
@@ -500,6 +503,7 @@ struct RootTabs: View {
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 ownsNavigationStack: false,
                 navigateToRoute: self.pushSidebarSettingsRoute,
+                execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }
     }
@@ -804,7 +808,8 @@ struct RootTabs: View {
             .gatewayTrustPromptAlert(store: self.makeGatewayTrustPromptStore())
             .deepLinkAgentPromptAlert(store: self.makeDeepLinkAgentPromptStore())
             .execApprovalPromptDialog(
-                suppressedApprovalID: self.activeExecApprovalPromptSuppressionID)
+                suppressedApprovalID: self.activeExecApprovalPromptSuppressionID,
+                store: self.makeExecApprovalPromptStore())
             .notificationPermissionGuidanceDialog(openNotifications: { approvalId in
                 self.suppressedExecApprovalPromptIDForNotificationSettings = approvalId
                 self.selectSettingsRoute(.notifications)
@@ -831,6 +836,13 @@ struct RootTabs: View {
     private func makeDeepLinkAgentPromptStore() -> StoreOf<DeepLinkAgentPromptFeature> {
         Store(initialState: DeepLinkAgentPromptFeature.State()) {
             DeepLinkAgentPromptFeature(client: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
+    private func makeExecApprovalPromptStore() -> StoreOf<ExecApprovalPromptFeature> {
+        Store(initialState: ExecApprovalPromptFeature.State()) {
+            ExecApprovalPromptFeature(client: .live(appModel: self.appModel))
         }
     }
 

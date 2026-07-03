@@ -59,6 +59,8 @@ struct SettingsProTab: View {
         PushEnrollmentConsentFeature()
     }
 
+    @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
+
     @State var isRequestingNotificationAuthorization = false
     @State var showNotificationRelayDisclosure = false
     @State var diagnosticsLastRunText = "Not run"
@@ -78,6 +80,11 @@ struct SettingsProTab: View {
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         ownsNavigationStack: Bool = true,
         navigateToRoute: ((SettingsRoute) -> Void)? = nil,
+        execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature> = Store(
+            initialState: ExecApprovalPromptFeature.State())
+        {
+            ExecApprovalPromptFeature()
+        },
         onRouteChange: ((SettingsRoute?) -> Void)? = nil)
     {
         self.initialRoute = initialRoute
@@ -85,6 +92,7 @@ struct SettingsProTab: View {
         self.headerLeadingAction = headerLeadingAction
         self.ownsNavigationStack = ownsNavigationStack
         self.navigateToRoute = navigateToRoute
+        self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self.onRouteChange = onRouteChange
     }
 

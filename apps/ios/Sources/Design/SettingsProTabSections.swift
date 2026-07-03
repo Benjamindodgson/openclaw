@@ -383,7 +383,7 @@ extension SettingsProTab {
 
                     HStack(spacing: 8) {
                         Button {
-                            Task { await self.appModel.resolvePendingExecApprovalPrompt(decision: "allow-once") }
+                            self.execApprovalPromptStore.send(.allowOnceButtonTapped)
                         } label: {
                             Label("Allow", systemImage: "checkmark")
                         }
@@ -392,9 +392,7 @@ extension SettingsProTab {
 
                         if pendingApproval.allowsAllowAlways {
                             Button {
-                                Task {
-                                    await self.appModel.resolvePendingExecApprovalPrompt(decision: "allow-always")
-                                }
+                                self.execApprovalPromptStore.send(.allowAlwaysButtonTapped)
                             } label: {
                                 Label("Always", systemImage: "checkmark.shield")
                             }
@@ -403,7 +401,7 @@ extension SettingsProTab {
                         }
 
                         Button(role: .destructive) {
-                            Task { await self.appModel.resolvePendingExecApprovalPrompt(decision: "deny") }
+                            self.execApprovalPromptStore.send(.denyButtonTapped)
                         } label: {
                             Label("Deny", systemImage: "xmark")
                         }
