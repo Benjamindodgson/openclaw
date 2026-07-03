@@ -205,7 +205,7 @@ extension SettingsProTab {
         guard let link = self.appModel.consumePendingGatewaySetupLink() else { return }
         self.setupCode = ""
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
-        self.stagedGatewaySetupLink = link
+        self.gatewaySetupLinkStore.send(.setupLinkStaged(link))
         let security = link.tls ? "TLS" : "plain"
         self.gatewaySetupStatusStore.send(
             .statusChanged("Setup link loaded for \(link.host):\(link.port) (\(security)). Tap Connect to apply."))
@@ -221,7 +221,7 @@ extension SettingsProTab {
         }
 
         if AppleReviewDemoMode.isSetupCode(raw) {
-            self.stagedGatewaySetupLink = nil
+            self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
             self.setupCode = ""
             self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
             self.appModel.enterAppleReviewDemoMode()
@@ -233,7 +233,7 @@ extension SettingsProTab {
                 .statusChanged("Setup code not recognized or uses an insecure ws:// gateway URL."))
             return false
         }
-        self.stagedGatewaySetupLink = nil
+        self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
         self.applyGatewayLink(link)
         return true
     }
@@ -284,7 +284,7 @@ extension SettingsProTab {
         guard AppleReviewDemoMode.isSetupCode(code) else { return }
         self.presentationStore.send(.qrScannerDismissed)
         self.setupCode = ""
-        self.stagedGatewaySetupLink = nil
+        self.gatewaySetupLinkStore.send(.setupLinkStaged(nil))
         self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
         self.appModel.enterAppleReviewDemoMode()
     }

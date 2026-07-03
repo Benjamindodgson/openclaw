@@ -214,6 +214,42 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup link stages pending links`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: "bootstrap",
+            token: nil,
+            password: nil)
+        let store = TestStore(initialState: SettingsGatewaySetupLinkFeature.State()) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.setupLinkStaged(link)) {
+            $0.stagedGatewaySetupLink = link
+        }
+    }
+
+    @Test func `settings gateway setup link clears when setup code is pasted`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: nil,
+            token: nil,
+            password: nil)
+        var initialState = SettingsGatewaySetupLinkFeature.State()
+        initialState.stagedGatewaySetupLink = link
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewaySetupLinkFeature()
+        }
+
+        await store.send(.setupCodeChanged("setup-code")) {
+            $0.stagedGatewaySetupLink = nil
+        }
+    }
+
     @Test func `settings location tracks change lifecycle`() async {
         var initialState = SettingsLocationFeature.State()
         initialState.statusText = "Location permission was not granted."
