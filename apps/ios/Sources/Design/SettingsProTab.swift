@@ -128,6 +128,126 @@ struct SettingsPresentationFeature {
 }
 
 @Reducer
+struct SettingsApprovalsFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var activeAgentName = "Default Agent"
+        var gatewayConnected = false
+        var hasPendingApproval = false
+        var isAppleReviewDemoModeEnabled = false
+        var isResolvingPendingApproval = false
+        var notificationsNeedAttention = false
+        var pendingApprovalAllowsAllowAlways = false
+        var pendingCommandPreview: String?
+
+        var approvalBadgeValue: String? {
+            self.hasPendingApproval ? "1" : nil
+        }
+
+        var approvalEmptyDetail: String {
+            if self.isAppleReviewDemoModeEnabled {
+                return "Live gateway requests are disabled in demo mode."
+            }
+            if self.notificationsNeedAttention {
+                return "Foreground approvals still appear while OpenClaw is connected."
+            }
+            return self.gatewayConnected ? "Gateway requests will appear here." : "Connect to the gateway."
+        }
+
+        var approvalsDetail: String {
+            if self.notificationsNeedAttention {
+                return self.hasPendingApproval ? "1 waiting, notifications off" : "Notifications off"
+            }
+            return self.hasPendingApproval ? "1 request waiting" : "No approvals waiting"
+        }
+
+        var destinationDetail: String {
+            if self.notificationsNeedAttention {
+                return "Out-of-app approval alerts need notification permission."
+            }
+            return self.hasPendingApproval
+                ? "Review the pending gateway action."
+                : "No gateway actions are waiting for review."
+        }
+
+        var destinationValue: String {
+            if self.notificationsNeedAttention { return "Alerts Off" }
+            return self.hasPendingApproval ? "1 waiting" : "clear"
+        }
+
+        var destinationColor: Color {
+            if self.notificationsNeedAttention { return OpenClawBrand.warn }
+            return self.hasPendingApproval ? OpenClawBrand.warn : OpenClawBrand.ok
+        }
+
+        var listColor: Color {
+            self.hasPendingApproval ? OpenClawBrand.warn : .secondary
+        }
+
+        var approvalItems: [SettingsApprovalItem] {
+            guard self.hasPendingApproval else { return [] }
+            return [
+                SettingsApprovalItem(
+                    id: "pending-real",
+                    icon: "terminal.fill",
+                    title: self.pendingCommandPreview ?? "Review gateway action",
+                    detail: "Agent: \(self.activeAgentName)",
+                    priority: self.isResolvingPendingApproval ? "Resolving" : "High",
+                    color: OpenClawBrand.danger),
+                SettingsApprovalItem(
+                    id: "pending-context",
+                    icon: "doc.text.fill",
+                    title: self.pendingApprovalAllowsAllowAlways ? "Permission can be saved" : "One-time approval",
+                    detail: "Gateway request",
+                    priority: self.pendingApprovalAllowsAllowAlways ? "Medium" : "Review",
+                    color: OpenClawBrand.warn),
+            ]
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case approvalsSynced(
+            isAppleReviewDemoModeEnabled: Bool,
+            gatewayConnected: Bool,
+            notificationsNeedAttention: Bool,
+            hasPendingApproval: Bool,
+            pendingCommandPreview: String?,
+            activeAgentName: String,
+            isResolvingPendingApproval: Bool,
+            pendingApprovalAllowsAllowAlways: Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .approvalsSynced(
+                isAppleReviewDemoModeEnabled,
+                gatewayConnected,
+                notificationsNeedAttention,
+                hasPendingApproval,
+                pendingCommandPreview,
+                activeAgentName,
+                isResolvingPendingApproval,
+                pendingApprovalAllowsAllowAlways):
+                state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
+                state.gatewayConnected = gatewayConnected
+                state.notificationsNeedAttention = notificationsNeedAttention
+                state.hasPendingApproval = hasPendingApproval
+                state.pendingCommandPreview = pendingCommandPreview
+                state.activeAgentName = activeAgentName
+                state.isResolvingPendingApproval = isResolvingPendingApproval
+                state.pendingApprovalAllowsAllowAlways = pendingApprovalAllowsAllowAlways
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct SettingsGatewayActivityFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -691,6 +811,12 @@ struct SettingsProTab: View {
 
     @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
 
+    @State var approvalsStore: StoreOf<SettingsApprovalsFeature> = Store(
+        initialState: SettingsApprovalsFeature.State())
+    {
+        SettingsApprovalsFeature()
+    }
+
     @State var agentSelectionStore: StoreOf<SettingsAgentSelectionFeature> = Store(
         initialState: SettingsAgentSelectionFeature.State())
     {
@@ -911,7 +1037,8 @@ struct SettingsProTab: View {
     private func settingsLifecycle(_ content: some View) -> some View {
         self.settingsTalkRuntimeLifecycle(
             self.settingsGatewaySetupStatusLifecycle(
-                self.settingsBaseLifecycle(content)))
+                self.settingsApprovalLifecycle(
+                    self.settingsBaseLifecycle(content))))
     }
 
     private func settingsBaseLifecycle(_ content: some View) -> some View {
@@ -1018,6 +1145,28 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.navigationStore.navigationPath) { _, _ in
                 self.notifyRouteChange()
+            }
+    }
+
+    private func settingsApprovalLifecycle(_ content: some View) -> some View {
+        content
+            .onChange(of: self.notificationStore.needsAttention) { _, _ in
+                self.syncApprovalState()
+            }
+            .onChange(of: self.appModel.pendingExecApprovalPrompt?.id) { _, _ in
+                self.syncApprovalState()
+            }
+            .onChange(of: self.appModel.pendingExecApprovalPrompt?.commandPreview) { _, _ in
+                self.syncApprovalState()
+            }
+            .onChange(of: self.appModel.pendingExecApprovalPrompt?.allowsAllowAlways) { _, _ in
+                self.syncApprovalState()
+            }
+            .onChange(of: self.appModel.pendingExecApprovalPromptResolving) { _, _ in
+                self.syncApprovalState()
+            }
+            .onChange(of: self.appModel.activeAgentName) { _, _ in
+                self.syncApprovalState()
             }
     }
 

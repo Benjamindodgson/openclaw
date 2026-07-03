@@ -113,8 +113,8 @@ extension SettingsProTab {
                         title: "Approvals",
                         detail: self.approvalsDetail,
                         route: .approvals,
-                        color: self.pendingApproval == nil ? .secondary : OpenClawBrand.warn,
-                        badgeValue: self.pendingApproval == nil ? nil : "1")
+                        color: self.approvalsStore.listColor,
+                        badgeValue: self.approvalsStore.approvalBadgeValue)
                     Divider().padding(.leading, 58)
                     self.settingsListRow(
                         icon: "person.2",
@@ -306,15 +306,9 @@ extension SettingsProTab {
             self.detailStatusCard(
                 icon: "checkmark.shield.fill",
                 title: "Approvals",
-                detail: self.notificationsNeedAttention
-                    ? "Out-of-app approval alerts need notification permission."
-                    : (self.pendingApproval == nil ? "No gateway actions are waiting for review." :
-                        "Review the pending gateway action."),
-                value: self.notificationsNeedAttention
-                    ? "Alerts Off"
-                    : (self.pendingApproval == nil ? "clear" : "1 waiting"),
-                color: self.notificationsNeedAttention ? OpenClawBrand.warn :
-                    (self.pendingApproval == nil ? OpenClawBrand.ok : OpenClawBrand.warn))
+                detail: self.approvalsStore.destinationDetail,
+                value: self.approvalsStore.destinationValue,
+                color: self.approvalsStore.destinationColor)
 
             if self.notificationsNeedAttention {
                 self.approvalNotificationsWarningCard
