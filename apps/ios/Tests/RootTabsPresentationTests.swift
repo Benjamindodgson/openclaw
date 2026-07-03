@@ -884,6 +884,70 @@ struct RootTabsPresentationTests {
         #expect(RootTabs.sidebarHideButtonAccessibilityIdentifier == "RootTabs.Sidebar.Hide")
     }
 
+    @Test func `sidebar reducer uses initial visibility as user override`() async {
+        let store = TestStore(initialState: RootSidebarFeature.State(initialVisibility: true)) {
+            RootSidebarFeature()
+        }
+
+        await store.send(.layoutModeResolved(.drawer, force: false)) {
+            $0.layoutMode = .drawer
+            $0.didResolveLayout = true
+        }
+    }
+
+    @Test func `sidebar reducer applies preferred visibility when not overridden`() async {
+        let store = TestStore(initialState: RootSidebarFeature.State()) {
+            RootSidebarFeature()
+        }
+
+        await store.send(.layoutModeResolved(.split, force: false)) {
+            $0.didResolveLayout = true
+            $0.isVisible = true
+        }
+
+        await store.send(.layoutModeResolved(.drawer, force: false)) {
+            $0.layoutMode = .drawer
+            $0.userOverridden = false
+            $0.isVisible = false
+        }
+    }
+
+    @Test func `sidebar reducer preserves user override until layout mode changes`() async {
+        let store = TestStore(initialState: RootSidebarFeature.State()) {
+            RootSidebarFeature()
+        }
+
+        await store.send(.layoutModeResolved(.drawer, force: false)) {
+            $0.layoutMode = .drawer
+            $0.didResolveLayout = true
+        }
+
+        await store.send(.showRequested) {
+            $0.userOverridden = true
+            $0.isVisible = true
+        }
+
+        await store.send(.layoutModeResolved(.drawer, force: false))
+
+        await store.send(.layoutModeResolved(.split, force: false)) {
+            $0.userOverridden = false
+            $0.layoutMode = .split
+        }
+    }
+
+    @Test func `sidebar reducer selection collapse does not mark user override`() async {
+        let store = TestStore(initialState: RootSidebarFeature.State(initialVisibility: true)) {
+            RootSidebarFeature()
+        }
+
+        await store.send(.visibilityChanged(false)) {
+            $0.isVisible = false
+        }
+        #expect(store.state.userOverridden)
+
+        await store.send(.hideRequested)
+    }
+
     @Test func `i pad drawer sidebar width stays inside screen`() {
         let width = RootTabs.sidebarWidth(containerWidth: 744, isDrawerLayout: true)
 
