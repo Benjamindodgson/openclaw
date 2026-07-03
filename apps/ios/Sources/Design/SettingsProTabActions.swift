@@ -168,6 +168,7 @@ extension SettingsProTab {
     func syncSettingsState() {
         self.pushEnrollmentConsentStore.send(.refresh)
         self.appearanceStore.send(.appearancePreferenceSynced(self.storedAppearancePreferenceRaw))
+        self.deviceIdentityStore.send(.displayNameSynced(self.storedDisplayName))
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
             preventSleep: self.storedPreventSleep))
@@ -579,6 +580,17 @@ extension SettingsProTab {
     func updateAppearancePreferenceRaw(_ rawValue: String) {
         self.appearanceStore.send(.appearancePreferenceChanged(rawValue))
         self.storedAppearancePreferenceRaw = rawValue
+    }
+
+    var displayNameBinding: Binding<String> {
+        Binding(
+            get: { self.deviceIdentityStore.displayName },
+            set: { self.updateDisplayName($0) })
+    }
+
+    func updateDisplayName(_ displayName: String) {
+        self.deviceIdentityStore.send(.displayNameChanged(displayName))
+        self.storedDisplayName = displayName
     }
 
     var locationModeRaw: String {

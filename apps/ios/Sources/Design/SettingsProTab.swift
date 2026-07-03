@@ -741,6 +741,37 @@ struct SettingsAppearanceFeature {
     }
 }
 
+@Reducer
+struct SettingsDeviceIdentityFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var displayName = "iOS Node"
+    }
+
+    enum Action: Equatable, Sendable {
+        case displayNameChanged(String)
+        case displayNameSynced(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .displayNameChanged(displayName):
+                state.displayName = displayName
+                return .none
+
+            case let .displayNameSynced(displayName):
+                state.displayName = displayName
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -748,7 +779,7 @@ struct SettingsProTab: View {
     @Environment(\.scenePhase) var scenePhase
     @AppStorage(AppAppearancePreference.storageKey) var storedAppearancePreferenceRaw: String =
         AppAppearancePreference.system.rawValue
-    @AppStorage("node.displayName") var displayName: String = "iOS Node"
+    @AppStorage("node.displayName") var storedDisplayName: String = "iOS Node"
     @AppStorage("node.instanceId") var instanceId: String = UUID().uuidString
     @AppStorage("camera.enabled") var storedCameraEnabled: Bool = true
     @AppStorage("location.enabledMode") var storedLocationModeRaw: String = OpenClawLocationMode.off.rawValue
@@ -820,6 +851,12 @@ struct SettingsProTab: View {
         initialState: SettingsDeviceCapabilityFeature.State())
     {
         SettingsDeviceCapabilityFeature()
+    }
+
+    @State var deviceIdentityStore: StoreOf<SettingsDeviceIdentityFeature> = Store(
+        initialState: SettingsDeviceIdentityFeature.State())
+    {
+        SettingsDeviceIdentityFeature()
     }
 
     @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
@@ -984,6 +1021,9 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedAppearancePreferenceRaw) { _, newValue in
                 self.appearanceStore.send(.appearancePreferenceSynced(newValue))
+            }
+            .onChange(of: self.storedDisplayName) { _, newValue in
+                self.deviceIdentityStore.send(.displayNameSynced(newValue))
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChanged(newValue))

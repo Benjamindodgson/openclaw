@@ -984,7 +984,7 @@ extension SettingsProTab {
     var deviceIdentityCard: some View {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                TextField("Device Name", text: self.$displayName)
+                TextField("Device Name", text: self.displayNameBinding)
                     .textFieldStyle(.roundedBorder)
                 self.detailRow("Instance ID", value: self.instanceId)
             }

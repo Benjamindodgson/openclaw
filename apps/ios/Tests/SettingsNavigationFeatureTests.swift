@@ -167,6 +167,26 @@ struct SettingsNavigationFeatureTests {
         #expect(state.appearancePreference == .system)
     }
 
+    @Test func `settings device identity syncs persisted display name`() async {
+        let store = TestStore(initialState: SettingsDeviceIdentityFeature.State()) {
+            SettingsDeviceIdentityFeature()
+        }
+
+        await store.send(.displayNameSynced("Kitchen iPad")) {
+            $0.displayName = "Kitchen iPad"
+        }
+    }
+
+    @Test func `settings device identity records display name changes`() async {
+        let store = TestStore(initialState: SettingsDeviceIdentityFeature.State()) {
+            SettingsDeviceIdentityFeature()
+        }
+
+        await store.send(.displayNameChanged("Field Node")) {
+            $0.displayName = "Field Node"
+        }
+    }
+
     @Test func `settings gateway activity tracks reconnect lifecycle`() async {
         let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
             SettingsGatewayActivityFeature()
