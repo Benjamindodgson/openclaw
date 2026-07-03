@@ -817,6 +817,7 @@ struct RootTabsSourceGuardTests {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let controllerSource = try String(contentsOf: Self.gatewayConnectionControllerSourceURL(), encoding: .utf8)
 
@@ -840,6 +841,14 @@ struct RootTabsSourceGuardTests {
 
         #expect(onboardingSource.contains("self.requestLocalNetworkAccess(reason: \"onboarding_continue\")"))
         #expect(onboardingSource.contains("self.requestLocalNetworkAccessIfPastIntro(reason: \"onboarding_appear\")"))
+        #expect(!onboardingSource.contains("@State private var pendingManualAuthOverride"))
+        #expect(onboardingSource.contains("self.credentialsStore.send(.setupAuthApplied(setupAuth))"))
+        #expect(onboardingSource.contains("pendingOverride: self.credentialsStore.pendingManualAuthOverride"))
+        #expect(onboardingSource.contains("self.credentialsStore.send(.pendingManualAuthOverrideConsumed)"))
+        #expect(onboardingStateSource
+            .contains("var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?"))
+        #expect(onboardingStateSource
+            .contains("case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)"))
         #expect(actionsSource
             .contains("self.gatewayController.requestLocalNetworkAccess(reason: \"settings_preflight\")"))
     }
@@ -1081,6 +1090,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Onboarding/OnboardingWizardView.swift")
+    }
+
+    private static func onboardingStateStoreSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Onboarding/OnboardingStateStore.swift")
     }
 
     private static func openClawAppSourceURL() -> URL {

@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Foundation
+import OpenClawKit
 import Testing
 @testable import OpenClaw
 
@@ -387,9 +388,39 @@ import Testing
 
         #expect(!store.state.hasGatewayPassword)
 
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: "bootstrap-1",
+            token: "token-3",
+            password: "password-3")
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
+
+        await store.send(.setupAuthApplied(setupAuth)) {
+            $0.gatewayToken = "token-3"
+            $0.gatewayPassword = "password-3"
+            $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+                token: "token-3",
+                bootstrapToken: "bootstrap-1",
+                password: "password-3")
+        }
+
+        await store.send(.pendingManualAuthOverrideConsumed) {
+            $0.pendingManualAuthOverride = nil
+        }
+
+        await store.send(.setupAuthApplied(setupAuth)) {
+            $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+                token: "token-3",
+                bootstrapToken: "bootstrap-1",
+                password: "password-3")
+        }
+
         await store.send(.reset) {
             $0.gatewayToken = ""
             $0.gatewayPassword = ""
+            $0.pendingManualAuthOverride = nil
         }
 
         #expect(!store.state.hasGatewayToken)
