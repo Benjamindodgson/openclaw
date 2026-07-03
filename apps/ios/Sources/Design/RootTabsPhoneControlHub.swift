@@ -170,7 +170,8 @@ struct RootTabsPhoneControlHub: View {
         case .sessions:
             CommandSessionsScreen(
                 headerLeadingAction: self.phoneDetailBackAction,
-                openChat: { self.openPhoneRootDestination(.chat) })
+                openChat: { self.openPhoneRootDestination(.chat) },
+                store: CommandSessionsStoreFactory.live(appModel: self.appModel))
         case .dreaming:
             AgentProTab(
                 directRoute: .dreaming,
