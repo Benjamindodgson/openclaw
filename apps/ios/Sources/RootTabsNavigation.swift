@@ -405,6 +405,7 @@ struct RootNavigationSelectionFeature {
         var selectedSidebarDestination: RootTabs.SidebarDestination
         var selectedSettingsRoute: SettingsRoute?
         var selectedSettingsRouteRequestID: Int
+        var sidebarNavigationPath: [SettingsRoute]
         var suppressedExecApprovalPromptIDForNotificationSettings: String?
 
         init(
@@ -415,6 +416,7 @@ struct RootNavigationSelectionFeature {
             self.selectedSidebarDestination = selectedSidebarDestination
             self.selectedSettingsRoute = selectedSidebarDestination.settingsRoute
             self.selectedSettingsRouteRequestID = 0
+            self.sidebarNavigationPath = []
             self.suppressedExecApprovalPromptIDForNotificationSettings = nil
         }
 
@@ -428,6 +430,8 @@ struct RootNavigationSelectionFeature {
         case tabSelected(RootTabs.AppTab)
         case sidebarDestinationSelected(RootTabs.SidebarDestination)
         case settingsRouteSelected(SettingsRoute)
+        case sidebarNavigationPathChanged([SettingsRoute])
+        case sidebarSettingsRoutePushed(SettingsRoute)
         case settingsRouteChanged(SettingsRoute?)
         case notificationPermissionSettingsOpened(suppressedApprovalID: String)
         case pendingExecApprovalPromptChanged(String?)
@@ -443,6 +447,7 @@ struct RootNavigationSelectionFeature {
                 return .none
 
             case let .sidebarDestinationSelected(destination):
+                state.sidebarNavigationPath.removeAll()
                 if destination.settingsRoute != .notifications {
                     state.suppressedExecApprovalPromptIDForNotificationSettings = nil
                 }
@@ -455,15 +460,17 @@ struct RootNavigationSelectionFeature {
                 self.selectSettingsRoute(route, state: &state)
                 return .none
 
+            case let .sidebarNavigationPathChanged(path):
+                state.sidebarNavigationPath = path
+                return .none
+
+            case let .sidebarSettingsRoutePushed(route):
+                state.sidebarNavigationPath = [route]
+                self.handleSettingsRouteChange(route, state: &state)
+                return .none
+
             case let .settingsRouteChanged(route):
-                guard route != .notifications else { return .none }
-                if route == nil {
-                    state.selectedSettingsRoute = nil
-                    if state.selectedTab == .settings {
-                        state.selectedSidebarDestination = .settings
-                    }
-                }
-                state.suppressedExecApprovalPromptIDForNotificationSettings = nil
+                self.handleSettingsRouteChange(route, state: &state)
                 return .none
 
             case let .notificationPermissionSettingsOpened(suppressedApprovalID):
@@ -485,6 +492,7 @@ struct RootNavigationSelectionFeature {
         _ route: SettingsRoute,
         state: inout State)
     {
+        state.sidebarNavigationPath.removeAll()
         if route != .notifications {
             state.suppressedExecApprovalPromptIDForNotificationSettings = nil
         }
@@ -492,6 +500,20 @@ struct RootNavigationSelectionFeature {
         state.selectedSettingsRouteRequestID &+= 1
         state.selectedSidebarDestination = .settings
         state.selectedTab = .settings
+    }
+
+    private func handleSettingsRouteChange(
+        _ route: SettingsRoute?,
+        state: inout State)
+    {
+        guard route != .notifications else { return }
+        if route == nil {
+            state.selectedSettingsRoute = nil
+            if state.selectedTab == .settings {
+                state.selectedSidebarDestination = .settings
+            }
+        }
+        state.suppressedExecApprovalPromptIDForNotificationSettings = nil
     }
 }
 

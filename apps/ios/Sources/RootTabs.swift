@@ -23,9 +23,6 @@ struct RootTabs: View {
     @AppStorage("canvas.debugStatusEnabled") private var canvasDebugStatusEnabled: Bool = false
     @AppStorage(AppAppearancePreference.storageKey) private var appearancePreferenceRaw: String =
         AppAppearancePreference.system.rawValue
-    // Embedded Settings rows push onto the sidebar stack; clear it before
-    // changing sidebar roots so stale settings detail screens cannot survive.
-    @State private var sidebarNavigationPath: [SettingsRoute] = []
     @State private var navigationStore: StoreOf<RootNavigationSelectionFeature> = Store(
         initialState: RootNavigationSelectionFeature.State(
             selectedTab: Self.initialTab,
@@ -501,7 +498,7 @@ struct RootTabs: View {
     }
 
     private var sidebarDetailNavigationShell: some View {
-        NavigationStack(path: self.$sidebarNavigationPath) {
+        NavigationStack(path: self.sidebarNavigationPathBinding) {
             self.sidebarDetailShell
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -996,6 +993,12 @@ extension RootTabs {
         self.navigationStore.selectedSettingsRouteRequestID
     }
 
+    private var sidebarNavigationPathBinding: Binding<[SettingsRoute]> {
+        Binding(
+            get: { self.navigationStore.sidebarNavigationPath },
+            set: { self.navigationStore.send(.sidebarNavigationPathChanged($0)) })
+    }
+
     private var isSidebarVisible: Bool {
         self.sidebarStore.isVisible
     }
@@ -1017,19 +1020,16 @@ extension RootTabs {
     }
 
     private func selectSidebarDestination(_ destination: SidebarDestination) {
-        self.sidebarNavigationPath.removeAll()
         self.navigationStore.send(.sidebarDestinationSelected(destination))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
 
     private func selectSettingsRoute(_ route: SettingsRoute) {
-        self.sidebarNavigationPath.removeAll()
         self.navigationStore.send(.settingsRouteSelected(route))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
 
     private func openNotificationSettings(suppressedApprovalID: String) {
-        self.sidebarNavigationPath.removeAll()
         self.navigationStore.send(.notificationPermissionSettingsOpened(suppressedApprovalID: suppressedApprovalID))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
@@ -1042,8 +1042,7 @@ extension RootTabs {
     }
 
     private func pushSidebarSettingsRoute(_ route: SettingsRoute) {
-        self.sidebarNavigationPath = [route]
-        self.handleSettingsRouteChange(route)
+        self.navigationStore.send(.sidebarSettingsRoutePushed(route))
     }
 
     private func handleSettingsRouteChange(_ route: SettingsRoute?) {

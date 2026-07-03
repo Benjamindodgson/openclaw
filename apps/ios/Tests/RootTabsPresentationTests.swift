@@ -613,7 +613,12 @@ struct RootTabsPresentationTests {
             RootNavigationSelectionFeature()
         }
 
+        await store.send(.sidebarNavigationPathChanged([.voice])) {
+            $0.sidebarNavigationPath = [.voice]
+        }
+
         await store.send(.sidebarDestinationSelected(.gateway)) {
+            $0.sidebarNavigationPath = []
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .gateway
             $0.selectedSettingsRoute = .gateway
@@ -632,7 +637,12 @@ struct RootTabsPresentationTests {
             RootNavigationSelectionFeature()
         }
 
+        await store.send(.sidebarNavigationPathChanged([.privacy])) {
+            $0.sidebarNavigationPath = [.privacy]
+        }
+
         await store.send(.settingsRouteSelected(.voice)) {
+            $0.sidebarNavigationPath = []
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .voice
@@ -660,6 +670,7 @@ struct RootTabsPresentationTests {
             $0.selectedSettingsRouteRequestID = 1
             $0.suppressedExecApprovalPromptIDForNotificationSettings = "approval-1"
         }
+        #expect(store.state.sidebarNavigationPath.isEmpty)
         #expect(store.state.activeExecApprovalPromptSuppressionID == "approval-1")
 
         await store.send(.pendingExecApprovalPromptChanged("approval-1"))
@@ -683,6 +694,10 @@ struct RootTabsPresentationTests {
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .voice
             $0.selectedSettingsRouteRequestID = 1
+        }
+
+        await store.send(.sidebarSettingsRoutePushed(.privacy)) {
+            $0.sidebarNavigationPath = [.privacy]
         }
 
         await store.send(.settingsRouteChanged(.notifications))
