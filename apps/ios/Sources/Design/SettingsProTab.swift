@@ -1222,6 +1222,9 @@ struct SettingsProTab: View {
                 self.syncGatewayConnectionStatusState()
                 self.syncDiagnosticsContextState()
             }
+            .onChange(of: self.appModel.gatewayRemoteAddress) { _, _ in
+                self.syncGatewayConnectionStatusState()
+            }
             .onChange(of: self.appModel.isAppleReviewDemoModeEnabled) { _, _ in
                 self.syncGatewayConnectionStatusState()
                 self.syncDiagnosticsContextState()
