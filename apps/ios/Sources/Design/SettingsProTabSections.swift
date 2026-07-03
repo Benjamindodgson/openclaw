@@ -23,7 +23,7 @@ extension SettingsProTab {
             ProSectionHeader(title: "Appearance", uppercase: false)
             ProCard(radius: SettingsLayout.cardRadius) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Picker("Appearance", selection: self.$appearancePreferenceRaw) {
+                    Picker("Appearance", selection: self.appearancePreferenceBinding) {
                         ForEach(AppAppearancePreference.allCases) { preference in
                             Text(preference.label).tag(preference.rawValue)
                         }

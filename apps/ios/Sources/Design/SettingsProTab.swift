@@ -706,12 +706,47 @@ struct SettingsDeviceCapabilityFeature {
     }
 }
 
+@Reducer
+struct SettingsAppearanceFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var appearancePreferenceRaw = AppAppearancePreference.system.rawValue
+
+        var appearancePreference: AppAppearancePreference {
+            AppAppearancePreference(rawValue: self.appearancePreferenceRaw) ?? .system
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case appearancePreferenceChanged(String)
+        case appearancePreferenceSynced(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .appearancePreferenceChanged(rawValue):
+                state.appearancePreferenceRaw = rawValue
+                return .none
+
+            case let .appearancePreferenceSynced(rawValue):
+                state.appearancePreferenceRaw = rawValue
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
     @Environment(GatewayConnectionController.self) var gatewayController
     @Environment(\.scenePhase) var scenePhase
-    @AppStorage(AppAppearancePreference.storageKey) var appearancePreferenceRaw: String =
+    @AppStorage(AppAppearancePreference.storageKey) var storedAppearancePreferenceRaw: String =
         AppAppearancePreference.system.rawValue
     @AppStorage("node.displayName") var displayName: String = "iOS Node"
     @AppStorage("node.instanceId") var instanceId: String = UUID().uuidString
@@ -773,6 +808,12 @@ struct SettingsProTab: View {
         initialState: SettingsDiagnosticsFeature.State())
     {
         SettingsDiagnosticsFeature()
+    }
+
+    @State var appearanceStore: StoreOf<SettingsAppearanceFeature> = Store(
+        initialState: SettingsAppearanceFeature.State())
+    {
+        SettingsAppearanceFeature()
     }
 
     @State var deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature> = Store(
@@ -878,7 +919,7 @@ struct SettingsProTab: View {
     }
 
     var appearancePreference: AppAppearancePreference {
-        AppAppearancePreference(rawValue: self.appearancePreferenceRaw) ?? .system
+        self.appearanceStore.appearancePreference
     }
 
     @ViewBuilder
@@ -940,6 +981,9 @@ struct SettingsProTab: View {
                     self.syncSettingsState()
                     self.refreshNotificationSettings()
                 }
+            }
+            .onChange(of: self.storedAppearancePreferenceRaw) { _, newValue in
+                self.appearanceStore.send(.appearancePreferenceSynced(newValue))
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChanged(newValue))
