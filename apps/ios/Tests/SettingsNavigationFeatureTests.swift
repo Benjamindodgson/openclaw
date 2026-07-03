@@ -757,4 +757,74 @@ struct SettingsNavigationFeatureTests {
         state.preventSleep = false
         #expect(state.enabledCount == 0)
     }
+
+    @Test func `settings talk preferences sync persisted values`() async {
+        let store = TestStore(initialState: SettingsTalkPreferencesFeature.State()) {
+            SettingsTalkPreferencesFeature()
+        }
+
+        await store.send(.preferencesSynced(
+            providerSelectionRaw: TalkModeProviderSelection.openAIRealtime.rawValue,
+            realtimeVoiceSelectionRaw: " Cedar ",
+            speechLocale: "en-US",
+            talkButtonEnabled: false,
+            talkBackgroundEnabled: true,
+            talkSpeakerphoneEnabled: false))
+        {
+            $0.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
+            $0.realtimeVoiceSelectionRaw = "cedar"
+            $0.speechLocale = "en-US"
+            $0.talkButtonEnabled = false
+            $0.talkBackgroundEnabled = true
+            $0.talkSpeakerphoneEnabled = false
+        }
+    }
+
+    @Test func `settings talk preferences normalize picker values`() async {
+        var initialState = SettingsTalkPreferencesFeature.State()
+        initialState.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
+        initialState.realtimeVoiceSelectionRaw = "cedar"
+        let store = TestStore(initialState: initialState) {
+            SettingsTalkPreferencesFeature()
+        }
+
+        await store.send(.providerSelectionChanged("unknown")) {
+            $0.providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
+        }
+        await store.send(.realtimeVoiceSelectionChanged("unknown")) {
+            $0.realtimeVoiceSelectionRaw = ""
+        }
+        await store.send(.realtimeVoiceSelectionChanged(" Cedar ")) {
+            $0.realtimeVoiceSelectionRaw = "cedar"
+        }
+    }
+
+    @Test func `settings talk preferences record field changes`() async {
+        let store = TestStore(initialState: SettingsTalkPreferencesFeature.State()) {
+            SettingsTalkPreferencesFeature()
+        }
+
+        await store.send(.speechLocaleChanged("en-US")) {
+            $0.speechLocale = "en-US"
+        }
+        await store.send(.talkBackgroundEnabledChanged(true)) {
+            $0.talkBackgroundEnabled = true
+        }
+        await store.send(.talkButtonEnabledChanged(false)) {
+            $0.talkButtonEnabled = false
+        }
+        await store.send(.talkSpeakerphoneEnabledChanged(false)) {
+            $0.talkSpeakerphoneEnabled = false
+        }
+    }
+
+    @Test func `settings talk preferences show realtime picker for local or gateway realtime`() {
+        var state = SettingsTalkPreferencesFeature.State()
+
+        #expect(state.shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: false) == false)
+        #expect(state.shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: true) == true)
+
+        state.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
+        #expect(state.shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: false) == true)
+    }
 }

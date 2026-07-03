@@ -523,7 +523,7 @@ extension SettingsProTab {
                 icon: "lock.open.display",
                 title: "Background Listening",
                 detail: "Allow active Talk sessions to continue while the app is backgrounded.",
-                isOn: self.$talkBackgroundEnabled)
+                isOn: self.talkBackgroundEnabledBinding)
 
             self.privacyAccessCard
         }
@@ -868,12 +868,12 @@ extension SettingsProTab {
                     self.appModel.setTalkEnabled(enabled)
                 }
                 .disabled(self.appModel.isAppleReviewDemoModeEnabled)
-                Picker("Speech Language", selection: self.$talkSpeechLocale) {
+                Picker("Speech Language", selection: self.talkSpeechLocaleBinding) {
                     ForEach(TalkSpeechLocale.supportedOptions()) { option in
                         Text(option.label).tag(option.id)
                     }
                 }
-                self.settingsToggle("Background Listening", isOn: self.$talkBackgroundEnabled)
+                self.settingsToggle("Background Listening", isOn: self.talkBackgroundEnabledBinding)
                 self.settingsToggle("Speakerphone", isOn: self.talkSpeakerphoneBinding)
                 NavigationLink {
                     VoiceWakeWordsSettingsView(
@@ -935,7 +935,7 @@ extension SettingsProTab {
     var shareSettingsCard: some View {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                Toggle("Show Talk Control", isOn: self.$talkButtonEnabled)
+                Toggle("Show Talk Control", isOn: self.talkButtonEnabledBinding)
                 TextField(
                     "Default Share Instruction",
                     text: self.defaultShareInstructionBinding,

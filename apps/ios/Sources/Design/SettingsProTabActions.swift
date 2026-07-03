@@ -176,6 +176,7 @@ extension SettingsProTab {
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
             preventSleep: self.storedPreventSleep))
+        self.syncTalkPreferencesState()
         self.locationStore.send(.locationModeSynced(self.storedLocationModeRaw))
         self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
         self.manualGatewayEndpointStore.send(.endpointSynced(
@@ -191,6 +192,16 @@ extension SettingsProTab {
         self.gatewayCredentialsStore.send(.credentialsLoaded(
             token: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? "",
             password: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""))
+    }
+
+    func syncTalkPreferencesState() {
+        self.talkPreferencesStore.send(.preferencesSynced(
+            providerSelectionRaw: self.storedTalkProviderSelectionRaw,
+            realtimeVoiceSelectionRaw: self.storedTalkRealtimeVoiceSelectionRaw,
+            speechLocale: self.storedTalkSpeechLocale,
+            talkButtonEnabled: self.storedTalkButtonEnabled,
+            talkBackgroundEnabled: self.storedTalkBackgroundEnabled,
+            talkSpeakerphoneEnabled: self.storedTalkSpeakerphoneEnabled))
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
@@ -810,37 +821,79 @@ extension SettingsProTab {
     }
 
     var shouldShowRealtimeVoicePicker: Bool {
-        let providerSelection = TalkModeProviderSelection.resolved(self.talkProviderSelectionRaw)
+        let providerSelection = TalkModeProviderSelection.resolved(self.talkPreferencesStore.providerSelectionRaw)
         return providerSelection == .openAIRealtime || self.appModel.talkMode.gatewayTalkUsesRealtime
     }
 
     var talkProviderSelectionBinding: Binding<String> {
         Binding(
-            get: { self.talkProviderSelectionRaw },
-            set: { newValue in
-                let selection = TalkModeProviderSelection.resolved(newValue)
-                self.talkProviderSelectionRaw = selection.rawValue
-                self.appModel.setTalkProviderSelection(selection.rawValue)
-            })
+            get: { self.talkPreferencesStore.providerSelectionRaw },
+            set: { self.updateTalkProviderSelection($0) })
     }
 
     var talkRealtimeVoiceSelectionBinding: Binding<String> {
         Binding(
-            get: { self.talkRealtimeVoiceSelectionRaw },
-            set: { newValue in
-                let voice = TalkModeRealtimeVoiceSelection.resolvedOverride(newValue) ?? ""
-                self.talkRealtimeVoiceSelectionRaw = voice
-                self.appModel.setTalkRealtimeVoiceSelection(voice)
-            })
+            get: { self.talkPreferencesStore.realtimeVoiceSelectionRaw },
+            set: { self.updateTalkRealtimeVoiceSelection($0) })
+    }
+
+    var talkSpeechLocaleBinding: Binding<String> {
+        Binding(
+            get: { self.talkPreferencesStore.speechLocale },
+            set: { self.updateTalkSpeechLocale($0) })
+    }
+
+    var talkBackgroundEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { self.talkPreferencesStore.talkBackgroundEnabled },
+            set: { self.updateTalkBackgroundEnabled($0) })
+    }
+
+    var talkButtonEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { self.talkPreferencesStore.talkButtonEnabled },
+            set: { self.updateTalkButtonEnabled($0) })
     }
 
     var talkSpeakerphoneBinding: Binding<Bool> {
         Binding(
-            get: { self.talkSpeakerphoneEnabled },
-            set: { newValue in
-                self.talkSpeakerphoneEnabled = newValue
-                self.appModel.setTalkSpeakerphoneEnabled(newValue)
-            })
+            get: { self.talkPreferencesStore.talkSpeakerphoneEnabled },
+            set: { self.updateTalkSpeakerphoneEnabled($0) })
+    }
+
+    func updateTalkProviderSelection(_ rawValue: String) {
+        self.talkPreferencesStore.send(.providerSelectionChanged(rawValue))
+        let selection = TalkModeProviderSelection.resolved(rawValue)
+        self.storedTalkProviderSelectionRaw = selection.rawValue
+        self.appModel.setTalkProviderSelection(selection.rawValue)
+    }
+
+    func updateTalkRealtimeVoiceSelection(_ rawValue: String) {
+        self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(rawValue))
+        let voice = TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
+        self.storedTalkRealtimeVoiceSelectionRaw = voice
+        self.appModel.setTalkRealtimeVoiceSelection(voice)
+    }
+
+    func updateTalkSpeechLocale(_ speechLocale: String) {
+        self.talkPreferencesStore.send(.speechLocaleChanged(speechLocale))
+        self.storedTalkSpeechLocale = speechLocale
+    }
+
+    func updateTalkBackgroundEnabled(_ enabled: Bool) {
+        self.talkPreferencesStore.send(.talkBackgroundEnabledChanged(enabled))
+        self.storedTalkBackgroundEnabled = enabled
+    }
+
+    func updateTalkButtonEnabled(_ enabled: Bool) {
+        self.talkPreferencesStore.send(.talkButtonEnabledChanged(enabled))
+        self.storedTalkButtonEnabled = enabled
+    }
+
+    func updateTalkSpeakerphoneEnabled(_ enabled: Bool) {
+        self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(enabled))
+        self.storedTalkSpeakerphoneEnabled = enabled
+        self.appModel.setTalkSpeakerphoneEnabled(enabled)
     }
 
     var talkApiKeyStatus: String {

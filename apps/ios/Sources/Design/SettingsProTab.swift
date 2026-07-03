@@ -823,6 +823,96 @@ struct SettingsDebugOptionsFeature {
     }
 }
 
+@Reducer
+struct SettingsTalkPreferencesFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
+        var realtimeVoiceSelectionRaw = ""
+        var speechLocale = TalkSpeechLocale.automaticID
+        var talkButtonEnabled = true
+        var talkBackgroundEnabled = false
+        var talkSpeakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
+
+        var providerSelection: TalkModeProviderSelection {
+            TalkModeProviderSelection.resolved(self.providerSelectionRaw)
+        }
+
+        func shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: Bool) -> Bool {
+            self.providerSelection == .openAIRealtime || gatewayTalkUsesRealtime
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case preferencesSynced(
+            providerSelectionRaw: String,
+            realtimeVoiceSelectionRaw: String,
+            speechLocale: String,
+            talkButtonEnabled: Bool,
+            talkBackgroundEnabled: Bool,
+            talkSpeakerphoneEnabled: Bool)
+        case providerSelectionChanged(String)
+        case realtimeVoiceSelectionChanged(String)
+        case speechLocaleChanged(String)
+        case talkBackgroundEnabledChanged(Bool)
+        case talkButtonEnabledChanged(Bool)
+        case talkSpeakerphoneEnabledChanged(Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .preferencesSynced(
+                providerSelectionRaw,
+                realtimeVoiceSelectionRaw,
+                speechLocale,
+                talkButtonEnabled,
+                talkBackgroundEnabled,
+                talkSpeakerphoneEnabled):
+                state.providerSelectionRaw = TalkModeProviderSelection.resolved(providerSelectionRaw).rawValue
+                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(realtimeVoiceSelectionRaw)
+                state.speechLocale = speechLocale
+                state.talkButtonEnabled = talkButtonEnabled
+                state.talkBackgroundEnabled = talkBackgroundEnabled
+                state.talkSpeakerphoneEnabled = talkSpeakerphoneEnabled
+                return .none
+
+            case let .providerSelectionChanged(rawValue):
+                state.providerSelectionRaw = TalkModeProviderSelection.resolved(rawValue).rawValue
+                return .none
+
+            case let .realtimeVoiceSelectionChanged(rawValue):
+                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(rawValue)
+                return .none
+
+            case let .speechLocaleChanged(speechLocale):
+                state.speechLocale = speechLocale
+                return .none
+
+            case let .talkBackgroundEnabledChanged(enabled):
+                state.talkBackgroundEnabled = enabled
+                return .none
+
+            case let .talkButtonEnabledChanged(enabled):
+                state.talkButtonEnabled = enabled
+                return .none
+
+            case let .talkSpeakerphoneEnabledChanged(enabled):
+                state.talkSpeakerphoneEnabled = enabled
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    private static func normalizedRealtimeVoice(_ rawValue: String) -> String {
+        TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -836,13 +926,13 @@ struct SettingsProTab: View {
     @AppStorage("location.enabledMode") var storedLocationModeRaw: String = OpenClawLocationMode.off.rawValue
     @AppStorage("screen.preventSleep") var storedPreventSleep: Bool = true
     @AppStorage("talk.enabled") var talkEnabled: Bool = false
-    @AppStorage(TalkModeProviderSelection.storageKey) var talkProviderSelectionRaw: String =
+    @AppStorage(TalkModeProviderSelection.storageKey) var storedTalkProviderSelectionRaw: String =
         TalkModeProviderSelection.gatewayDefault.rawValue
-    @AppStorage(TalkModeRealtimeVoiceSelection.storageKey) var talkRealtimeVoiceSelectionRaw: String = ""
-    @AppStorage(TalkSpeechLocale.storageKey) var talkSpeechLocale: String = TalkSpeechLocale.automaticID
-    @AppStorage("talk.button.enabled") var talkButtonEnabled: Bool = true
-    @AppStorage("talk.background.enabled") var talkBackgroundEnabled: Bool = false
-    @AppStorage(TalkDefaults.speakerphoneEnabledKey) var talkSpeakerphoneEnabled: Bool =
+    @AppStorage(TalkModeRealtimeVoiceSelection.storageKey) var storedTalkRealtimeVoiceSelectionRaw: String = ""
+    @AppStorage(TalkSpeechLocale.storageKey) var storedTalkSpeechLocale: String = TalkSpeechLocale.automaticID
+    @AppStorage("talk.button.enabled") var storedTalkButtonEnabled: Bool = true
+    @AppStorage("talk.background.enabled") var storedTalkBackgroundEnabled: Bool = false
+    @AppStorage(TalkDefaults.speakerphoneEnabledKey) var storedTalkSpeakerphoneEnabled: Bool =
         TalkDefaults.speakerphoneEnabledByDefault
     @AppStorage(VoiceWakePreferences.enabledKey) var voiceWakeEnabled: Bool = false
     @AppStorage("gateway.autoconnect") var storedGatewayAutoConnect: Bool = false
@@ -914,6 +1004,12 @@ struct SettingsProTab: View {
         initialState: SettingsDebugOptionsFeature.State())
     {
         SettingsDebugOptionsFeature()
+    }
+
+    @State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature> = Store(
+        initialState: SettingsTalkPreferencesFeature.State())
+    {
+        SettingsTalkPreferencesFeature()
     }
 
     @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
@@ -1113,6 +1209,24 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedPreventSleep) { _, newValue in
                 self.deviceCapabilityStore.send(.preventSleepChanged(newValue))
+            }
+            .onChange(of: self.storedTalkProviderSelectionRaw) { _, _ in
+                self.syncTalkPreferencesState()
+            }
+            .onChange(of: self.storedTalkRealtimeVoiceSelectionRaw) { _, _ in
+                self.syncTalkPreferencesState()
+            }
+            .onChange(of: self.storedTalkSpeechLocale) { _, _ in
+                self.syncTalkPreferencesState()
+            }
+            .onChange(of: self.storedTalkButtonEnabled) { _, _ in
+                self.syncTalkPreferencesState()
+            }
+            .onChange(of: self.storedTalkBackgroundEnabled) { _, _ in
+                self.syncTalkPreferencesState()
+            }
+            .onChange(of: self.storedTalkSpeakerphoneEnabled) { _, _ in
+                self.syncTalkPreferencesState()
             }
             .onChange(of: self.storedGatewayAutoConnect) { _, newValue in
                 self.gatewayAutoConnectStore.send(.enabledSynced(newValue))
