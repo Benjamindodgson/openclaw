@@ -549,8 +549,12 @@ struct RootTabsPresentationTests {
         #expect(!routed.showsAgentBadge)
         #expect(!routed.ownsNavigationStack)
         #expect(routed.openSettings != nil)
-        #expect(ChatProTab.defaultHeaderTitle(showsAgentBadge: true, agentDisplayName: "OpenClaw") == "OpenClaw")
-        #expect(ChatProTab.defaultHeaderTitle(showsAgentBadge: false, agentDisplayName: "OpenClaw") == "Chat")
+        #expect(ChatProPresentationState.defaultHeaderTitle(
+            showsAgentBadge: true,
+            agentDisplayName: "OpenClaw") == "OpenClaw")
+        #expect(ChatProPresentationState.defaultHeaderTitle(
+            showsAgentBadge: false,
+            agentDisplayName: "OpenClaw") == "Chat")
     }
 
     @Test func `agent routes can open gateway settings from header pill`() {

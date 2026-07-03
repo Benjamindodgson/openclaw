@@ -57,6 +57,23 @@ struct GatewayStatusBuilderTests {
         #expect(unavailable.messagePlaceholder == "Connect to a gateway")
     }
 
+    @Test func `chat presentation state owns route header overrides`() {
+        let routed = Self.chatState(
+            .connected,
+            isGatewayUsable: true,
+            headerTitle: "  Chat  ",
+            headerSubtitle: "  Agent conversation  ",
+            showsAgentBadge: false)
+        let standalone = Self.chatState(.connected, isGatewayUsable: true)
+        let unbadged = Self.chatState(.connected, isGatewayUsable: true, showsAgentBadge: false)
+
+        #expect(routed.headerDisplayTitle == "Chat")
+        #expect(routed.headerDisplaySubtitle == "Agent conversation")
+        #expect(standalone.headerDisplayTitle == "Joshtimus Prime")
+        #expect(standalone.headerDisplaySubtitle == nil)
+        #expect(unbadged.headerDisplayTitle == "Chat")
+    }
+
     @Test func `reducer refresh updates display state`() async {
         let problem = GatewayConnectionProblem(
             kind: .pairingRequired,
@@ -81,11 +98,17 @@ struct GatewayStatusBuilderTests {
 
     private static func chatState(
         _ gatewayDisplayState: GatewayDisplayState,
-        isGatewayUsable: Bool = false) -> ChatProPresentationState
+        isGatewayUsable: Bool = false,
+        headerTitle: String? = nil,
+        headerSubtitle: String? = nil,
+        showsAgentBadge: Bool = true) -> ChatProPresentationState
     {
         ChatProPresentationState(
             gatewayDisplayState: gatewayDisplayState,
             isGatewayUsable: isGatewayUsable,
-            agentDisplayName: "Joshtimus Prime")
+            agentDisplayName: "Joshtimus Prime",
+            headerTitle: headerTitle,
+            headerSubtitle: headerSubtitle,
+            showsAgentBadge: showsAgentBadge)
     }
 }
