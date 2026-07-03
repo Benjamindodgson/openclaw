@@ -924,6 +924,34 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway credentials load persisted values through client`() async {
+        let probe = SettingsGatewayCredentialsPersistenceProbe()
+        probe.gatewayTokens["instance-1"] = "token-1"
+        probe.gatewayPasswords["instance-1"] = "password-1"
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature(persistenceClient: probe.client)
+        }
+
+        await store.send(.credentialsLoadRequested(instanceId: " instance-1 ")) {
+            $0.gatewayToken = "token-1"
+            $0.gatewayPassword = "password-1"
+        }
+    }
+
+    @Test func `settings gateway credentials ignore load without instance id`() async {
+        let probe = SettingsGatewayCredentialsPersistenceProbe()
+        var initialState = SettingsGatewayCredentialsFeature.State()
+        initialState.gatewayToken = "existing-token"
+        initialState.gatewayPassword = "existing-password"
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewayCredentialsFeature(persistenceClient: probe.client)
+        }
+
+        await store.send(.credentialsLoadRequested(instanceId: " "))
+
+        #expect(probe.loadedInstanceIds.isEmpty)
+    }
+
     @Test func `settings gateway credentials record field changes`() async {
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature()
@@ -2209,11 +2237,22 @@ private final class SettingsNotificationRegistrationProbe: @unchecked Sendable {
 }
 
 private final class SettingsGatewayCredentialsPersistenceProbe: @unchecked Sendable {
+    var gatewayPasswords: [String: String] = [:]
+    var gatewayTokens: [String: String] = [:]
+    var loadedInstanceIds: [String] = []
     var savedPasswords: [String] = []
     var savedTokens: [String] = []
 
     var client: SettingsGatewayCredentialsPersistenceClient {
         SettingsGatewayCredentialsPersistenceClient(
+            loadGatewayPassword: { instanceId in
+                self.loadedInstanceIds.append(instanceId)
+                return self.gatewayPasswords[instanceId]
+            },
+            loadGatewayToken: { instanceId in
+                self.loadedInstanceIds.append(instanceId)
+                return self.gatewayTokens[instanceId]
+            },
             saveGatewayPassword: { value, instanceId in
                 self.savedPasswords.append("\(instanceId):\(value)")
             },

@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import Darwin
 import OpenClawKit
 import SwiftUI
@@ -18,6 +19,42 @@ enum SettingsRoute: Hashable {
 enum SettingsLayout {
     static let cardRadius: CGFloat = OpenClawProMetric.cardRadius
     static let rowHeight: CGFloat = 58
+}
+
+struct SettingsGatewayCredentialsPersistenceClient {
+    var loadGatewayPassword: @Sendable (_ instanceId: String) -> String?
+    var loadGatewayToken: @Sendable (_ instanceId: String) -> String?
+    var saveGatewayPassword: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
+    var saveGatewayToken: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
+}
+
+extension SettingsGatewayCredentialsPersistenceClient: DependencyKey {
+    static let liveValue = SettingsGatewayCredentialsPersistenceClient(
+        loadGatewayPassword: { instanceId in
+            GatewaySettingsStore.loadGatewayPassword(instanceId: instanceId)
+        },
+        loadGatewayToken: { instanceId in
+            GatewaySettingsStore.loadGatewayToken(instanceId: instanceId)
+        },
+        saveGatewayPassword: { value, instanceId in
+            GatewaySettingsStore.saveGatewayPassword(value, instanceId: instanceId)
+        },
+        saveGatewayToken: { value, instanceId in
+            GatewaySettingsStore.saveGatewayToken(value, instanceId: instanceId)
+        })
+
+    static let testValue = SettingsGatewayCredentialsPersistenceClient(
+        loadGatewayPassword: { _ in nil },
+        loadGatewayToken: { _ in nil },
+        saveGatewayPassword: { _, _ in },
+        saveGatewayToken: { _, _ in })
+}
+
+extension DependencyValues {
+    var settingsGatewayCredentialsPersistence: SettingsGatewayCredentialsPersistenceClient {
+        get { self[SettingsGatewayCredentialsPersistenceClient.self] }
+        set { self[SettingsGatewayCredentialsPersistenceClient.self] = newValue }
+    }
 }
 
 struct SettingsApprovalItem: Identifiable {

@@ -450,32 +450,6 @@ struct SettingsGatewaySetupLinkFeature {
     private static let appleReviewDemoStatusText = "Apple Review demo mode enabled."
 }
 
-struct SettingsGatewayCredentialsPersistenceClient {
-    var saveGatewayPassword: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
-    var saveGatewayToken: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
-}
-
-extension SettingsGatewayCredentialsPersistenceClient: DependencyKey {
-    static let liveValue = SettingsGatewayCredentialsPersistenceClient(
-        saveGatewayPassword: { value, instanceId in
-            GatewaySettingsStore.saveGatewayPassword(value, instanceId: instanceId)
-        },
-        saveGatewayToken: { value, instanceId in
-            GatewaySettingsStore.saveGatewayToken(value, instanceId: instanceId)
-        })
-
-    static let testValue = SettingsGatewayCredentialsPersistenceClient(
-        saveGatewayPassword: { _, _ in },
-        saveGatewayToken: { _, _ in })
-}
-
-extension DependencyValues {
-    var settingsGatewayCredentialsPersistence: SettingsGatewayCredentialsPersistenceClient {
-        get { self[SettingsGatewayCredentialsPersistenceClient.self] }
-        set { self[SettingsGatewayCredentialsPersistenceClient.self] = newValue }
-    }
-}
-
 @Reducer
 struct SettingsGatewayCredentialsFeature {
     private let persistenceClientOverride: SettingsGatewayCredentialsPersistenceClient?
@@ -495,6 +469,7 @@ struct SettingsGatewayCredentialsFeature {
 
     enum Action: Equatable, Sendable {
         case credentialsClearedForOnboardingReset
+        case credentialsLoadRequested(instanceId: String)
         case credentialsLoaded(token: String, password: String)
         case gatewayPasswordChanged(String)
         case gatewayPasswordPersistenceRequested(value: String, instanceId: String)
@@ -518,6 +493,12 @@ struct SettingsGatewayCredentialsFeature {
                 state.gatewayToken = ""
                 state.gatewayPassword = ""
                 state.pendingManualAuthOverride = nil
+                return .none
+
+            case let .credentialsLoadRequested(instanceId):
+                guard let trimmedInstanceId = Self.trimmedInstanceId(instanceId) else { return .none }
+                state.gatewayToken = persistenceClient.loadGatewayToken(trimmedInstanceId) ?? ""
+                state.gatewayPassword = persistenceClient.loadGatewayPassword(trimmedInstanceId) ?? ""
                 return .none
 
             case let .credentialsLoaded(token, password):
@@ -587,11 +568,16 @@ struct SettingsGatewayCredentialsFeature {
         instanceId: String)
         -> (value: String, instanceId: String)?
     {
-        let trimmedInstanceId = instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedInstanceId.isEmpty else { return nil }
+        guard let trimmedInstanceId = Self.trimmedInstanceId(instanceId) else { return nil }
         return (
             value.trimmingCharacters(in: .whitespacesAndNewlines),
             trimmedInstanceId)
+    }
+
+    private static func trimmedInstanceId(_ instanceId: String) -> String? {
+        let trimmedInstanceId = instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedInstanceId.isEmpty else { return nil }
+        return trimmedInstanceId
     }
 }
 
