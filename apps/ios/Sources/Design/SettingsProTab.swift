@@ -599,6 +599,7 @@ struct SettingsManualGatewayPortFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var manualGatewayPortResolutionResult: ManualGatewayPortResolutionResult?
         var manualGatewayPort = 18789
         var manualGatewayPortText = "18789"
 
@@ -627,7 +628,14 @@ struct SettingsManualGatewayPortFeature {
         }
     }
 
+    enum ManualGatewayPortResolutionResult: Equatable, Sendable {
+        case failure(String)
+        case resolved
+    }
+
     enum Action: Equatable, Sendable {
+        case manualGatewayPortResolutionRequested(host: String, useTLS: Bool)
+        case manualGatewayPortResolutionResultHandled
         case manualGatewayPortSynced(Int)
         case manualGatewayPortTextChanged(String)
     }
@@ -637,6 +645,19 @@ struct SettingsManualGatewayPortFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .manualGatewayPortResolutionRequested(host, useTLS):
+                state.manualGatewayPortResolutionResult = nil
+                guard state.resolvedManualPort(host: host, useTLS: useTLS) != nil else {
+                    state.manualGatewayPortResolutionResult = .failure("Failed: invalid port")
+                    return .none
+                }
+                state.manualGatewayPortResolutionResult = .resolved
+                return .none
+
+            case .manualGatewayPortResolutionResultHandled:
+                state.manualGatewayPortResolutionResult = nil
+                return .none
+
             case let .manualGatewayPortSynced(port):
                 state.manualGatewayPort = port
                 state.manualGatewayPortText = port > 0 ? String(port) : ""

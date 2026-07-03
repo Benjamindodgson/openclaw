@@ -305,10 +305,7 @@ extension SettingsProTab {
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
         guard self.applySetupCode() else { return }
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard self.resolvedManualPort(host: host) != nil else {
-            self.gatewaySetupStatusStore.send(.statusChanged("Failed: invalid port"))
-            return
-        }
+        guard self.resolveManualPortForConnection(host: host) else { return }
         guard await self.preflightGateway(host: host) else { return }
         self.gatewaySetupStatusStore.send(.setupConnectionStarted)
         await self.connectManual()
@@ -407,12 +404,26 @@ extension SettingsProTab {
 
     func connectAfterScannedGatewayLink() async {
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard self.resolvedManualPort(host: host) != nil else {
-            self.gatewaySetupStatusStore.send(.statusChanged("Failed: invalid port"))
-            return
-        }
+        guard self.resolveManualPortForConnection(host: host) else { return }
         guard await self.preflightGateway(host: host) else { return }
         await self.connectManual()
+    }
+
+    func resolveManualPortForConnection(host: String) -> Bool {
+        self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested(
+            host: host,
+            useTLS: self.manualGatewayTLS))
+        guard let result = self.manualGatewayPortStore.manualGatewayPortResolutionResult else { return false }
+        self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)
+
+        switch result {
+        case let .failure(message):
+            self.gatewaySetupStatusStore.send(.statusChanged(message))
+            return false
+
+        case .resolved:
+            return true
+        }
     }
 
     func connectManual() async {
@@ -842,13 +853,6 @@ extension SettingsProTab {
 
     var manualPortIsValid: Bool {
         self.manualGatewayPortStore.isManualPortValid
-    }
-
-    func resolvedManualPort(host: String) -> Int? {
-        SettingsManualGatewayPortFeature.State.resolvedManualPort(
-            manualGatewayPort: self.manualGatewayPortStore.manualGatewayPort,
-            host: host,
-            useTLS: self.manualGatewayTLS)
     }
 
     var setupStatusLine: String? {
