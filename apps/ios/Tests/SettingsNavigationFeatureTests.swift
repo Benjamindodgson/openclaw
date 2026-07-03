@@ -658,7 +658,13 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupLinkStaged(link)) {
+            $0.setupLinkStatusText =
+                "Setup link loaded for gateway.example.com:443 (TLS). Tap Connect to apply."
             $0.stagedGatewaySetupLink = link
+        }
+
+        await store.send(.setupLinkStatusHandled) {
+            $0.setupLinkStatusText = nil
         }
     }
 
@@ -666,7 +672,7 @@ struct SettingsNavigationFeatureTests {
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
             port: 443,
-            tls: true,
+            tls: false,
             bootstrapToken: nil,
             token: nil,
             password: nil)
@@ -678,6 +684,8 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.setupLinkStaged(link)) {
             $0.setupCode = ""
+            $0.setupLinkStatusText =
+                "Setup link loaded for gateway.example.com:443 (plain). Tap Connect to apply."
             $0.stagedGatewaySetupLink = link
         }
     }

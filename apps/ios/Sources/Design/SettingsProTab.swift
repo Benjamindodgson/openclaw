@@ -324,6 +324,7 @@ struct SettingsGatewaySetupLinkFeature {
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
         var setupCode = ""
+        var setupLinkStatusText: String?
         var stagedGatewaySetupLink: GatewayConnectDeepLink?
 
         var canApplyGatewaySetup: Bool {
@@ -346,6 +347,7 @@ struct SettingsGatewaySetupLinkFeature {
         case setupCodeChanged(String)
         case setupCodeSynced(String)
         case setupLinkStaged(GatewayConnectDeepLink?)
+        case setupLinkStatusHandled
     }
 
     // swiftformat:enable redundantSendable
@@ -413,13 +415,25 @@ struct SettingsGatewaySetupLinkFeature {
 
             case let .setupLinkStaged(link):
                 state.stagedGatewaySetupLink = link
-                if link != nil {
+                if let link {
                     state.setupCode = ""
+                    state.setupLinkStatusText = Self.setupLinkLoadedStatusText(link)
+                } else {
+                    state.setupLinkStatusText = nil
                 }
+                return .none
+
+            case .setupLinkStatusHandled:
+                state.setupLinkStatusText = nil
                 return .none
             }
         }
         .autoLogActions()
+    }
+
+    private static func setupLinkLoadedStatusText(_ link: GatewayConnectDeepLink) -> String {
+        let security = link.tls ? "TLS" : "plain"
+        return "Setup link loaded for \(link.host):\(link.port) (\(security)). Tap Connect to apply."
     }
 }
 

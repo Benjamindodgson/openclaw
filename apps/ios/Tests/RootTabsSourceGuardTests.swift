@@ -984,6 +984,25 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("let stagedLink = self.stagedGatewaySetupLink"))
     }
 
+    @Test func `settings setup link staging status is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let stagingFunction = try Self.extract(
+            actionsSource,
+            from: "func applyPendingGatewaySetupLinkIfNeeded()",
+            to: "@discardableResult")
+
+        #expect(settingsSource.contains("var setupLinkStatusText: String?"))
+        #expect(settingsSource.contains("case setupLinkStatusHandled"))
+        #expect(settingsSource.contains("Self.setupLinkLoadedStatusText(link)"))
+        #expect(settingsSource.contains("Setup link loaded for \\(link.host):\\(link.port)"))
+        #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStaged(link))"))
+        #expect(actionsSource.contains("self.gatewaySetupLinkStore.setupLinkStatusText"))
+        #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)"))
+        #expect(!stagingFunction.contains("let security = link.tls"))
+        #expect(!stagingFunction.contains("Setup link loaded for \\(link.host):\\(link.port)"))
+    }
+
     @Test func `scanner setup code results are reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
