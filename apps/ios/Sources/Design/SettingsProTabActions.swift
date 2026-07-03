@@ -188,6 +188,7 @@ extension SettingsProTab {
         self.syncTalkPreferencesState()
         self.syncTalkRuntimeState()
         self.locationStore.send(.locationModeSynced(self.storedLocationModeRaw))
+        self.syncNotificationRelayState()
         self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
         self.manualGatewayEndpointStore.send(.endpointSynced(
             enabled: self.storedManualGatewayEnabled,
@@ -254,6 +255,16 @@ extension SettingsProTab {
             activeAgentName: self.appModel.activeAgentName,
             isResolvingPendingApproval: self.appModel.pendingExecApprovalPromptResolving,
             pendingApprovalAllowsAllowAlways: pendingApproval?.allowsAllowAlways ?? false))
+    }
+
+    func syncNotificationRelayState() {
+        let config = PushBuildConfig.current
+        let host = config.relayBaseURL.flatMap {
+            URLComponents(url: $0, resolvingAgainstBaseURL: false)?.host
+        }
+        self.notificationStore.send(.relayConfigSynced(
+            usesOpenClawHostedRelay: config.usesOpenClawHostedRelay,
+            hostedRelayHost: host))
     }
 
     func syncOnboardingState() {
@@ -1093,19 +1104,10 @@ extension SettingsProTab {
     }
 
     var notificationRelayDetail: String {
-        if PushBuildConfig.current.usesOpenClawHostedRelay {
-            let host = PushBuildConfig.current.relayBaseURL.flatMap {
-                URLComponents(url: $0, resolvingAgainstBaseURL: false)?.host
-            } ?? "ios-push-relay.openclaw.ai"
-            return """
-            This build uses OpenClaw's hosted push relay at \(host) for notification \
-            delivery data.
-            """
-        }
-        return "This build is not configured to use OpenClaw's hosted push relay."
+        self.notificationStore.relayDetail
     }
 
     var notificationRelayDisclosureMessage: String {
-        "Enabling this sends delivery data through OpenClaw's hosted push relay."
+        self.notificationStore.relayDisclosureMessage
     }
 }

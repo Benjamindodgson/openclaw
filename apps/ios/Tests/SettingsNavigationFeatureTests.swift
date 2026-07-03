@@ -890,6 +890,44 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings notifications sync relay config`() async {
+        let store = TestStore(initialState: SettingsNotificationFeature.State()) {
+            SettingsNotificationFeature()
+        }
+
+        await store.send(.relayConfigSynced(
+            usesOpenClawHostedRelay: true,
+            hostedRelayHost: "relay.example.com"))
+        {
+            $0.usesOpenClawHostedRelay = true
+            $0.hostedRelayHost = "relay.example.com"
+        }
+        await store.send(.relayConfigSynced(
+            usesOpenClawHostedRelay: false,
+            hostedRelayHost: nil))
+        {
+            $0.usesOpenClawHostedRelay = false
+            $0.hostedRelayHost = "ios-push-relay.openclaw.ai"
+        }
+    }
+
+    @Test func `settings notifications summarize relay config`() {
+        var state = SettingsNotificationFeature.State()
+
+        #expect(state.relayDetail == "This build is not configured to use OpenClaw's hosted push relay.")
+        #expect(state.relayDisclosureMessage ==
+            "Enabling this sends delivery data through OpenClaw's hosted push relay.")
+
+        state.usesOpenClawHostedRelay = true
+        state.hostedRelayHost = "ios-push-relay-sandbox.openclaw.ai"
+
+        #expect(state.relayDetail ==
+            """
+            This build uses OpenClaw's hosted push relay at ios-push-relay-sandbox.openclaw.ai for notification \
+            delivery data.
+            """)
+    }
+
     @Test func `settings agent selection records picker changes`() async {
         let store = TestStore(initialState: SettingsAgentSelectionFeature.State()) {
             SettingsAgentSelectionFeature()

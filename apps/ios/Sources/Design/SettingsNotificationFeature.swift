@@ -5,8 +5,10 @@ struct SettingsNotificationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var hostedRelayHost = "ios-push-relay.openclaw.ai"
         var isRequestingAuthorization = false
         var status: SettingsNotificationStatus = .checking
+        var usesOpenClawHostedRelay = false
 
         var actionText: String {
             self.status.actionTitle
@@ -39,11 +41,26 @@ struct SettingsNotificationFeature {
         var statusText: String {
             self.status.text
         }
+
+        var relayDetail: String {
+            if self.usesOpenClawHostedRelay {
+                return """
+                This build uses OpenClaw's hosted push relay at \(self.hostedRelayHost) for notification \
+                delivery data.
+                """
+            }
+            return "This build is not configured to use OpenClaw's hosted push relay."
+        }
+
+        var relayDisclosureMessage: String {
+            "Enabling this sends delivery data through OpenClaw's hosted push relay."
+        }
     }
 
     enum Action: Equatable, Sendable {
         case authorizationRequestFinished(SettingsNotificationStatus)
         case authorizationRequestStarted
+        case relayConfigSynced(usesOpenClawHostedRelay: Bool, hostedRelayHost: String?)
         case statusChanged(SettingsNotificationStatus)
     }
 
@@ -59,6 +76,11 @@ struct SettingsNotificationFeature {
 
             case .authorizationRequestStarted:
                 state.isRequestingAuthorization = true
+                return .none
+
+            case let .relayConfigSynced(usesOpenClawHostedRelay, hostedRelayHost):
+                state.usesOpenClawHostedRelay = usesOpenClawHostedRelay
+                state.hostedRelayHost = hostedRelayHost ?? "ios-push-relay.openclaw.ai"
                 return .none
 
             case let .statusChanged(status):
