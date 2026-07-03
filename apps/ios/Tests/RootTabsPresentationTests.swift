@@ -292,6 +292,50 @@ struct RootTabsPresentationTests {
         #expect(store.state.sidebarGatewayStatusColor == .secondary)
     }
 
+    @Test func `launch reducer applies initial appearance once`() async {
+        let store = TestStore(initialState: RootLaunchFeature.State()) {
+            RootLaunchFeature()
+        }
+
+        await store.send(.initialAppearanceRequested(AppAppearancePreference.dark.rawValue)) {
+            $0.didApplyInitialAppearance = true
+            $0.command = .applyAppearance(rawValue: AppAppearancePreference.dark.rawValue)
+        }
+
+        await store.send(.commandHandled) {
+            $0.command = nil
+        }
+
+        await store.send(.initialAppearanceRequested(AppAppearancePreference.light.rawValue))
+    }
+
+    @Test func `launch reducer marks appearance applied without launch argument`() async {
+        let store = TestStore(initialState: RootLaunchFeature.State()) {
+            RootLaunchFeature()
+        }
+
+        await store.send(.initialAppearanceRequested(nil)) {
+            $0.didApplyInitialAppearance = true
+        }
+    }
+
+    @Test func `launch reducer focuses initial chat session once`() async {
+        let store = TestStore(initialState: RootLaunchFeature.State()) {
+            RootLaunchFeature()
+        }
+
+        await store.send(.initialChatSessionRequested("session-1")) {
+            $0.didApplyInitialChatSession = true
+            $0.command = .focusChatSession("session-1")
+        }
+
+        await store.send(.commandHandled) {
+            $0.command = nil
+        }
+
+        await store.send(.initialChatSessionRequested("session-2"))
+    }
+
     @Test func `voice wake toast reducer shows trimmed command and dismisses after delay`() async {
         let store = TestStore(initialState: RootVoiceWakeToastFeature.State()) {
             RootVoiceWakeToastFeature(sleeper: RootVoiceWakeToastSleepClient(sleep: {}))
