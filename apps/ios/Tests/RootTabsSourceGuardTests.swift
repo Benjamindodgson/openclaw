@@ -1106,6 +1106,30 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("if PushBuildConfig.current.usesOpenClawHostedRelay"))
     }
 
+    @Test func `settings notification authorization request is reducer effect owned`() throws {
+        let notificationSource = try String(contentsOf: Self.settingsNotificationFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let requestFunction = try Self.extract(
+            actionsSource,
+            from: "func requestNotificationAuthorizationFromSettings()",
+            to: "func handleNotificationAuthorizationResult")
+
+        #expect(notificationSource.contains("struct SettingsNotificationAuthorizationClient"))
+        #expect(notificationSource.contains("case authorizationRequestRequested"))
+        #expect(notificationSource
+            .contains("case authorizationRequestFinished(SettingsNotificationAuthorizationResult)"))
+        #expect(notificationSource.contains("await authorizationClient.requestAuthorization()"))
+        #expect(notificationSource.contains("return .run { send in"))
+        #expect(actionsSource.contains("self.notificationStore.send(.authorizationRequestRequested)"))
+        #expect(actionsSource.contains("self.notificationStore.send(.authorizationRequestResultHandled)"))
+        #expect(settingsSource
+            .contains("self.handleNotificationAuthorizationResult(result)"))
+        #expect(requestFunction.contains("UNUserNotificationCenter.current().requestAuthorization") == false)
+        #expect(requestFunction.contains("let granted = await") == false)
+        #expect(requestFunction.contains("Task {") == false)
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 

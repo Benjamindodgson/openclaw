@@ -1082,18 +1082,51 @@ struct SettingsNavigationFeatureTests {
         #expect(state.needsAttention == true)
     }
 
-    @Test func `settings notifications track authorization request lifecycle`() async {
-        let store = TestStore(initialState: SettingsNotificationFeature.State()) {
-            SettingsNotificationFeature()
+    @Test func `settings notifications request authorization through client`() async {
+        let result = SettingsNotificationAuthorizationResult(granted: true, status: .allowed)
+        let probe = SettingsNotificationAuthorizationProbe(result: result)
+        var initialState = SettingsNotificationFeature.State()
+        initialState.actionRequest = .requestAuthorization
+        initialState.authorizationRequestResult = SettingsNotificationAuthorizationResult(
+            granted: false,
+            status: .notAllowed)
+        let store = TestStore(initialState: initialState) {
+            SettingsNotificationFeature(authorizationClient: probe.client)
         }
 
-        await store.send(.authorizationRequestStarted) {
+        await store.send(.authorizationRequestRequested) {
+            $0.actionRequest = nil
+            $0.authorizationRequestResult = nil
             $0.isRequestingAuthorization = true
         }
-        await store.send(.authorizationRequestFinished(.allowed)) {
+        await store.receive(.authorizationRequestFinished(result)) {
+            $0.authorizationRequestResult = result
             $0.isRequestingAuthorization = false
             $0.status = .allowed
         }
+        await store.send(.authorizationRequestResultHandled) {
+            $0.authorizationRequestResult = nil
+        }
+        await store.finish()
+
+        #expect(probe.requestCount == 1)
+    }
+
+    @Test func `settings notifications ignore duplicate authorization requests`() async {
+        let probe = SettingsNotificationAuthorizationProbe(result: SettingsNotificationAuthorizationResult(
+            granted: true,
+            status: .allowed))
+        var initialState = SettingsNotificationFeature.State()
+        initialState.status = .notSet
+        initialState.isRequestingAuthorization = true
+        let store = TestStore(initialState: initialState) {
+            SettingsNotificationFeature(authorizationClient: probe.client)
+        }
+
+        await store.send(.authorizationRequestRequested)
+        await store.finish()
+
+        #expect(probe.requestCount == 0)
     }
 
     @Test func `settings notifications action button opens ios settings for managed statuses`() async {
@@ -1800,5 +1833,22 @@ struct SettingsNavigationFeatureTests {
         #expect(SettingsTalkPreferencesFeature.State.shouldShowRealtimeVoicePicker(
             providerSelectionRaw: TalkModeProviderSelection.openAIRealtime.rawValue,
             gatewayTalkUsesRealtime: false) == true)
+    }
+}
+
+private final class SettingsNotificationAuthorizationProbe: @unchecked Sendable {
+    var requestCount = 0
+    var result: SettingsNotificationAuthorizationResult
+
+    init(result: SettingsNotificationAuthorizationResult) {
+        self.result = result
+    }
+
+    var client: SettingsNotificationAuthorizationClient {
+        SettingsNotificationAuthorizationClient(
+            requestAuthorization: {
+                self.requestCount += 1
+                return self.result
+            })
     }
 }

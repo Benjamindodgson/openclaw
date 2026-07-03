@@ -560,22 +560,15 @@ extension SettingsProTab {
     func requestNotificationAuthorizationFromSettings() {
         guard !self.notificationStore.isRequestingAuthorization else { return }
         self.pushEnrollmentConsentStore.send(.acceptDisclosure)
-        self.notificationStore.send(.authorizationRequestStarted)
-        Task {
-            let granted = await (try? UNUserNotificationCenter.current().requestAuthorization(options: [
-                .alert,
-                .badge,
-                .sound,
-            ])) ?? false
-            let settings = await UNUserNotificationCenter.current().notificationSettings()
-            await MainActor.run {
-                self.notificationStore.send(.authorizationRequestFinished(
-                    SettingsNotificationStatus(settings.authorizationStatus)))
-                self.syncApprovalState()
-                guard granted else { return }
-                self.registerForRemoteNotificationsIfEnrollmentReady()
-            }
-        }
+        self.notificationStore.send(.authorizationRequestRequested)
+    }
+
+    func handleNotificationAuthorizationResult(_ result: SettingsNotificationAuthorizationResult?) {
+        guard let result else { return }
+        self.notificationStore.send(.authorizationRequestResultHandled)
+        self.syncApprovalState()
+        guard result.granted else { return }
+        self.registerForRemoteNotificationsIfEnrollmentReady()
     }
 
     @MainActor

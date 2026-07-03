@@ -1,13 +1,57 @@
 import ComposableArchitecture
 import SwiftUI
+import UserNotifications
+
+struct SettingsNotificationAuthorizationClient {
+    var requestAuthorization: @Sendable () async -> SettingsNotificationAuthorizationResult
+}
+
+struct SettingsNotificationAuthorizationResult: Equatable {
+    let granted: Bool
+    let status: SettingsNotificationStatus
+}
+
+extension SettingsNotificationAuthorizationClient: DependencyKey {
+    static let liveValue = SettingsNotificationAuthorizationClient(
+        requestAuthorization: {
+            let granted = await (try? UNUserNotificationCenter.current().requestAuthorization(options: [
+                .alert,
+                .badge,
+                .sound,
+            ])) ?? false
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            return SettingsNotificationAuthorizationResult(
+                granted: granted,
+                status: SettingsNotificationStatus(settings.authorizationStatus))
+        })
+
+    static let testValue = SettingsNotificationAuthorizationClient(
+        requestAuthorization: {
+            SettingsNotificationAuthorizationResult(granted: false, status: .unknown)
+        })
+}
+
+extension DependencyValues {
+    var settingsNotificationAuthorization: SettingsNotificationAuthorizationClient {
+        get { self[SettingsNotificationAuthorizationClient.self] }
+        set { self[SettingsNotificationAuthorizationClient.self] = newValue }
+    }
+}
 
 @Reducer
 struct SettingsNotificationFeature {
+    private let authorizationClientOverride: SettingsNotificationAuthorizationClient?
+
+    init(authorizationClient: SettingsNotificationAuthorizationClient? = nil) {
+        self.authorizationClientOverride = authorizationClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var hostedRelayHost = "ios-push-relay.openclaw.ai"
         var actionRequest: ActionRequest?
+        var authorizationRequestResult: SettingsNotificationAuthorizationResult?
         var isRequestingAuthorization = false
         var status: SettingsNotificationStatus = .checking
         var usesOpenClawHostedRelay = false
@@ -72,8 +116,9 @@ struct SettingsNotificationFeature {
     enum Action: Equatable, Sendable {
         case actionButtonTapped
         case actionRequestHandled
-        case authorizationRequestFinished(SettingsNotificationStatus)
-        case authorizationRequestStarted
+        case authorizationRequestFinished(SettingsNotificationAuthorizationResult)
+        case authorizationRequestRequested
+        case authorizationRequestResultHandled
         case relayConfigSynced(usesOpenClawHostedRelay: Bool, hostedRelayHost: String?)
         case statusChanged(SettingsNotificationStatus)
     }
@@ -82,6 +127,9 @@ struct SettingsNotificationFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsNotificationAuthorization) var dependencyAuthorizationClient
+            let authorizationClient = self.authorizationClientOverride ?? dependencyAuthorizationClient
+
             switch action {
             case .actionButtonTapped:
                 state.actionRequest = nil
@@ -97,14 +145,24 @@ struct SettingsNotificationFeature {
                 state.actionRequest = nil
                 return .none
 
-            case let .authorizationRequestFinished(status):
+            case let .authorizationRequestFinished(result):
+                state.authorizationRequestResult = result
                 state.isRequestingAuthorization = false
-                state.status = status
+                state.status = result.status
                 return .none
 
-            case .authorizationRequestStarted:
+            case .authorizationRequestRequested:
+                guard !state.isRequestingAuthorization else { return .none }
                 state.actionRequest = nil
+                state.authorizationRequestResult = nil
                 state.isRequestingAuthorization = true
+                return .run { send in
+                    let result = await authorizationClient.requestAuthorization()
+                    await send(.authorizationRequestFinished(result))
+                }
+
+            case .authorizationRequestResultHandled:
+                state.authorizationRequestResult = nil
                 return .none
 
             case let .relayConfigSynced(usesOpenClawHostedRelay, hostedRelayHost):
