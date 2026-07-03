@@ -1392,13 +1392,23 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature()
         }
 
-        await store.send(.gatewayTalkConfigSynced(configLoaded: true, apiKeyConfigured: false)) {
+        await store.send(.gatewayTalkConfigSynced(
+            configLoaded: true,
+            apiKeyConfigured: false,
+            usesRealtime: true))
+        {
             $0.gatewayTalkConfigLoaded = true
             $0.gatewayTalkApiKeyConfigured = false
+            $0.gatewayTalkUsesRealtime = true
         }
-        await store.send(.gatewayTalkConfigSynced(configLoaded: true, apiKeyConfigured: true)) {
+        await store.send(.gatewayTalkConfigSynced(
+            configLoaded: true,
+            apiKeyConfigured: true,
+            usesRealtime: false))
+        {
             $0.gatewayTalkConfigLoaded = true
             $0.gatewayTalkApiKeyConfigured = true
+            $0.gatewayTalkUsesRealtime = false
         }
         await store.send(.gatewayTalkDisplayContextSynced(
             isAppleReviewDemoModeEnabled: true,
@@ -1482,11 +1492,13 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings talk preferences show realtime picker for local or gateway realtime`() {
         var state = SettingsTalkPreferencesFeature.State()
 
-        #expect(state.shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: false) == false)
-        #expect(state.shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: true) == true)
+        #expect(state.shouldShowRealtimeVoicePicker == false)
+        state.gatewayTalkUsesRealtime = true
+        #expect(state.shouldShowRealtimeVoicePicker == true)
 
+        state.gatewayTalkUsesRealtime = false
         state.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
-        #expect(state.shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: false) == true)
+        #expect(state.shouldShowRealtimeVoicePicker == true)
         #expect(SettingsTalkPreferencesFeature.State.shouldShowRealtimeVoicePicker(
             providerSelectionRaw: TalkModeProviderSelection.openAIRealtime.rawValue,
             gatewayTalkUsesRealtime: false) == true)

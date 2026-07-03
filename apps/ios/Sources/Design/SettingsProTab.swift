@@ -1251,6 +1251,9 @@ struct SettingsProTab: View {
             .onChange(of: self.appModel.talkMode.gatewayTalkApiKeyConfigured) { _, _ in
                 self.syncTalkRuntimeState()
             }
+            .onChange(of: self.appModel.talkMode.gatewayTalkUsesRealtime) { _, _ in
+                self.syncTalkRuntimeState()
+            }
             .onChange(of: self.appModel.talkMode.gatewayTalkTransportLabel) { _, _ in
                 self.syncTalkRuntimeState()
             }

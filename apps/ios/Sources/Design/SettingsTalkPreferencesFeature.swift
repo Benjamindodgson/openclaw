@@ -16,6 +16,7 @@ struct SettingsTalkPreferencesFeature {
         var gatewayTalkConfigLoaded = false
         var gatewayTalkApiKeyConfigured = false
         var gatewayTalkTransportLabel = "Not loaded"
+        var gatewayTalkUsesRealtime = false
         var isAppleReviewDemoModeEnabled = false
         var gatewayTalkActiveModeTitle = "Not active"
         var gatewayTalkActiveModeSubtitle: String?
@@ -55,10 +56,10 @@ struct SettingsTalkPreferencesFeature {
             Self.gatewayTalkLastIssueDetail(self.gatewayTalkLastIssueText)
         }
 
-        func shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: Bool) -> Bool {
+        var shouldShowRealtimeVoicePicker: Bool {
             Self.shouldShowRealtimeVoicePicker(
                 providerSelectionRaw: self.providerSelectionRaw,
-                gatewayTalkUsesRealtime: gatewayTalkUsesRealtime)
+                gatewayTalkUsesRealtime: self.gatewayTalkUsesRealtime)
         }
 
         static func shouldShowRealtimeVoicePicker(
@@ -89,7 +90,10 @@ struct SettingsTalkPreferencesFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case gatewayTalkConfigSynced(configLoaded: Bool, apiKeyConfigured: Bool)
+        case gatewayTalkConfigSynced(
+            configLoaded: Bool,
+            apiKeyConfigured: Bool,
+            usesRealtime: Bool)
         case gatewayTalkDisplayContextSynced(
             isAppleReviewDemoModeEnabled: Bool,
             transportLabel: String)
@@ -117,9 +121,10 @@ struct SettingsTalkPreferencesFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .gatewayTalkConfigSynced(configLoaded, apiKeyConfigured):
+            case let .gatewayTalkConfigSynced(configLoaded, apiKeyConfigured, usesRealtime):
                 state.gatewayTalkConfigLoaded = configLoaded
                 state.gatewayTalkApiKeyConfigured = apiKeyConfigured
+                state.gatewayTalkUsesRealtime = usesRealtime
                 return .none
 
             case let .gatewayTalkDisplayContextSynced(isAppleReviewDemoModeEnabled, transportLabel):
