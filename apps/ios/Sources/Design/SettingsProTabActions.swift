@@ -2,7 +2,6 @@ import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 import UIKit
-import UserNotifications
 
 extension SettingsProTab {
     func detailStatusCard(
@@ -153,9 +152,8 @@ extension SettingsProTab {
         }
         self.syncGatewayConnectionStatusState()
         self.syncDiagnosticsContextState()
-        let notificationSettings = await UNUserNotificationCenter.current().notificationSettings()
-        self.applyNotificationStatus(notificationSettings.authorizationStatus)
-        self.registerForRemoteNotificationsIfEnrollmentReady()
+        await self.notificationStore.send(.statusRefreshRequested).finish()
+        self.handleNotificationStatusRefreshResult(self.notificationStore.statusRefreshResult)
 
         self.diagnosticsStore.send(.diagnosticsCompletionRequested(
             gatewayConnected: self.gatewayDiagnosticConnected,
@@ -581,12 +579,6 @@ extension SettingsProTab {
         guard self.pushEnrollmentConsentStore.disclosureAccepted else { return }
         guard self.notificationStore.status.allowsNotifications else { return }
         UIApplication.shared.registerForRemoteNotifications()
-    }
-
-    @MainActor
-    func applyNotificationStatus(_ status: UNAuthorizationStatus) {
-        self.notificationStore.send(.statusChanged(SettingsNotificationStatus(status)))
-        self.syncApprovalState()
     }
 
     func persistGatewayToken(_ value: String) {

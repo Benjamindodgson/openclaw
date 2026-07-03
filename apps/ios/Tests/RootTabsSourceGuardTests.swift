@@ -1312,6 +1312,7 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains(".onChange(of: self.notificationStore.statusRefreshResult)"))
         #expect(actionsSource.contains("self.notificationStore.send(.statusRefreshRequested)"))
         #expect(actionsSource.contains("self.notificationStore.send(.statusRefreshResultHandled)"))
+        #expect(actionsSource.contains("await self.notificationStore.send(.statusRefreshRequested).finish()"))
         #expect(refreshFunction.contains("UNUserNotificationCenter.current().getNotificationSettings") == false)
         #expect(refreshFunction.contains("Task {") == false)
         #expect(resultFunction.contains("UNUserNotificationCenter") == false)
@@ -1328,6 +1329,10 @@ struct RootTabsSourceGuardTests {
         #expect(diagnosticsSource.contains("case diagnosticsCompletionRequested("))
         #expect(diagnosticsSource.contains("state.issueCount = SettingsDiagnostics.issueCount("))
         #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsCompletionRequested("))
+        #expect(runDiagnosticsFunction.contains("await self.notificationStore.send(.statusRefreshRequested).finish()"))
+        #expect(runDiagnosticsFunction.contains("self.handleNotificationStatusRefreshResult"))
+        #expect(runDiagnosticsFunction.contains("UNUserNotificationCenter.current().notificationSettings()") == false)
+        #expect(actionsSource.contains("func applyNotificationStatus") == false)
         #expect(runDiagnosticsFunction.contains("SettingsDiagnostics.issueCount(") == false)
         #expect(actionsSource.contains(".diagnosticsCompleted(") == false)
     }
