@@ -9,6 +9,11 @@ struct VoiceWakeWordsPreferencesClient {
     var sanitize: @Sendable ([String]) -> [String]
 }
 
+struct VoiceWakeWordsGatewayClient {
+    var waitBeforeSync: @Sendable () async throws -> Void
+    var setGlobalWakeWords: @Sendable @MainActor ([String]) async -> Void
+}
+
 extension VoiceWakeWordsPreferencesClient: DependencyKey {
     static let liveValue = VoiceWakeWordsPreferencesClient(
         defaultTriggerWords: { VoiceWakePreferences.defaultTriggerWords },
@@ -23,34 +28,64 @@ extension VoiceWakeWordsPreferencesClient: DependencyKey {
         sanitize: { VoiceWakePreferences.sanitizeTriggerWords($0) })
 }
 
+extension VoiceWakeWordsGatewayClient: DependencyKey {
+    static let liveValue = VoiceWakeWordsGatewayClient(
+        waitBeforeSync: {
+            try await Task.sleep(nanoseconds: 650_000_000)
+        },
+        setGlobalWakeWords: { _ in })
+    static let testValue = VoiceWakeWordsGatewayClient(
+        waitBeforeSync: {},
+        setGlobalWakeWords: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        VoiceWakeWordsGatewayClient(
+            waitBeforeSync: {
+                try await Task.sleep(nanoseconds: 650_000_000)
+            },
+            setGlobalWakeWords: { words in
+                await appModel.setGlobalWakeWords(words)
+            })
+    }
+}
+
 extension DependencyValues {
     var voiceWakeWordsPreferences: VoiceWakeWordsPreferencesClient {
         get { self[VoiceWakeWordsPreferencesClient.self] }
         set { self[VoiceWakeWordsPreferencesClient.self] = newValue }
+    }
+
+    var voiceWakeWordsGateway: VoiceWakeWordsGatewayClient {
+        get { self[VoiceWakeWordsGatewayClient.self] }
+        set { self[VoiceWakeWordsGatewayClient.self] = newValue }
     }
 }
 
 @Reducer
 struct VoiceWakeWordsSettingsFeature {
     private let preferencesOverride: VoiceWakeWordsPreferencesClient?
+    private let gatewayOverride: VoiceWakeWordsGatewayClient?
 
-    init(preferences: VoiceWakeWordsPreferencesClient? = nil) {
+    init(
+        preferences: VoiceWakeWordsPreferencesClient? = nil,
+        gateway: VoiceWakeWordsGatewayClient? = nil)
+    {
         self.preferencesOverride = preferences
+        self.gatewayOverride = gateway
     }
+
+    private enum CancelID { case gatewaySync }
 
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var triggerWords: [String]
         var focusedTriggerIndex: Int?
-        var syncSnapshot: [String]
-        var syncRequestID: Int
 
         init(triggerWords: [String]) {
             self.triggerWords = triggerWords
             self.focusedTriggerIndex = nil
-            self.syncSnapshot = VoiceWakePreferences.sanitizeTriggerWords(triggerWords)
-            self.syncRequestID = 0
         }
 
         var canAddWord: Bool {
@@ -75,13 +110,15 @@ struct VoiceWakeWordsSettingsFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.voiceWakeWordsPreferences) var dependencyPreferences
+            @Dependency(\.voiceWakeWordsGateway) var dependencyGateway
             let preferences = self.preferencesOverride ?? dependencyPreferences
+            let gateway = self.gatewayOverride ?? dependencyGateway
 
             switch action {
             case .appeared:
                 guard state.triggerWords.isEmpty else { return .none }
                 state.triggerWords = preferences.defaultTriggerWords()
-                return self.commit(&state, preferences: preferences)
+                return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case .addWordButtonTapped:
                 state.triggerWords.append("")
@@ -92,7 +129,7 @@ struct VoiceWakeWordsSettingsFeature {
                 if state.triggerWords.isEmpty {
                     state.triggerWords = preferences.defaultTriggerWords()
                 }
-                return self.commit(&state, preferences: preferences)
+                return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case let .triggerWordChanged(index, value):
                 guard state.triggerWords.indices.contains(index) else { return .none }
@@ -106,38 +143,55 @@ struct VoiceWakeWordsSettingsFeature {
             case let .focusedTriggerIndexChanged(index):
                 let shouldCommit = state.focusedTriggerIndex != nil && state.focusedTriggerIndex != index
                 state.focusedTriggerIndex = index
-                return shouldCommit ? self.commit(&state, preferences: preferences) : .none
+                return shouldCommit ? self.commit(&state, preferences: preferences, gateway: gateway) : .none
 
             case .commitTriggerWords:
-                return self.commit(&state, preferences: preferences)
+                return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case .externalPreferencesChanged:
                 let updated = preferences.load()
                 guard updated != state.triggerWords else { return .none }
                 state.triggerWords = updated
-                state.syncSnapshot = preferences.sanitize(updated)
                 return .none
             }
         }
         .autoLogActions()
     }
 
-    private func commit(_ state: inout State, preferences: VoiceWakeWordsPreferencesClient) -> Effect<Action> {
+    private func commit(
+        _ state: inout State,
+        preferences: VoiceWakeWordsPreferencesClient,
+        gateway: VoiceWakeWordsGatewayClient) -> Effect<Action>
+    {
         let words = state.triggerWords
         let snapshot = preferences.sanitize(words)
-        state.syncSnapshot = snapshot
-        state.syncRequestID += 1
-        return .run { _ in
-            preferences.save(words)
+        return .merge(
+            .run { _ in
+                preferences.save(words)
+            },
+            .run { _ in
+                try await gateway.waitBeforeSync()
+                await gateway.setGlobalWakeWords(snapshot)
+            }
+            .cancellable(id: CancelID.gatewaySync, cancelInFlight: true))
+    }
+}
+
+enum VoiceWakeWordsSettingsStoreFactory {
+    @MainActor
+    static func live(appModel: NodeAppModel) -> StoreOf<VoiceWakeWordsSettingsFeature> {
+        Store(
+            initialState: VoiceWakeWordsSettingsFeature.State(
+                triggerWords: VoiceWakePreferences.loadTriggerWords()))
+        {
+            VoiceWakeWordsSettingsFeature(gateway: .live(appModel: appModel))
         }
     }
 }
 
 struct VoiceWakeWordsSettingsView: View {
-    @Environment(NodeAppModel.self) private var appModel
     @State private var store: StoreOf<VoiceWakeWordsSettingsFeature>
     @FocusState private var focusedTriggerIndex: Int?
-    @State private var syncTask: Task<Void, Never>?
 
     init(store: StoreOf<VoiceWakeWordsSettingsFeature> = Store(
         initialState: VoiceWakeWordsSettingsFeature.State(
@@ -190,9 +244,6 @@ struct VoiceWakeWordsSettingsView: View {
         .onChange(of: self.focusedTriggerIndex) { _, newValue in
             self.store.send(.focusedTriggerIndexChanged(newValue))
         }
-        .onChange(of: self.store.syncRequestID) { _, _ in
-            self.scheduleGatewaySync(words: self.store.syncSnapshot)
-        }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
             guard self.focusedTriggerIndex == nil else { return }
             self.store.send(.externalPreferencesChanged)
@@ -208,13 +259,5 @@ struct VoiceWakeWordsSettingsView: View {
             set: { newValue in
                 self.store.send(.triggerWordChanged(index: index, value: newValue))
             })
-    }
-
-    private func scheduleGatewaySync(words: [String]) {
-        self.syncTask?.cancel()
-        self.syncTask = Task { [words, weak appModel = self.appModel] in
-            try? await Task.sleep(nanoseconds: 650_000_000)
-            await appModel?.setGlobalWakeWords(words)
-        }
     }
 }

@@ -874,7 +874,8 @@ extension SettingsProTab {
                 self.settingsToggle("Background Listening", isOn: self.$talkBackgroundEnabled)
                 self.settingsToggle("Speakerphone", isOn: self.talkSpeakerphoneBinding)
                 NavigationLink {
-                    VoiceWakeWordsSettingsView()
+                    VoiceWakeWordsSettingsView(
+                        store: VoiceWakeWordsSettingsStoreFactory.live(appModel: self.appModel))
                 } label: {
                     self.simpleSettingsRow(
                         title: "Wake Words",
