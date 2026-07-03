@@ -50,9 +50,9 @@ extension SettingsProTab {
                 self.diagnosticCheckRow(
                     icon: "dot.radiowaves.left.and.right",
                     title: "Discovery",
-                    detail: self.gatewayController.discoveryStatusText,
-                    value: "\(self.gatewayController.gateways.count)",
-                    color: self.gatewayController.gateways.isEmpty ? .secondary : OpenClawBrand.accent)
+                    detail: self.diagnosticsStore.discoveryStatusText,
+                    value: self.diagnosticsStore.discoveryValue,
+                    color: self.diagnosticsStore.hasDiscoveredGateway ? OpenClawBrand.accent : .secondary)
                 Divider().padding(.leading, 60)
                 self.diagnosticCheckRow(
                     icon: "waveform",
@@ -237,7 +237,8 @@ extension SettingsProTab {
         self.diagnosticsStore.send(.diagnosticsContextSynced(
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
             gatewayConnected: self.gatewayConnected,
-            discoveredGatewayCount: self.gatewayController.gateways.count))
+            discoveredGatewayCount: self.gatewayController.gateways.count,
+            discoveryStatusText: self.gatewayController.discoveryStatusText))
     }
 
     func syncOnboardingState() {
