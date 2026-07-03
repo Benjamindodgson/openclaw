@@ -1041,7 +1041,17 @@ struct SettingsTalkPreferencesFeature {
         }
 
         func shouldShowRealtimeVoicePicker(gatewayTalkUsesRealtime: Bool) -> Bool {
-            self.providerSelection == .openAIRealtime || gatewayTalkUsesRealtime
+            Self.shouldShowRealtimeVoicePicker(
+                providerSelectionRaw: self.providerSelectionRaw,
+                gatewayTalkUsesRealtime: gatewayTalkUsesRealtime)
+        }
+
+        static func shouldShowRealtimeVoicePicker(
+            providerSelectionRaw: String,
+            gatewayTalkUsesRealtime: Bool) -> Bool
+        {
+            TalkModeProviderSelection.resolved(providerSelectionRaw) == .openAIRealtime
+                || gatewayTalkUsesRealtime
         }
     }
 
