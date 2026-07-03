@@ -625,6 +625,24 @@ import Testing
         }
     }
 
+    @Test @MainActor func `setup code reducer classifies scanned apple review setup codes`() async {
+        var initialState = OnboardingSetupCodeFeature.State()
+        initialState.setupCode = "stale code"
+        let store = TestStore(initialState: initialState) {
+            OnboardingSetupCodeFeature()
+        }
+
+        await store.send(.scannedSetupCodeReceived("not a demo code"))
+
+        await store.send(.scannedSetupCodeReceived("  APPLE-REVIEW-DEMO  ")) {
+            $0.applyResult = .appleReviewDemoSetupCode("APPLE-REVIEW-DEMO")
+        }
+
+        await store.send(.applyResultHandled) {
+            $0.applyResult = nil
+        }
+    }
+
     @Test @MainActor func `connection form reducer normalizes ports and mode defaults`() async {
         let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
             OnboardingConnectionFormFeature()

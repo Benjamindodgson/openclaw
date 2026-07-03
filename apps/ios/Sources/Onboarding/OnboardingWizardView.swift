@@ -804,7 +804,11 @@ extension OnboardingWizardView {
     }
 
     private func handleScannedSetupCode(_ code: String) {
-        guard AppleReviewDemoMode.isSetupCode(code) else { return }
+        self.setupCodeStore.send(.scannedSetupCodeReceived(code))
+        guard let result = self.setupCodeStore.applyResult else { return }
+        self.setupCodeStore.send(.applyResultHandled)
+
+        guard case .appleReviewDemoSetupCode = result else { return }
         self.presentationStore.send(.qrScannerDismissed)
         self.statusStore.send(.appleReviewDemoModeEnabled)
         self.connectionFormStore.send(.selectedModeChanged(.homeNetwork))

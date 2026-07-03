@@ -667,6 +667,7 @@ struct OnboardingSetupCodeFeature {
         case applyStarted
         case emptyCodeSubmitted
         case invalidSetupCodeSubmitted
+        case scannedSetupCodeReceived(String)
         case setupCodeAccepted
         case setupCodeChanged(String)
         case statusCleared
@@ -725,6 +726,14 @@ struct OnboardingSetupCodeFeature {
             case .invalidSetupCodeSubmitted:
                 state.applyResult = nil
                 state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+                return .none
+
+            case let .scannedSetupCodeReceived(code):
+                state.applyResult = nil
+                guard AppleReviewDemoMode.isSetupCode(code) else {
+                    return .none
+                }
+                state.applyResult = .appleReviewDemoSetupCode(code.trimmingCharacters(in: .whitespacesAndNewlines))
                 return .none
 
             case .setupCodeAccepted:
