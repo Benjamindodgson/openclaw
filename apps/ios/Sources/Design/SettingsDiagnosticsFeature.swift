@@ -26,6 +26,10 @@ struct SettingsDiagnosticsFeature {
             return "partial"
         }
 
+        var healthColor: Color {
+            self.isAppleReviewDemoModeEnabled || self.gatewayConnected ? OpenClawBrand.ok : OpenClawBrand.warn
+        }
+
         var discoveryValue: String {
             "\(self.discoveredGatewayCount)"
         }

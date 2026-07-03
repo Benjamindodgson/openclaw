@@ -291,16 +291,20 @@ struct SettingsNavigationFeatureTests {
         var state = SettingsDiagnosticsFeature.State()
 
         #expect(state.healthValue == "check")
+        #expect(state.healthColor == OpenClawBrand.warn)
 
         state.discoveredGatewayCount = 1
         #expect(state.healthValue == "partial")
+        #expect(state.healthColor == OpenClawBrand.warn)
 
         state.gatewayConnected = true
         #expect(state.healthValue == "ready")
+        #expect(state.healthColor == OpenClawBrand.ok)
 
         state.isAppleReviewDemoModeEnabled = true
         state.gatewayConnected = false
         #expect(state.healthValue == "demo")
+        #expect(state.healthColor == OpenClawBrand.ok)
     }
 
     @Test func `settings diagnostics summarize discovery state`() {
