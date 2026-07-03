@@ -6,41 +6,6 @@ import PhotosUI
 import SwiftUI
 import UIKit
 
-private enum OnboardingStep: Int, CaseIterable {
-    case intro
-    case welcome
-    case mode
-    case connect
-    case auth
-    case success
-
-    var previous: Self? {
-        Self(rawValue: self.rawValue - 1)
-    }
-
-    /// Progress label for the manual setup flow (mode → connect → auth → success).
-    var manualProgressTitle: String {
-        let manualSteps: [OnboardingStep] = [.mode, .connect, .auth, .success]
-        guard let idx = manualSteps.firstIndex(of: self) else { return "" }
-        return "Step \(idx + 1) of \(manualSteps.count)"
-    }
-
-    var title: String {
-        switch self {
-        case .intro: "Welcome"
-        case .welcome: "Connect Gateway"
-        case .mode: "Connection Mode"
-        case .connect: "Connect"
-        case .auth: "Authentication"
-        case .success: "Connected"
-        }
-    }
-
-    var canGoBack: Bool {
-        self != .intro && self != .welcome && self != .success
-    }
-}
-
 struct OnboardingWizardView: View {
     @Environment(NodeAppModel.self) private var appModel: NodeAppModel
     @Environment(GatewayConnectionController.self) private var gatewayController: GatewayConnectionController
@@ -48,7 +13,7 @@ struct OnboardingWizardView: View {
     @AppStorage("node.instanceId") private var instanceId: String = UUID().uuidString
     @AppStorage("gateway.discovery.domain") private var discoveryDomain: String = ""
     @AppStorage("onboarding.developerMode") private var developerModeEnabled: Bool = false
-    @State private var step: OnboardingStep
+    @State private var stepStore: StoreOf<OnboardingStepFeature>
     @State private var gatewayToken: String = ""
     @State private var gatewayPassword: String = ""
     @State private var connectMessage: String?
@@ -93,8 +58,11 @@ struct OnboardingWizardView: View {
         self.allowSkip = allowSkip
         self.onRequestLocalNetworkAccess = onRequestLocalNetworkAccess
         self.onClose = onClose
-        _step = State(
-            initialValue: OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome)
+        let initialStep: OnboardingStep =
+            OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome
+        self._stepStore = State(wrappedValue: Store(initialState: OnboardingStepFeature.State(step: initialStep)) {
+            OnboardingStepFeature()
+        })
     }
 
     @MainActor
@@ -105,7 +73,11 @@ struct OnboardingWizardView: View {
     }
 
     private var isFullScreenStep: Bool {
-        self.step == .intro || self.step == .welcome || self.step == .success
+        self.stepStore.isFullScreenStep
+    }
+
+    private var step: OnboardingStep {
+        self.stepStore.step
     }
 
     private var currentProblem: GatewayConnectionProblem? {
@@ -340,7 +312,7 @@ struct OnboardingWizardView: View {
                     OnboardingStateStore.markCompleted(mode: selectedMode)
                     self.didMarkCompleted = true
                 }
-                self.step = .success
+                self.stepStore.send(.stepChanged(.success))
             }
             .onChange(of: self.scenePhase) { _, newValue in
                 guard newValue == .active else { return }
@@ -363,7 +335,7 @@ struct OnboardingWizardView: View {
                 self.presentationStore.send(.qrScannerButtonTapped)
             },
             onManualSetup: {
-                self.step = .mode
+                self.stepStore.send(.stepChanged(.mode))
             })
     }
 
@@ -403,7 +375,7 @@ struct OnboardingWizardView: View {
 
         Section {
             Button("Continue") {
-                self.step = .connect
+                self.stepStore.send(.stepChanged(.connect))
             }
             .disabled(self.selectedMode == nil)
         }
@@ -480,7 +452,7 @@ struct OnboardingWizardView: View {
             Section {
                 Text("Choose a mode first.")
                 Button("Back to Mode Selection") {
-                    self.step = .mode
+                    self.stepStore.send(.stepChanged(.mode))
                 }
             }
         }
@@ -774,7 +746,7 @@ extension OnboardingWizardView {
         self.setupCodeStore.send(.setupCodeAccepted)
         self.connectMessage = "Connecting via setup code..."
         self.statusLine = "Setup code loaded. Connecting to \(link.host):\(link.port)..."
-        self.step = .connect
+        self.stepStore.send(.stepChanged(.connect))
         await self.connectManual()
     }
 
@@ -784,7 +756,7 @@ extension OnboardingWizardView {
         self.presentationStore.send(.qrScannerDismissed)
         self.connectMessage = "Connecting via QR code..."
         self.statusLine = "QR loaded. Connecting to \(link.host):\(link.port)..."
-        self.step = .connect
+        self.stepStore.send(.stepChanged(.connect))
         Task { await self.connectManual() }
     }
 
@@ -890,7 +862,7 @@ extension OnboardingWizardView {
         }
 
         if self.issue.needsAuthToken || self.issue.needsPairing || problem?.pauseReconnect == true {
-            self.step = .auth
+            self.stepStore.send(.stepChanged(.auth))
         }
 
         if let problem {
@@ -925,7 +897,7 @@ extension OnboardingWizardView {
         OnboardingStateStore.markFirstRunIntroSeen()
         self.requestLocalNetworkAccess(reason: "onboarding_continue")
         self.statusLine = "In your OpenClaw chat, run /pair qr, then scan the code here."
-        self.step = .welcome
+        self.stepStore.send(.stepChanged(.welcome))
     }
 
     private func requestLocalNetworkAccessIfPastIntro(reason: String) {
@@ -938,10 +910,10 @@ extension OnboardingWizardView {
     }
 
     private func navigateBack() {
-        guard let target = self.step.previous else { return }
+        guard self.step.canGoBack else { return }
         self.connectingGatewayID = nil
         self.connectMessage = nil
-        self.step = target
+        self.stepStore.send(.backButtonTapped)
     }
 
     private func initializeState() {
@@ -1070,7 +1042,7 @@ extension OnboardingWizardView {
             self.issue = .none
             self.pairingRequestId = nil
             self.statusLine = "Scan a fresh setup QR code from this gateway."
-            self.step = .connect
+            self.stepStore.send(.stepChanged(.connect))
             self.presentationStore.send(.qrScannerButtonTapped)
             return
         }

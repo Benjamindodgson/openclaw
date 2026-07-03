@@ -1,6 +1,41 @@
 import ComposableArchitecture
 import Foundation
 
+enum OnboardingStep: Int, CaseIterable {
+    case intro
+    case welcome
+    case mode
+    case connect
+    case auth
+    case success
+
+    var previous: Self? {
+        Self(rawValue: self.rawValue - 1)
+    }
+
+    /// Progress label for the manual setup flow (mode -> connect -> auth -> success).
+    var manualProgressTitle: String {
+        let manualSteps: [OnboardingStep] = [.mode, .connect, .auth, .success]
+        guard let idx = manualSteps.firstIndex(of: self) else { return "" }
+        return "Step \(idx + 1) of \(manualSteps.count)"
+    }
+
+    var title: String {
+        switch self {
+        case .intro: "Welcome"
+        case .welcome: "Connect Gateway"
+        case .mode: "Connection Mode"
+        case .connect: "Connect"
+        case .auth: "Authentication"
+        case .success: "Connected"
+        }
+    }
+
+    var canGoBack: Bool {
+        self != .intro && self != .welcome && self != .success
+    }
+}
+
 enum OnboardingConnectionMode: String, CaseIterable {
     case homeNetwork = "home_network"
     case remoteDomain = "remote_domain"
@@ -97,6 +132,46 @@ struct OnboardingStateFeature {
                 state.isCompleted = false
                 state.firstRunIntroSeen = false
                 state.refreshPresentation()
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
+struct OnboardingStepFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var step: OnboardingStep
+
+        init(step: OnboardingStep = .welcome) {
+            self.step = step
+        }
+
+        var isFullScreenStep: Bool {
+            self.step == .intro || self.step == .welcome || self.step == .success
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case backButtonTapped
+        case stepChanged(OnboardingStep)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .backButtonTapped:
+                guard state.step.canGoBack, let previous = state.step.previous else { return .none }
+                state.step = previous
+                return .none
+
+            case let .stepChanged(step):
+                state.step = step
                 return .none
             }
         }

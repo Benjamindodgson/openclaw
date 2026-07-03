@@ -161,6 +161,39 @@ import Testing
         }
     }
 
+    @Test @MainActor func `step reducer navigates wizard steps`() async {
+        let store = TestStore(initialState: OnboardingStepFeature.State(step: .intro)) {
+            OnboardingStepFeature()
+        }
+
+        #expect(store.state.isFullScreenStep)
+
+        await store.send(.stepChanged(.mode)) {
+            $0.step = .mode
+        }
+
+        #expect(!store.state.isFullScreenStep)
+
+        await store.send(.backButtonTapped) {
+            $0.step = .welcome
+        }
+
+        await store.send(.stepChanged(.connect)) {
+            $0.step = .connect
+        }
+
+        await store.send(.backButtonTapped) {
+            $0.step = .mode
+        }
+
+        await store.send(.stepChanged(.success)) {
+            $0.step = .success
+        }
+
+        await store.send(.backButtonTapped)
+        #expect(store.state.step == .success)
+    }
+
     @Test @MainActor func `setup code reducer owns setup text and status`() async {
         let store = TestStore(initialState: OnboardingSetupCodeFeature.State()) {
             OnboardingSetupCodeFeature()
