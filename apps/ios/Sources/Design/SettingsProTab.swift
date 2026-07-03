@@ -1046,6 +1046,9 @@ struct SettingsProTab: View {
             .onChange(of: self.gatewayController.discoveryStatusText) { _, _ in
                 self.syncDiagnosticsContextState()
             }
+            .onChange(of: self.appModel.screenRecordActive) { _, _ in
+                self.syncDiagnosticsContextState()
+            }
     }
 
     private func settingsTalkRuntimeLifecycle(_ content: some View) -> some View {

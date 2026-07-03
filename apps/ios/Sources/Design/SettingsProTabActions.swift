@@ -72,8 +72,8 @@ extension SettingsProTab {
                     icon: "rectangle.on.rectangle",
                     title: "Screen Capture",
                     detail: "Live foreground capture state",
-                    value: self.appModel.screenRecordActive ? "live" : "idle",
-                    color: self.appModel.screenRecordActive ? OpenClawBrand.ok : .secondary)
+                    value: self.diagnosticsStore.screenCaptureValue,
+                    color: self.diagnosticsStore.screenRecordActive ? OpenClawBrand.ok : .secondary)
                 Divider().padding(.leading, 60)
                 self.diagnosticCheckRow(
                     icon: "mic",
@@ -238,7 +238,8 @@ extension SettingsProTab {
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
             gatewayConnected: self.gatewayConnected,
             discoveredGatewayCount: self.gatewayController.gateways.count,
-            discoveryStatusText: self.gatewayController.discoveryStatusText))
+            discoveryStatusText: self.gatewayController.discoveryStatusText,
+            screenRecordActive: self.appModel.screenRecordActive))
     }
 
     func syncOnboardingState() {
