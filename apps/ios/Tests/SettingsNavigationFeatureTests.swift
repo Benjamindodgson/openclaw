@@ -758,6 +758,57 @@ struct SettingsNavigationFeatureTests {
         #expect(state.enabledCount == 0)
     }
 
+    @Test func `settings voice controls sync persisted values`() async {
+        let store = TestStore(initialState: SettingsVoiceControlFeature.State()) {
+            SettingsVoiceControlFeature()
+        }
+
+        await store.send(.controlsSynced(talkEnabled: true, voiceWakeEnabled: true)) {
+            $0.talkEnabled = true
+            $0.voiceWakeEnabled = true
+        }
+    }
+
+    @Test func `settings voice controls record field changes`() async {
+        let store = TestStore(initialState: SettingsVoiceControlFeature.State()) {
+            SettingsVoiceControlFeature()
+        }
+
+        await store.send(.talkEnabledChanged(true)) {
+            $0.talkEnabled = true
+        }
+        await store.send(.voiceWakeEnabledChanged(true)) {
+            $0.voiceWakeEnabled = true
+        }
+    }
+
+    @Test func `settings voice controls disable talk for apple review`() async {
+        var initialState = SettingsVoiceControlFeature.State()
+        initialState.talkEnabled = true
+        initialState.voiceWakeEnabled = true
+        let store = TestStore(initialState: initialState) {
+            SettingsVoiceControlFeature()
+        }
+
+        await store.send(.talkDisabledForAppleReview) {
+            $0.talkEnabled = false
+        }
+    }
+
+    @Test func `settings voice controls summarize active modes`() {
+        var state = SettingsVoiceControlFeature.State()
+        #expect(state.detailText == "Off")
+
+        state.voiceWakeEnabled = true
+        #expect(state.detailText == "Wake on")
+
+        state.talkEnabled = true
+        #expect(state.detailText == "Talk + Wake")
+
+        state.voiceWakeEnabled = false
+        #expect(state.detailText == "Talk on")
+    }
+
     @Test func `settings talk preferences sync persisted values`() async {
         let store = TestStore(initialState: SettingsTalkPreferencesFeature.State()) {
             SettingsTalkPreferencesFeature()

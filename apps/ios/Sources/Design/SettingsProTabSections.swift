@@ -857,17 +857,9 @@ extension SettingsProTab {
     var voiceFeatureCard: some View {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                self.settingsToggle("Voice Wake", isOn: self.$voiceWakeEnabled) { enabled in
-                    self.appModel.setVoiceWakeEnabled(enabled)
-                }
-                self.settingsToggle("Talk Mode", isOn: self.$talkEnabled) { enabled in
-                    guard !self.appModel.isAppleReviewDemoModeEnabled else {
-                        self.talkEnabled = false
-                        return
-                    }
-                    self.appModel.setTalkEnabled(enabled)
-                }
-                .disabled(self.appModel.isAppleReviewDemoModeEnabled)
+                self.settingsToggle("Voice Wake", isOn: self.voiceWakeEnabledBinding)
+                self.settingsToggle("Talk Mode", isOn: self.talkEnabledBinding)
+                    .disabled(self.appModel.isAppleReviewDemoModeEnabled)
                 Picker("Speech Language", selection: self.talkSpeechLocaleBinding) {
                     ForEach(TalkSpeechLocale.supportedOptions()) { option in
                         Text(option.label).tag(option.id)
