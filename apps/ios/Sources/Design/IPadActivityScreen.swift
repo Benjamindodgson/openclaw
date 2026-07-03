@@ -49,9 +49,11 @@ struct IPadActivitySessionsFeature {
         var sessions: [OpenClawChatSessionEntry] = []
         var isLoading = false
         var loadErrorText: String?
+        var gatewayPresentation = IPadActivityGatewayPresentationState()
     }
 
     enum Action: Equatable, Sendable {
+        case gatewayPresentationChanged(IPadActivityGatewayPresentationState)
         case refreshRequested(sceneActive: Bool, sessionsAvailable: Bool)
         case refreshResponse(Result<[OpenClawChatSessionEntry], IPadActivitySessionsError>)
     }
@@ -64,6 +66,10 @@ struct IPadActivitySessionsFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
+            case let .gatewayPresentationChanged(presentation):
+                state.gatewayPresentation = presentation
+                return .none
+
             case let .refreshRequested(sceneActive, sessionsAvailable):
                 guard sceneActive else {
                     state.isLoading = false
@@ -148,7 +154,11 @@ struct IPadActivityScreen: View {
             self.activityFeed
         }
         .task(id: self.refreshID) {
+            self.syncGatewayPresentation()
             await self.refreshSessions()
+        }
+        .onChange(of: self.currentGatewayPresentation) { _, _ in
+            self.syncGatewayPresentation()
         }
         .refreshable {
             await self.refreshSessions()
@@ -158,14 +168,14 @@ struct IPadActivityScreen: View {
     private var metrics: [ProMetric] {
         [
             ProMetric(
-                icon: self.gatewayConnected ? "checkmark.circle.fill" : "wifi.slash",
+                icon: self.store.gatewayPresentation.metricIcon,
                 title: "Gateway",
-                value: self.gatewayStateText,
-                color: self.gatewayConnected ? OpenClawBrand.ok : .secondary),
+                value: self.store.gatewayPresentation.gatewayStateText,
+                color: self.store.gatewayPresentation.gatewayStateColor),
             ProMetric(
                 icon: "person.2.fill",
                 title: "Agents",
-                value: self.gatewayConnected ? "\(self.appModel.gatewayAgents.count)" : "offline",
+                value: self.store.gatewayPresentation.agentCountText,
                 color: OpenClawBrand.accent),
             ProMetric(
                 icon: "bubble.left.and.text.bubble.right",
@@ -199,13 +209,13 @@ struct IPadActivityScreen: View {
                 }
 
                 ProStatusRow(
-                    icon: self.gatewayConnected ? "network" : "wifi.slash",
+                    icon: self.store.gatewayPresentation.rowIcon,
                     title: "Gateway",
-                    detail: self.gatewayDetailText,
-                    value: self.gatewayStateText.lowercased(),
-                    color: self.gatewayConnected ? OpenClawBrand.ok : .secondary,
-                    actionTitle: self.gatewayConnected ? nil : "Settings",
-                    action: self.gatewayConnected ? nil : self.openSettings)
+                    detail: self.store.gatewayPresentation.gatewayDetailText,
+                    value: self.store.gatewayPresentation.gatewayRowValue,
+                    color: self.store.gatewayPresentation.gatewayStateColor,
+                    actionTitle: self.store.gatewayPresentation.settingsActionTitle,
+                    action: self.store.gatewayPresentation.showsSettingsAction ? self.openSettings : nil)
 
                 Divider().padding(.leading, 58)
 
@@ -278,20 +288,19 @@ struct IPadActivityScreen: View {
         ].joined(separator: ":")
     }
 
-    private var gatewayConnected: Bool {
-        GatewayStatusBuilder.build(appModel: self.appModel) == .connected
+    private var currentGatewayPresentation: IPadActivityGatewayPresentationState {
+        IPadActivityGatewayPresentationState(
+            gatewayDisplayState: GatewayStatusBuilder.build(appModel: self.appModel),
+            gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
+            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress,
+            gatewayServerName: self.appModel.gatewayServerName,
+            gatewayAgentCount: self.appModel.gatewayAgents.count)
     }
 
-    private var gatewayStateText: String {
-        guard !self.gatewayConnected else { return "Online" }
-        let status = self.appModel.gatewayDisplayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return status.isEmpty ? "Offline" : status
-    }
-
-    private var gatewayDetailText: String {
-        self.normalized(self.appModel.gatewayRemoteAddress)
-            ?? self.normalized(self.appModel.gatewayServerName)
-            ?? "No gateway connection"
+    private func syncGatewayPresentation() {
+        let presentation = self.currentGatewayPresentation
+        guard self.store.gatewayPresentation != presentation else { return }
+        self.store.send(.gatewayPresentationChanged(presentation))
     }
 
     private var sessionsAvailable: Bool {
@@ -331,8 +340,60 @@ struct IPadActivityScreen: View {
             self.openSettings()
         }
     }
+}
 
-    private func normalized(_ value: String?) -> String? {
+struct IPadActivityGatewayPresentationState: Equatable {
+    var gatewayDisplayState: GatewayDisplayState = .disconnected
+    var gatewayDisplayStatusText = "Offline"
+    var gatewayRemoteAddress: String?
+    var gatewayServerName: String?
+    var gatewayAgentCount = 0
+
+    var isConnected: Bool {
+        self.gatewayDisplayState == .connected
+    }
+
+    var metricIcon: String {
+        self.isConnected ? "checkmark.circle.fill" : "wifi.slash"
+    }
+
+    var rowIcon: String {
+        self.isConnected ? "network" : "wifi.slash"
+    }
+
+    var gatewayStateText: String {
+        guard !self.isConnected else { return "Online" }
+        let status = self.gatewayDisplayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return status.isEmpty ? "Offline" : status
+    }
+
+    var gatewayRowValue: String {
+        self.gatewayStateText.lowercased()
+    }
+
+    var gatewayStateColor: Color {
+        self.isConnected ? OpenClawBrand.ok : .secondary
+    }
+
+    var agentCountText: String {
+        self.isConnected ? "\(self.gatewayAgentCount)" : "offline"
+    }
+
+    var gatewayDetailText: String {
+        Self.normalized(self.gatewayRemoteAddress)
+            ?? Self.normalized(self.gatewayServerName)
+            ?? "No gateway connection"
+    }
+
+    var settingsActionTitle: String? {
+        self.showsSettingsAction ? "Settings" : nil
+    }
+
+    var showsSettingsAction: Bool {
+        !self.isConnected
+    }
+
+    private static func normalized(_ value: String?) -> String? {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
