@@ -7,7 +7,7 @@ struct ChatProTab: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.colorScheme) private var colorScheme
     @State private var viewModel: OpenClawChatViewModel?
-    @State private var viewModelTransportModeID = ""
+    @State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>
     @State private var presentationStore: StoreOf<ChatProPresentationFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let headerTitle: String?
@@ -23,6 +23,11 @@ struct ChatProTab: View {
         showsAgentBadge: Bool = true,
         ownsNavigationStack: Bool = true,
         openSettings: (() -> Void)? = nil,
+        viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature> = Store(
+            initialState: ChatViewModelLifecycleFeature.State())
+        {
+            ChatViewModelLifecycleFeature()
+        },
         presentationStore: StoreOf<ChatProPresentationFeature> = Store(
             initialState: ChatProPresentationFeature.State())
         {
@@ -35,6 +40,7 @@ struct ChatProTab: View {
         self.showsAgentBadge = showsAgentBadge
         self.ownsNavigationStack = ownsNavigationStack
         self.openSettings = openSettings
+        self._viewModelLifecycleStore = State(wrappedValue: viewModelLifecycleStore)
         self._presentationStore = State(wrappedValue: presentationStore)
     }
 
@@ -160,7 +166,7 @@ struct ChatProTab: View {
         let sessionKey = self.appModel.chatSessionKey
         let transportModeID = self.appModel.chatTransportModeID
         guard let viewModel else {
-            self.viewModelTransportModeID = transportModeID
+            self.viewModelLifecycleStore.send(.transportModeRecorded(transportModeID))
             self.viewModel = OpenClawChatViewModel(
                 sessionKey: sessionKey,
                 transport: self.appModel.makeChatTransport(),
@@ -173,7 +179,7 @@ struct ChatProTab: View {
             return
         }
         if self.viewModelTransportModeID != transportModeID {
-            self.viewModelTransportModeID = transportModeID
+            self.viewModelLifecycleStore.send(.transportModeRecorded(transportModeID))
             self.viewModel = OpenClawChatViewModel(
                 sessionKey: sessionKey,
                 transport: self.appModel.makeChatTransport(),
@@ -187,6 +193,10 @@ struct ChatProTab: View {
         }
         guard viewModel.sessionKey != sessionKey else { return }
         viewModel.syncSession(to: sessionKey)
+    }
+
+    private var viewModelTransportModeID: String {
+        self.viewModelLifecycleStore.transportModeID
     }
 
     private var talkControl: OpenClawChatTalkControl {
@@ -295,6 +305,32 @@ struct ChatProTab: View {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+@Reducer
+struct ChatViewModelLifecycleFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var transportModeID = ""
+    }
+
+    enum Action: Equatable, Sendable {
+        case transportModeRecorded(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .transportModeRecorded(transportModeID):
+                state.transportModeID = transportModeID
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }
 
