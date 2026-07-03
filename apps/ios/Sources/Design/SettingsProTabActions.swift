@@ -151,6 +151,8 @@ extension SettingsProTab {
             self.gatewayController.restartDiscovery()
             await self.appModel.refreshGatewayOverviewIfConnected()
         }
+        self.syncGatewayConnectionStatusState()
+        self.syncDiagnosticsContextState()
         let notificationSettings = await UNUserNotificationCenter.current().notificationSettings()
         self.applyNotificationStatus(notificationSettings.authorizationStatus)
         self.registerForRemoteNotificationsIfEnrollmentReady()
@@ -175,6 +177,7 @@ extension SettingsProTab {
             canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
         self.syncGatewaySetupStatusContext()
         self.syncGatewayConnectionStatusState()
+        self.syncDiagnosticsContextState()
         self.gatewaySetupLinkStore.send(.setupCodeSynced(self.storedSetupCode))
         self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
@@ -228,6 +231,13 @@ extension SettingsProTab {
             activeModeTitle: self.appModel.talkMode.gatewayTalkActiveModeTitle,
             activeModeSubtitle: self.appModel.talkMode.gatewayTalkActiveModeSubtitle,
             lastIssueText: self.appModel.talkMode.gatewayTalkLastIssueText))
+    }
+
+    func syncDiagnosticsContextState() {
+        self.diagnosticsStore.send(.diagnosticsContextSynced(
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
+            gatewayConnected: self.gatewayConnected,
+            discoveredGatewayCount: self.gatewayController.gateways.count))
     }
 
     func syncOnboardingState() {
@@ -1084,10 +1094,7 @@ extension SettingsProTab {
     }
 
     var diagnosticsHealthValue: String {
-        if self.appModel.isAppleReviewDemoModeEnabled { return "demo" }
-        if self.gatewayConnected { return "ready" }
-        if self.gatewayController.gateways.isEmpty { return "check" }
-        return "partial"
+        self.diagnosticsStore.healthValue
     }
 
     var diagnosticsRunValue: String {

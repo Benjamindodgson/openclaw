@@ -1014,25 +1014,34 @@ struct SettingsProTab: View {
             .onChange(of: self.appModel.lastGatewayProblem?.message) { _, _ in
                 self.syncGatewaySetupStatusContext()
                 self.syncGatewayConnectionStatusState()
+                self.syncDiagnosticsContextState()
             }
             .onChange(of: self.appModel.lastGatewayProblem?.statusText) { _, _ in
                 self.syncGatewayConnectionStatusState()
+                self.syncDiagnosticsContextState()
             }
             .onChange(of: self.appModel.lastGatewayProblem?.pauseReconnect) { _, _ in
                 self.syncGatewayConnectionStatusState()
+                self.syncDiagnosticsContextState()
             }
             .onChange(of: self.appModel.gatewayStatusText) { _, _ in
                 self.syncGatewaySetupStatusContext()
                 self.syncGatewayConnectionStatusState()
+                self.syncDiagnosticsContextState()
             }
             .onChange(of: self.appModel.gatewayServerName) { _, _ in
                 self.syncGatewayConnectionStatusState()
+                self.syncDiagnosticsContextState()
             }
             .onChange(of: self.appModel.isAppleReviewDemoModeEnabled) { _, _ in
                 self.syncGatewayConnectionStatusState()
+                self.syncDiagnosticsContextState()
             }
             .onChange(of: self.appModel.gatewayAgents.count) { _, _ in
                 self.syncGatewayConnectionStatusState()
+            }
+            .onChange(of: self.gatewayController.gateways.count) { _, _ in
+                self.syncDiagnosticsContextState()
             }
     }
 
