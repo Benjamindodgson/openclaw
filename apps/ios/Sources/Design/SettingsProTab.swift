@@ -280,6 +280,37 @@ struct SettingsNotificationFeature {
     }
 }
 
+@Reducer
+struct SettingsAgentSelectionFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var selectedAgentPickerId = ""
+    }
+
+    enum Action: Equatable, Sendable {
+        case pickerSelectionChanged(String)
+        case selectedAgentSynced(String?)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .pickerSelectionChanged(selectedAgentPickerId):
+                state.selectedAgentPickerId = selectedAgentPickerId
+                return .none
+
+            case let .selectedAgentSynced(selectedAgentId):
+                state.selectedAgentPickerId = selectedAgentId ?? ""
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -314,7 +345,6 @@ struct SettingsProTab: View {
     @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
     @State var connectingGatewayID: String?
-    @State var selectedAgentPickerId = ""
     @State var gatewayToken = ""
     @State var gatewayPassword = ""
     @State var manualGatewayPortText = ""
@@ -328,6 +358,12 @@ struct SettingsProTab: View {
     }
 
     @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
+
+    @State var agentSelectionStore: StoreOf<SettingsAgentSelectionFeature> = Store(
+        initialState: SettingsAgentSelectionFeature.State())
+    {
+        SettingsAgentSelectionFeature()
+    }
 
     @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
         initialState: SettingsDiagnosticsFeature.State())
@@ -469,13 +505,13 @@ struct SettingsProTab: View {
             .onChange(of: self.locationModeRaw) { _, newValue in
                 self.handleLocationModeChange(newValue)
             }
-            .onChange(of: self.selectedAgentPickerId) { _, newValue in
+            .onChange(of: self.agentSelectionStore.selectedAgentPickerId) { _, newValue in
                 let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
                 self.appModel.setSelectedAgentId(trimmed.isEmpty ? nil : trimmed)
             }
             .onChange(of: self.appModel.selectedAgentId ?? "") { _, newValue in
-                if newValue != self.selectedAgentPickerId {
-                    self.selectedAgentPickerId = newValue
+                if newValue != self.agentSelectionStore.selectedAgentPickerId {
+                    self.agentSelectionStore.send(.selectedAgentSynced(newValue))
                 }
             }
             .onChange(of: self.gatewayToken) { _, newValue in
@@ -590,6 +626,12 @@ struct SettingsProTab: View {
 }
 
 extension SettingsProTab {
+    var agentSelectionBinding: Binding<String> {
+        Binding(
+            get: { self.agentSelectionStore.selectedAgentPickerId },
+            set: { self.agentSelectionStore.send(.pickerSelectionChanged($0)) })
+    }
+
     private var gatewayProblemDetailsBinding: Binding<Bool> {
         Binding(
             get: { self.presentationStore.showGatewayProblemDetails },

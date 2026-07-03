@@ -228,4 +228,29 @@ struct SettingsNavigationFeatureTests {
             $0.status = .allowed
         }
     }
+
+    @Test func `settings agent selection records picker changes`() async {
+        let store = TestStore(initialState: SettingsAgentSelectionFeature.State()) {
+            SettingsAgentSelectionFeature()
+        }
+
+        await store.send(.pickerSelectionChanged("agent-1")) {
+            $0.selectedAgentPickerId = "agent-1"
+        }
+    }
+
+    @Test func `settings agent selection syncs external agent selection`() async {
+        var initialState = SettingsAgentSelectionFeature.State()
+        initialState.selectedAgentPickerId = "agent-1"
+        let store = TestStore(initialState: initialState) {
+            SettingsAgentSelectionFeature()
+        }
+
+        await store.send(.selectedAgentSynced("agent-2")) {
+            $0.selectedAgentPickerId = "agent-2"
+        }
+        await store.send(.selectedAgentSynced(nil)) {
+            $0.selectedAgentPickerId = ""
+        }
+    }
 }

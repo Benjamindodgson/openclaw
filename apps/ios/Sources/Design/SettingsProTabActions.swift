@@ -168,7 +168,7 @@ extension SettingsProTab {
     func syncSettingsState() {
         self.pushEnrollmentConsentStore.send(.refresh)
         self.manualGatewayPortText = self.manualGatewayPort > 0 ? String(self.manualGatewayPort) : ""
-        self.selectedAgentPickerId = self.appModel.selectedAgentId ?? ""
+        self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
         self.defaultShareInstruction = ShareToAgentSettings.loadDefaultInstruction()
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedInstanceId.isEmpty else { return }
