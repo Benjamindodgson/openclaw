@@ -78,7 +78,7 @@ struct ChatProTab: View {
                         showsAssistantAvatars: false,
                         composerChrome: .clean,
                         isComposerEnabled: self.gatewayConnected,
-                        messagePlaceholder: self.messagePlaceholder,
+                        messagePlaceholder: self.presentationState.messagePlaceholder,
                         talkControl: self.talkControl)
                         .id(ObjectIdentifier(viewModel))
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -211,14 +211,21 @@ struct ChatProTab: View {
 
     private var connectionPill: some View {
         HStack(spacing: 6) {
-            ProStatusDot(color: self.gatewayPillColor)
-            Text(Self.gatewayPillTitle(state: self.gatewayDisplayState, isGatewayUsable: self.gatewayConnected))
+            ProStatusDot(color: self.presentationState.gatewayPillColor)
+            Text(self.presentationState.gatewayPillTitle)
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
         }
-        .foregroundStyle(self.gatewayPillColor)
+        .foregroundStyle(self.presentationState.gatewayPillColor)
         .padding(.horizontal, 4)
         .frame(height: 30)
+    }
+
+    private var presentationState: ChatProPresentationState {
+        ChatProPresentationState(
+            gatewayDisplayState: self.gatewayDisplayState,
+            isGatewayUsable: self.gatewayConnected,
+            agentDisplayName: self.agentDisplayName)
     }
 
     private var gatewayConnected: Bool {
@@ -230,36 +237,6 @@ struct ChatProTab: View {
 
     private var gatewayDisplayState: GatewayDisplayState {
         GatewayStatusBuilder.build(appModel: self.appModel)
-    }
-
-    private var gatewayPillColor: Color {
-        switch self.gatewayDisplayState {
-        case .connected:
-            self.gatewayConnected ? OpenClawBrand.ok : .secondary
-        case .connecting:
-            OpenClawBrand.accent
-        case .error:
-            OpenClawBrand.warn
-        case .disconnected:
-            .secondary
-        }
-    }
-
-    nonisolated static func gatewayPillTitle(state: GatewayDisplayState, isGatewayUsable: Bool) -> String {
-        switch state {
-        case .connected:
-            isGatewayUsable ? "Connected" : "Unavailable"
-        case .connecting:
-            "Connecting"
-        case .error:
-            "Attention"
-        case .disconnected:
-            "Offline"
-        }
-    }
-
-    private var messagePlaceholder: String {
-        self.gatewayConnected ? "Message \(self.agentDisplayName)..." : "Connect to a gateway"
     }
 
     private var headerDisplayTitle: String {
@@ -308,5 +285,41 @@ struct ChatProTab: View {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+struct ChatProPresentationState: Equatable {
+    let gatewayDisplayState: GatewayDisplayState
+    let isGatewayUsable: Bool
+    let agentDisplayName: String
+
+    var gatewayPillTitle: String {
+        switch self.gatewayDisplayState {
+        case .connected:
+            self.isGatewayUsable ? "Connected" : "Unavailable"
+        case .connecting:
+            "Connecting"
+        case .error:
+            "Attention"
+        case .disconnected:
+            "Offline"
+        }
+    }
+
+    var gatewayPillColor: Color {
+        switch self.gatewayDisplayState {
+        case .connected:
+            self.isGatewayUsable ? OpenClawBrand.ok : .secondary
+        case .connecting:
+            OpenClawBrand.accent
+        case .error:
+            OpenClawBrand.warn
+        case .disconnected:
+            .secondary
+        }
+    }
+
+    var messagePlaceholder: String {
+        self.isGatewayUsable ? "Message \(self.agentDisplayName)..." : "Connect to a gateway"
     }
 }

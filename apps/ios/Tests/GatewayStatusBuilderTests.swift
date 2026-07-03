@@ -37,11 +37,24 @@ struct GatewayStatusBuilderTests {
     }
 
     @Test func `chat gateway pill labels match display state`() {
-        #expect(ChatProTab.gatewayPillTitle(state: .disconnected, isGatewayUsable: false) == "Offline")
-        #expect(ChatProTab.gatewayPillTitle(state: .connecting, isGatewayUsable: false) == "Connecting")
-        #expect(ChatProTab.gatewayPillTitle(state: .error, isGatewayUsable: false) == "Attention")
-        #expect(ChatProTab.gatewayPillTitle(state: .connected, isGatewayUsable: true) == "Connected")
-        #expect(ChatProTab.gatewayPillTitle(state: .connected, isGatewayUsable: false) == "Unavailable")
+        #expect(Self.chatState(.disconnected).gatewayPillTitle == "Offline")
+        #expect(Self.chatState(.connecting).gatewayPillTitle == "Connecting")
+        #expect(Self.chatState(.error).gatewayPillTitle == "Attention")
+        #expect(Self.chatState(.connected, isGatewayUsable: true).gatewayPillTitle == "Connected")
+        #expect(Self.chatState(.connected, isGatewayUsable: false).gatewayPillTitle == "Unavailable")
+    }
+
+    @Test func `chat presentation state owns gateway color and message placeholder`() {
+        let offline = Self.chatState(.disconnected)
+        let connected = Self.chatState(.connected, isGatewayUsable: true)
+        let unavailable = Self.chatState(.connected, isGatewayUsable: false)
+
+        #expect(offline.gatewayPillColor == .secondary)
+        #expect(offline.messagePlaceholder == "Connect to a gateway")
+        #expect(connected.gatewayPillColor == OpenClawBrand.ok)
+        #expect(connected.messagePlaceholder == "Message Joshtimus Prime...")
+        #expect(unavailable.gatewayPillColor == .secondary)
+        #expect(unavailable.messagePlaceholder == "Connect to a gateway")
     }
 
     @Test func `reducer refresh updates display state`() async {
@@ -64,5 +77,15 @@ struct GatewayStatusBuilderTests {
         await store.send(.refresh) {
             $0.displayState = .error
         }
+    }
+
+    private static func chatState(
+        _ gatewayDisplayState: GatewayDisplayState,
+        isGatewayUsable: Bool = false) -> ChatProPresentationState
+    {
+        ChatProPresentationState(
+            gatewayDisplayState: gatewayDisplayState,
+            isGatewayUsable: isGatewayUsable,
+            agentDisplayName: "Joshtimus Prime")
     }
 }
