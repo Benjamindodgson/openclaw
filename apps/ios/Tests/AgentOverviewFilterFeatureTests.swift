@@ -4,6 +4,97 @@ import Testing
 @testable import OpenClaw
 
 @MainActor
+struct AgentSkillEditorFeatureTests {
+    @Test func `editor selection opens changes and dismisses`() async {
+        let store = TestStore(initialState: AgentSkillEditorFeature.State()) {
+            AgentSkillEditorFeature()
+        }
+
+        await store.send(.editorOpened(id: "skill-a")) {
+            $0.selection = AgentProTab.SkillEditorSelection(id: "skill-a")
+        }
+        await store.send(.selectionChanged(AgentProTab.SkillEditorSelection(id: "skill-b"))) {
+            $0.selection = AgentProTab.SkillEditorSelection(id: "skill-b")
+        }
+        await store.send(.editorDismissed) {
+            $0.selection = nil
+        }
+    }
+
+    @Test func `api key draft changes and clears`() async {
+        let store = TestStore(initialState: AgentSkillEditorFeature.State()) {
+            AgentSkillEditorFeature()
+        }
+
+        await store.send(.apiKeyDraftChanged(key: "skill-a", value: "sk-test")) {
+            $0.apiKeyDrafts = ["skill-a": "sk-test"]
+        }
+        await store.send(.apiKeyDraftCleared(key: "skill-a")) {
+            $0.apiKeyDrafts = [:]
+        }
+    }
+
+    @Test func `mutation start records busy key and clears stale message`() async {
+        var initialState = AgentSkillEditorFeature.State()
+        initialState.messages = [
+            "skill-a": AgentProTab.SkillEditorMessage(kind: .error, text: "Old error."),
+        ]
+        let store = TestStore(initialState: initialState) {
+            AgentSkillEditorFeature()
+        }
+
+        await store.send(.mutationStarted(key: "skill-a")) {
+            $0.busyKeys = ["skill-a"]
+            $0.messages = [:]
+        }
+    }
+
+    @Test func `mutation success stores message while busy key remains active`() async {
+        var initialState = AgentSkillEditorFeature.State()
+        initialState.busyKeys = ["skill-a"]
+        let store = TestStore(initialState: initialState) {
+            AgentSkillEditorFeature()
+        }
+
+        await store.send(.mutationSucceeded(key: "skill-a", message: "Skill enabled.")) {
+            $0.messages = [
+                "skill-a": AgentProTab.SkillEditorMessage(kind: .success, text: "Skill enabled."),
+            ]
+        }
+    }
+
+    @Test func `mutation finish clears busy key`() async {
+        var initialState = AgentSkillEditorFeature.State()
+        initialState.busyKeys = ["skill-a", "skill-b"]
+        initialState.messages = [
+            "skill-a": AgentProTab.SkillEditorMessage(kind: .success, text: "Skill enabled."),
+        ]
+        let store = TestStore(initialState: initialState) {
+            AgentSkillEditorFeature()
+        }
+
+        await store.send(.mutationFinished(key: "skill-a")) {
+            $0.busyKeys = ["skill-b"]
+        }
+    }
+
+    @Test func `mutation failure clears busy key and stores error`() async {
+        var initialState = AgentSkillEditorFeature.State()
+        initialState.busyKeys = ["skill-a"]
+        let store = TestStore(initialState: initialState) {
+            AgentSkillEditorFeature()
+        }
+
+        await store.send(.mutationFailed(key: "skill-a", message: "Skill failed.")) {
+            $0.busyKeys = []
+            $0.messages = [
+                "skill-a": AgentProTab.SkillEditorMessage(kind: .error, text: "Skill failed."),
+            ]
+        }
+    }
+}
+
+@MainActor
 struct AgentCronActionFeatureTests {
     @Test func `action start records busy id and clears status`() async {
         var initialState = AgentCronActionFeature.State()
