@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import OpenClawChatUI
 import SwiftUI
 
@@ -242,7 +243,9 @@ struct CommandCenterTab: View {
                                 .buttonStyle(.plain)
                             } else {
                                 NavigationLink {
-                                    CommandSessionsScreen(openChat: self.openChat)
+                                    CommandSessionsScreen(
+                                        openChat: self.openChat,
+                                        store: CommandSessionsStoreFactory.live(appModel: self.appModel))
                                 } label: {
                                     CommandViewMoreRow()
                                 }
@@ -594,15 +597,20 @@ struct CommandCenterTab: View {
 struct CommandSessionsScreen: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.dismiss) private var dismiss
-    @State private var sessions: [OpenClawChatSessionEntry] = []
-    @State private var isLoading = false
-    @State private var loadErrorText: String?
+    @State private var store: StoreOf<CommandSessionsFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let openChat: () -> Void
 
-    init(headerLeadingAction: OpenClawSidebarHeaderAction? = nil, openChat: @escaping () -> Void) {
+    init(
+        headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
+        openChat: @escaping () -> Void,
+        store: StoreOf<CommandSessionsFeature> = Store(initialState: CommandSessionsFeature.State()) {
+            CommandSessionsFeature()
+        })
+    {
         self.headerLeadingAction = headerLeadingAction
         self.openChat = openChat
+        self._store = State(wrappedValue: store)
     }
 
     var body: some View {
@@ -649,7 +657,7 @@ struct CommandSessionsScreen: View {
                     Text("Recent sessions")
                         .font(.subheadline.weight(.bold))
                     Spacer(minLength: 8)
-                    if self.isLoading {
+                    if self.store.isLoading {
                         ProgressView()
                             .controlSize(.small)
                     }
@@ -658,7 +666,7 @@ struct CommandSessionsScreen: View {
                 .padding(.top, 10)
                 .padding(.bottom, 3)
 
-                if let loadErrorText {
+                if let loadErrorText = self.store.loadErrorText {
                     CommandEmptyStateRow(
                         icon: "exclamationmark.triangle.fill",
                         title: "Sessions unavailable",
@@ -695,7 +703,7 @@ struct CommandSessionsScreen: View {
     }
 
     private var headerDetail: String {
-        if self.isLoading, self.sessions.isEmpty { return "Loading recent sessions" }
+        if self.store.isLoading, self.store.sessions.isEmpty { return "Loading recent sessions" }
         let count = self.sessionRows.count
         if count == 0 {
             return self.appModel.isCommandSessionListAvailable ? "No recent sessions" : "Gateway offline"
@@ -704,7 +712,7 @@ struct CommandSessionsScreen: View {
     }
 
     private var sessionRows: [CommandCenterTab.WorkItem] {
-        self.sessions
+        self.store.sessions
             .filter { CommandCenterTab.isRecentChatSession(
                 $0.key,
                 defaultSessionKey: self.appModel.defaultChatSessionKey) }
@@ -732,24 +740,8 @@ struct CommandSessionsScreen: View {
     }
 
     private func refreshSessions() async {
-        guard self.appModel.isCommandSessionListAvailable else {
-            self.sessions = []
-            self.loadErrorText = nil
-            return
-        }
-
-        self.isLoading = true
-        self.loadErrorText = nil
-        defer { self.isLoading = false }
-
-        do {
-            let transport = self.appModel.makeChatTransport()
-            let response = try await transport.listSessions(limit: CommandCenterTab.recentSessionsFetchLimit)
-            self.sessions = response.sessions
-        } catch {
-            self.sessions = []
-            self.loadErrorText = "Try again after the gateway reconnects."
-        }
+        await self.store.send(.refreshRequested(
+            sessionsAvailable: self.appModel.isCommandSessionListAvailable)).finish()
     }
 }
 

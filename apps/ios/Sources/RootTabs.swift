@@ -455,7 +455,8 @@ struct RootTabs: View {
         case .sessions:
             CommandSessionsScreen(
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
-                openChat: { self.selectSidebarDestination(.chat) })
+                openChat: { self.selectSidebarDestination(.chat) },
+                store: CommandSessionsStoreFactory.live(appModel: self.appModel))
         case .dreaming:
             AgentProTab(
                 directRoute: .dreaming,
