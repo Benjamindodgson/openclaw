@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import UIKit
 import UserNotifications
 
 struct SettingsNotificationAuthorizationClient {
@@ -10,6 +11,20 @@ struct SettingsNotificationAuthorizationClient {
 struct SettingsNotificationAuthorizationResult: Equatable {
     let granted: Bool
     let status: SettingsNotificationStatus
+}
+
+struct SettingsNotificationRegistrationClient {
+    var registerForRemoteNotifications: @MainActor @Sendable () -> Void
+}
+
+extension SettingsNotificationRegistrationClient: DependencyKey {
+    static let liveValue = SettingsNotificationRegistrationClient(
+        registerForRemoteNotifications: {
+            UIApplication.shared.registerForRemoteNotifications()
+        })
+
+    static let testValue = SettingsNotificationRegistrationClient(
+        registerForRemoteNotifications: {})
 }
 
 extension SettingsNotificationAuthorizationClient: DependencyKey {
@@ -44,14 +59,24 @@ extension DependencyValues {
         get { self[SettingsNotificationAuthorizationClient.self] }
         set { self[SettingsNotificationAuthorizationClient.self] = newValue }
     }
+
+    var settingsNotificationRegistration: SettingsNotificationRegistrationClient {
+        get { self[SettingsNotificationRegistrationClient.self] }
+        set { self[SettingsNotificationRegistrationClient.self] = newValue }
+    }
 }
 
 @Reducer
 struct SettingsNotificationFeature {
     private let authorizationClientOverride: SettingsNotificationAuthorizationClient?
+    private let registrationClientOverride: SettingsNotificationRegistrationClient?
 
-    init(authorizationClient: SettingsNotificationAuthorizationClient? = nil) {
+    init(
+        authorizationClient: SettingsNotificationAuthorizationClient? = nil,
+        registrationClient: SettingsNotificationRegistrationClient? = nil)
+    {
         self.authorizationClientOverride = authorizationClient
+        self.registrationClientOverride = registrationClient
     }
 
     // swiftformat:disable redundantSendable
@@ -129,6 +154,7 @@ struct SettingsNotificationFeature {
         case authorizationRequestRequested
         case authorizationRequestResultHandled
         case relayConfigSynced(usesOpenClawHostedRelay: Bool, hostedRelayHost: String?)
+        case remoteRegistrationRequested(disclosureAccepted: Bool)
         case statusRefreshFinished(SettingsNotificationStatus)
         case statusRefreshRequested
         case statusRefreshResultHandled
@@ -140,7 +166,9 @@ struct SettingsNotificationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.settingsNotificationAuthorization) var dependencyAuthorizationClient
+            @Dependency(\.settingsNotificationRegistration) var dependencyRegistrationClient
             let authorizationClient = self.authorizationClientOverride ?? dependencyAuthorizationClient
+            let registrationClient = self.registrationClientOverride ?? dependencyRegistrationClient
 
             switch action {
             case .actionButtonTapped:
@@ -181,6 +209,12 @@ struct SettingsNotificationFeature {
                 state.usesOpenClawHostedRelay = usesOpenClawHostedRelay
                 state.hostedRelayHost = hostedRelayHost ?? "ios-push-relay.openclaw.ai"
                 return .none
+
+            case let .remoteRegistrationRequested(disclosureAccepted):
+                guard disclosureAccepted, state.status.allowsNotifications else { return .none }
+                return .run { _ in
+                    await registrationClient.registerForRemoteNotifications()
+                }
 
             case let .statusRefreshFinished(status):
                 state.status = status

@@ -1330,6 +1330,42 @@ struct SettingsNavigationFeatureTests {
         #expect(probe.requestCount == 0)
     }
 
+    @Test func `settings notifications register remote notifications when enrollment is ready`() async {
+        let probe = SettingsNotificationRegistrationProbe()
+        var initialState = SettingsNotificationFeature.State()
+        initialState.status = .allowed
+        let store = TestStore(initialState: initialState) {
+            SettingsNotificationFeature(registrationClient: probe.client)
+        }
+
+        await store.send(.remoteRegistrationRequested(disclosureAccepted: true))
+        await store.finish()
+
+        #expect(probe.registerCount == 1)
+    }
+
+    @Test func `settings notifications skip remote registration until enrollment is ready`() async {
+        let probe = SettingsNotificationRegistrationProbe()
+
+        var allowedState = SettingsNotificationFeature.State()
+        allowedState.status = .allowed
+        let missingDisclosureStore = TestStore(initialState: allowedState) {
+            SettingsNotificationFeature(registrationClient: probe.client)
+        }
+        await missingDisclosureStore.send(.remoteRegistrationRequested(disclosureAccepted: false))
+        await missingDisclosureStore.finish()
+
+        var notAllowedState = SettingsNotificationFeature.State()
+        notAllowedState.status = .notSet
+        let missingAuthorizationStore = TestStore(initialState: notAllowedState) {
+            SettingsNotificationFeature(registrationClient: probe.client)
+        }
+        await missingAuthorizationStore.send(.remoteRegistrationRequested(disclosureAccepted: true))
+        await missingAuthorizationStore.finish()
+
+        #expect(probe.registerCount == 0)
+    }
+
     @Test func `settings notifications action button opens ios settings for managed statuses`() async {
         var initialState = SettingsNotificationFeature.State()
         initialState.status = .allowed
@@ -2113,6 +2149,17 @@ private final class SettingsNotificationAuthorizationProbe: @unchecked Sendable 
             requestAuthorization: {
                 self.requestCount += 1
                 return self.result
+            })
+    }
+}
+
+private final class SettingsNotificationRegistrationProbe: @unchecked Sendable {
+    var registerCount = 0
+
+    var client: SettingsNotificationRegistrationClient {
+        SettingsNotificationRegistrationClient(
+            registerForRemoteNotifications: {
+                self.registerCount += 1
             })
     }
 }

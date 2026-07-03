@@ -576,9 +576,8 @@ extension SettingsProTab {
 
     @MainActor
     func registerForRemoteNotificationsIfEnrollmentReady() {
-        guard self.pushEnrollmentConsentStore.disclosureAccepted else { return }
-        guard self.notificationStore.status.allowsNotifications else { return }
-        UIApplication.shared.registerForRemoteNotifications()
+        self.notificationStore.send(.remoteRegistrationRequested(
+            disclosureAccepted: self.pushEnrollmentConsentStore.disclosureAccepted))
     }
 
     func persistGatewayToken(_ value: String) {
