@@ -250,6 +250,87 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway credentials load persisted values`() async {
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature()
+        }
+
+        await store.send(.credentialsLoaded(token: "token-1", password: "password-1")) {
+            $0.gatewayToken = "token-1"
+            $0.gatewayPassword = "password-1"
+        }
+    }
+
+    @Test func `settings gateway credentials record field changes`() async {
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature()
+        }
+
+        await store.send(.gatewayTokenChanged("token-2")) {
+            $0.gatewayToken = "token-2"
+        }
+        await store.send(.gatewayPasswordChanged("password-2")) {
+            $0.gatewayPassword = "password-2"
+        }
+    }
+
+    @Test func `settings gateway credentials apply setup auth`() async {
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: "bootstrap-1",
+            token: "token-3",
+            password: "password-3")
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
+        let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
+            SettingsGatewayCredentialsFeature()
+        }
+
+        await store.send(.setupAuthApplied(setupAuth)) {
+            $0.gatewayToken = "token-3"
+            $0.gatewayPassword = "password-3"
+            $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+                token: "token-3",
+                bootstrapToken: "bootstrap-1",
+                password: "password-3")
+        }
+    }
+
+    @Test func `settings gateway credentials clear reset state`() async {
+        var initialState = SettingsGatewayCredentialsFeature.State()
+        initialState.gatewayToken = "token-4"
+        initialState.gatewayPassword = "password-4"
+        initialState.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+            token: "token-4",
+            bootstrapToken: "bootstrap-4",
+            password: "password-4")
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewayCredentialsFeature()
+        }
+
+        await store.send(.credentialsClearedForOnboardingReset) {
+            $0.gatewayToken = ""
+            $0.gatewayPassword = ""
+            $0.pendingManualAuthOverride = nil
+        }
+    }
+
+    @Test func `settings gateway credentials clear consumed pending override`() async {
+        var initialState = SettingsGatewayCredentialsFeature.State()
+        initialState.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+            token: "token-5",
+            bootstrapToken: "bootstrap-5",
+            password: "password-5")
+        let store = TestStore(initialState: initialState) {
+            SettingsGatewayCredentialsFeature()
+        }
+
+        await store.send(.pendingManualAuthOverrideConsumed) {
+            $0.pendingManualAuthOverride = nil
+        }
+    }
+
     @Test func `settings location tracks change lifecycle`() async {
         var initialState = SettingsLocationFeature.State()
         initialState.statusText = "Location permission was not granted."

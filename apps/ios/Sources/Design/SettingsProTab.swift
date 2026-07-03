@@ -288,6 +288,68 @@ struct SettingsGatewaySetupLinkFeature {
 }
 
 @Reducer
+struct SettingsGatewayCredentialsFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var gatewayToken = ""
+        var gatewayPassword = ""
+        var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
+    }
+
+    enum Action: Equatable, Sendable {
+        case credentialsClearedForOnboardingReset
+        case credentialsLoaded(token: String, password: String)
+        case gatewayPasswordChanged(String)
+        case gatewayTokenChanged(String)
+        case pendingManualAuthOverrideConsumed
+        case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .credentialsClearedForOnboardingReset:
+                state.gatewayToken = ""
+                state.gatewayPassword = ""
+                state.pendingManualAuthOverride = nil
+                return .none
+
+            case let .credentialsLoaded(token, password):
+                state.gatewayToken = token
+                state.gatewayPassword = password
+                return .none
+
+            case let .gatewayPasswordChanged(password):
+                state.gatewayPassword = password
+                return .none
+
+            case let .gatewayTokenChanged(token):
+                state.gatewayToken = token
+                return .none
+
+            case .pendingManualAuthOverrideConsumed:
+                state.pendingManualAuthOverride = nil
+                return .none
+
+            case let .setupAuthApplied(setupAuth):
+                if setupAuth.shouldApplyTokenField {
+                    state.gatewayToken = setupAuth.token
+                }
+                if setupAuth.shouldApplyPasswordField {
+                    state.gatewayPassword = setupAuth.password
+                }
+                state.pendingManualAuthOverride = setupAuth.manualAuthOverride
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct SettingsLocationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -524,10 +586,6 @@ struct SettingsProTab: View {
     @AppStorage("gateway.onboardingComplete") var onboardingComplete: Bool = false
     @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
-    @State var gatewayToken = ""
-    @State var gatewayPassword = ""
-    @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
-    @State var suppressCredentialPersist = false
     @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
         PushEnrollmentConsentFeature()
     }
@@ -580,6 +638,12 @@ struct SettingsProTab: View {
         initialState: SettingsGatewaySetupLinkFeature.State())
     {
         SettingsGatewaySetupLinkFeature()
+    }
+
+    @State var gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature> = Store(
+        initialState: SettingsGatewayCredentialsFeature.State())
+    {
+        SettingsGatewayCredentialsFeature()
     }
 
     @State var locationStore: StoreOf<SettingsLocationFeature> = Store(
@@ -721,12 +785,6 @@ struct SettingsProTab: View {
                 if newValue != self.agentSelectionStore.selectedAgentPickerId {
                     self.agentSelectionStore.send(.selectedAgentSynced(newValue))
                 }
-            }
-            .onChange(of: self.gatewayToken) { _, newValue in
-                self.persistGatewayToken(newValue)
-            }
-            .onChange(of: self.gatewayPassword) { _, newValue in
-                self.persistGatewayPassword(newValue)
             }
             .onChange(of: self.setupCode) { _, newValue in
                 self.gatewaySetupLinkStore.send(.setupCodeChanged(newValue))
