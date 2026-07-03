@@ -675,6 +675,50 @@ struct SettingsGatewayAutoConnectFeature {
 }
 
 @Reducer
+struct SettingsOnboardingStateFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var hasConnectedOnce = false
+        var onboardingComplete = false
+        var onboardingRequestID = 0
+    }
+
+    enum Action: Equatable, Sendable {
+        case completionStateReset
+        case onboardingRequestIDChanged(Int)
+        case onboardingStateSynced(
+            hasConnectedOnce: Bool,
+            onboardingComplete: Bool,
+            onboardingRequestID: Int)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .completionStateReset:
+                state.hasConnectedOnce = false
+                state.onboardingComplete = false
+                return .none
+
+            case let .onboardingRequestIDChanged(requestID):
+                state.onboardingRequestID = requestID
+                return .none
+
+            case let .onboardingStateSynced(hasConnectedOnce, onboardingComplete, onboardingRequestID):
+                state.hasConnectedOnce = hasConnectedOnce
+                state.onboardingComplete = onboardingComplete
+                state.onboardingRequestID = onboardingRequestID
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct SettingsDeviceCapabilityFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -999,9 +1043,9 @@ struct SettingsProTab: View {
     @AppStorage("gateway.discovery.debugLogs") var storedDiscoveryDebugLogsEnabled: Bool = false
     @AppStorage("canvas.debugStatusEnabled") var storedCanvasDebugStatusEnabled: Bool = false
     @AppStorage("gateway.setupCode") var storedSetupCode: String = ""
-    @AppStorage("gateway.onboardingComplete") var onboardingComplete: Bool = false
-    @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
-    @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
+    @AppStorage("gateway.onboardingComplete") var storedOnboardingComplete: Bool = false
+    @AppStorage("gateway.hasConnectedOnce") var storedHasConnectedOnce: Bool = false
+    @AppStorage("onboarding.requestID") var storedOnboardingRequestID: Int = 0
     @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
         PushEnrollmentConsentFeature()
     }
@@ -1084,6 +1128,12 @@ struct SettingsProTab: View {
         initialState: SettingsGatewayAutoConnectFeature.State())
     {
         SettingsGatewayAutoConnectFeature()
+    }
+
+    @State var onboardingStateStore: StoreOf<SettingsOnboardingStateFeature> = Store(
+        initialState: SettingsOnboardingStateFeature.State())
+    {
+        SettingsOnboardingStateFeature()
     }
 
     @State var gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
@@ -1301,6 +1351,15 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedGatewayAutoConnect) { _, newValue in
                 self.gatewayAutoConnectStore.send(.enabledSynced(newValue))
+            }
+            .onChange(of: self.storedOnboardingComplete) { _, _ in
+                self.syncOnboardingState()
+            }
+            .onChange(of: self.storedHasConnectedOnce) { _, _ in
+                self.syncOnboardingState()
+            }
+            .onChange(of: self.storedOnboardingRequestID) { _, _ in
+                self.syncOnboardingState()
             }
             .onChange(of: self.shareInstructionStore.defaultShareInstruction) { _, newValue in
                 ShareToAgentSettings.saveDefaultInstruction(newValue)

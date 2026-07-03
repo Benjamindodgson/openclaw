@@ -174,6 +174,7 @@ extension SettingsProTab {
             discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
             canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
         self.gatewaySetupLinkStore.send(.setupCodeSynced(self.storedSetupCode))
+        self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             cameraEnabled: self.storedCameraEnabled,
             preventSleep: self.storedPreventSleep))
@@ -210,6 +211,13 @@ extension SettingsProTab {
             talkButtonEnabled: self.storedTalkButtonEnabled,
             talkBackgroundEnabled: self.storedTalkBackgroundEnabled,
             talkSpeakerphoneEnabled: self.storedTalkSpeakerphoneEnabled))
+    }
+
+    func syncOnboardingState() {
+        self.onboardingStateStore.send(.onboardingStateSynced(
+            hasConnectedOnce: self.storedHasConnectedOnce,
+            onboardingComplete: self.storedOnboardingComplete,
+            onboardingRequestID: self.storedOnboardingRequestID))
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
@@ -375,10 +383,9 @@ extension SettingsProTab {
         self.disableGatewayAutoConnectForOnboardingReset()
         self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
         GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
-        self.onboardingComplete = false
-        self.hasConnectedOnce = false
+        self.resetOnboardingCompletionState()
         self.clearManualGatewayEndpointForOnboardingReset()
-        self.onboardingRequestID += 1
+        self.advanceOnboardingRequestID()
     }
 
     func retryGatewayConnectionFromProblem() async {
@@ -704,6 +711,17 @@ extension SettingsProTab {
     func disableGatewayAutoConnectForOnboardingReset() {
         self.gatewayAutoConnectStore.send(.disabledForOnboardingReset)
         self.storedGatewayAutoConnect = false
+    }
+
+    func resetOnboardingCompletionState() {
+        self.onboardingStateStore.send(.completionStateReset)
+        self.storedOnboardingComplete = false
+        self.storedHasConnectedOnce = false
+    }
+
+    func advanceOnboardingRequestID() {
+        self.storedOnboardingRequestID += 1
+        self.onboardingStateStore.send(.onboardingRequestIDChanged(self.storedOnboardingRequestID))
     }
 
     var manualGatewayEnabled: Bool {
