@@ -13,9 +13,7 @@ struct AgentProTab: View {
     @State var filterStore: StoreOf<AgentOverviewFilterFeature>
     @State var overviewStore: StoreOf<AgentOverviewLoadFeature>
     @State var skillFilterStore: StoreOf<AgentSkillFilterFeature>
-    @State var skillMutationBusyKeys: Set<String> = []
-    @State var skillMutationErrorText: String?
-    @State var skillMutationStatusText: String?
+    @State var skillPolicyMutationStore: StoreOf<AgentSkillPolicyMutationFeature>
     @State var skillEditorStore: StoreOf<AgentSkillEditorFeature>
     @State var clawHubStore: StoreOf<AgentClawHubSearchFeature>
     @State var cronActionStore: StoreOf<AgentCronActionFeature>
@@ -127,6 +125,11 @@ struct AgentProTab: View {
         {
             AgentSkillFilterFeature()
         },
+        skillPolicyMutationStore: StoreOf<AgentSkillPolicyMutationFeature> = Store(
+            initialState: AgentSkillPolicyMutationFeature.State())
+        {
+            AgentSkillPolicyMutationFeature()
+        },
         skillEditorStore: StoreOf<AgentSkillEditorFeature> = Store(
             initialState: AgentSkillEditorFeature.State())
         {
@@ -151,6 +154,7 @@ struct AgentProTab: View {
         self._overviewStore = State(wrappedValue: overviewStore)
         self._clawHubStore = State(wrappedValue: clawHubStore)
         self._skillFilterStore = State(wrappedValue: skillFilterStore)
+        self._skillPolicyMutationStore = State(wrappedValue: skillPolicyMutationStore)
         self._skillEditorStore = State(wrappedValue: skillEditorStore)
         self._cronActionStore = State(wrappedValue: cronActionStore)
         self._filterStore = State(wrappedValue: filterStore)
@@ -234,6 +238,18 @@ struct AgentProTab: View {
             set: { self.skillFilterStore.send(.statusFilterChanged($0)) })
     }
 
+    var skillMutationBusyKeys: Set<String> {
+        self.skillPolicyMutationStore.busyKeys
+    }
+
+    var skillMutationErrorText: String? {
+        self.skillPolicyMutationStore.errorText
+    }
+
+    var skillMutationStatusText: String? {
+        self.skillPolicyMutationStore.statusText
+    }
+
     var skillConfigBusyKeys: Set<String> {
         self.skillEditorStore.busyKeys
     }
@@ -293,6 +309,51 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+@Reducer
+struct AgentSkillPolicyMutationFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var busyKeys: Set<String> = []
+        var errorText: String?
+        var statusText: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case mutationFailed(message: String)
+        case mutationFinished(key: String)
+        case mutationStarted(key: String)
+        case mutationSucceeded(message: String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .mutationStarted(key):
+                state.busyKeys.insert(key)
+                state.errorText = nil
+                state.statusText = nil
+                return .none
+
+            case let .mutationSucceeded(message):
+                state.statusText = message
+                return .none
+
+            case let .mutationFailed(message):
+                state.errorText = message
+                return .none
+
+            case let .mutationFinished(key):
+                state.busyKeys.remove(key)
+                return .none
+            }
+        }
+        .autoLogActions()
     }
 }
 
