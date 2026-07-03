@@ -17,6 +17,7 @@ struct RootPresentationFeature {
         var showOnboarding: Bool
         var hasPresentedSheet: Bool
         var discoveredGatewayCount: Int
+        var showGatewayProblemDetails: Bool
         var startupRoute: RootTabs.StartupPresentationRoute
         var shouldPresentQuickSetup: Bool
 
@@ -40,6 +41,7 @@ struct RootPresentationFeature {
             self.showOnboarding = showOnboarding
             self.hasPresentedSheet = hasPresentedSheet
             self.discoveredGatewayCount = discoveredGatewayCount
+            self.showGatewayProblemDetails = false
             self.startupRoute = .none
             self.shouldPresentQuickSetup = false
             self.refreshPresentation()
@@ -114,6 +116,8 @@ struct RootPresentationFeature {
             gatewayConnected: Bool,
             hasExistingGatewayConfig: Bool,
             discoveredGatewayCount: Int)
+        case gatewayProblemDetailsButtonTapped
+        case gatewayProblemDetailsDismissed
     }
 
     // swiftformat:enable redundantSendable
@@ -153,6 +157,14 @@ struct RootPresentationFeature {
                 state.hasExistingGatewayConfig = hasExistingGatewayConfig
                 state.discoveredGatewayCount = discoveredGatewayCount
                 state.refreshPresentation()
+                return .none
+
+            case .gatewayProblemDetailsButtonTapped:
+                state.showGatewayProblemDetails = true
+                return .none
+
+            case .gatewayProblemDetailsDismissed:
+                state.showGatewayProblemDetails = false
                 return .none
             }
         }

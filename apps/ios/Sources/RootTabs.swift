@@ -40,8 +40,13 @@ struct RootTabs: View {
         RootVoiceWakeToastFeature()
     }
 
+    @State private var presentationStore: StoreOf<RootPresentationFeature> = Store(
+        initialState: RootPresentationFeature.State())
+    {
+        RootPresentationFeature()
+    }
+
     @State private var presentedSheet: PresentedSheet?
-    @State private var showGatewayProblemDetails: Bool = false
     @State private var showOnboarding: Bool = false
     @State private var onboardingAllowSkip: Bool = true
     @State private var didEvaluateOnboarding: Bool = false
@@ -607,7 +612,7 @@ struct RootTabs: View {
                             self.handleGatewayProblemPrimaryAction(gatewayProblem)
                         },
                         onShowDetails: {
-                            self.showGatewayProblemDetails = true
+                            self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
                         })
                         .padding(.horizontal, 12)
                         .safeAreaPadding(.top, 10)
@@ -767,7 +772,7 @@ struct RootTabs: View {
 
     private func rootPresentation(_ content: some View) -> some View {
         content
-            .sheet(isPresented: self.$showGatewayProblemDetails) {
+            .sheet(isPresented: self.gatewayProblemDetailsBinding) {
                 if let gatewayProblem = self.appModel.lastGatewayProblem {
                     GatewayProblemDetailsSheet(
                         problem: gatewayProblem,
@@ -1217,6 +1222,20 @@ extension RootTabs {
             discoveredGatewayCount: self.gatewayController.gateways.count)
         guard shouldPresent else { return }
         self.presentedSheet = .quickSetup
+    }
+}
+
+extension RootTabs {
+    private var gatewayProblemDetailsBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showGatewayProblemDetails },
+            set: { isPresented in
+                if isPresented {
+                    self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
+                } else {
+                    self.presentationStore.send(.gatewayProblemDetailsDismissed)
+                }
+            })
     }
 }
 

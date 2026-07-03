@@ -121,6 +121,19 @@ struct RootTabsPresentationTests {
         }
     }
 
+    @Test func `reducer presents and dismisses gateway problem details`() async {
+        let store = TestStore(initialState: RootPresentationFeature.State()) {
+            RootPresentationFeature()
+        }
+
+        await store.send(.gatewayProblemDetailsButtonTapped) {
+            $0.showGatewayProblemDetails = true
+        }
+        await store.send(.gatewayProblemDetailsDismissed) {
+            $0.showGatewayProblemDetails = false
+        }
+    }
+
     @Test func `voice wake toast reducer shows trimmed command and dismisses after delay`() async {
         let store = TestStore(initialState: RootVoiceWakeToastFeature.State()) {
             RootVoiceWakeToastFeature(sleeper: RootVoiceWakeToastSleepClient(sleep: {}))
