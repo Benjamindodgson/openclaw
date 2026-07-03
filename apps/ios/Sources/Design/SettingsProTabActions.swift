@@ -408,28 +408,31 @@ extension SettingsProTab {
     }
 
     func connectManual() async {
-        let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !host.isEmpty else {
-            self.gatewaySetupStatusStore.send(.statusChanged("Failed: host required"))
-            return
-        }
-        guard self.manualPortIsValid else {
-            self.gatewaySetupStatusStore.send(.statusChanged("Failed: invalid port"))
-            return
-        }
-        self.gatewayConnectionStore.send(.connectionStarted("manual"))
-        self.updateManualGatewayEnabled(true)
-        defer { self.gatewayConnectionStore.send(.connectionFinished) }
-        let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
-            token: self.gatewayCredentialsStore.gatewayToken,
-            pendingOverride: self.gatewayCredentialsStore.pendingManualAuthOverride,
-            password: self.gatewayCredentialsStore.gatewayPassword)
-        self.gatewayCredentialsStore.send(.pendingManualAuthOverrideConsumed)
-        await self.gatewayController.connectManual(
-            host: host,
+        self.manualGatewayEndpointStore.send(.manualConnectionRequested(
             port: self.manualGatewayPortStore.manualGatewayPort,
-            useTLS: self.manualGatewayTLS,
-            authOverride: authOverride)
+            isPortValid: self.manualPortIsValid))
+        guard let result = self.manualGatewayEndpointStore.manualConnectionResult else { return }
+        self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)
+
+        switch result {
+        case let .failure(message):
+            self.gatewaySetupStatusStore.send(.statusChanged(message))
+
+        case let .request(request):
+            self.gatewayConnectionStore.send(.connectionStarted("manual"))
+            self.updateManualGatewayEnabled(true)
+            defer { self.gatewayConnectionStore.send(.connectionFinished) }
+            let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
+                token: self.gatewayCredentialsStore.gatewayToken,
+                pendingOverride: self.gatewayCredentialsStore.pendingManualAuthOverride,
+                password: self.gatewayCredentialsStore.gatewayPassword)
+            self.gatewayCredentialsStore.send(.pendingManualAuthOverrideConsumed)
+            await self.gatewayController.connectManual(
+                host: request.host,
+                port: request.port,
+                useTLS: request.useTLS,
+                authOverride: authOverride)
+        }
     }
 
     func preflightGateway(host: String) async -> Bool {

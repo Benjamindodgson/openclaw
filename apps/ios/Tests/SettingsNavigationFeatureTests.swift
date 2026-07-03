@@ -1200,6 +1200,43 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings manual gateway endpoint validates manual connection requests`() async {
+        let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
+            SettingsManualGatewayEndpointFeature()
+        }
+
+        await store.send(.manualConnectionRequested(port: 18789, isPortValid: true)) {
+            $0.manualConnectionResult = .failure("Failed: host required")
+        }
+
+        await store.send(.manualConnectionResultHandled) {
+            $0.manualConnectionResult = nil
+        }
+
+        await store.send(.manualGatewayHostChanged("  gateway.example.com  ")) {
+            $0.manualGatewayHost = "  gateway.example.com  "
+        }
+
+        await store.send(.manualConnectionRequested(port: 18789, isPortValid: false)) {
+            $0.manualConnectionResult = .failure("Failed: invalid port")
+        }
+
+        await store.send(.manualConnectionResultHandled) {
+            $0.manualConnectionResult = nil
+        }
+
+        await store.send(.manualGatewayTLSChanged(false)) {
+            $0.manualGatewayTLS = false
+        }
+
+        await store.send(.manualConnectionRequested(port: 18789, isPortValid: true)) {
+            $0.manualConnectionResult = .request(SettingsManualGatewayEndpointFeature.ManualConnectionRequest(
+                host: "gateway.example.com",
+                port: 18789,
+                useTLS: false))
+        }
+    }
+
     @Test func `settings manual gateway endpoint applies setup link host and tls`() async {
         let store = TestStore(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature()

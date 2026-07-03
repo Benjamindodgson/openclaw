@@ -100,6 +100,7 @@ struct SettingsManualGatewayEndpointFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        var manualConnectionResult: ManualConnectionResult?
         var manualGatewayEnabled = false
         var manualGatewayHost = ""
         var manualGatewayTLS = true
@@ -134,9 +135,22 @@ struct SettingsManualGatewayEndpointFeature {
         }
     }
 
+    struct ManualConnectionRequest: Equatable, Sendable {
+        var host: String
+        var port: Int
+        var useTLS: Bool
+    }
+
+    enum ManualConnectionResult: Equatable, Sendable {
+        case failure(String)
+        case request(ManualConnectionRequest)
+    }
+
     enum Action: Equatable, Sendable {
         case endpointClearedForOnboardingReset
         case endpointSynced(enabled: Bool, host: String, tls: Bool)
+        case manualConnectionRequested(port: Int, isPortValid: Bool)
+        case manualConnectionResultHandled
         case manualGatewayEnabledChanged(Bool)
         case manualGatewayHostChanged(String)
         case manualGatewayTLSChanged(Bool)
@@ -157,6 +171,27 @@ struct SettingsManualGatewayEndpointFeature {
                 state.manualGatewayEnabled = enabled
                 state.manualGatewayHost = host
                 state.manualGatewayTLS = tls
+                return .none
+
+            case let .manualConnectionRequested(port, isPortValid):
+                state.manualConnectionResult = nil
+                let host = state.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !host.isEmpty else {
+                    state.manualConnectionResult = .failure("Failed: host required")
+                    return .none
+                }
+                guard isPortValid else {
+                    state.manualConnectionResult = .failure("Failed: invalid port")
+                    return .none
+                }
+                state.manualConnectionResult = .request(ManualConnectionRequest(
+                    host: host,
+                    port: port,
+                    useTLS: state.manualGatewayTLS))
+                return .none
+
+            case .manualConnectionResultHandled:
+                state.manualConnectionResult = nil
                 return .none
 
             case let .manualGatewayEnabledChanged(enabled):

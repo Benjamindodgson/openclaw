@@ -984,6 +984,21 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("let stagedLink = self.stagedGatewaySetupLink"))
     }
 
+    @Test func `settings manual connection result is reducer owned`() throws {
+        let gatewaySetupFeaturesSource = try String(
+            contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
+            encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+
+        #expect(gatewaySetupFeaturesSource.contains("enum ManualConnectionResult: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("case manualConnectionRequested(port: Int, isPortValid: Bool)"))
+        #expect(gatewaySetupFeaturesSource.contains("state.manualConnectionResult = .request(ManualConnectionRequest("))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionRequested("))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)"))
+        #expect(!actionsSource.contains("guard !host.isEmpty else"))
+        #expect(!actionsSource.contains("guard self.manualPortIsValid else"))
+    }
+
     @Test func `onboarding setup code apply result is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
