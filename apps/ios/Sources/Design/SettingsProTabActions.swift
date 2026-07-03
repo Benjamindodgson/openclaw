@@ -442,15 +442,23 @@ extension SettingsProTab {
     }
 
     func preflightGateway(host: String) async -> Bool {
-        let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return false }
-        if SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(trimmed), !Self.hasTailnetIPv4() {
-            self.gatewaySetupStatusStore.send(
-                .statusChanged("Tailscale is off on this device. Turn it on, then try again."))
+        self.manualGatewayEndpointStore.send(.preflightRequested(
+            host: host,
+            hasTailnetIPv4: Self.hasTailnetIPv4()))
+        guard let result = self.manualGatewayEndpointStore.preflightResult else { return false }
+        self.manualGatewayEndpointStore.send(.preflightResultHandled)
+
+        switch result {
+        case let .blocked(statusText):
+            if let statusText {
+                self.gatewaySetupStatusStore.send(.statusChanged(statusText))
+            }
             return false
+
+        case let .requestLocalNetworkAccess(reason):
+            self.gatewayController.requestLocalNetworkAccess(reason: reason)
+            return true
         }
-        self.gatewayController.requestLocalNetworkAccess(reason: "settings_preflight")
-        return true
     }
 
     func resetOnboarding() {

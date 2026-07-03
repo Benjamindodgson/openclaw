@@ -104,6 +104,7 @@ struct SettingsManualGatewayEndpointFeature {
         var manualGatewayEnabled = false
         var manualGatewayHost = ""
         var manualGatewayTLS = true
+        var preflightResult: GatewayPreflightResult?
 
         func tailnetWarningText(hasTailnetIPv4: Bool) -> String? {
             Self.tailnetWarningText(
@@ -146,6 +147,11 @@ struct SettingsManualGatewayEndpointFeature {
         case request(ManualConnectionRequest)
     }
 
+    enum GatewayPreflightResult: Equatable, Sendable {
+        case blocked(statusText: String?)
+        case requestLocalNetworkAccess(reason: String)
+    }
+
     enum Action: Equatable, Sendable {
         case endpointClearedForOnboardingReset
         case endpointSynced(enabled: Bool, host: String, tls: Bool)
@@ -154,6 +160,8 @@ struct SettingsManualGatewayEndpointFeature {
         case manualGatewayEnabledChanged(Bool)
         case manualGatewayHostChanged(String)
         case manualGatewayTLSChanged(Bool)
+        case preflightRequested(host: String, hasTailnetIPv4: Bool)
+        case preflightResultHandled
         case setupLinkApplied(host: String, tls: Bool)
     }
 
@@ -192,6 +200,25 @@ struct SettingsManualGatewayEndpointFeature {
 
             case .manualConnectionResultHandled:
                 state.manualConnectionResult = nil
+                return .none
+
+            case let .preflightRequested(host, hasTailnetIPv4):
+                state.preflightResult = nil
+                let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else {
+                    state.preflightResult = .blocked(statusText: nil)
+                    return .none
+                }
+                if State.isTailnetHostOrIP(trimmed), !hasTailnetIPv4 {
+                    state.preflightResult = .blocked(
+                        statusText: "Tailscale is off on this device. Turn it on, then try again.")
+                    return .none
+                }
+                state.preflightResult = .requestLocalNetworkAccess(reason: "settings_preflight")
+                return .none
+
+            case .preflightResultHandled:
+                state.preflightResult = nil
                 return .none
 
             case let .manualGatewayEnabledChanged(enabled):

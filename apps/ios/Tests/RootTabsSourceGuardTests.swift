@@ -854,11 +854,12 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.gatewayController.refreshActiveGatewayRegistrationFromSettings()"))
         #expect(actionsSource.contains("self.gatewayController.restartDiscovery()"))
         #expect(actionsSource.contains("await self.appModel.refreshGatewayOverviewIfConnected()"))
-        #expect(actionsSource
-            .contains("self.gatewayController.requestLocalNetworkAccess(reason: \"settings_preflight\")"))
+        #expect(actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
+        #expect(gatewaySetupFeaturesSource
+            .contains("state.preflightResult = .requestLocalNetworkAccess(reason: \"settings_preflight\")"))
         #expect(controllerSource.contains("await self.tcpReachabilityProbe("))
         #expect(controllerSource.contains("Check Tailscale or LAN."))
-        #expect(actionsSource.contains("Tailscale is off on this device. Turn it on, then try again."))
+        #expect(gatewaySetupFeaturesSource.contains("Tailscale is off on this device. Turn it on, then try again."))
         #expect(gatewaySetupFeaturesSource.contains("Run /pair approve in your OpenClaw chat"))
         #expect(actionsSource.contains("self.resetOnboarding()"))
         #expect(actionsSource.contains("self.gatewayController.trustRotatedGatewayCertificate(from: problem)"))
@@ -880,6 +881,9 @@ struct RootTabsSourceGuardTests {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let gatewaySetupFeaturesSource = try String(
+            contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
+            encoding: .utf8)
         let controllerSource = try String(contentsOf: Self.gatewayConnectionControllerSourceURL(), encoding: .utf8)
 
         #expect(appSource.contains("deferDiscoveryUntilLocalNetworkRequest: true"))
@@ -924,8 +928,9 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartFeature"))
         #expect(onboardingStateSource.contains("struct OnboardingQRPhotoImportFeature"))
         #expect(onboardingStateSource.contains(".cancellable(id: CancelID.restart, cancelInFlight: true)"))
-        #expect(actionsSource
-            .contains("self.gatewayController.requestLocalNetworkAccess(reason: \"settings_preflight\")"))
+        #expect(actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
+        #expect(gatewaySetupFeaturesSource
+            .contains("state.preflightResult = .requestLocalNetworkAccess(reason: \"settings_preflight\")"))
     }
 
     @Test func `gateway settings preview matrix covers primary states`() throws {
@@ -1061,6 +1066,28 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)"))
         #expect(!actionsSource.contains("guard !host.isEmpty else"))
         #expect(!actionsSource.contains("guard self.manualPortIsValid else"))
+    }
+
+    @Test func `settings gateway preflight decision is reducer owned`() throws {
+        let gatewaySetupFeaturesSource = try String(
+            contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
+            encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let preflightFunction = try Self.extract(
+            actionsSource,
+            from: "func preflightGateway(host: String) async -> Bool",
+            to: "func resetOnboarding()")
+
+        #expect(gatewaySetupFeaturesSource.contains("enum GatewayPreflightResult: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("case preflightRequested(host: String, hasTailnetIPv4: Bool)"))
+        #expect(gatewaySetupFeaturesSource
+            .contains("state.preflightResult = .requestLocalNetworkAccess(reason: \"settings_preflight\")"))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.preflightRequested("))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.preflightResultHandled)"))
+        #expect(actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
+        #expect(!preflightFunction.contains("SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP"))
+        #expect(!preflightFunction.contains("\"Tailscale is off on this device. Turn it on, then try again.\""))
+        #expect(!preflightFunction.contains("requestLocalNetworkAccess(reason: \"settings_preflight\")"))
     }
 
     @Test func `settings setup auth derivation is reducer owned`() throws {
