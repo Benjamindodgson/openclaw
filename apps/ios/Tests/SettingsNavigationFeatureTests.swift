@@ -149,22 +149,26 @@ struct SettingsNavigationFeatureTests {
             isAppleReviewDemoModeEnabled: false,
             gatewayConnected: true,
             discoveredGatewayCount: 2,
-            discoveryStatusText: "2 gateways found"))
+            discoveryStatusText: "2 gateways found",
+            screenRecordActive: true))
         {
             $0.gatewayConnected = true
             $0.discoveredGatewayCount = 2
             $0.discoveryStatusText = "2 gateways found"
+            $0.screenRecordActive = true
         }
         await store.send(.diagnosticsContextSynced(
             isAppleReviewDemoModeEnabled: true,
             gatewayConnected: false,
             discoveredGatewayCount: 0,
-            discoveryStatusText: "Discovery paused"))
+            discoveryStatusText: "Discovery paused",
+            screenRecordActive: false))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayConnected = false
             $0.discoveredGatewayCount = 0
             $0.discoveryStatusText = "Discovery paused"
+            $0.screenRecordActive = false
         }
     }
 
@@ -208,6 +212,15 @@ struct SettingsNavigationFeatureTests {
         #expect(state.discoveryValue == "2")
         #expect(state.hasDiscoveredGateway)
         #expect(state.discoveryStatusText == "2 gateways found")
+    }
+
+    @Test func `settings diagnostics summarize screen capture state`() {
+        var state = SettingsDiagnosticsFeature.State()
+
+        #expect(state.screenCaptureValue == "idle")
+
+        state.screenRecordActive = true
+        #expect(state.screenCaptureValue == "live")
     }
 
     @Test func `settings appearance syncs persisted preference`() async {

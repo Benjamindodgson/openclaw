@@ -11,6 +11,7 @@ struct SettingsDiagnosticsFeature {
         var issueCount: Int?
         var isAppleReviewDemoModeEnabled = false
         var lastRunText = "Not run"
+        var screenRecordActive = false
 
         var detailText: String {
             "System checks"
@@ -31,6 +32,10 @@ struct SettingsDiagnosticsFeature {
             self.discoveredGatewayCount > 0
         }
 
+        var screenCaptureValue: String {
+            self.screenRecordActive ? "live" : "idle"
+        }
+
         var runValue: String {
             guard let issueCount else { return "pending" }
             return issueCount == 0 ? "pass" : "\(issueCount)"
@@ -42,7 +47,8 @@ struct SettingsDiagnosticsFeature {
             isAppleReviewDemoModeEnabled: Bool,
             gatewayConnected: Bool,
             discoveredGatewayCount: Int,
-            discoveryStatusText: String)
+            discoveryStatusText: String,
+            screenRecordActive: Bool)
         case diagnosticsCompleted(issueCount: Int, lastRunText: String)
     }
 
@@ -55,11 +61,13 @@ struct SettingsDiagnosticsFeature {
                 isAppleReviewDemoModeEnabled,
                 gatewayConnected,
                 discoveredGatewayCount,
-                discoveryStatusText):
+                discoveryStatusText,
+                screenRecordActive):
                 state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
                 state.gatewayConnected = gatewayConnected
                 state.discoveredGatewayCount = discoveredGatewayCount
                 state.discoveryStatusText = discoveryStatusText
+                state.screenRecordActive = screenRecordActive
                 return .none
 
             case let .diagnosticsCompleted(issueCount, lastRunText):
