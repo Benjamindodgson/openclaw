@@ -1144,6 +1144,13 @@ struct SettingsNavigationFeatureTests {
             $0.gatewayTalkConfigLoaded = true
             $0.gatewayTalkApiKeyConfigured = true
         }
+        await store.send(.gatewayTalkDisplayContextSynced(
+            isAppleReviewDemoModeEnabled: true,
+            transportLabel: "Gateway Relay"))
+        {
+            $0.isAppleReviewDemoModeEnabled = true
+            $0.gatewayTalkTransportLabel = "Gateway Relay"
+        }
     }
 
     @Test func `settings talk preferences sync gateway runtime details`() async {
@@ -1173,6 +1180,26 @@ struct SettingsNavigationFeatureTests {
         #expect(SettingsTalkPreferencesFeature.State.talkApiKeyStatus(
             configLoaded: true,
             apiKeyConfigured: false) == "Not configured")
+    }
+
+    @Test func `settings talk preferences summarize gateway config status`() {
+        var state = SettingsTalkPreferencesFeature.State()
+
+        #expect(state.gatewayDiagnosticTalkConfigLoaded == false)
+        #expect(state.gatewayTalkConfigDetail == "Not loaded")
+        #expect(state.gatewayTalkConfigValue == "missing")
+
+        state.gatewayTalkConfigLoaded = true
+        state.gatewayTalkTransportLabel = "Gateway Relay"
+        #expect(state.gatewayDiagnosticTalkConfigLoaded)
+        #expect(state.gatewayTalkConfigDetail == "Gateway Relay")
+        #expect(state.gatewayTalkConfigValue == "loaded")
+
+        state.isAppleReviewDemoModeEnabled = true
+        state.gatewayTalkConfigLoaded = false
+        #expect(state.gatewayDiagnosticTalkConfigLoaded)
+        #expect(state.gatewayTalkConfigDetail == "Demo mode only")
+        #expect(state.gatewayTalkConfigValue == "demo")
     }
 
     @Test func `settings talk preferences summarize gateway runtime details`() {

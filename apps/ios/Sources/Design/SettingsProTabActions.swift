@@ -221,6 +221,9 @@ extension SettingsProTab {
         self.talkPreferencesStore.send(.gatewayTalkConfigSynced(
             configLoaded: self.appModel.talkMode.gatewayTalkConfigLoaded,
             apiKeyConfigured: self.appModel.talkMode.gatewayTalkApiKeyConfigured))
+        self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
+            transportLabel: self.appModel.talkMode.gatewayTalkTransportLabel))
         self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(
             activeModeTitle: self.appModel.talkMode.gatewayTalkActiveModeTitle,
             activeModeSubtitle: self.appModel.talkMode.gatewayTalkActiveModeSubtitle,
@@ -999,7 +1002,7 @@ extension SettingsProTab {
     }
 
     var gatewayDiagnosticTalkConfigLoaded: Bool {
-        self.appModel.isAppleReviewDemoModeEnabled || self.appModel.talkMode.gatewayTalkConfigLoaded
+        self.talkPreferencesStore.gatewayDiagnosticTalkConfigLoaded
     }
 
     var approvalEmptyDetail: String {
@@ -1013,18 +1016,16 @@ extension SettingsProTab {
     }
 
     var gatewayTalkConfigDetail: String {
-        if self.appModel.isAppleReviewDemoModeEnabled { return "Demo mode only" }
-        return self.appModel.talkMode.gatewayTalkTransportLabel
+        self.talkPreferencesStore.gatewayTalkConfigDetail
     }
 
     var gatewayTalkConfigValue: String {
-        if self.appModel.isAppleReviewDemoModeEnabled { return "demo" }
-        return self.appModel.talkMode.gatewayTalkConfigLoaded ? "loaded" : "missing"
+        self.talkPreferencesStore.gatewayTalkConfigValue
     }
 
     var gatewayTalkConfigColor: Color {
-        if self.appModel.isAppleReviewDemoModeEnabled { return .secondary }
-        return self.appModel.talkMode.gatewayTalkConfigLoaded ? OpenClawBrand.ok : .secondary
+        if self.talkPreferencesStore.isAppleReviewDemoModeEnabled { return .secondary }
+        return self.talkPreferencesStore.gatewayTalkConfigLoaded ? OpenClawBrand.ok : .secondary
     }
 
     var gatewayAddress: String {
