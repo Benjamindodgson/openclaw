@@ -78,9 +78,9 @@ extension SettingsProTab {
                 self.diagnosticCheckRow(
                     icon: "mic",
                     title: "Voice Wake",
-                    detail: self.appModel.voiceWake.statusText,
-                    value: self.voiceWakeEnabled ? "on" : "off",
-                    color: self.voiceWakeEnabled ? OpenClawBrand.ok : .secondary)
+                    detail: self.voiceControlStore.voiceWakeStatusText,
+                    value: self.voiceControlStore.voiceWakeValue,
+                    color: self.voiceControlStore.voiceWakeEnabled ? OpenClawBrand.ok : .secondary)
             }
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
@@ -207,7 +207,8 @@ extension SettingsProTab {
     func syncVoiceControlState() {
         self.voiceControlStore.send(.controlsSynced(
             talkEnabled: self.storedTalkEnabled,
-            voiceWakeEnabled: self.storedVoiceWakeEnabled))
+            voiceWakeEnabled: self.storedVoiceWakeEnabled,
+            voiceWakeStatusText: self.appModel.voiceWake.statusText))
     }
 
     func syncTalkPreferencesState() {
