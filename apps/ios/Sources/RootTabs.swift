@@ -191,6 +191,7 @@ struct RootTabs: View {
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
@@ -475,6 +476,7 @@ struct RootTabs: View {
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                    onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
                 SettingsProTab(
@@ -484,6 +486,7 @@ struct RootTabs: View {
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                    onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
         case .gateway:
@@ -495,6 +498,7 @@ struct RootTabs: View {
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
+                onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }
     }
@@ -823,6 +827,13 @@ struct RootTabs: View {
         Store(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature(
                 setupAuthPersistenceClient: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsOnboardingStateStore() -> StoreOf<SettingsOnboardingStateFeature> {
+        Store(initialState: SettingsOnboardingStateFeature.State()) {
+            SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))
         }
     }
 

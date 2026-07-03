@@ -796,6 +796,12 @@ struct SettingsGatewayAutoConnectFeature {
 
 @Reducer
 struct SettingsOnboardingStateFeature {
+    private let resetClientOverride: SettingsOnboardingResetClient?
+
+    init(resetClient: SettingsOnboardingResetClient? = nil) {
+        self.resetClientOverride = resetClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -805,9 +811,8 @@ struct SettingsOnboardingStateFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case completionStateReset
-        case onboardingRequestAdvanced
         case onboardingRequestIDChanged(Int)
+        case onboardingResetRequested(instanceId: String)
         case onboardingStateSynced(
             hasConnectedOnce: Bool,
             onboardingComplete: Bool,
@@ -818,19 +823,21 @@ struct SettingsOnboardingStateFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsOnboardingReset) var dependencyResetClient
+            let resetClient = self.resetClientOverride ?? dependencyResetClient
+
             switch action {
-            case .completionStateReset:
-                state.hasConnectedOnce = false
-                state.onboardingComplete = false
-                return .none
-
-            case .onboardingRequestAdvanced:
-                state.onboardingRequestID += 1
-                return .none
-
             case let .onboardingRequestIDChanged(requestID):
                 state.onboardingRequestID = requestID
                 return .none
+
+            case let .onboardingResetRequested(instanceId):
+                state.hasConnectedOnce = false
+                state.onboardingComplete = false
+                state.onboardingRequestID += 1
+                return .run { _ in
+                    await resetClient.reset(instanceId)
+                }
 
             case let .onboardingStateSynced(hasConnectedOnce, onboardingComplete, onboardingRequestID):
                 state.hasConnectedOnce = hasConnectedOnce
@@ -1225,6 +1232,11 @@ struct SettingsProTab: View {
         {
             SettingsGatewayCredentialsFeature()
         },
+        onboardingStateStore: StoreOf<SettingsOnboardingStateFeature> = Store(
+            initialState: SettingsOnboardingStateFeature.State())
+        {
+            SettingsOnboardingStateFeature()
+        },
         navigationStore: StoreOf<SettingsNavigationFeature> = Store(
             initialState: SettingsNavigationFeature.State())
         {
@@ -1240,6 +1252,7 @@ struct SettingsProTab: View {
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
+        self._onboardingStateStore = State(wrappedValue: onboardingStateStore)
         self._navigationStore = State(wrappedValue: navigationStore)
         self.onRouteChange = onRouteChange
     }
@@ -1567,7 +1580,7 @@ struct SettingsProTab: View {
             }
             .alert("Reset Onboarding?", isPresented: self.resetOnboardingAlertBinding) {
                 Button("Reset", role: .destructive) {
-                    self.resetOnboarding()
+                    Task { await self.resetOnboarding() }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {

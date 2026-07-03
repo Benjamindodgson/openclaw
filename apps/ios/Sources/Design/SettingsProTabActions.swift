@@ -451,16 +451,15 @@ extension SettingsProTab {
         }
     }
 
-    func resetOnboarding() {
+    func resetOnboarding() async {
         self.gatewayConnectionStore.send(.connectionFinished)
         self.gatewaySetupStatusStore.send(.statusChanged(nil))
         self.updateSetupCode("")
         self.disableGatewayAutoConnectForOnboardingReset()
         self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
-        GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
-        self.resetOnboardingCompletionState()
+        await self.onboardingStateStore.send(.onboardingResetRequested(instanceId: self.instanceId)).finish()
+        self.syncStoredOnboardingResetState()
         self.clearManualGatewayEndpointForOnboardingReset()
-        self.advanceOnboardingRequestID()
     }
 
     func retryGatewayConnectionFromProblem() async {
@@ -480,7 +479,7 @@ extension SettingsProTab {
 
     func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
         if problem.suggestsOnboardingReset {
-            self.resetOnboarding()
+            await self.resetOnboarding()
             return
         }
         if problem.canTrustRotatedCertificate {
@@ -710,14 +709,9 @@ extension SettingsProTab {
         self.storedGatewayAutoConnect = false
     }
 
-    func resetOnboardingCompletionState() {
-        self.onboardingStateStore.send(.completionStateReset)
-        self.storedOnboardingComplete = false
-        self.storedHasConnectedOnce = false
-    }
-
-    func advanceOnboardingRequestID() {
-        self.onboardingStateStore.send(.onboardingRequestAdvanced)
+    func syncStoredOnboardingResetState() {
+        self.storedOnboardingComplete = self.onboardingStateStore.onboardingComplete
+        self.storedHasConnectedOnce = self.onboardingStateStore.hasConnectedOnce
         self.storedOnboardingRequestID = self.onboardingStateStore.onboardingRequestID
     }
 
