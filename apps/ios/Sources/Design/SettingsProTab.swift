@@ -1449,7 +1449,7 @@ struct SettingsProTab: View {
                         },
                         onError: { error in
                             self.presentationStore.send(.qrScannerErrorReceived(error))
-                            self.gatewaySetupStatusStore.send(.statusChanged("Scanner error: \(error)"))
+                            self.gatewaySetupStatusStore.send(.qrScannerErrorReceived(error))
                         },
                         onDismiss: {
                             self.presentationStore.send(.qrScannerDismissed)

@@ -614,6 +614,16 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup status records qr scanner errors`() async {
+        let store = TestStore(initialState: SettingsGatewaySetupStatusFeature.State()) {
+            SettingsGatewaySetupStatusFeature()
+        }
+
+        await store.send(.qrScannerErrorReceived("Camera unavailable")) {
+            $0.statusText = "Scanner error: Camera unavailable"
+        }
+    }
+
     @Test func `settings gateway setup status clears messages`() async {
         var initialState = SettingsGatewaySetupStatusFeature.State()
         initialState.statusText = "Setup code applied. Connecting..."
