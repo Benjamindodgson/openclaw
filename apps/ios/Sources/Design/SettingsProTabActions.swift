@@ -374,7 +374,7 @@ extension SettingsProTab {
     func preflightGateway(host: String) async -> Bool {
         let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
-        if Self.isTailnetHostOrIP(trimmed), !Self.hasTailnetIPv4() {
+        if SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(trimmed), !Self.hasTailnetIPv4() {
             self.gatewaySetupStatusStore.send(
                 .statusChanged("Tailscale is off on this device. Turn it on, then try again."))
             return false
@@ -846,9 +846,9 @@ extension SettingsProTab {
     }
 
     var tailnetWarningText: String? {
-        let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !host.isEmpty, Self.isTailnetHostOrIP(host), !Self.hasTailnetIPv4() else { return nil }
-        return "This gateway is on your tailnet. Turn on Tailscale on this device, then tap Connect."
+        SettingsManualGatewayEndpointFeature.State.tailnetWarningText(
+            host: self.manualGatewayHost,
+            hasTailnetIPv4: Self.hasTailnetIPv4())
     }
 
     var shouldShowRealtimeVoicePicker: Bool {

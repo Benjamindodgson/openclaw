@@ -656,6 +656,35 @@ struct SettingsManualGatewayEndpointFeature {
         var manualGatewayEnabled = false
         var manualGatewayHost = ""
         var manualGatewayTLS = true
+
+        func tailnetWarningText(hasTailnetIPv4: Bool) -> String? {
+            Self.tailnetWarningText(
+                host: self.manualGatewayHost,
+                hasTailnetIPv4: hasTailnetIPv4)
+        }
+
+        static func tailnetWarningText(host: String, hasTailnetIPv4: Bool) -> String? {
+            let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, Self.isTailnetHostOrIP(trimmed), !hasTailnetIPv4 else { return nil }
+            return "This gateway is on your tailnet. Turn on Tailscale on this device, then tap Connect."
+        }
+
+        static func isTailnetHostOrIP(_ host: String) -> Bool {
+            let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if trimmed.hasSuffix(".ts.net") || trimmed.hasSuffix(".ts.net.") { return true }
+            return self.isTailnetIPv4(trimmed)
+        }
+
+        static func isTailnetIPv4(_ ip: String) -> Bool {
+            let parts = ip.split(separator: ".")
+            guard parts.count == 4 else { return false }
+            let octets = parts.compactMap { Int($0) }
+            guard octets.count == 4 else { return false }
+            let a = octets[0]
+            let b = octets[1]
+            guard (0...255).contains(a), (0...255).contains(b) else { return false }
+            return a == 100 && b >= 64 && b <= 127
+        }
     }
 
     enum Action: Equatable, Sendable {

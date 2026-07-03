@@ -212,26 +212,9 @@ extension SettingsProTab {
             guard result == 0 else { continue }
             let bytes = buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
             guard let ip = String(bytes: bytes, encoding: .utf8) else { continue }
-            if self.isTailnetIPv4(ip) { return true }
+            if SettingsManualGatewayEndpointFeature.State.isTailnetIPv4(ip) { return true }
         }
         return false
-    }
-
-    static func isTailnetHostOrIP(_ host: String) -> Bool {
-        let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if trimmed.hasSuffix(".ts.net") || trimmed.hasSuffix(".ts.net.") { return true }
-        return self.isTailnetIPv4(trimmed)
-    }
-
-    static func isTailnetIPv4(_ ip: String) -> Bool {
-        let parts = ip.split(separator: ".")
-        guard parts.count == 4 else { return false }
-        let octets = parts.compactMap { Int($0) }
-        guard octets.count == 4 else { return false }
-        let a = octets[0]
-        let b = octets[1]
-        guard (0...255).contains(a), (0...255).contains(b) else { return false }
-        return a == 100 && b >= 64 && b <= 127
     }
 }
 
