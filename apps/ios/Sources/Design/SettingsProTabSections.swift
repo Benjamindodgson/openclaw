@@ -936,7 +936,10 @@ extension SettingsProTab {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
                 Toggle("Show Talk Control", isOn: self.$talkButtonEnabled)
-                TextField("Default Share Instruction", text: self.$defaultShareInstruction, axis: .vertical)
+                TextField(
+                    "Default Share Instruction",
+                    text: self.defaultShareInstructionBinding,
+                    axis: .vertical)
                     .lineLimit(2...5)
                     .textInputAutocapitalization(.sentences)
                     .textFieldStyle(.roundedBorder)

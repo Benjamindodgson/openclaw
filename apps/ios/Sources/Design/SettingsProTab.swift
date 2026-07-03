@@ -311,6 +311,37 @@ struct SettingsAgentSelectionFeature {
     }
 }
 
+@Reducer
+struct SettingsShareInstructionFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var defaultShareInstruction = ""
+    }
+
+    enum Action: Equatable, Sendable {
+        case defaultShareInstructionChanged(String)
+        case defaultShareInstructionLoaded(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .defaultShareInstructionChanged(instruction):
+                state.defaultShareInstruction = instruction
+                return .none
+
+            case let .defaultShareInstructionLoaded(instruction):
+                state.defaultShareInstruction = instruction
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -351,7 +382,6 @@ struct SettingsProTab: View {
     @State var setupStatusText: String?
     @State var stagedGatewaySetupLink: GatewayConnectDeepLink?
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
-    @State var defaultShareInstruction = ""
     @State var suppressCredentialPersist = false
     @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
         PushEnrollmentConsentFeature()
@@ -363,6 +393,12 @@ struct SettingsProTab: View {
         initialState: SettingsAgentSelectionFeature.State())
     {
         SettingsAgentSelectionFeature()
+    }
+
+    @State var shareInstructionStore: StoreOf<SettingsShareInstructionFeature> = Store(
+        initialState: SettingsShareInstructionFeature.State())
+    {
+        SettingsShareInstructionFeature()
     }
 
     @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
@@ -525,7 +561,7 @@ struct SettingsProTab: View {
                     self.stagedGatewaySetupLink = nil
                 }
             }
-            .onChange(of: self.defaultShareInstruction) { _, newValue in
+            .onChange(of: self.shareInstructionStore.defaultShareInstruction) { _, newValue in
                 ShareToAgentSettings.saveDefaultInstruction(newValue)
             }
             .onChange(of: self.appModel.gatewaySetupRequestID) { _, _ in
@@ -626,6 +662,12 @@ struct SettingsProTab: View {
 }
 
 extension SettingsProTab {
+    var defaultShareInstructionBinding: Binding<String> {
+        Binding(
+            get: { self.shareInstructionStore.defaultShareInstruction },
+            set: { self.shareInstructionStore.send(.defaultShareInstructionChanged($0)) })
+    }
+
     var agentSelectionBinding: Binding<String> {
         Binding(
             get: { self.agentSelectionStore.selectedAgentPickerId },
