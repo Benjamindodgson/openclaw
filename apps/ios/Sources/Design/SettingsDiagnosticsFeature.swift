@@ -30,12 +30,20 @@ struct SettingsDiagnosticsFeature {
             "\(self.discoveredGatewayCount)"
         }
 
+        var discoveryColor: Color {
+            self.hasDiscoveredGateway ? OpenClawBrand.accent : .secondary
+        }
+
         var hasDiscoveredGateway: Bool {
             self.discoveredGatewayCount > 0
         }
 
         var screenCaptureValue: String {
             self.screenRecordActive ? "live" : "idle"
+        }
+
+        var screenCaptureColor: Color {
+            self.screenRecordActive ? OpenClawBrand.ok : .secondary
         }
 
         var runValue: String {

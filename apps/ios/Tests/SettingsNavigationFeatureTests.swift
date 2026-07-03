@@ -307,11 +307,13 @@ struct SettingsNavigationFeatureTests {
         var state = SettingsDiagnosticsFeature.State()
 
         #expect(state.discoveryValue == "0")
+        #expect(state.discoveryColor == .secondary)
         #expect(state.hasDiscoveredGateway == false)
 
         state.discoveredGatewayCount = 2
         state.discoveryStatusText = "2 gateways found"
         #expect(state.discoveryValue == "2")
+        #expect(state.discoveryColor == OpenClawBrand.accent)
         #expect(state.hasDiscoveredGateway)
         #expect(state.discoveryStatusText == "2 gateways found")
     }
@@ -320,9 +322,11 @@ struct SettingsNavigationFeatureTests {
         var state = SettingsDiagnosticsFeature.State()
 
         #expect(state.screenCaptureValue == "idle")
+        #expect(state.screenCaptureColor == .secondary)
 
         state.screenRecordActive = true
         #expect(state.screenCaptureValue == "live")
+        #expect(state.screenCaptureColor == OpenClawBrand.ok)
     }
 
     @Test func `settings appearance syncs persisted preference`() async {
