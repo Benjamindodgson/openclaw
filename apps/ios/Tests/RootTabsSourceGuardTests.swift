@@ -387,7 +387,7 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `workboard uses real gateway methods`() throws {
-        let source = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let source = try Self.iPadWorkboardSource()
 
         #expect(source.contains("workboard.cards.list"))
         #expect(source.contains("workboard.cards.create"))
@@ -402,51 +402,61 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `workboard create action surfaces unavailable reasons`() throws {
-        let source = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let source = try Self.iPadWorkboardSource()
         let createFunction = try Self.extract(
             source,
             from: "private func createCard() async",
             to: "private func move(_ card: IPadWorkboardCard, to status: String) async")
 
-        #expect(source.contains("@Reducer\nstruct IPadWorkboardPresentationFeature"))
+        #expect(source.contains("struct IPadWorkboardClient"))
+        #expect(source.contains("@Reducer\nstruct IPadWorkboardFeature"))
+        #expect(source.contains("enum IPadWorkboardStoreFactory"))
         #expect(!source.contains("@State private var selectedStatus"))
         #expect(!source.contains("@State private var selectedBoardID"))
         #expect(!source.contains("@State private var query"))
         #expect(!source.contains("@State private var presentedSheet"))
+        #expect(!source.contains("@State private var cards"))
+        #expect(!source.contains("@State private var statuses"))
+        #expect(!source.contains("@State private var isLoading"))
+        #expect(!source.contains("@State private var busyCardID"))
         #expect(source.contains("private var createUnavailableMessage: String?"))
         #expect(source.contains("Enter a title to create a card."))
         #expect(source.contains("Card creation is already in progress."))
         #expect(source.contains("private func newCardButton(expands: Bool) -> some View"))
         #expect(source.contains("private func beginCreateCard()"))
-        #expect(source.contains("self.presentationStore.send(.beginCreateCardTapped)"))
+        #expect(source.contains("self.store.send(.beginCreateCardTapped)"))
         #expect(source.contains("self.newCardButton(expands: false)"))
         #expect(source.contains("self.newCardButton(expands: true)"))
         #expect(source.contains("Label(\"New Card\", systemImage: \"plus\")"))
         #expect(source.contains(".accessibilityHint(\"Opens card title and notes entry\")"))
         #expect(source.contains(".accessibilityHint(self.createUnavailableMessage ?? \"Creates a workboard card\")"))
         #expect(source.contains("await self.createCard()"))
-        #expect(source.contains(".disabled(self.presentationStore.isCreatingCard)"))
+        #expect(source.contains(".disabled(self.store.isCreatingCard)"))
         #expect(!source.contains("Button(\"Create\")"))
         #expect(!source.contains("TextField(\"New card\""))
         #expect(!source.contains(".disabled(!self.canWrite || self.draftTitle"))
         #expect(createFunction
-            .contains("self.presentationStore.send(.createValidationFailed(createUnavailableMessage))"))
-        #expect(createFunction.contains("self.presentationStore.send(.createStarted)"))
-        #expect(createFunction.contains("self.presentationStore.send(.createSucceeded)"))
-        #expect(createFunction.contains("self.presentationStore.send(.createFailed(Self.message(for: error)))"))
+            .contains("self.store.send(.createRequested(canRead: self.canRead, canWrite: self.canWrite))"))
+        #expect(source.contains("case createRequested(canRead: Bool, canWrite: Bool)"))
+        #expect(source.contains("case createResponse(Result<IPadWorkboardCard, IPadWorkboardError>)"))
     }
 
     @Test func `task scope controls send real gateway params`() throws {
         let source = try Self.iPadTaskFeatureScreensSource()
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let phoneSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
 
         #expect(source.contains("private var boardScopeMenu: some View"))
         #expect(source.contains("method: \"workboard.boards.list\""))
-        #expect(source.contains("IPadWorkboardListParams(boardId: selectedBoardParam)"))
-        #expect(source.contains("boardId: selectedBoardParam"))
+        #expect(source.contains("let boardID = state.selectedBoardParam"))
+        #expect(source.contains("IPadWorkboardListParams(boardId: boardID)"))
+        #expect(source.contains("boardId: state.selectedBoardParam"))
         #expect(source
             .matches(
-                of: /method: "workboard\.cards\.dispatch"[\s\S]*?IPadWorkboardListParams\(boardId: selectedBoardParam\)/)
+                of: /method: "workboard\.cards\.dispatch"[\s\S]*?IPadWorkboardListParams\(boardId: boardID\)/)
             .count == 1)
+        #expect(rootSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))
+        #expect(phoneSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))
         #expect(source.contains("private var agentScopeMenu: some View"))
         #expect(source.contains("IPadSkillProposalListParams(agentId: agentID)"))
         #expect(source.contains("agentId: agentID"))
@@ -471,7 +481,7 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains(".sheet(item: self.presentedProposalRouteBinding)"))
         #expect(source.contains("private func selectProposal("))
         #expect(!source.contains("proposalSheetPresented"))
-        #expect(source.contains("self.presentationStore.send(.cardSheetPresented(card))"))
+        #expect(source.contains("self.store.send(.cardSheetPresented(card))"))
         #expect(!source.contains("Label(\"Gateway\", systemImage: \"network\")"))
         #expect(!source.contains("Button(\"Gateway\")"))
         #expect(!source.contains("actionTitle: self.canRead ? nil : \"Gateway\""))
@@ -944,8 +954,18 @@ struct RootTabsSourceGuardTests {
     private static func iPadTaskFeatureScreensSource() throws -> String {
         try [
             self.iPadWorkboardScreenSourceURL(),
+            self.iPadWorkboardFeatureSourceURL(),
             self.iPadSkillWorkshopScreenSourceURL(),
             self.iPadSidebarFeatureScreensSourceURL(),
+        ]
+            .map { try String(contentsOf: $0, encoding: .utf8) }
+            .joined(separator: "\n")
+    }
+
+    private static func iPadWorkboardSource() throws -> String {
+        try [
+            self.iPadWorkboardScreenSourceURL(),
+            self.iPadWorkboardFeatureSourceURL(),
         ]
             .map { try String(contentsOf: $0, encoding: .utf8) }
             .joined(separator: "\n")
@@ -956,6 +976,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/IPadWorkboardScreen.swift")
+    }
+
+    private static func iPadWorkboardFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/IPadWorkboardFeature.swift")
     }
 
     private static func iPadSkillWorkshopScreenSourceURL() -> URL {
