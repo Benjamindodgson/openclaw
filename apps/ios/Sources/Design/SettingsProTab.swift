@@ -255,6 +255,39 @@ struct SettingsGatewaySetupStatusFeature {
 }
 
 @Reducer
+struct SettingsGatewaySetupLinkFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var stagedGatewaySetupLink: GatewayConnectDeepLink?
+    }
+
+    enum Action: Equatable, Sendable {
+        case setupCodeChanged(String)
+        case setupLinkStaged(GatewayConnectDeepLink?)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .setupCodeChanged(setupCode):
+                if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    state.stagedGatewaySetupLink = nil
+                }
+                return .none
+
+            case let .setupLinkStaged(link):
+                state.stagedGatewaySetupLink = link
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct SettingsLocationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -493,7 +526,6 @@ struct SettingsProTab: View {
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
     @State var gatewayToken = ""
     @State var gatewayPassword = ""
-    @State var stagedGatewaySetupLink: GatewayConnectDeepLink?
     @State var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
     @State var suppressCredentialPersist = false
     @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
@@ -542,6 +574,12 @@ struct SettingsProTab: View {
         initialState: SettingsGatewaySetupStatusFeature.State())
     {
         SettingsGatewaySetupStatusFeature()
+    }
+
+    @State var gatewaySetupLinkStore: StoreOf<SettingsGatewaySetupLinkFeature> = Store(
+        initialState: SettingsGatewaySetupLinkFeature.State())
+    {
+        SettingsGatewaySetupLinkFeature()
     }
 
     @State var locationStore: StoreOf<SettingsLocationFeature> = Store(
@@ -691,9 +729,7 @@ struct SettingsProTab: View {
                 self.persistGatewayPassword(newValue)
             }
             .onChange(of: self.setupCode) { _, newValue in
-                if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    self.stagedGatewaySetupLink = nil
-                }
+                self.gatewaySetupLinkStore.send(.setupCodeChanged(newValue))
             }
             .onChange(of: self.shareInstructionStore.defaultShareInstruction) { _, newValue in
                 ShareToAgentSettings.saveDefaultInstruction(newValue)
@@ -802,6 +838,10 @@ extension SettingsProTab {
 
     var setupStatusText: String? {
         self.gatewaySetupStatusStore.statusText
+    }
+
+    var stagedGatewaySetupLink: GatewayConnectDeepLink? {
+        self.gatewaySetupLinkStore.stagedGatewaySetupLink
     }
 
     var defaultShareInstructionBinding: Binding<String> {
