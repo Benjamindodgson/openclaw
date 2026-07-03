@@ -1061,6 +1061,10 @@ extension SettingsProTab {
         self.diagnosticsStore.healthValue
     }
 
+    var diagnosticsHealthColor: Color {
+        self.diagnosticsStore.healthColor
+    }
+
     var diagnosticsRunValue: String {
         self.diagnosticsStore.runValue
     }

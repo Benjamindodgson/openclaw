@@ -460,7 +460,7 @@ extension SettingsProTab {
                 title: "Health Check",
                 detail: "Run app, permission, and gateway-adjacent checks without editing setup.",
                 value: self.diagnosticsHealthValue,
-                color: self.gatewayDiagnosticConnected ? OpenClawBrand.ok : OpenClawBrand.warn)
+                color: self.diagnosticsHealthColor)
 
             ProCard(radius: SettingsLayout.cardRadius) {
                 self.gatewayActionButton(
