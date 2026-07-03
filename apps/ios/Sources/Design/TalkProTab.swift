@@ -83,6 +83,7 @@ struct TalkProTab: View {
             isSpeaking: self.appModel.talkMode.isSpeaking,
             isUserSpeechDetected: self.appModel.talkMode.isUserSpeechDetected,
             permissionState: self.appModel.talkMode.gatewayTalkPermissionState,
+            voiceModeTitle: self.appModel.talkMode.gatewayTalkVoiceModeTitle,
             voiceModeSubtitle: self.appModel.talkMode.gatewayTalkVoiceModeSubtitle,
             agentName: self.appModel.chatAgentName)
     }
@@ -157,7 +158,7 @@ struct TalkProTab: View {
     private var header: some View {
         OpenClawAdaptiveHeaderRow(
             title: "Talk",
-            subtitle: self.headerSubtitle,
+            subtitle: self.state.headerSubtitle,
             titleFont: .system(size: 30, weight: .bold),
             subtitleFont: .caption.weight(.medium),
             subtitleLineLimit: 1)
@@ -257,14 +258,6 @@ struct TalkProTab: View {
     private var fallbackIssue: TalkRuntimeIssue? {
         guard self.gatewayConnected else { return nil }
         return self.appModel.talkMode.gatewayTalkCurrentFallbackIssue
-    }
-
-    private var headerSubtitle: String {
-        let mode = self.appModel.talkMode.gatewayTalkVoiceModeTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        let agent = self.appModel.chatAgentName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if mode.isEmpty || mode == "Not loaded" { return agent.isEmpty ? "Realtime voice" : agent }
-        if agent.isEmpty { return mode }
-        return "\(agent) • \(mode)"
     }
 
     private func alignPersistedTalkState() {
@@ -373,6 +366,7 @@ struct TalkProState: Equatable {
     let isSpeaking: Bool
     let isUserSpeechDetected: Bool
     let permissionState: TalkGatewayPermissionState
+    let voiceModeTitle: String
     let voiceModeSubtitle: String?
     let agentName: String
 
@@ -509,6 +503,14 @@ struct TalkProState: Equatable {
         default:
             Color(uiColor: .systemBlue)
         }
+    }
+
+    var headerSubtitle: String {
+        let mode = self.voiceModeTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let agent = self.agentName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if mode.isEmpty || mode == "Not loaded" { return agent.isEmpty ? "Realtime voice" : agent }
+        if agent.isEmpty { return mode }
+        return "\(agent) • \(mode)"
     }
 
     var heroSubtitle: String {
