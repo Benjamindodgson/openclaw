@@ -358,6 +358,58 @@ struct OnboardingStatusFeature {
 }
 
 @Reducer
+struct OnboardingCredentialsFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var gatewayPassword = ""
+        var gatewayToken = ""
+
+        var hasGatewayPassword: Bool {
+            !self.gatewayPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+
+        var hasGatewayToken: Bool {
+            !self.gatewayToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case credentialsLoaded(token: String, password: String)
+        case gatewayPasswordChanged(String)
+        case gatewayTokenChanged(String)
+        case reset
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .credentialsLoaded(token, password):
+                state.gatewayToken = token
+                state.gatewayPassword = password
+                return .none
+
+            case let .gatewayPasswordChanged(password):
+                state.gatewayPassword = password
+                return .none
+
+            case let .gatewayTokenChanged(token):
+                state.gatewayToken = token
+                return .none
+
+            case .reset:
+                state.gatewayToken = ""
+                state.gatewayPassword = ""
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct OnboardingPresentationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
