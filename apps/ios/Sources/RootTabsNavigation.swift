@@ -330,6 +330,72 @@ struct RootPresentationFeature {
     }
 }
 
+@Reducer
+struct RootSidebarFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var isVisible: Bool
+        var userOverridden: Bool
+        var layoutMode: RootTabs.SidebarLayoutMode
+        var didResolveLayout: Bool
+
+        init(initialVisibility: Bool? = nil) {
+            self.isVisible = initialVisibility ?? false
+            self.userOverridden = initialVisibility != nil
+            self.layoutMode = .split
+            self.didResolveLayout = false
+        }
+
+        static func preferredVisibility(layoutMode: RootTabs.SidebarLayoutMode) -> Bool {
+            layoutMode == .split
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case layoutModeResolved(RootTabs.SidebarLayoutMode, force: Bool)
+        case showRequested
+        case hideRequested
+        case visibilityChanged(Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .layoutModeResolved(layoutMode, force):
+                let previousLayoutMode = state.layoutMode
+                let didResolvePreviousLayout = state.didResolveLayout
+                let layoutModeDidChange = layoutMode != previousLayoutMode
+                state.didResolveLayout = true
+                state.layoutMode = layoutMode
+                if layoutModeDidChange && didResolvePreviousLayout {
+                    state.userOverridden = false
+                }
+                guard force || !state.userOverridden else { return .none }
+                state.isVisible = State.preferredVisibility(layoutMode: layoutMode)
+                return .none
+
+            case .showRequested:
+                state.userOverridden = true
+                state.isVisible = true
+                return .none
+
+            case .hideRequested:
+                state.userOverridden = true
+                state.isVisible = false
+                return .none
+
+            case let .visibilityChanged(isVisible):
+                state.isVisible = isVisible
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 extension RootTabs {
     private static var sidebarPersistentWidthThreshold: CGFloat {
         980

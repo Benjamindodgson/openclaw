@@ -30,10 +30,12 @@ struct RootTabs: View {
     // Embedded Settings rows push onto the sidebar stack; clear it before
     // changing sidebar roots so stale settings detail screens cannot survive.
     @State private var sidebarNavigationPath: [SettingsRoute] = []
-    @State private var isSidebarVisible: Bool = Self.initialSidebarVisibility ?? false
-    @State private var sidebarVisibilityUserOverridden: Bool = Self.initialSidebarVisibility != nil
-    @State private var isSidebarDrawerLayout: Bool = false
-    @State private var didResolveSidebarLayout: Bool = false
+    @State private var sidebarStore: StoreOf<RootSidebarFeature> = Store(
+        initialState: RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility))
+    {
+        RootSidebarFeature()
+    }
+
     @State private var launchStore: StoreOf<RootLaunchFeature> = Store(
         initialState: RootLaunchFeature.State())
     {
@@ -973,6 +975,14 @@ struct RootTabs: View {
 }
 
 extension RootTabs {
+    private var isSidebarVisible: Bool {
+        self.sidebarStore.isVisible
+    }
+
+    private var isSidebarDrawerLayout: Bool {
+        self.sidebarStore.layoutMode == .drawer
+    }
+
     private var sidebarOverview: some View {
         CommandCenterTab(
             ownsNavigationStack: false,
@@ -1031,38 +1041,24 @@ extension RootTabs {
     }
 
     private func showSidebar() {
-        self.sidebarVisibilityUserOverridden = true
         withAnimation(.easeInOut(duration: 0.22)) {
-            self.setSidebarVisible(true)
+            _ = self.sidebarStore.send(.showRequested)
         }
     }
 
     private func hideSidebar() {
-        self.sidebarVisibilityUserOverridden = true
         withAnimation(.easeInOut(duration: 0.22)) {
-            self.setSidebarVisible(false)
+            _ = self.sidebarStore.send(.hideRequested)
         }
     }
 
     private func updateSidebarLayout(containerSize: CGSize, force: Bool) {
         let layoutMode = Self.sidebarLayoutMode(containerSize: containerSize)
-        let previousLayoutMode: SidebarLayoutMode = self.isSidebarDrawerLayout ? .drawer : .split
-        let didResolvePreviousLayout = self.didResolveSidebarLayout
-        let layoutModeDidChange = layoutMode != previousLayoutMode
-        self.didResolveSidebarLayout = true
-        self.isSidebarDrawerLayout = layoutMode == .drawer
-        if layoutModeDidChange && didResolvePreviousLayout {
-            self.sidebarVisibilityUserOverridden = false
-        }
-        guard force || !self.sidebarVisibilityUserOverridden else { return }
-
-        let preferredVisibility = Self.preferredSidebarVisibility(layoutMode: layoutMode)
-        guard self.isSidebarVisible != preferredVisibility else { return }
-        self.setSidebarVisible(preferredVisibility)
+        self.sidebarStore.send(.layoutModeResolved(layoutMode, force: force))
     }
 
     private func setSidebarVisible(_ isVisible: Bool) {
-        self.isSidebarVisible = isVisible
+        self.sidebarStore.send(.visibilityChanged(isVisible))
     }
 
     private func homeCanvasBadge(for agent: AgentSummary) -> String {
