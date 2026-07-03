@@ -148,19 +148,23 @@ struct SettingsNavigationFeatureTests {
         await store.send(.diagnosticsContextSynced(
             isAppleReviewDemoModeEnabled: false,
             gatewayConnected: true,
-            discoveredGatewayCount: 2))
+            discoveredGatewayCount: 2,
+            discoveryStatusText: "2 gateways found"))
         {
             $0.gatewayConnected = true
             $0.discoveredGatewayCount = 2
+            $0.discoveryStatusText = "2 gateways found"
         }
         await store.send(.diagnosticsContextSynced(
             isAppleReviewDemoModeEnabled: true,
             gatewayConnected: false,
-            discoveredGatewayCount: 0))
+            discoveredGatewayCount: 0,
+            discoveryStatusText: "Discovery paused"))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayConnected = false
             $0.discoveredGatewayCount = 0
+            $0.discoveryStatusText = "Discovery paused"
         }
     }
 
@@ -191,6 +195,19 @@ struct SettingsNavigationFeatureTests {
         state.isAppleReviewDemoModeEnabled = true
         state.gatewayConnected = false
         #expect(state.healthValue == "demo")
+    }
+
+    @Test func `settings diagnostics summarize discovery state`() {
+        var state = SettingsDiagnosticsFeature.State()
+
+        #expect(state.discoveryValue == "0")
+        #expect(state.hasDiscoveredGateway == false)
+
+        state.discoveredGatewayCount = 2
+        state.discoveryStatusText = "2 gateways found"
+        #expect(state.discoveryValue == "2")
+        #expect(state.hasDiscoveredGateway)
+        #expect(state.discoveryStatusText == "2 gateways found")
     }
 
     @Test func `settings appearance syncs persisted preference`() async {

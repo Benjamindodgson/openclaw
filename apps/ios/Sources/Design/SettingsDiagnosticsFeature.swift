@@ -6,6 +6,7 @@ struct SettingsDiagnosticsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var discoveredGatewayCount = 0
+        var discoveryStatusText = "Discovery idle"
         var gatewayConnected = false
         var issueCount: Int?
         var isAppleReviewDemoModeEnabled = false
@@ -22,6 +23,14 @@ struct SettingsDiagnosticsFeature {
             return "partial"
         }
 
+        var discoveryValue: String {
+            "\(self.discoveredGatewayCount)"
+        }
+
+        var hasDiscoveredGateway: Bool {
+            self.discoveredGatewayCount > 0
+        }
+
         var runValue: String {
             guard let issueCount else { return "pending" }
             return issueCount == 0 ? "pass" : "\(issueCount)"
@@ -32,7 +41,8 @@ struct SettingsDiagnosticsFeature {
         case diagnosticsContextSynced(
             isAppleReviewDemoModeEnabled: Bool,
             gatewayConnected: Bool,
-            discoveredGatewayCount: Int)
+            discoveredGatewayCount: Int,
+            discoveryStatusText: String)
         case diagnosticsCompleted(issueCount: Int, lastRunText: String)
     }
 
@@ -44,10 +54,12 @@ struct SettingsDiagnosticsFeature {
             case let .diagnosticsContextSynced(
                 isAppleReviewDemoModeEnabled,
                 gatewayConnected,
-                discoveredGatewayCount):
+                discoveredGatewayCount,
+                discoveryStatusText):
                 state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
                 state.gatewayConnected = gatewayConnected
                 state.discoveredGatewayCount = discoveredGatewayCount
+                state.discoveryStatusText = discoveryStatusText
                 return .none
 
             case let .diagnosticsCompleted(issueCount, lastRunText):
