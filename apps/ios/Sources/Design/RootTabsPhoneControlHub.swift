@@ -145,7 +145,8 @@ struct RootTabsPhoneControlHub: View {
                 showsHeaderMark: false,
                 openChat: { self.openPhoneRootDestination(.chat) },
                 openSettings: { self.openPhoneRootDestination(.gateway) },
-                openSessions: { self.navigationPath.append(.sessions) })
+                openSessions: { self.navigationPath.append(.sessions) },
+                recentSessionsStore: CommandCenterRecentSessionsStoreFactory.live(appModel: self.appModel))
         case .activity:
             IPadActivityScreen(
                 headerLeadingAction: self.phoneDetailBackAction,

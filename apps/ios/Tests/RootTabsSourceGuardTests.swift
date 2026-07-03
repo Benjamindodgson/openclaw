@@ -141,9 +141,14 @@ struct RootTabsSourceGuardTests {
             rootSource,
             from: "private var sidebarDetail: some View",
             to: "private var sidebarDetailNavigationShell: some View")
+        let sidebarOverview = try Self.extract(
+            rootSource,
+            from: "private var sidebarOverview: some View",
+            to: "private func selectSidebarDestination")
 
         #expect(sidebarDetail.contains("headerTitle: \"Chat\""))
-        #expect(sidebarDetail.contains("headerTitle: \"Overview\""))
+        #expect(sidebarDetail.contains("self.sidebarOverview"))
+        #expect(sidebarOverview.contains("headerTitle: \"Overview\""))
         #expect(sidebarDetail.contains("headerTitle: \"Agents\""))
         #expect(sidebarDetail.contains("headerTitle: \"Instances\""))
         #expect(!sidebarDetail.contains("headerTitle: \"Nodes\""))

@@ -415,14 +415,7 @@ struct RootTabs: View {
                 openSettings: { self.selectSidebarDestination(.gateway) },
                 openVoiceSettings: { self.selectSettingsRoute(.voice) })
         case .overview:
-            CommandCenterTab(
-                ownsNavigationStack: false,
-                headerTitle: "Overview",
-                headerLeadingAction: self.sidebarHeaderLeadingAction,
-                showsHeaderMark: false,
-                openChat: { self.selectSidebarDestination(.chat) },
-                openSettings: { self.selectSidebarDestination(.gateway) },
-                openSessions: { self.selectSidebarDestination(.sessions) })
+            self.sidebarOverview
         case .activity:
             IPadActivityScreen(
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
@@ -989,6 +982,18 @@ struct RootTabs: View {
 }
 
 extension RootTabs {
+    private var sidebarOverview: some View {
+        CommandCenterTab(
+            ownsNavigationStack: false,
+            headerTitle: "Overview",
+            headerLeadingAction: self.sidebarHeaderLeadingAction,
+            showsHeaderMark: false,
+            openChat: { self.selectSidebarDestination(.chat) },
+            openSettings: { self.selectSidebarDestination(.gateway) },
+            openSessions: { self.selectSidebarDestination(.sessions) },
+            recentSessionsStore: CommandCenterRecentSessionsStoreFactory.live(appModel: self.appModel))
+    }
+
     private func selectSidebarDestination(_ destination: SidebarDestination) {
         self.sidebarNavigationPath.removeAll()
         if destination.settingsRoute != .notifications {
