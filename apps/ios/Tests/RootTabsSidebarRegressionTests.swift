@@ -62,6 +62,7 @@ struct RootTabsSidebarRegressionTests {
 
     @Test func `sidebar selection resets embedded settings navigation path`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let sidebarDetail = try Self.extract(
             source,
             from: "private var sidebarDetail: some View",
@@ -74,14 +75,19 @@ struct RootTabsSidebarRegressionTests {
             source,
             from: "private func selectSidebarDestination(_ destination: SidebarDestination)",
             to: "private func showSidebar()")
-        let resetRange = try #require(selection.range(of: "self.sidebarNavigationPath.removeAll()"))
+        let reducer = try Self.extract(
+            navigationSource,
+            from: "struct RootNavigationSelectionFeature",
+            to: "extension RootTabs")
+        let resetRange = try #require(reducer.range(of: "state.sidebarNavigationPath.removeAll()"))
         let destinationRange = try #require(
-            selection.range(of: "self.navigationStore.send(.sidebarDestinationSelected(destination))"))
+            reducer.range(of: "state.selectedSidebarDestination = destination"))
 
-        #expect(source.contains("@State private var sidebarNavigationPath: [SettingsRoute] = []"))
-        #expect(navigationShell.contains("NavigationStack(path: self.$sidebarNavigationPath)"))
+        #expect(navigationSource.contains("var sidebarNavigationPath: [SettingsRoute]"))
+        #expect(navigationShell.contains("NavigationStack(path: self.sidebarNavigationPathBinding)"))
         #expect(sidebarDetail.contains("case .settings:"))
         #expect(sidebarDetail.contains("ownsNavigationStack: false"))
+        #expect(selection.contains("self.navigationStore.send(.sidebarDestinationSelected(destination))"))
         #expect(resetRange.lowerBound < destinationRange.lowerBound)
     }
 
