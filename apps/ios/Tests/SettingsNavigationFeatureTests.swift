@@ -594,6 +594,16 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway setup status records setup connection start`() async {
+        let store = TestStore(initialState: SettingsGatewaySetupStatusFeature.State()) {
+            SettingsGatewaySetupStatusFeature()
+        }
+
+        await store.send(.setupConnectionStarted) {
+            $0.statusText = "Setup code applied. Connecting..."
+        }
+    }
+
     @Test func `settings gateway setup status clears messages`() async {
         var initialState = SettingsGatewaySetupStatusFeature.State()
         initialState.statusText = "Setup code applied. Connecting..."

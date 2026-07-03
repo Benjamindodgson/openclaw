@@ -21,6 +21,7 @@ struct SettingsGatewaySetupStatusFeature {
 
     enum Action: Equatable, Sendable {
         case gatewayStatusSynced(problemMessage: String?, gatewayStatusText: String)
+        case setupConnectionStarted
         case statusChanged(String?)
     }
 
@@ -32,6 +33,10 @@ struct SettingsGatewaySetupStatusFeature {
             case let .gatewayStatusSynced(problemMessage, gatewayStatusText):
                 state.gatewayProblemMessage = problemMessage
                 state.gatewayStatusText = gatewayStatusText
+                return .none
+
+            case .setupConnectionStarted:
+                state.statusText = Self.setupConnectionStartedStatusText
                 return .none
 
             case let .statusChanged(statusText):
@@ -93,6 +98,8 @@ struct SettingsGatewaySetupStatusFeature {
             || lower.hasPrefix("qr loaded. connecting to ")
             || lower == "checking gateway reachability..."
     }
+
+    private static let setupConnectionStartedStatusText = "Setup code applied. Connecting..."
 }
 
 @Reducer

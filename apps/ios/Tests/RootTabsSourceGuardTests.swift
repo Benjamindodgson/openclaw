@@ -1014,6 +1014,23 @@ struct RootTabsSourceGuardTests {
         #expect(!stagingFunction.contains("Setup link loaded for \\(link.host):\\(link.port)"))
     }
 
+    @Test func `settings setup connection status is reducer owned`() throws {
+        let gatewaySetupFeaturesSource = try String(
+            contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
+            encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let applyFunction = try Self.extract(
+            actionsSource,
+            from: "func applySetupCodeAndConnect() async",
+            to: "func applyPendingGatewaySetupLinkIfNeeded()")
+
+        #expect(gatewaySetupFeaturesSource.contains("case setupConnectionStarted"))
+        #expect(gatewaySetupFeaturesSource
+            .contains("private static let setupConnectionStartedStatusText = \"Setup code applied. Connecting...\""))
+        #expect(applyFunction.contains("self.gatewaySetupStatusStore.send(.setupConnectionStarted)"))
+        #expect(!applyFunction.contains("Setup code applied. Connecting..."))
+    }
+
     @Test func `scanner setup code results are reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
