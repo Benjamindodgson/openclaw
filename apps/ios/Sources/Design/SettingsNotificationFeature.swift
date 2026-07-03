@@ -14,16 +14,22 @@ struct SettingsNotificationAuthorizationResult: Equatable {
 }
 
 struct SettingsNotificationRegistrationClient {
+    var openNotificationSettings: @MainActor @Sendable () -> Void
     var registerForRemoteNotifications: @MainActor @Sendable () -> Void
 }
 
 extension SettingsNotificationRegistrationClient: DependencyKey {
     static let liveValue = SettingsNotificationRegistrationClient(
+        openNotificationSettings: {
+            guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else { return }
+            UIApplication.shared.open(url)
+        },
         registerForRemoteNotifications: {
             UIApplication.shared.registerForRemoteNotifications()
         })
 
     static let testValue = SettingsNotificationRegistrationClient(
+        openNotificationSettings: {},
         registerForRemoteNotifications: {})
 }
 
@@ -153,6 +159,7 @@ struct SettingsNotificationFeature {
         case authorizationRequestFinished(SettingsNotificationAuthorizationResult)
         case authorizationRequestRequested
         case authorizationRequestResultHandled
+        case notificationSettingsOpenRequested
         case relayConfigSynced(usesOpenClawHostedRelay: Bool, hostedRelayHost: String?)
         case remoteRegistrationRequested(disclosureAccepted: Bool)
         case statusRefreshFinished(SettingsNotificationStatus)
@@ -204,6 +211,11 @@ struct SettingsNotificationFeature {
             case .authorizationRequestResultHandled:
                 state.authorizationRequestResult = nil
                 return .none
+
+            case .notificationSettingsOpenRequested:
+                return .run { _ in
+                    await registrationClient.openNotificationSettings()
+                }
 
             case let .relayConfigSynced(usesOpenClawHostedRelay, hostedRelayHost):
                 state.usesOpenClawHostedRelay = usesOpenClawHostedRelay
