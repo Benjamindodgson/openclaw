@@ -396,6 +396,105 @@ struct RootSidebarFeature {
     }
 }
 
+@Reducer
+struct RootNavigationSelectionFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var selectedTab: RootTabs.AppTab
+        var selectedSidebarDestination: RootTabs.SidebarDestination
+        var selectedSettingsRoute: SettingsRoute?
+        var selectedSettingsRouteRequestID: Int
+        var suppressedExecApprovalPromptIDForNotificationSettings: String?
+
+        init(
+            selectedTab: RootTabs.AppTab,
+            selectedSidebarDestination: RootTabs.SidebarDestination)
+        {
+            self.selectedTab = selectedTab
+            self.selectedSidebarDestination = selectedSidebarDestination
+            self.selectedSettingsRoute = selectedSidebarDestination.settingsRoute
+            self.selectedSettingsRouteRequestID = 0
+            self.suppressedExecApprovalPromptIDForNotificationSettings = nil
+        }
+
+        var activeExecApprovalPromptSuppressionID: String? {
+            guard self.selectedTab == .settings, self.selectedSettingsRoute == .notifications else { return nil }
+            return self.suppressedExecApprovalPromptIDForNotificationSettings
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case tabSelected(RootTabs.AppTab)
+        case sidebarDestinationSelected(RootTabs.SidebarDestination)
+        case settingsRouteSelected(SettingsRoute)
+        case settingsRouteChanged(SettingsRoute?)
+        case notificationPermissionSettingsOpened(suppressedApprovalID: String)
+        case pendingExecApprovalPromptChanged(String?)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .tabSelected(tab):
+                state.selectedTab = tab
+                return .none
+
+            case let .sidebarDestinationSelected(destination):
+                if destination.settingsRoute != .notifications {
+                    state.suppressedExecApprovalPromptIDForNotificationSettings = nil
+                }
+                state.selectedSidebarDestination = destination
+                state.selectedSettingsRoute = destination.settingsRoute
+                state.selectedTab = destination.appTab
+                return .none
+
+            case let .settingsRouteSelected(route):
+                self.selectSettingsRoute(route, state: &state)
+                return .none
+
+            case let .settingsRouteChanged(route):
+                guard route != .notifications else { return .none }
+                if route == nil {
+                    state.selectedSettingsRoute = nil
+                    if state.selectedTab == .settings {
+                        state.selectedSidebarDestination = .settings
+                    }
+                }
+                state.suppressedExecApprovalPromptIDForNotificationSettings = nil
+                return .none
+
+            case let .notificationPermissionSettingsOpened(suppressedApprovalID):
+                state.suppressedExecApprovalPromptIDForNotificationSettings = suppressedApprovalID
+                self.selectSettingsRoute(.notifications, state: &state)
+                return .none
+
+            case let .pendingExecApprovalPromptChanged(promptID):
+                if promptID != state.suppressedExecApprovalPromptIDForNotificationSettings {
+                    state.suppressedExecApprovalPromptIDForNotificationSettings = nil
+                }
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    private func selectSettingsRoute(
+        _ route: SettingsRoute,
+        state: inout State)
+    {
+        if route != .notifications {
+            state.suppressedExecApprovalPromptIDForNotificationSettings = nil
+        }
+        state.selectedSettingsRoute = route
+        state.selectedSettingsRouteRequestID &+= 1
+        state.selectedSidebarDestination = .settings
+        state.selectedTab = .settings
+    }
+}
+
 extension RootTabs {
     private static var sidebarPersistentWidthThreshold: CGFloat {
         980

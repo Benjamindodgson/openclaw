@@ -30,16 +30,18 @@ struct RootTabsSidebarRegressionTests {
 
     @Test func `initial sidebar visibility survives first layout measurement`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
-        let layoutUpdate = try Self.extract(
-            source,
-            from: "private func updateSidebarLayout(containerSize: CGSize, force: Bool)",
-            to: "private func setSidebarVisible(_ isVisible: Bool)")
+        let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
+        let reducer = try Self.extract(
+            navigationSource,
+            from: "struct RootSidebarFeature",
+            to: "struct RootNavigationSelectionFeature")
 
-        #expect(source.contains("@State private var didResolveSidebarLayout: Bool = false"))
-        #expect(layoutUpdate.contains("let didResolvePreviousLayout = self.didResolveSidebarLayout"))
-        #expect(layoutUpdate.contains("self.didResolveSidebarLayout = true"))
-        #expect(layoutUpdate.contains("if layoutModeDidChange && didResolvePreviousLayout"))
-        #expect(layoutUpdate.contains("guard force || !self.sidebarVisibilityUserOverridden else { return }"))
+        #expect(source.contains("RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility)"))
+        #expect(reducer.contains("var didResolveLayout: Bool"))
+        #expect(reducer.contains("let didResolvePreviousLayout = state.didResolveLayout"))
+        #expect(reducer.contains("state.didResolveLayout = true"))
+        #expect(reducer.contains("if layoutModeDidChange && didResolvePreviousLayout"))
+        #expect(reducer.contains("guard force || !state.userOverridden else { return .none }"))
     }
 
     @Test func `drawer dimming layer does not steal sidebar touches`() throws {
@@ -73,7 +75,8 @@ struct RootTabsSidebarRegressionTests {
             from: "private func selectSidebarDestination(_ destination: SidebarDestination)",
             to: "private func showSidebar()")
         let resetRange = try #require(selection.range(of: "self.sidebarNavigationPath.removeAll()"))
-        let destinationRange = try #require(selection.range(of: "self.selectedSidebarDestination = destination"))
+        let destinationRange = try #require(
+            selection.range(of: "self.navigationStore.send(.sidebarDestinationSelected(destination))"))
 
         #expect(source.contains("@State private var sidebarNavigationPath: [SettingsRoute] = []"))
         #expect(navigationShell.contains("NavigationStack(path: self.$sidebarNavigationPath)"))
