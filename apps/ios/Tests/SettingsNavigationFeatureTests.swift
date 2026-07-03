@@ -1326,10 +1326,12 @@ struct SettingsNavigationFeatureTests {
         var state = SettingsVoiceControlFeature.State()
         #expect(state.detailText == "Off")
         #expect(state.voiceWakeValue == "off")
+        #expect(state.voiceWakeColor == .secondary)
 
         state.voiceWakeEnabled = true
         #expect(state.detailText == "Wake on")
         #expect(state.voiceWakeValue == "on")
+        #expect(state.voiceWakeColor == OpenClawBrand.ok)
 
         state.talkEnabled = true
         #expect(state.detailText == "Talk + Wake")

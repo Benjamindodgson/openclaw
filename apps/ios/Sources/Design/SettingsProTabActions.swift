@@ -80,7 +80,7 @@ extension SettingsProTab {
                     title: "Voice Wake",
                     detail: self.voiceControlStore.voiceWakeStatusText,
                     value: self.voiceControlStore.voiceWakeValue,
-                    color: self.voiceControlStore.voiceWakeEnabled ? OpenClawBrand.ok : .secondary)
+                    color: self.voiceControlStore.voiceWakeColor)
             }
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
