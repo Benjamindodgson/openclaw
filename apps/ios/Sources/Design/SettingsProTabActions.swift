@@ -178,8 +178,8 @@ extension SettingsProTab {
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
-        self.connectingGatewayID = gateway.id
-        defer { self.connectingGatewayID = nil }
+        self.gatewayConnectionStore.send(.connectionStarted(gateway.id))
+        defer { self.gatewayConnectionStore.send(.connectionFinished) }
         self.manualGatewayEnabled = false
         GatewaySettingsStore.savePreferredGatewayStableID(gateway.stableID)
         GatewaySettingsStore.saveLastDiscoveredGatewayStableID(gateway.stableID)
@@ -265,7 +265,7 @@ extension SettingsProTab {
 
     func openGatewayQRScanner() {
         self.appModel.disconnectGateway()
-        self.connectingGatewayID = nil
+        self.gatewayConnectionStore.send(.connectionFinished)
         self.setupStatusText = "Opening QR scanner..."
         self.presentationStore.send(.qrScannerButtonTapped)
     }
@@ -307,9 +307,9 @@ extension SettingsProTab {
             self.setupStatusText = "Failed: invalid port"
             return
         }
-        self.connectingGatewayID = "manual"
+        self.gatewayConnectionStore.send(.connectionStarted("manual"))
         self.manualGatewayEnabled = true
-        defer { self.connectingGatewayID = nil }
+        defer { self.gatewayConnectionStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
             token: self.gatewayToken,
             pendingOverride: self.pendingManualAuthOverride,
@@ -334,7 +334,7 @@ extension SettingsProTab {
     }
 
     func resetOnboarding() {
-        self.connectingGatewayID = nil
+        self.gatewayConnectionStore.send(.connectionFinished)
         self.setupStatusText = nil
         self.setupCode = ""
         self.gatewayAutoConnect = false

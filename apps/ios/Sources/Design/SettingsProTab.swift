@@ -198,6 +198,37 @@ struct SettingsGatewayActivityFeature {
 }
 
 @Reducer
+struct SettingsGatewayConnectionFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var connectingGatewayID: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case connectionFinished
+        case connectionStarted(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .connectionFinished:
+                state.connectingGatewayID = nil
+                return .none
+
+            case let .connectionStarted(gatewayID):
+                state.connectingGatewayID = gatewayID
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+@Reducer
 struct SettingsLocationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -434,7 +465,6 @@ struct SettingsProTab: View {
     @AppStorage("gateway.onboardingComplete") var onboardingComplete: Bool = false
     @AppStorage("gateway.hasConnectedOnce") var hasConnectedOnce: Bool = false
     @AppStorage("onboarding.requestID") var onboardingRequestID: Int = 0
-    @State var connectingGatewayID: String?
     @State var gatewayToken = ""
     @State var gatewayPassword = ""
     @State var setupStatusText: String?
@@ -475,6 +505,12 @@ struct SettingsProTab: View {
         initialState: SettingsGatewayActivityFeature.State())
     {
         SettingsGatewayActivityFeature()
+    }
+
+    @State var gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
+        initialState: SettingsGatewayConnectionFeature.State())
+    {
+        SettingsGatewayConnectionFeature()
     }
 
     @State var locationStore: StoreOf<SettingsLocationFeature> = Store(
@@ -729,6 +765,10 @@ struct SettingsProTab: View {
 }
 
 extension SettingsProTab {
+    var connectingGatewayID: String? {
+        self.gatewayConnectionStore.connectingGatewayID
+    }
+
     var defaultShareInstructionBinding: Binding<String> {
         Binding(
             get: { self.shareInstructionStore.defaultShareInstruction },
