@@ -36,6 +36,24 @@ struct SettingsGatewayConnectionFeature {
         static func agentSummary(count: Int) -> String {
             count == 1 ? "1 agent" : "\(count) agents"
         }
+
+        static func discoveredGatewayDetailLines(
+            lanHost: String?,
+            tailnetDNS: String?,
+            gatewayPort: Int?,
+            canvasPort: Int?,
+            debugID: String) -> [String]
+        {
+            var lines: [String] = []
+            if let lanHost { lines.append("LAN: \(lanHost)") }
+            if let tailnetDNS { lines.append("Tailnet: \(tailnetDNS)") }
+            let gatewayPortText = gatewayPort.map(String.init)
+            let canvasPortText = canvasPort.map(String.init)
+            if gatewayPortText != nil || canvasPortText != nil {
+                lines.append("Ports: gateway \(gatewayPortText ?? "-") / canvas \(canvasPortText ?? "-")")
+            }
+            return lines.isEmpty ? [debugID] : lines
+        }
     }
 
     enum Action: Equatable, Sendable {

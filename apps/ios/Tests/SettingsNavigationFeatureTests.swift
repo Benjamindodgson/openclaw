@@ -510,6 +510,33 @@ struct SettingsNavigationFeatureTests {
         #expect(demoState.gatewayDiagnosticConnected)
     }
 
+    @Test func `settings gateway connection formats discovered gateway detail lines`() {
+        #expect(SettingsGatewayConnectionFeature.State.discoveredGatewayDetailLines(
+            lanHost: nil,
+            tailnetDNS: nil,
+            gatewayPort: nil,
+            canvasPort: nil,
+            debugID: "gateway-debug") == ["gateway-debug"])
+
+        #expect(SettingsGatewayConnectionFeature.State.discoveredGatewayDetailLines(
+            lanHost: "192.168.1.20",
+            tailnetDNS: "openclaw-gateway.tailnet.ts.net",
+            gatewayPort: 18789,
+            canvasPort: 18790,
+            debugID: "gateway-debug") == [
+                "LAN: 192.168.1.20",
+                "Tailnet: openclaw-gateway.tailnet.ts.net",
+                "Ports: gateway 18789 / canvas 18790",
+            ])
+
+        #expect(SettingsGatewayConnectionFeature.State.discoveredGatewayDetailLines(
+            lanHost: nil,
+            tailnetDNS: nil,
+            gatewayPort: 18789,
+            canvasPort: nil,
+            debugID: "gateway-debug") == ["Ports: gateway 18789 / canvas -"])
+    }
+
     @Test func `settings gateway setup status records messages`() async {
         let store = TestStore(initialState: SettingsGatewaySetupStatusFeature.State()) {
             SettingsGatewaySetupStatusFeature()

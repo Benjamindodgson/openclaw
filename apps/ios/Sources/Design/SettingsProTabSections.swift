@@ -772,7 +772,12 @@ extension SettingsProTab {
             VStack(alignment: .leading, spacing: 3) {
                 Text(verbatim: gateway.name)
                     .font(.subheadline.weight(.semibold))
-                Text(verbatim: self.gatewayDetailLines(gateway).joined(separator: " • "))
+                Text(verbatim: SettingsGatewayConnectionFeature.State.discoveredGatewayDetailLines(
+                    lanHost: gateway.lanHost,
+                    tailnetDNS: gateway.tailnetDns,
+                    gatewayPort: gateway.gatewayPort,
+                    canvasPort: gateway.canvasPort,
+                    debugID: gateway.debugID).joined(separator: " • "))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
