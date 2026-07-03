@@ -990,8 +990,7 @@ extension SettingsProTab {
     }
 
     var gatewayStatusColor: Color {
-        if self.gatewayConnectionStore.isAppleReviewDemoModeEnabled { return OpenClawBrand.accent }
-        return self.gatewayConnectionStore.gatewayConnected ? OpenClawBrand.ok : .secondary
+        self.gatewayConnectionStore.gatewayStatusColor
     }
 
     var gatewayDiagnosticConnected: Bool {
