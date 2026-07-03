@@ -1,13 +1,122 @@
+import ComposableArchitecture
 import OpenClawChatUI
 import OpenClawKit
 import SwiftUI
 
+struct IPadActivitySessionsClient {
+    var listSessions: @Sendable @MainActor (_ limit: Int) async throws -> [OpenClawChatSessionEntry]
+}
+
+extension IPadActivitySessionsClient: DependencyKey {
+    static let liveValue = IPadActivitySessionsClient(listSessions: { _ in [] })
+    static let testValue = IPadActivitySessionsClient(listSessions: { _ in [] })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        IPadActivitySessionsClient(listSessions: { limit in
+            let transport = appModel.makeChatTransport()
+            let response = try await transport.listSessions(limit: limit)
+            return response.sessions
+        })
+    }
+}
+
+extension DependencyValues {
+    var iPadActivitySessions: IPadActivitySessionsClient {
+        get { self[IPadActivitySessionsClient.self] }
+        set { self[IPadActivitySessionsClient.self] = newValue }
+    }
+}
+
+// swiftformat:disable redundantSendable
+enum IPadActivitySessionsError: Error, Equatable, Sendable {
+    case failed
+}
+
+// swiftformat:enable redundantSendable
+
+@Reducer
+struct IPadActivitySessionsFeature {
+    private let clientOverride: IPadActivitySessionsClient?
+
+    init(client: IPadActivitySessionsClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var sessions: [OpenClawChatSessionEntry] = []
+        var isLoading = false
+        var loadErrorText: String?
+    }
+
+    enum Action: Equatable, Sendable {
+        case refreshRequested(sceneActive: Bool, sessionsAvailable: Bool)
+        case refreshResponse(Result<[OpenClawChatSessionEntry], IPadActivitySessionsError>)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.iPadActivitySessions) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case let .refreshRequested(sceneActive, sessionsAvailable):
+                guard sceneActive else {
+                    state.isLoading = false
+                    return .none
+                }
+                guard sessionsAvailable else {
+                    state.isLoading = false
+                    state.sessions = []
+                    state.loadErrorText = nil
+                    return .none
+                }
+
+                state.isLoading = true
+                state.loadErrorText = nil
+                return .run { send in
+                    do {
+                        let sessions = try await client.listSessions(CommandCenterTab.recentSessionsFetchLimit)
+                        await send(.refreshResponse(.success(sessions)))
+                    } catch {
+                        await send(.refreshResponse(.failure(.failed)))
+                    }
+                }
+
+            case let .refreshResponse(.success(sessions)):
+                state.isLoading = false
+                state.sessions = sessions
+                state.loadErrorText = nil
+                return .none
+
+            case .refreshResponse(.failure):
+                state.isLoading = false
+                state.sessions = []
+                state.loadErrorText = "Try again after the gateway reconnects."
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
+enum IPadActivitySessionsStoreFactory {
+    @MainActor
+    static func live(appModel: NodeAppModel) -> StoreOf<IPadActivitySessionsFeature> {
+        Store(initialState: IPadActivitySessionsFeature.State()) {
+            IPadActivitySessionsFeature(client: .live(appModel: appModel))
+        }
+    }
+}
+
 struct IPadActivityScreen: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.scenePhase) private var scenePhase
-    @State private var sessions: [OpenClawChatSessionEntry] = []
-    @State private var isLoading = false
-    @State private var loadErrorText: String?
+    @State private var store: StoreOf<IPadActivitySessionsFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let openChat: () -> Void
     let openSettings: () -> Void
@@ -15,11 +124,17 @@ struct IPadActivityScreen: View {
     init(
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         openChat: @escaping () -> Void,
-        openSettings: @escaping () -> Void)
+        openSettings: @escaping () -> Void,
+        store: StoreOf<IPadActivitySessionsFeature> = Store(
+            initialState: IPadActivitySessionsFeature.State())
+        {
+            IPadActivitySessionsFeature()
+        })
     {
         self.headerLeadingAction = headerLeadingAction
         self.openChat = openChat
         self.openSettings = openSettings
+        self._store = State(wrappedValue: store)
     }
 
     var body: some View {
@@ -55,7 +170,7 @@ struct IPadActivityScreen: View {
             ProMetric(
                 icon: "bubble.left.and.text.bubble.right",
                 title: "Sessions",
-                value: self.isLoading ? "..." : "\(self.sessionRows.count)",
+                value: self.store.isLoading ? "..." : "\(self.sessionRows.count)",
                 color: OpenClawBrand.accentHot),
         ]
     }
@@ -65,7 +180,7 @@ struct IPadActivityScreen: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: "Recent activity",
-                    value: self.isLoading ? "Loading" : nil,
+                    value: self.store.isLoading ? "Loading" : nil,
                     actionTitle: "Refresh",
                     action: {
                         Task { await self.refreshSessions() }
@@ -103,7 +218,7 @@ struct IPadActivityScreen: View {
                     actionTitle: nil,
                     action: nil)
 
-                if self.isLoading, self.sessions.isEmpty {
+                if self.store.isLoading, self.store.sessions.isEmpty {
                     Divider().padding(.leading, 58)
                     ProStatusRow(
                         icon: "hourglass",
@@ -113,7 +228,7 @@ struct IPadActivityScreen: View {
                         color: OpenClawBrand.accent,
                         actionTitle: nil,
                         action: nil)
-                } else if let loadErrorText {
+                } else if let loadErrorText = self.store.loadErrorText {
                     Divider().padding(.leading, 58)
                     ProStatusRow(
                         icon: "exclamationmark.triangle.fill",
@@ -188,7 +303,7 @@ struct IPadActivityScreen: View {
     }
 
     private var sessionRows: [CommandCenterTab.WorkItem] {
-        self.sessions
+        self.store.sessions
             .filter { CommandCenterTab.isRecentChatSession(
                 $0.key,
                 defaultSessionKey: self.appModel.defaultChatSessionKey) }
@@ -202,25 +317,9 @@ struct IPadActivityScreen: View {
     }
 
     private func refreshSessions() async {
-        guard self.scenePhase == .active else { return }
-        guard self.sessionsAvailable else {
-            self.sessions = []
-            self.loadErrorText = nil
-            return
-        }
-
-        self.isLoading = true
-        self.loadErrorText = nil
-        defer { self.isLoading = false }
-
-        do {
-            let transport = self.appModel.makeChatTransport()
-            let response = try await transport.listSessions(limit: CommandCenterTab.recentSessionsFetchLimit)
-            self.sessions = response.sessions
-        } catch {
-            self.sessions = []
-            self.loadErrorText = "Try again after the gateway reconnects."
-        }
+        await self.store.send(.refreshRequested(
+            sceneActive: self.scenePhase == .active,
+            sessionsAvailable: self.sessionsAvailable)).finish()
     }
 
     private func open(_ item: CommandCenterTab.WorkItem) {
