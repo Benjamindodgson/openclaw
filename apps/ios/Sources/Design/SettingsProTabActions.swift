@@ -332,9 +332,9 @@ extension SettingsProTab {
         self.gatewaySetupLinkStore.send(.applyResultHandled)
 
         switch result {
-        case .appleReviewDemo:
+        case let .appleReviewDemo(statusText):
             self.updateSetupCode("")
-            self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
+            self.gatewaySetupStatusStore.send(.statusChanged(statusText))
             self.appModel.enterAppleReviewDemoMode()
             return false
 
@@ -395,11 +395,11 @@ extension SettingsProTab {
 
     func handleScannedSetupCode(_ code: String) {
         self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(code))
-        guard self.gatewaySetupLinkStore.applyResult == .appleReviewDemo else { return }
+        guard case let .appleReviewDemo(statusText)? = self.gatewaySetupLinkStore.applyResult else { return }
         self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
-        self.gatewaySetupStatusStore.send(.statusChanged("Apple Review demo mode enabled."))
+        self.gatewaySetupStatusStore.send(.statusChanged(statusText))
         self.appModel.enterAppleReviewDemoMode()
     }
 
