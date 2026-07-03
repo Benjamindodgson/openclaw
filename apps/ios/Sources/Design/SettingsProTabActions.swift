@@ -52,7 +52,7 @@ extension SettingsProTab {
                     title: "Discovery",
                     detail: self.diagnosticsStore.discoveryStatusText,
                     value: self.diagnosticsStore.discoveryValue,
-                    color: self.diagnosticsStore.hasDiscoveredGateway ? OpenClawBrand.accent : .secondary)
+                    color: self.diagnosticsStore.discoveryColor)
                 Divider().padding(.leading, 60)
                 self.diagnosticCheckRow(
                     icon: "waveform",
@@ -73,7 +73,7 @@ extension SettingsProTab {
                     title: "Screen Capture",
                     detail: "Live foreground capture state",
                     value: self.diagnosticsStore.screenCaptureValue,
-                    color: self.diagnosticsStore.screenRecordActive ? OpenClawBrand.ok : .secondary)
+                    color: self.diagnosticsStore.screenCaptureColor)
                 Divider().padding(.leading, 60)
                 self.diagnosticCheckRow(
                     icon: "mic",
