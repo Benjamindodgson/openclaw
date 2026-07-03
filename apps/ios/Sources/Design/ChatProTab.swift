@@ -73,7 +73,7 @@ struct ChatProTab: View {
                         showsSessionSwitcher: false,
                         userAccent: self.chatUserAccent,
                         assistantName: self.agentDisplayName,
-                        assistantAvatarText: self.agentBadge,
+                        assistantAvatarText: self.presentationState.agentBadge,
                         assistantAvatarTint: OpenClawBrand.accent,
                         showsAssistantAvatars: false,
                         composerChrome: .clean,
@@ -127,8 +127,9 @@ struct ChatProTab: View {
     @ViewBuilder
     private var headerIdentityBadge: some View {
         if self.showsAgentBadge {
-            Text(self.agentBadge)
-                .font(.system(size: self.agentBadge.count > 2 ? 13 : 16, weight: .bold, design: .rounded))
+            let badge = self.presentationState.agentBadge
+            Text(badge)
+                .font(.system(size: badge.count > 2 ? 13 : 16, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
@@ -228,7 +229,8 @@ struct ChatProTab: View {
             agentDisplayName: self.agentDisplayName,
             headerTitle: self.headerTitle,
             headerSubtitle: self.headerSubtitle,
-            showsAgentBadge: self.showsAgentBadge)
+            showsAgentBadge: self.showsAgentBadge,
+            agentBadgeOverride: self.agentBadgeOverride)
     }
 
     private var gatewayConnected: Bool {
@@ -254,21 +256,13 @@ struct ChatProTab: View {
         self.normalized(self.activeAgent?.name) ?? self.appModel.chatAgentName
     }
 
-    private var agentBadge: String {
+    private var agentBadgeOverride: String? {
         if let identity = self.activeAgent?.identity,
-           let emoji = identity["emoji"]?.value as? String,
-           let normalizedEmoji = self.normalized(emoji)
+           let emoji = identity["emoji"]?.value as? String
         {
-            return normalizedEmoji
+            return emoji
         }
-        let words = self.agentDisplayName
-            .split(whereSeparator: { $0.isWhitespace || $0 == "-" || $0 == "_" })
-            .prefix(2)
-        let initials = words.compactMap(\.first).map(String.init).joined()
-        if !initials.isEmpty {
-            return initials.uppercased()
-        }
-        return "OC"
+        return nil
     }
 
     private func normalized(_ value: String?) -> String? {
@@ -285,6 +279,7 @@ struct ChatProPresentationState: Equatable {
     let headerTitle: String?
     let headerSubtitle: String?
     let showsAgentBadge: Bool
+    let agentBadgeOverride: String?
 
     var gatewayPillTitle: String {
         switch self.gatewayDisplayState {
@@ -323,6 +318,20 @@ struct ChatProPresentationState: Equatable {
 
     var headerDisplaySubtitle: String? {
         Self.normalized(self.headerSubtitle)
+    }
+
+    var agentBadge: String {
+        if let badge = Self.normalized(self.agentBadgeOverride) {
+            return badge
+        }
+        let words = self.agentDisplayName
+            .split(whereSeparator: { $0.isWhitespace || $0 == "-" || $0 == "_" })
+            .prefix(2)
+        let initials = words.compactMap(\.first).map(String.init).joined()
+        if !initials.isEmpty {
+            return initials.uppercased()
+        }
+        return "OC"
     }
 
     nonisolated static func defaultHeaderTitle(showsAgentBadge: Bool, agentDisplayName: String) -> String {

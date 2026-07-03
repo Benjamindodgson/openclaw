@@ -74,6 +74,18 @@ struct GatewayStatusBuilderTests {
         #expect(unbadged.headerDisplayTitle == "Chat")
     }
 
+    @Test func `chat presentation state owns agent badge fallback`() {
+        let override = Self.chatState(.connected, agentBadgeOverride: "  BOT  ")
+        let initials = Self.chatState(.connected, agentDisplayName: "Joshtimus Prime")
+        let hyphenated = Self.chatState(.connected, agentDisplayName: "north-star")
+        let fallback = Self.chatState(.connected, agentDisplayName: "   ")
+
+        #expect(override.agentBadge == "BOT")
+        #expect(initials.agentBadge == "JP")
+        #expect(hyphenated.agentBadge == "NS")
+        #expect(fallback.agentBadge == "OC")
+    }
+
     @Test func `reducer refresh updates display state`() async {
         let problem = GatewayConnectionProblem(
             kind: .pairingRequired,
@@ -99,16 +111,19 @@ struct GatewayStatusBuilderTests {
     private static func chatState(
         _ gatewayDisplayState: GatewayDisplayState,
         isGatewayUsable: Bool = false,
+        agentDisplayName: String = "Joshtimus Prime",
         headerTitle: String? = nil,
         headerSubtitle: String? = nil,
-        showsAgentBadge: Bool = true) -> ChatProPresentationState
+        showsAgentBadge: Bool = true,
+        agentBadgeOverride: String? = nil) -> ChatProPresentationState
     {
         ChatProPresentationState(
             gatewayDisplayState: gatewayDisplayState,
             isGatewayUsable: isGatewayUsable,
-            agentDisplayName: "Joshtimus Prime",
+            agentDisplayName: agentDisplayName,
             headerTitle: headerTitle,
             headerSubtitle: headerSubtitle,
-            showsAgentBadge: showsAgentBadge)
+            showsAgentBadge: showsAgentBadge,
+            agentBadgeOverride: agentBadgeOverride)
     }
 }
