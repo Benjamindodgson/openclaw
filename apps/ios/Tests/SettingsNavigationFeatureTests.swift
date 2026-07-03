@@ -1419,6 +1419,18 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings onboarding state advances request id`() async {
+        var initialState = SettingsOnboardingStateFeature.State()
+        initialState.onboardingRequestID = 4
+        let store = TestStore(initialState: initialState) {
+            SettingsOnboardingStateFeature()
+        }
+
+        await store.send(.onboardingRequestAdvanced) {
+            $0.onboardingRequestID = 5
+        }
+    }
+
     @Test func `settings device capabilities sync persisted values`() async {
         let store = TestStore(initialState: SettingsDeviceCapabilityFeature.State()) {
             SettingsDeviceCapabilityFeature()

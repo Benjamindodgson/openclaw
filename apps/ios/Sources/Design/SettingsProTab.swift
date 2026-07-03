@@ -654,6 +654,7 @@ struct SettingsOnboardingStateFeature {
 
     enum Action: Equatable, Sendable {
         case completionStateReset
+        case onboardingRequestAdvanced
         case onboardingRequestIDChanged(Int)
         case onboardingStateSynced(
             hasConnectedOnce: Bool,
@@ -669,6 +670,10 @@ struct SettingsOnboardingStateFeature {
             case .completionStateReset:
                 state.hasConnectedOnce = false
                 state.onboardingComplete = false
+                return .none
+
+            case .onboardingRequestAdvanced:
+                state.onboardingRequestID += 1
                 return .none
 
             case let .onboardingRequestIDChanged(requestID):
