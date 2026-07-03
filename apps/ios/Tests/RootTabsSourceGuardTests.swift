@@ -405,27 +405,35 @@ struct RootTabsSourceGuardTests {
         let source = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
         let createFunction = try Self.extract(
             source,
-            from: "private func createCard() async -> Bool",
+            from: "private func createCard() async",
             to: "private func move(_ card: IPadWorkboardCard, to status: String) async")
 
+        #expect(source.contains("@Reducer\nstruct IPadWorkboardPresentationFeature"))
+        #expect(!source.contains("@State private var selectedStatus"))
+        #expect(!source.contains("@State private var selectedBoardID"))
+        #expect(!source.contains("@State private var query"))
+        #expect(!source.contains("@State private var presentedSheet"))
         #expect(source.contains("private var createUnavailableMessage: String?"))
         #expect(source.contains("Enter a title to create a card."))
         #expect(source.contains("Card creation is already in progress."))
         #expect(source.contains("private func newCardButton(expands: Bool) -> some View"))
         #expect(source.contains("private func beginCreateCard()"))
+        #expect(source.contains("self.presentationStore.send(.beginCreateCardTapped)"))
         #expect(source.contains("self.newCardButton(expands: false)"))
         #expect(source.contains("self.newCardButton(expands: true)"))
         #expect(source.contains("Label(\"New Card\", systemImage: \"plus\")"))
         #expect(source.contains(".accessibilityHint(\"Opens card title and notes entry\")"))
         #expect(source.contains(".accessibilityHint(self.createUnavailableMessage ?? \"Creates a workboard card\")"))
-        #expect(source.contains("if await self.createCard()"))
-        #expect(source.contains(".disabled(self.isCreatingCard)"))
+        #expect(source.contains("await self.createCard()"))
+        #expect(source.contains(".disabled(self.presentationStore.isCreatingCard)"))
         #expect(!source.contains("Button(\"Create\")"))
         #expect(!source.contains("TextField(\"New card\""))
         #expect(!source.contains(".disabled(!self.canWrite || self.draftTitle"))
-        #expect(createFunction.contains("self.errorText = createUnavailableMessage"))
-        #expect(createFunction.contains("return false"))
-        #expect(createFunction.contains("return true"))
+        #expect(createFunction
+            .contains("self.presentationStore.send(.createValidationFailed(createUnavailableMessage))"))
+        #expect(createFunction.contains("self.presentationStore.send(.createStarted)"))
+        #expect(createFunction.contains("self.presentationStore.send(.createSucceeded)"))
+        #expect(createFunction.contains("self.presentationStore.send(.createFailed(Self.message(for: error)))"))
     }
 
     @Test func `task scope controls send real gateway params`() throws {
@@ -463,7 +471,7 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains(".sheet(item: self.presentedProposalRouteBinding)"))
         #expect(source.contains("private func selectProposal("))
         #expect(!source.contains("proposalSheetPresented"))
-        #expect(source.contains("self.presentedSheet = .card(card)"))
+        #expect(source.contains("self.presentationStore.send(.cardSheetPresented(card))"))
         #expect(!source.contains("Label(\"Gateway\", systemImage: \"network\")"))
         #expect(!source.contains("Button(\"Gateway\")"))
         #expect(!source.contains("actionTitle: self.canRead ? nil : \"Gateway\""))
