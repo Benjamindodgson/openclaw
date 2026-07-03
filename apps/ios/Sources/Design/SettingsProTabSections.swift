@@ -436,7 +436,7 @@ extension SettingsProTab {
                 icon: "camera",
                 title: "Camera",
                 detail: "Allow the gateway to request photos or video while OpenClaw is foregrounded.",
-                isOn: self.$cameraEnabled)
+                isOn: self.cameraEnabledBinding)
 
             self.locationModeCard
 
@@ -444,7 +444,7 @@ extension SettingsProTab {
                 icon: "lock.display",
                 title: "Keep Awake",
                 detail: "Keep the screen awake while OpenClaw is open.",
-                isOn: self.$preventSleep)
+                isOn: self.preventSleepBinding)
 
             self.privacyAccessCard
         }
@@ -515,7 +515,7 @@ extension SettingsProTab {
                 icon: "camera",
                 title: "Camera Access",
                 detail: "Disable to block camera capture requests from the gateway.",
-                isOn: self.$cameraEnabled)
+                isOn: self.cameraEnabledBinding)
 
             self.locationModeCard
 

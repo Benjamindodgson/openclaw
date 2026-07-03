@@ -646,6 +646,51 @@ struct SettingsGatewayAutoConnectFeature {
     }
 }
 
+@Reducer
+struct SettingsDeviceCapabilityFeature {
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var cameraEnabled = true
+        var preventSleep = true
+
+        var enabledCount: Int {
+            var count = 0
+            if self.cameraEnabled { count += 1 }
+            if self.preventSleep { count += 1 }
+            return count
+        }
+    }
+
+    enum Action: Equatable, Sendable {
+        case cameraEnabledChanged(Bool)
+        case capabilitiesSynced(cameraEnabled: Bool, preventSleep: Bool)
+        case preventSleepChanged(Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .cameraEnabledChanged(enabled):
+                state.cameraEnabled = enabled
+                return .none
+
+            case let .capabilitiesSynced(cameraEnabled, preventSleep):
+                state.cameraEnabled = cameraEnabled
+                state.preventSleep = preventSleep
+                return .none
+
+            case let .preventSleepChanged(enabled):
+                state.preventSleep = enabled
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 struct SettingsProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) var voiceWake
@@ -655,9 +700,9 @@ struct SettingsProTab: View {
         AppAppearancePreference.system.rawValue
     @AppStorage("node.displayName") var displayName: String = "iOS Node"
     @AppStorage("node.instanceId") var instanceId: String = UUID().uuidString
-    @AppStorage("camera.enabled") var cameraEnabled: Bool = true
+    @AppStorage("camera.enabled") var storedCameraEnabled: Bool = true
     @AppStorage("location.enabledMode") var locationModeRaw: String = OpenClawLocationMode.off.rawValue
-    @AppStorage("screen.preventSleep") var preventSleep: Bool = true
+    @AppStorage("screen.preventSleep") var storedPreventSleep: Bool = true
     @AppStorage("talk.enabled") var talkEnabled: Bool = false
     @AppStorage(TalkModeProviderSelection.storageKey) var talkProviderSelectionRaw: String =
         TalkModeProviderSelection.gatewayDefault.rawValue
@@ -713,6 +758,12 @@ struct SettingsProTab: View {
         initialState: SettingsDiagnosticsFeature.State())
     {
         SettingsDiagnosticsFeature()
+    }
+
+    @State var deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature> = Store(
+        initialState: SettingsDeviceCapabilityFeature.State())
+    {
+        SettingsDeviceCapabilityFeature()
     }
 
     @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
@@ -893,6 +944,12 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.setupCode) { _, newValue in
                 self.gatewaySetupLinkStore.send(.setupCodeChanged(newValue))
+            }
+            .onChange(of: self.storedCameraEnabled) { _, newValue in
+                self.deviceCapabilityStore.send(.cameraEnabledChanged(newValue))
+            }
+            .onChange(of: self.storedPreventSleep) { _, newValue in
+                self.deviceCapabilityStore.send(.preventSleepChanged(newValue))
             }
             .onChange(of: self.storedGatewayAutoConnect) { _, newValue in
                 self.gatewayAutoConnectStore.send(.enabledSynced(newValue))
