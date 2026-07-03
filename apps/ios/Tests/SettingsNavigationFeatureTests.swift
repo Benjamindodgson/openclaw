@@ -48,6 +48,25 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings navigation route metadata covers headers`() {
+        let cases: [(SettingsRoute, String, String)] = [
+            (.gateway, "Gateway", "Pairing, diagnostics, and Tailscale checks."),
+            (.approvals, "Approvals", "Review pending agent actions."),
+            (.permissions, "Permissions", "Control device capabilities."),
+            (.channels, "Channels", "Message routing and external clients."),
+            (.voice, "Voice & Talk", "Talk mode and wake phrase settings."),
+            (.diagnostics, "Diagnostics", "Run local health checks."),
+            (.privacy, "Privacy", "Data and device privacy controls."),
+            (.notifications, "Notifications", "Alert permissions and delivery."),
+            (.about, "About", "Version and support details."),
+        ]
+
+        for (route, title, subtitle) in cases {
+            #expect(SettingsNavigationFeature.State.title(for: route) == title)
+            #expect(SettingsNavigationFeature.State.subtitle(for: route) == subtitle)
+        }
+    }
+
     @Test func `settings presentation opens and dismisses talk issue details`() async {
         let store = TestStore(initialState: SettingsPresentationFeature.State()) {
             SettingsPresentationFeature()

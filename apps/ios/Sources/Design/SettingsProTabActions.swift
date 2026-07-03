@@ -591,34 +591,6 @@ extension SettingsProTab {
         UIApplication.shared.open(url)
     }
 
-    func title(for route: SettingsRoute) -> String {
-        switch route {
-        case .gateway: "Gateway"
-        case .approvals: "Approvals"
-        case .permissions: "Permissions"
-        case .channels: "Channels"
-        case .voice: "Voice & Talk"
-        case .diagnostics: "Diagnostics"
-        case .privacy: "Privacy"
-        case .notifications: "Notifications"
-        case .about: "About"
-        }
-    }
-
-    func subtitle(for route: SettingsRoute) -> String {
-        switch route {
-        case .gateway: "Pairing, diagnostics, and Tailscale checks."
-        case .approvals: "Review pending agent actions."
-        case .permissions: "Control device capabilities."
-        case .channels: "Message routing and external clients."
-        case .voice: "Talk mode and wake phrase settings."
-        case .diagnostics: "Run local health checks."
-        case .privacy: "Data and device privacy controls."
-        case .notifications: "Alert permissions and delivery."
-        case .about: "Version and support details."
-        }
-    }
-
     var manualPortBinding: Binding<String> {
         Binding(
             get: { self.manualGatewayPortStore.manualGatewayPortText },
