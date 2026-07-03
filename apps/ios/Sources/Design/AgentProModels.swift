@@ -22,7 +22,7 @@ enum AgentProValueReader {
     }
 }
 
-struct AgentOverviewSnapshot {
+struct AgentOverviewSnapshot: Equatable {
     let skills: SkillStatusReportLite?
     let presence: [PresenceEntry]
     let cronStatus: CronStatusLite?
@@ -43,9 +43,66 @@ struct AgentOverviewSnapshot {
             || self.dreamDiary != nil
             || self.usage != nil
     }
+
+    static func == (lhs: AgentOverviewSnapshot, rhs: AgentOverviewSnapshot) -> Bool {
+        lhs.skills == rhs.skills
+            && agentOverviewPresenceEntriesEqual(lhs.presence, rhs.presence)
+            && lhs.cronStatus == rhs.cronStatus
+            && agentOverviewCronJobsEqual(lhs.cronJobs, rhs.cronJobs)
+            && lhs.dreaming == rhs.dreaming
+            && lhs.dreamDiary == rhs.dreamDiary
+            && lhs.usage == rhs.usage
+            && lhs.activeAgentId == rhs.activeAgentId
+            && lhs.agentSkillFilter == rhs.agentSkillFilter
+            && lhs.loadedAt == rhs.loadedAt
+    }
 }
 
-struct SkillStatusReportLite: Decodable {
+private func agentOverviewPresenceEntriesEqual(_ lhs: [PresenceEntry], _ rhs: [PresenceEntry]) -> Bool {
+    guard lhs.count == rhs.count else { return false }
+    return zip(lhs, rhs).allSatisfy { lhs, rhs in
+        lhs.host == rhs.host
+            && lhs.ip == rhs.ip
+            && lhs.version == rhs.version
+            && lhs.platform == rhs.platform
+            && lhs.devicefamily == rhs.devicefamily
+            && lhs.modelidentifier == rhs.modelidentifier
+            && lhs.mode == rhs.mode
+            && lhs.lastinputseconds == rhs.lastinputseconds
+            && lhs.reason == rhs.reason
+            && lhs.tags == rhs.tags
+            && lhs.text == rhs.text
+            && lhs.ts == rhs.ts
+            && lhs.deviceid == rhs.deviceid
+            && lhs.roles == rhs.roles
+            && lhs.scopes == rhs.scopes
+            && lhs.instanceid == rhs.instanceid
+    }
+}
+
+private func agentOverviewCronJobsEqual(_ lhs: [CronJob], _ rhs: [CronJob]) -> Bool {
+    guard lhs.count == rhs.count else { return false }
+    return zip(lhs, rhs).allSatisfy { lhs, rhs in
+        lhs.id == rhs.id
+            && lhs.agentid == rhs.agentid
+            && lhs.sessionkey == rhs.sessionkey
+            && lhs.name == rhs.name
+            && lhs.description == rhs.description
+            && lhs.enabled == rhs.enabled
+            && lhs.deleteafterrun == rhs.deleteafterrun
+            && lhs.createdatms == rhs.createdatms
+            && lhs.updatedatms == rhs.updatedatms
+            && lhs.schedule == rhs.schedule
+            && lhs.sessiontarget == rhs.sessiontarget
+            && lhs.wakemode == rhs.wakemode
+            && lhs.payload == rhs.payload
+            && lhs.delivery == rhs.delivery
+            && lhs.failurealert == rhs.failurealert
+            && lhs.state == rhs.state
+    }
+}
+
+struct SkillStatusReportLite: Decodable, Equatable {
     let workspaceDir: String?
     let managedSkillsDir: String?
     let agentId: String?
@@ -75,7 +132,7 @@ struct SkillStatusReportLite: Decodable {
     }
 }
 
-struct SkillStatusEntryLite: Decodable {
+struct SkillStatusEntryLite: Decodable, Equatable {
     let name: String
     let description: String?
     let source: String?
@@ -146,7 +203,7 @@ struct SkillStatusEntryLite: Decodable {
     }
 }
 
-struct SkillInstallOptionLite: Decodable {
+struct SkillInstallOptionLite: Decodable, Equatable {
     let id: String?
     let kind: String?
     let label: String
@@ -204,14 +261,14 @@ struct CronUpdateParams: Encodable {
     let patch: CronUpdatePatch
 }
 
-struct SkillStatusMissingLite: Decodable {
+struct SkillStatusMissingLite: Decodable, Equatable {
     let bins: [String]
     let env: [String]
     let config: [String]
     let os: [String]
 }
 
-struct CronStatusLite: Decodable {
+struct CronStatusLite: Decodable, Equatable {
     let enabled: Bool
     let jobs: Int
     let nextwakeatms: Int?
@@ -232,7 +289,7 @@ struct DreamingStatusEnvelope: Decodable {
     let dreaming: DreamingStatusLite?
 }
 
-struct DreamingStatusLite: Decodable {
+struct DreamingStatusLite: Decodable, Equatable {
     let enabled: Bool
     let shortTermCount: Int?
     let totalSignalCount: Int?
@@ -250,7 +307,7 @@ struct DreamingStatusLite: Decodable {
     }
 }
 
-struct DreamingEntryLite: Decodable, Identifiable {
+struct DreamingEntryLite: Decodable, Equatable, Identifiable {
     let key: String
     let path: String
     let startLine: Int
@@ -271,7 +328,7 @@ struct DreamingEntryLite: Decodable, Identifiable {
     }
 }
 
-struct DreamDiaryLite: Decodable {
+struct DreamDiaryLite: Decodable, Equatable {
     let agentId: String
     let found: Bool
     let path: String
@@ -279,7 +336,7 @@ struct DreamDiaryLite: Decodable {
     let updatedAtMs: Int?
 }
 
-struct DreamingPhaseStatusLite: Decodable {
+struct DreamingPhaseStatusLite: Decodable, Equatable {
     let enabled: Bool?
     let cron: String?
     let managedCronPresent: Bool?
@@ -355,7 +412,7 @@ enum SkillMutationError: LocalizedError {
     }
 }
 
-struct CostUsageSummaryLite: Decodable {
+struct CostUsageSummaryLite: Decodable, Equatable {
     let updatedAt: Int?
     let days: Int?
     let daily: [CostUsageDailyEntryLite]?
@@ -371,7 +428,7 @@ struct CostUsageSummaryLite: Decodable {
     }
 }
 
-struct CostUsageDailyEntryLite: Decodable {
+struct CostUsageDailyEntryLite: Decodable, Equatable {
     let date: String
     let totalTokens: Int?
     let totalCost: Double?
