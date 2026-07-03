@@ -18,6 +18,7 @@ struct RootPresentationFeature {
         var hasPresentedSheet: Bool
         var discoveredGatewayCount: Int
         var showGatewayProblemDetails: Bool
+        var sidebarGatewayStatus: GatewayDisplayState
         var startupRoute: RootTabs.StartupPresentationRoute
         var shouldPresentQuickSetup: Bool
 
@@ -42,9 +43,36 @@ struct RootPresentationFeature {
             self.hasPresentedSheet = hasPresentedSheet
             self.discoveredGatewayCount = discoveredGatewayCount
             self.showGatewayProblemDetails = false
+            self.sidebarGatewayStatus = .disconnected
             self.startupRoute = .none
             self.shouldPresentQuickSetup = false
             self.refreshPresentation()
+        }
+
+        var sidebarGatewayStatusTitle: String {
+            switch self.sidebarGatewayStatus {
+            case .connected:
+                "Online"
+            case .connecting:
+                "Connecting"
+            case .error:
+                "Needs attention"
+            case .disconnected:
+                "Offline"
+            }
+        }
+
+        var sidebarGatewayStatusColor: Color {
+            switch self.sidebarGatewayStatus {
+            case .connected:
+                OpenClawBrand.ok
+            case .connecting:
+                OpenClawBrand.accent
+            case .error:
+                OpenClawBrand.warn
+            case .disconnected:
+                .secondary
+            }
         }
 
         mutating func refreshPresentation() {
@@ -103,6 +131,7 @@ struct RootPresentationFeature {
 
     enum Action: Equatable, Sendable {
         case refreshPresentation
+        case sidebarGatewayStatusChanged(GatewayDisplayState)
         case startupSnapshotChanged(
             gatewayConnected: Bool,
             hasConnectedOnce: Bool,
@@ -127,6 +156,10 @@ struct RootPresentationFeature {
             switch action {
             case .refreshPresentation:
                 state.refreshPresentation()
+                return .none
+
+            case let .sidebarGatewayStatusChanged(status):
+                state.sidebarGatewayStatus = status
                 return .none
 
             case let .startupSnapshotChanged(
