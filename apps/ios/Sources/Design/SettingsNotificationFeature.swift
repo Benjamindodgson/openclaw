@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import SwiftUI
 
 @Reducer
 struct SettingsNotificationFeature {
@@ -40,6 +41,10 @@ struct SettingsNotificationFeature {
 
         var statusText: String {
             self.status.text
+        }
+
+        var statusColor: Color {
+            self.status.color
         }
 
         var relayDetail: String {

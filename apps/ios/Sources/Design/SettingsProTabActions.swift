@@ -1089,6 +1089,10 @@ extension SettingsProTab {
         self.notificationStore.statusText
     }
 
+    var notificationStatusColor: Color {
+        self.notificationStore.statusColor
+    }
+
     var notificationActionText: String {
         self.notificationStore.actionText
     }

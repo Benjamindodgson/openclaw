@@ -910,18 +910,21 @@ struct SettingsNavigationFeatureTests {
         #expect(state.statusText == "Checking")
         #expect(state.actionText == "Checking")
         #expect(state.statusDetail == "Checking iOS notification permission.")
+        #expect(state.statusColor == .secondary)
         #expect(state.needsAttention == false)
 
         state.status = .allowed
         #expect(state.statusText == "Enabled")
         #expect(state.actionText == "Manage in iOS Settings")
         #expect(state.statusDetail == "OpenClaw can show approval prompts and event alerts when the app is not active.")
+        #expect(state.statusColor == OpenClawBrand.ok)
         #expect(state.needsAttention == false)
 
         state.status = .notAllowed
         #expect(state.statusText == "Denied")
         #expect(state.actionText == "Open iOS Settings")
         #expect(state.statusDetail == "Notifications have been denied. Enable them in iOS Settings.")
+        #expect(state.statusColor == OpenClawBrand.warn)
         #expect(state.needsAttention == true)
 
         state.status = .notSet
@@ -929,12 +932,14 @@ struct SettingsNavigationFeatureTests {
         #expect(state.actionText == "Enable Notifications")
         #expect(state.statusDetail ==
             "Enable notifications to receive approval prompts and event alerts outside the app.")
+        #expect(state.statusColor == .secondary)
         #expect(state.needsAttention == true)
 
         state.status = .unknown
         #expect(state.statusText == "Unknown")
         #expect(state.actionText == "Open iOS Settings")
         #expect(state.statusDetail == "OpenClaw cannot determine the current notification permission state.")
+        #expect(state.statusColor == OpenClawBrand.warn)
         #expect(state.needsAttention == true)
     }
 

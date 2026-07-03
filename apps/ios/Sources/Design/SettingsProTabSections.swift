@@ -524,7 +524,7 @@ extension SettingsProTab {
                 title: "Notifications",
                 detail: self.notificationStatusDetail,
                 value: self.notificationStatusText,
-                color: self.notificationStore.status.color)
+                color: self.notificationStatusColor)
 
             ProCard(radius: SettingsLayout.cardRadius) {
                 VStack(alignment: .leading, spacing: 12) {
