@@ -995,6 +995,52 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings location creates mode change requests`() async {
+        let store = TestStore(initialState: SettingsLocationFeature.State()) {
+            SettingsLocationFeature()
+        }
+
+        await store.send(.locationModeChangeRequested(OpenClawLocationMode.always.rawValue)) {
+            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
+            $0.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
+                mode: .always,
+                previousRawValue: OpenClawLocationMode.off.rawValue,
+                rawValue: OpenClawLocationMode.always.rawValue)
+        }
+        await store.send(.locationModeRequestHandled) {
+            $0.locationModeRequest = nil
+        }
+    }
+
+    @Test func `settings location ignores duplicate in flight and invalid mode change requests`() async {
+        var duplicateState = SettingsLocationFeature.State()
+        duplicateState.locationModeRaw = OpenClawLocationMode.always.rawValue
+        duplicateState.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
+        let duplicateStore = TestStore(initialState: duplicateState) {
+            SettingsLocationFeature()
+        }
+
+        await duplicateStore.send(.locationModeChangeRequested(OpenClawLocationMode.always.rawValue))
+
+        var changingState = SettingsLocationFeature.State()
+        changingState.isChangingLocationMode = true
+        let changingStore = TestStore(initialState: changingState) {
+            SettingsLocationFeature()
+        }
+
+        await changingStore.send(.locationModeChangeRequested(OpenClawLocationMode.whileUsing.rawValue)) {
+            $0.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        }
+
+        let invalidStore = TestStore(initialState: SettingsLocationFeature.State()) {
+            SettingsLocationFeature()
+        }
+
+        await invalidStore.send(.locationModeChangeRequested("invalid-location-mode")) {
+            $0.locationModeRaw = "invalid-location-mode"
+        }
+    }
+
     @Test func `settings location summarizes privacy detail`() {
         var state = SettingsLocationFeature.State()
 
