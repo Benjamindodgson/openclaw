@@ -282,6 +282,66 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway connection syncs status summary`() async {
+        let store = TestStore(initialState: SettingsGatewayConnectionFeature.State()) {
+            SettingsGatewayConnectionFeature()
+        }
+
+        await store.send(.gatewayStatusSynced(
+            isAppleReviewDemoModeEnabled: false,
+            gatewayStatusConnected: false,
+            gatewayDisplayStatusText: "Pairing required",
+            gatewayAgentCount: 0))
+        {
+            $0.gatewayDisplayStatusText = "Pairing required"
+        }
+        await store.send(.gatewayStatusSynced(
+            isAppleReviewDemoModeEnabled: false,
+            gatewayStatusConnected: true,
+            gatewayDisplayStatusText: "Connected",
+            gatewayAgentCount: 2))
+        {
+            $0.gatewayDisplayStatusText = "Connected"
+            $0.gatewayStatusConnected = true
+            $0.gatewayAgentCount = 2
+        }
+        await store.send(.gatewayStatusSynced(
+            isAppleReviewDemoModeEnabled: true,
+            gatewayStatusConnected: false,
+            gatewayDisplayStatusText: "Offline",
+            gatewayAgentCount: 3))
+        {
+            $0.isAppleReviewDemoModeEnabled = true
+            $0.gatewayStatusConnected = false
+            $0.gatewayDisplayStatusText = "Offline"
+            $0.gatewayAgentCount = 3
+        }
+    }
+
+    @Test func `settings gateway connection resolves status summary`() {
+        #expect(SettingsGatewayConnectionFeature.State().gatewayStatusDetail == "Offline")
+        #expect(SettingsGatewayConnectionFeature.State().gatewayStatusValue == "offline")
+        #expect(SettingsGatewayConnectionFeature.State().gatewaySummaryDetail == "Offline • 0 agents")
+        #expect(SettingsGatewayConnectionFeature.State().gatewayDiagnosticConnected == false)
+
+        var connectedState = SettingsGatewayConnectionFeature.State()
+        connectedState.gatewayStatusConnected = true
+        connectedState.gatewayAgentCount = 1
+        #expect(connectedState.gatewayStatusDetail == "Connected")
+        #expect(connectedState.gatewayStatusValue == "online")
+        #expect(connectedState.gatewaySummaryDetail == "Connected • 1 agent")
+        #expect(connectedState.gatewayDiagnosticConnected)
+
+        var demoState = SettingsGatewayConnectionFeature.State()
+        demoState.isAppleReviewDemoModeEnabled = true
+        demoState.gatewayStatusConnected = true
+        demoState.gatewayAgentCount = 3
+        #expect(demoState.gatewayStatusDetail == "Apple Review demo mode")
+        #expect(demoState.gatewayStatusValue == "demo")
+        #expect(demoState.gatewaySummaryDetail == "Apple Review demo mode • 3 agents")
+        #expect(demoState.gatewayDiagnosticConnected)
+    }
+
     @Test func `settings gateway setup status records messages`() async {
         let store = TestStore(initialState: SettingsGatewaySetupStatusFeature.State()) {
             SettingsGatewaySetupStatusFeature()

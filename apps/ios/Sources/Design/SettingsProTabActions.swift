@@ -174,6 +174,7 @@ extension SettingsProTab {
             discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
             canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
         self.syncGatewaySetupStatusContext()
+        self.syncGatewayConnectionStatusState()
         self.gatewaySetupLinkStore.send(.setupCodeSynced(self.storedSetupCode))
         self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
@@ -237,6 +238,14 @@ extension SettingsProTab {
         self.gatewaySetupStatusStore.send(.gatewayStatusSynced(
             problemMessage: self.appModel.lastGatewayProblem?.message,
             gatewayStatusText: self.appModel.gatewayStatusText))
+    }
+
+    func syncGatewayConnectionStatusState() {
+        self.gatewayConnectionStore.send(.gatewayStatusSynced(
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
+            gatewayStatusConnected: GatewayStatusBuilder.build(appModel: self.appModel) == .connected,
+            gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
+            gatewayAgentCount: self.appModel.gatewayAgents.count))
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
@@ -965,27 +974,28 @@ extension SettingsProTab {
     }
 
     var gatewayConnected: Bool {
-        !self.appModel.isAppleReviewDemoModeEnabled &&
-            GatewayStatusBuilder.build(appModel: self.appModel) == .connected
+        self.gatewayConnectionStore.gatewayConnected
     }
 
     var gatewayStatusDetail: String {
-        if self.appModel.isAppleReviewDemoModeEnabled { return "Apple Review demo mode" }
-        return self.gatewayConnected ? "Connected" : self.appModel.gatewayDisplayStatusText
+        self.gatewayConnectionStore.gatewayStatusDetail
     }
 
     var gatewayStatusValue: String {
-        if self.appModel.isAppleReviewDemoModeEnabled { return "demo" }
-        return self.gatewayConnected ? "online" : "offline"
+        self.gatewayConnectionStore.gatewayStatusValue
     }
 
     var gatewayStatusColor: Color {
-        if self.appModel.isAppleReviewDemoModeEnabled { return OpenClawBrand.accent }
-        return self.gatewayConnected ? OpenClawBrand.ok : .secondary
+        if self.gatewayConnectionStore.isAppleReviewDemoModeEnabled { return OpenClawBrand.accent }
+        return self.gatewayConnectionStore.gatewayConnected ? OpenClawBrand.ok : .secondary
     }
 
     var gatewayDiagnosticConnected: Bool {
-        self.appModel.isAppleReviewDemoModeEnabled || self.gatewayConnected
+        self.gatewayConnectionStore.gatewayDiagnosticConnected
+    }
+
+    var gatewaySummaryDetail: String {
+        self.gatewayConnectionStore.gatewaySummaryDetail
     }
 
     var gatewayDiagnosticTalkConfigLoaded: Bool {
