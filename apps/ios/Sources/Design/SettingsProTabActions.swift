@@ -193,11 +193,7 @@ extension SettingsProTab {
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
         self.shareInstructionStore.send(
             .defaultShareInstructionLoaded(ShareToAgentSettings.loadDefaultInstruction()))
-        let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedInstanceId.isEmpty else { return }
-        self.gatewayCredentialsStore.send(.credentialsLoaded(
-            token: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? "",
-            password: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""))
+        self.gatewayCredentialsStore.send(.credentialsLoadRequested(instanceId: self.instanceId))
     }
 
     func syncVoiceControlState() {

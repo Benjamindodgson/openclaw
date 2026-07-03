@@ -1206,12 +1206,13 @@ struct RootTabsSourceGuardTests {
     @Test func `settings manual credential persistence is reducer effect owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let updateCredentialsFunction = try Self.extract(
             actionsSource,
             from: "func updateGatewayToken(_ value: String)",
             to: "var manualPortIsValid")
 
-        #expect(settingsSource.contains("struct SettingsGatewayCredentialsPersistenceClient"))
+        #expect(supportSource.contains("struct SettingsGatewayCredentialsPersistenceClient"))
         #expect(settingsSource.contains("case gatewayTokenPersistenceRequested(value: String, instanceId: String)"))
         #expect(settingsSource.contains("case gatewayPasswordPersistenceRequested(value: String, instanceId: String)"))
         #expect(settingsSource.contains("await persistenceClient.saveGatewayToken("))
@@ -1223,6 +1224,27 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("func persistGatewayPassword") == false)
         #expect(updateCredentialsFunction.contains("GatewaySettingsStore.saveGatewayToken") == false)
         #expect(updateCredentialsFunction.contains("GatewaySettingsStore.saveGatewayPassword") == false)
+    }
+
+    @Test func `settings credential loading is reducer owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let syncSettingsFunction = try Self.extract(
+            actionsSource,
+            from: "func syncSettingsState()",
+            to: "func syncVoiceControlState()")
+
+        #expect(supportSource.contains("GatewaySettingsStore.loadGatewayToken(instanceId: instanceId)"))
+        #expect(supportSource.contains("GatewaySettingsStore.loadGatewayPassword(instanceId: instanceId)"))
+        #expect(settingsSource.contains("case credentialsLoadRequested(instanceId: String)"))
+        #expect(settingsSource.contains("persistenceClient.loadGatewayToken(trimmedInstanceId)"))
+        #expect(settingsSource.contains("persistenceClient.loadGatewayPassword(trimmedInstanceId)"))
+        #expect(settingsSource.contains("trimmedInstanceId(_ instanceId: String) -> String?"))
+        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.credentialsLoadRequested("))
+        #expect(syncSettingsFunction.contains("GatewaySettingsStore.loadGatewayToken") == false)
+        #expect(syncSettingsFunction.contains("GatewaySettingsStore.loadGatewayPassword") == false)
+        #expect(syncSettingsFunction.contains("credentialsLoaded(") == false)
     }
 
     @Test func `onboarding setup code apply result is reducer owned`() throws {
