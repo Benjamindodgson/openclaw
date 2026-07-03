@@ -66,7 +66,7 @@ extension SettingsProTab {
                     title: "Notifications",
                     detail: "Approval and event alert channel",
                     value: self.notificationStatusText,
-                    color: self.notificationStore.status.color)
+                    color: self.notificationStatusColor)
                 Divider().padding(.leading, 60)
                 self.diagnosticCheckRow(
                     icon: "rectangle.on.rectangle",
