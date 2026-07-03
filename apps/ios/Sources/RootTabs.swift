@@ -47,13 +47,8 @@ struct RootTabs: View {
     }
 
     @State private var presentedSheet: PresentedSheet?
-    @State private var showOnboarding: Bool = false
-    @State private var onboardingAllowSkip: Bool = true
-    @State private var didEvaluateOnboarding: Bool = false
-    @State private var didAutoOpenSettings: Bool = false
     @State private var didApplyInitialAppearance: Bool = false
     @State private var didApplyInitialChatSession: Bool = false
-    @State private var handledGatewaySetupRequestID: Int = 0
     @State private var suppressedExecApprovalPromptIDForNotificationSettings: String?
 
     private static var initialTab: AppTab {
@@ -737,10 +732,6 @@ struct RootTabs: View {
             .onChange(of: self.onboardingRequestID) { _, _ in
                 self.evaluateOnboardingPresentation(force: true)
             }
-            .onChange(of: self.showOnboarding) { _, newValue in
-                guard !newValue else { return }
-                self.maybeRequestLocalNetworkAccess(reason: "onboarding_dismissed")
-            }
             .onChange(of: self.appModel.openChatRequestID) { _, _ in
                 self.selectSidebarDestination(.chat)
             }
@@ -776,14 +767,14 @@ struct RootTabs: View {
                         .preferredColorScheme(self.appearancePreference.colorScheme)
                 }
             }
-            .fullScreenCover(isPresented: self.$showOnboarding) {
+            .fullScreenCover(isPresented: self.onboardingPresentedBinding) {
                 OnboardingWizardView(
-                    allowSkip: self.onboardingAllowSkip,
+                    allowSkip: self.presentationStore.onboardingAllowSkip,
                     onRequestLocalNetworkAccess: { reason in
                         self.requestLocalNetworkAccess(reason: reason)
                     },
                     onClose: {
-                        self.showOnboarding = false
+                        self.setOnboardingPresented(false)
                     })
                     .environment(self.appModel)
                     .environment(self.voiceWake)
@@ -1114,30 +1105,17 @@ extension RootTabs {
 
     private func evaluateOnboardingPresentation(force: Bool) {
         if force {
-            self.onboardingAllowSkip = true
-            self.showOnboarding = true
+            self.presentationStore.send(.forceOnboardingRequested)
             return
         }
 
-        guard !self.didEvaluateOnboarding else { return }
-        self.didEvaluateOnboarding = true
-        let route = Self.startupPresentationRoute(
+        self.presentationStore.send(.startupPresentationEvaluationRequested(
             gatewayConnected: self.appModel.gatewayServerName != nil,
             hasConnectedOnce: self.hasConnectedOnce,
             onboardingComplete: self.onboardingComplete,
             hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
-            shouldPresentOnLaunch: OnboardingStateStore.shouldPresentOnLaunch(appModel: self.appModel))
-        switch route {
-        case .none:
-            self.maybeRequestLocalNetworkAccess(reason: "root_appear")
-        case .onboarding:
-            self.onboardingAllowSkip = true
-            self.showOnboarding = true
-        case .settings:
-            self.didAutoOpenSettings = true
-            self.selectSidebarDestination(.gateway)
-            self.maybeRequestLocalNetworkAccess(reason: "root_appear")
-        }
+            shouldPresentOnLaunch: OnboardingStateStore.shouldPresentOnLaunch(appModel: self.appModel)))
+        self.handlePresentationCommand()
     }
 
     private func hasExistingGatewayConfig() -> Bool {
@@ -1152,36 +1130,24 @@ extension RootTabs {
     }
 
     private func maybeAutoOpenSettings() {
-        guard !self.didAutoOpenSettings else { return }
-        guard !self.showOnboarding else { return }
-        let route = Self.startupPresentationRoute(
+        self.presentationStore.send(.autoOpenSettingsRequested(
             gatewayConnected: self.appModel.gatewayServerName != nil,
             hasConnectedOnce: self.hasConnectedOnce,
             onboardingComplete: self.onboardingComplete,
-            hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
-            shouldPresentOnLaunch: false)
-        guard route == .settings else { return }
-        self.didAutoOpenSettings = true
-        self.selectSidebarDestination(.gateway)
-        self.maybeRequestLocalNetworkAccess(reason: "auto_open_settings")
+            hasExistingGatewayConfig: self.hasExistingGatewayConfig()))
+        self.handlePresentationCommand()
     }
 
     private func maybeOpenSettingsForGatewaySetup() {
-        let requestID = self.appModel.gatewaySetupRequestID
-        guard requestID != 0, requestID != self.handledGatewaySetupRequestID else { return }
-        self.handledGatewaySetupRequestID = requestID
-        self.showOnboarding = false
-        self.presentedSheet = nil
-        self.didAutoOpenSettings = true
-        self.selectSidebarDestination(.gateway)
-        self.requestLocalNetworkAccess(reason: "gateway_setup_deeplink")
+        self.presentationStore.send(.gatewaySetupRequestChanged(self.appModel.gatewaySetupRequestID))
+        self.handlePresentationCommand()
     }
 
     private func maybeRequestLocalNetworkAccess(reason: String) {
-        guard self.didEvaluateOnboarding else { return }
-        guard self.scenePhase == .active else { return }
-        guard !self.showOnboarding else { return }
-        self.requestLocalNetworkAccess(reason: reason)
+        self.presentationStore.send(.localNetworkAccessRequested(
+            reason: reason,
+            sceneActive: self.scenePhase == .active))
+        self.handlePresentationCommand()
     }
 
     private func requestLocalNetworkAccess(reason: String) {
@@ -1203,19 +1169,49 @@ extension RootTabs {
     }
 
     private func maybeShowQuickSetup() {
-        let shouldPresent = Self.shouldPresentQuickSetup(
+        self.presentationStore.send(.quickSetupSnapshotChanged(
             quickSetupDismissed: self.quickSetupDismissed,
-            showOnboarding: self.showOnboarding,
+            showOnboarding: self.presentationStore.showOnboarding,
             hasPresentedSheet: self.presentedSheet != nil,
             gatewayConnected: self.appModel.gatewayServerName != nil,
             hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
-            discoveredGatewayCount: self.gatewayController.gateways.count)
-        guard shouldPresent else { return }
+            discoveredGatewayCount: self.gatewayController.gateways.count))
+        guard self.presentationStore.shouldPresentQuickSetup else { return }
         self.presentedSheet = .quickSetup
     }
 }
 
 extension RootTabs {
+    private var onboardingPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { self.presentationStore.showOnboarding },
+            set: { self.setOnboardingPresented($0) })
+    }
+
+    private func setOnboardingPresented(_ isPresented: Bool) {
+        self.presentationStore.send(.onboardingVisibilityChanged(
+            isPresented: isPresented,
+            sceneActive: self.scenePhase == .active))
+        self.handlePresentationCommand()
+    }
+
+    private func handlePresentationCommand() {
+        guard let command = self.presentationStore.presentationCommand else { return }
+        self.presentationStore.send(.presentationCommandHandled)
+
+        switch command {
+        case let .requestLocalNetworkAccess(reason):
+            self.requestLocalNetworkAccess(reason: reason)
+
+        case let .openGatewaySettingsAndRequestLocalNetworkAccess(reason, dismissPresentedSheet):
+            if dismissPresentedSheet {
+                self.presentedSheet = nil
+            }
+            self.selectSidebarDestination(.gateway)
+            self.requestLocalNetworkAccess(reason: reason)
+        }
+    }
+
     private var gatewayProblemDetailsBinding: Binding<Bool> {
         Binding(
             get: { self.presentationStore.showGatewayProblemDetails },

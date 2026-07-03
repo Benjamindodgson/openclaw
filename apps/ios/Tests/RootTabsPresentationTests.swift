@@ -121,6 +121,140 @@ struct RootTabsPresentationTests {
         }
     }
 
+    @Test func `reducer opens onboarding on first startup presentation evaluation`() async {
+        let store = TestStore(initialState: RootPresentationFeature.State()) {
+            RootPresentationFeature()
+        }
+
+        await store.send(.startupPresentationEvaluationRequested(
+            gatewayConnected: false,
+            hasConnectedOnce: false,
+            onboardingComplete: false,
+            hasExistingGatewayConfig: false,
+            shouldPresentOnLaunch: false))
+        {
+            $0.didEvaluateOnboarding = true
+            $0.showOnboarding = true
+            $0.startupRoute = .onboarding
+        }
+
+        await store.send(.startupPresentationEvaluationRequested(
+            gatewayConnected: false,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: false,
+            shouldPresentOnLaunch: false))
+    }
+
+    @Test func `reducer opens settings when startup evaluation needs gateway config`() async {
+        let store = TestStore(initialState: RootPresentationFeature.State()) {
+            RootPresentationFeature()
+        }
+
+        await store.send(.startupPresentationEvaluationRequested(
+            gatewayConnected: false,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: false,
+            shouldPresentOnLaunch: false))
+        {
+            $0.hasConnectedOnce = true
+            $0.onboardingComplete = true
+            $0.didEvaluateOnboarding = true
+            $0.didAutoOpenSettings = true
+            $0.startupRoute = .settings
+            $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
+                reason: "root_appear",
+                dismissPresentedSheet: false)
+        }
+
+        await store.send(.presentationCommandHandled) {
+            $0.presentationCommand = nil
+        }
+    }
+
+    @Test func `reducer auto opens settings once after onboarding is complete without config`() async {
+        let store = TestStore(initialState: RootPresentationFeature.State()) {
+            RootPresentationFeature()
+        }
+
+        await store.send(.autoOpenSettingsRequested(
+            gatewayConnected: false,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: false))
+        {
+            $0.hasConnectedOnce = true
+            $0.onboardingComplete = true
+            $0.startupRoute = .settings
+            $0.didAutoOpenSettings = true
+            $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
+                reason: "auto_open_settings",
+                dismissPresentedSheet: false)
+        }
+
+        await store.send(.autoOpenSettingsRequested(
+            gatewayConnected: false,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: false))
+    }
+
+    @Test func `reducer handles gateway setup request once`() async {
+        let store = TestStore(initialState: RootPresentationFeature.State(showOnboarding: true)) {
+            RootPresentationFeature()
+        }
+
+        await store.send(.gatewaySetupRequestChanged(42)) {
+            $0.showOnboarding = false
+            $0.didAutoOpenSettings = true
+            $0.handledGatewaySetupRequestID = 42
+            $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
+                reason: "gateway_setup_deeplink",
+                dismissPresentedSheet: true)
+        }
+
+        await store.send(.gatewaySetupRequestChanged(42))
+    }
+
+    @Test func `reducer gates local network access until evaluated active and onboarding hidden`() async {
+        let store = TestStore(initialState: RootPresentationFeature.State(showOnboarding: true)) {
+            RootPresentationFeature()
+        }
+
+        await store.send(.localNetworkAccessRequested(reason: "scene_active", sceneActive: true))
+
+        await store.send(.onboardingVisibilityChanged(isPresented: false, sceneActive: true)) {
+            $0.showOnboarding = false
+        }
+
+        await store.send(.startupPresentationEvaluationRequested(
+            gatewayConnected: true,
+            hasConnectedOnce: true,
+            onboardingComplete: true,
+            hasExistingGatewayConfig: true,
+            shouldPresentOnLaunch: false))
+        {
+            $0.gatewayConnected = true
+            $0.hasConnectedOnce = true
+            $0.onboardingComplete = true
+            $0.hasExistingGatewayConfig = true
+            $0.didEvaluateOnboarding = true
+            $0.startupRoute = .none
+            $0.presentationCommand = .requestLocalNetworkAccess(reason: "root_appear")
+        }
+
+        await store.send(.presentationCommandHandled) {
+            $0.presentationCommand = nil
+        }
+
+        await store.send(.localNetworkAccessRequested(reason: "scene_active", sceneActive: false))
+
+        await store.send(.localNetworkAccessRequested(reason: "scene_active", sceneActive: true)) {
+            $0.presentationCommand = .requestLocalNetworkAccess(reason: "scene_active")
+        }
+    }
+
     @Test func `reducer presents and dismisses gateway problem details`() async {
         let store = TestStore(initialState: RootPresentationFeature.State()) {
             RootPresentationFeature()

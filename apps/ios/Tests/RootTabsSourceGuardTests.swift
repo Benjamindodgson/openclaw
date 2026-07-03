@@ -802,6 +802,7 @@ struct RootTabsSourceGuardTests {
     @Test func `local network access is requested from visible gateway flows`() throws {
         let appSource = try String(contentsOf: Self.openClawAppSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let controllerSource = try String(contentsOf: Self.gatewayConnectionControllerSourceURL(), encoding: .utf8)
@@ -813,11 +814,15 @@ struct RootTabsSourceGuardTests {
         #expect(controllerSource.contains("self.requestLocalNetworkAccess(reason: \"connect_discovered_gateway\")"))
         #expect(controllerSource.contains("self.requestLocalNetworkAccess(reason: \"connect_last_known\")"))
 
-        #expect(rootSource.contains("self.maybeRequestLocalNetworkAccess(reason: \"root_appear\")"))
         #expect(rootSource.contains("self.maybeRequestLocalNetworkAccess(reason: \"scene_active\")"))
-        #expect(rootSource.contains("self.maybeRequestLocalNetworkAccess(reason: \"onboarding_dismissed\")"))
-        #expect(rootSource.contains("self.requestLocalNetworkAccess(reason: \"gateway_setup_deeplink\")"))
-        #expect(rootSource.contains("guard self.didEvaluateOnboarding else { return }"))
+        #expect(rootSource.contains("self.requestLocalNetworkAccess(reason: reason)"))
+        #expect(rootSource.contains("self.handlePresentationCommand()"))
+        #expect(rootSource.contains("self.presentationStore.send(.localNetworkAccessRequested("))
+        #expect(rootSource.contains("self.presentationStore.send(.onboardingVisibilityChanged("))
+        #expect(navigationSource.contains("reason: \"root_appear\""))
+        #expect(navigationSource.contains("reason: \"gateway_setup_deeplink\""))
+        #expect(navigationSource.contains("guard state.didEvaluateOnboarding else { return .none }"))
+        #expect(navigationSource.contains("reason: \"onboarding_dismissed\""))
         #expect(rootSource.contains("onRequestLocalNetworkAccess: { reason in"))
 
         #expect(onboardingSource.contains("self.requestLocalNetworkAccess(reason: \"onboarding_continue\")"))

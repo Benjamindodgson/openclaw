@@ -15,12 +15,17 @@ struct RootPresentationFeature {
         var shouldPresentOnLaunch: Bool
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
+        var onboardingAllowSkip: Bool
         var hasPresentedSheet: Bool
         var discoveredGatewayCount: Int
+        var didEvaluateOnboarding: Bool
+        var didAutoOpenSettings: Bool
+        var handledGatewaySetupRequestID: Int
         var showGatewayProblemDetails: Bool
         var sidebarGatewayStatus: GatewayDisplayState
         var startupRoute: RootTabs.StartupPresentationRoute
         var shouldPresentQuickSetup: Bool
+        var presentationCommand: PresentationCommand?
 
         init(
             gatewayConnected: Bool = false,
@@ -30,6 +35,7 @@ struct RootPresentationFeature {
             shouldPresentOnLaunch: Bool = false,
             quickSetupDismissed: Bool = false,
             showOnboarding: Bool = false,
+            onboardingAllowSkip: Bool = true,
             hasPresentedSheet: Bool = false,
             discoveredGatewayCount: Int = 0)
         {
@@ -40,12 +46,17 @@ struct RootPresentationFeature {
             self.shouldPresentOnLaunch = shouldPresentOnLaunch
             self.quickSetupDismissed = quickSetupDismissed
             self.showOnboarding = showOnboarding
+            self.onboardingAllowSkip = onboardingAllowSkip
             self.hasPresentedSheet = hasPresentedSheet
             self.discoveredGatewayCount = discoveredGatewayCount
+            self.didEvaluateOnboarding = false
+            self.didAutoOpenSettings = false
+            self.handledGatewaySetupRequestID = 0
             self.showGatewayProblemDetails = false
             self.sidebarGatewayStatus = .disconnected
             self.startupRoute = .none
             self.shouldPresentQuickSetup = false
+            self.presentationCommand = nil
             self.refreshPresentation()
         }
 
@@ -129,6 +140,11 @@ struct RootPresentationFeature {
         }
     }
 
+    enum PresentationCommand: Equatable, Sendable {
+        case requestLocalNetworkAccess(reason: String)
+        case openGatewaySettingsAndRequestLocalNetworkAccess(reason: String, dismissPresentedSheet: Bool)
+    }
+
     enum Action: Equatable, Sendable {
         case refreshPresentation
         case sidebarGatewayStatusChanged(GatewayDisplayState)
@@ -145,6 +161,22 @@ struct RootPresentationFeature {
             gatewayConnected: Bool,
             hasExistingGatewayConfig: Bool,
             discoveredGatewayCount: Int)
+        case startupPresentationEvaluationRequested(
+            gatewayConnected: Bool,
+            hasConnectedOnce: Bool,
+            onboardingComplete: Bool,
+            hasExistingGatewayConfig: Bool,
+            shouldPresentOnLaunch: Bool)
+        case forceOnboardingRequested
+        case autoOpenSettingsRequested(
+            gatewayConnected: Bool,
+            hasConnectedOnce: Bool,
+            onboardingComplete: Bool,
+            hasExistingGatewayConfig: Bool)
+        case gatewaySetupRequestChanged(Int)
+        case localNetworkAccessRequested(reason: String, sceneActive: Bool)
+        case onboardingVisibilityChanged(isPresented: Bool, sceneActive: Bool)
+        case presentationCommandHandled
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
     }
@@ -190,6 +222,99 @@ struct RootPresentationFeature {
                 state.hasExistingGatewayConfig = hasExistingGatewayConfig
                 state.discoveredGatewayCount = discoveredGatewayCount
                 state.refreshPresentation()
+                return .none
+
+            case let .startupPresentationEvaluationRequested(
+                gatewayConnected,
+                hasConnectedOnce,
+                onboardingComplete,
+                hasExistingGatewayConfig,
+                shouldPresentOnLaunch):
+                guard !state.didEvaluateOnboarding else { return .none }
+                state.didEvaluateOnboarding = true
+                state.gatewayConnected = gatewayConnected
+                state.hasConnectedOnce = hasConnectedOnce
+                state.onboardingComplete = onboardingComplete
+                state.hasExistingGatewayConfig = hasExistingGatewayConfig
+                state.shouldPresentOnLaunch = shouldPresentOnLaunch
+                state.refreshPresentation()
+
+                switch state.startupRoute {
+                case .none:
+                    state.presentationCommand = .requestLocalNetworkAccess(reason: "root_appear")
+                case .onboarding:
+                    state.onboardingAllowSkip = true
+                    state.showOnboarding = true
+                    state.refreshPresentation()
+                case .settings:
+                    state.didAutoOpenSettings = true
+                    state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
+                        reason: "root_appear",
+                        dismissPresentedSheet: false)
+                }
+                return .none
+
+            case .forceOnboardingRequested:
+                state.onboardingAllowSkip = true
+                state.showOnboarding = true
+                state.refreshPresentation()
+                return .none
+
+            case let .autoOpenSettingsRequested(
+                gatewayConnected,
+                hasConnectedOnce,
+                onboardingComplete,
+                hasExistingGatewayConfig):
+                guard !state.didAutoOpenSettings else { return .none }
+                guard !state.showOnboarding else { return .none }
+                state.gatewayConnected = gatewayConnected
+                state.hasConnectedOnce = hasConnectedOnce
+                state.onboardingComplete = onboardingComplete
+                state.hasExistingGatewayConfig = hasExistingGatewayConfig
+                state.shouldPresentOnLaunch = false
+                state.refreshPresentation()
+                let route = Self.State.startupRoute(
+                    gatewayConnected: gatewayConnected,
+                    hasConnectedOnce: hasConnectedOnce,
+                    onboardingComplete: onboardingComplete,
+                    hasExistingGatewayConfig: hasExistingGatewayConfig,
+                    shouldPresentOnLaunch: false)
+                guard route == .settings else { return .none }
+                state.didAutoOpenSettings = true
+                state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
+                    reason: "auto_open_settings",
+                    dismissPresentedSheet: false)
+                return .none
+
+            case let .gatewaySetupRequestChanged(requestID):
+                guard requestID != 0, requestID != state.handledGatewaySetupRequestID else { return .none }
+                state.handledGatewaySetupRequestID = requestID
+                state.showOnboarding = false
+                state.didAutoOpenSettings = true
+                state.refreshPresentation()
+                state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
+                    reason: "gateway_setup_deeplink",
+                    dismissPresentedSheet: true)
+                return .none
+
+            case let .localNetworkAccessRequested(reason, sceneActive):
+                guard state.didEvaluateOnboarding else { return .none }
+                guard sceneActive else { return .none }
+                guard !state.showOnboarding else { return .none }
+                state.presentationCommand = .requestLocalNetworkAccess(reason: reason)
+                return .none
+
+            case let .onboardingVisibilityChanged(isPresented, sceneActive):
+                let wasPresented = state.showOnboarding
+                state.showOnboarding = isPresented
+                state.refreshPresentation()
+                guard wasPresented, !isPresented else { return .none }
+                guard state.didEvaluateOnboarding, sceneActive else { return .none }
+                state.presentationCommand = .requestLocalNetworkAccess(reason: "onboarding_dismissed")
+                return .none
+
+            case .presentationCommandHandled:
+                state.presentationCommand = nil
                 return .none
 
             case .gatewayProblemDetailsButtonTapped:
