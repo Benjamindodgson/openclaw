@@ -6,6 +6,14 @@ import SwiftUI
 @Reducer
 struct RootPresentationFeature {
     // swiftformat:disable redundantSendable
+    enum PresentedSheet: Int, Identifiable, Equatable, Sendable {
+        case quickSetup
+
+        var id: Int {
+            self.rawValue
+        }
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected: Bool
@@ -16,7 +24,7 @@ struct RootPresentationFeature {
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
         var onboardingAllowSkip: Bool
-        var hasPresentedSheet: Bool
+        var presentedSheet: PresentedSheet?
         var discoveredGatewayCount: Int
         var didEvaluateOnboarding: Bool
         var didAutoOpenSettings: Bool
@@ -36,7 +44,7 @@ struct RootPresentationFeature {
             quickSetupDismissed: Bool = false,
             showOnboarding: Bool = false,
             onboardingAllowSkip: Bool = true,
-            hasPresentedSheet: Bool = false,
+            presentedSheet: PresentedSheet? = nil,
             discoveredGatewayCount: Int = 0)
         {
             self.gatewayConnected = gatewayConnected
@@ -47,7 +55,7 @@ struct RootPresentationFeature {
             self.quickSetupDismissed = quickSetupDismissed
             self.showOnboarding = showOnboarding
             self.onboardingAllowSkip = onboardingAllowSkip
-            self.hasPresentedSheet = hasPresentedSheet
+            self.presentedSheet = presentedSheet
             self.discoveredGatewayCount = discoveredGatewayCount
             self.didEvaluateOnboarding = false
             self.didAutoOpenSettings = false
@@ -96,7 +104,7 @@ struct RootPresentationFeature {
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
                 quickSetupDismissed: self.quickSetupDismissed,
                 showOnboarding: self.showOnboarding,
-                hasPresentedSheet: self.hasPresentedSheet,
+                hasPresentedSheet: self.presentedSheet != nil,
                 gatewayConnected: self.gatewayConnected,
                 hasExistingGatewayConfig: self.hasExistingGatewayConfig,
                 discoveredGatewayCount: self.discoveredGatewayCount)
@@ -142,7 +150,7 @@ struct RootPresentationFeature {
 
     enum PresentationCommand: Equatable, Sendable {
         case requestLocalNetworkAccess(reason: String)
-        case openGatewaySettingsAndRequestLocalNetworkAccess(reason: String, dismissPresentedSheet: Bool)
+        case openGatewaySettingsAndRequestLocalNetworkAccess(reason: String)
     }
 
     enum Action: Equatable, Sendable {
@@ -157,10 +165,10 @@ struct RootPresentationFeature {
         case quickSetupSnapshotChanged(
             quickSetupDismissed: Bool,
             showOnboarding: Bool,
-            hasPresentedSheet: Bool,
             gatewayConnected: Bool,
             hasExistingGatewayConfig: Bool,
             discoveredGatewayCount: Int)
+        case presentedSheetChanged(PresentedSheet?)
         case startupPresentationEvaluationRequested(
             gatewayConnected: Bool,
             hasConnectedOnce: Bool,
@@ -211,16 +219,23 @@ struct RootPresentationFeature {
             case let .quickSetupSnapshotChanged(
                 quickSetupDismissed,
                 showOnboarding,
-                hasPresentedSheet,
                 gatewayConnected,
                 hasExistingGatewayConfig,
                 discoveredGatewayCount):
                 state.quickSetupDismissed = quickSetupDismissed
                 state.showOnboarding = showOnboarding
-                state.hasPresentedSheet = hasPresentedSheet
                 state.gatewayConnected = gatewayConnected
                 state.hasExistingGatewayConfig = hasExistingGatewayConfig
                 state.discoveredGatewayCount = discoveredGatewayCount
+                state.refreshPresentation()
+                if state.shouldPresentQuickSetup {
+                    state.presentedSheet = .quickSetup
+                    state.refreshPresentation()
+                }
+                return .none
+
+            case let .presentedSheetChanged(sheet):
+                state.presentedSheet = sheet
                 state.refreshPresentation()
                 return .none
 
@@ -249,8 +264,7 @@ struct RootPresentationFeature {
                 case .settings:
                     state.didAutoOpenSettings = true
                     state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                        reason: "root_appear",
-                        dismissPresentedSheet: false)
+                        reason: "root_appear")
                 }
                 return .none
 
@@ -282,8 +296,7 @@ struct RootPresentationFeature {
                 guard route == .settings else { return .none }
                 state.didAutoOpenSettings = true
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                    reason: "auto_open_settings",
-                    dismissPresentedSheet: false)
+                    reason: "auto_open_settings")
                 return .none
 
             case let .gatewaySetupRequestChanged(requestID):
@@ -291,10 +304,10 @@ struct RootPresentationFeature {
                 state.handledGatewaySetupRequestID = requestID
                 state.showOnboarding = false
                 state.didAutoOpenSettings = true
+                state.presentedSheet = nil
                 state.refreshPresentation()
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                    reason: "gateway_setup_deeplink",
-                    dismissPresentedSheet: true)
+                    reason: "gateway_setup_deeplink")
                 return .none
 
             case let .localNetworkAccessRequested(reason, sceneActive):

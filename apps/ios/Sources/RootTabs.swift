@@ -55,8 +55,6 @@ struct RootTabs: View {
         RootPresentationFeature()
     }
 
-    @State private var presentedSheet: PresentedSheet?
-
     private static var initialTab: AppTab {
         Self.initialTab(arguments: ProcessInfo.processInfo.arguments)
     }
@@ -124,16 +122,6 @@ struct RootTabs: View {
         guard arguments.indices.contains(valueIndex) else { return nil }
         let trimmed = arguments[valueIndex].trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
-    }
-
-    private enum PresentedSheet: Identifiable {
-        case quickSetup
-
-        var id: Int {
-            switch self {
-            case .quickSetup: 0
-            }
-        }
     }
 
     static func shouldUseSidebarTabs(
@@ -760,7 +748,7 @@ struct RootTabs: View {
                         })
                 }
             }
-            .sheet(item: self.$presentedSheet) { sheet in
+            .sheet(item: self.presentedSheetBinding) { sheet in
                 switch sheet {
                 case .quickSetup:
                     GatewayQuickSetupSheet(store: self.makeGatewayQuickSetupStore())
@@ -1178,12 +1166,9 @@ extension RootTabs {
         self.presentationStore.send(.quickSetupSnapshotChanged(
             quickSetupDismissed: self.quickSetupDismissed,
             showOnboarding: self.presentationStore.showOnboarding,
-            hasPresentedSheet: self.presentedSheet != nil,
             gatewayConnected: self.appModel.gatewayServerName != nil,
             hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
             discoveredGatewayCount: self.gatewayController.gateways.count))
-        guard self.presentationStore.shouldPresentQuickSetup else { return }
-        self.presentedSheet = .quickSetup
     }
 }
 
@@ -1222,13 +1207,16 @@ extension RootTabs {
         case let .requestLocalNetworkAccess(reason):
             self.requestLocalNetworkAccess(reason: reason)
 
-        case let .openGatewaySettingsAndRequestLocalNetworkAccess(reason, dismissPresentedSheet):
-            if dismissPresentedSheet {
-                self.presentedSheet = nil
-            }
+        case let .openGatewaySettingsAndRequestLocalNetworkAccess(reason):
             self.selectSidebarDestination(.gateway)
             self.requestLocalNetworkAccess(reason: reason)
         }
+    }
+
+    private var presentedSheetBinding: Binding<RootPresentationFeature.PresentedSheet?> {
+        Binding(
+            get: { self.presentationStore.presentedSheet },
+            set: { self.presentationStore.send(.presentedSheetChanged($0)) })
     }
 
     private var gatewayProblemDetailsBinding: Binding<Bool> {
