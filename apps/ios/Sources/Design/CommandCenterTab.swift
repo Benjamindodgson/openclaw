@@ -9,8 +9,7 @@ struct CommandCenterTab: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.scenePhase) private var scenePhase
-    @State private var defaultChatSessionEntry: OpenClawChatSessionEntry?
-    @State private var recentChatSessions: [OpenClawChatSessionEntry] = []
+    @State private var recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature>
     var ownsNavigationStack: Bool = true
     var headerTitle: String = "OpenClaw"
     var headerLeadingAction: OpenClawSidebarHeaderAction?
@@ -34,6 +33,30 @@ struct CommandCenterTab: View {
         let color: Color
         let progress: Double?
         let route: WorkRoute
+    }
+
+    init(
+        ownsNavigationStack: Bool = true,
+        headerTitle: String = "OpenClaw",
+        headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
+        showsHeaderMark: Bool = true,
+        openChat: @escaping () -> Void,
+        openSettings: @escaping () -> Void,
+        openSessions: (() -> Void)? = nil,
+        recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature> = Store(
+            initialState: CommandCenterRecentSessionsFeature.State())
+        {
+            CommandCenterRecentSessionsFeature()
+        })
+    {
+        self.ownsNavigationStack = ownsNavigationStack
+        self.headerTitle = headerTitle
+        self.headerLeadingAction = headerLeadingAction
+        self.showsHeaderMark = showsHeaderMark
+        self.openChat = openChat
+        self.openSettings = openSettings
+        self.openSessions = openSessions
+        self._recentSessionsStore = State(wrappedValue: recentSessionsStore)
     }
 
     var body: some View {
@@ -327,7 +350,7 @@ struct CommandCenterTab: View {
     }
 
     private var defaultChatActivityText: String {
-        guard let updatedAt = defaultChatSessionEntry?.updatedAt, updatedAt > 0 else {
+        guard let updatedAt = recentSessionsStore.defaultChatSessionEntry?.updatedAt, updatedAt > 0 else {
             return "No recent activity"
         }
         return Self.relativeTimeText(forMilliseconds: updatedAt)
@@ -367,7 +390,7 @@ struct CommandCenterTab: View {
 
     private var sessionWorkItems: [WorkItem] {
         let currentSessionKey = self.appModel.chatSessionKey
-        return self.recentChatSessions
+        return self.recentSessionsStore.recentChatSessions
             .filter { Self.isRecentChatSession($0.key, defaultSessionKey: self.appModel.defaultChatSessionKey) }
             .map { session in
                 Self.sessionWorkItem(for: session, currentSessionKey: currentSessionKey)
@@ -385,58 +408,11 @@ struct CommandCenterTab: View {
     }
 
     private func refreshRecentSessionsIfNeeded() async {
-        guard self.scenePhase == .active else { return }
-        guard self.sessionListAvailable else {
-            if self.defaultChatSessionEntry != nil {
-                self.defaultChatSessionEntry = nil
-            }
-            if !self.recentChatSessions.isEmpty {
-                self.recentChatSessions = []
-            }
-            return
-        }
-
-        do {
-            let transport = self.appModel.makeChatTransport()
-            let response = try await transport.listSessions(limit: Self.recentSessionsFetchLimit)
-            self.defaultChatSessionEntry = response.sessions.first {
-                $0.key == self.appModel.defaultChatSessionKey
-            }
-            self.recentChatSessions = Self.sessionChoices(
-                response.sessions,
-                currentSessionKey: self.appModel.chatSessionKey,
-                defaultSessionKey: self.appModel.defaultChatSessionKey)
-        } catch {
-            self.defaultChatSessionEntry = nil
-            self.recentChatSessions = []
-        }
-    }
-
-    private static func sessionChoices(
-        _ sessions: [OpenClawChatSessionEntry],
-        currentSessionKey: String,
-        defaultSessionKey: String) -> [OpenClawChatSessionEntry]
-    {
-        let sorted = sessions.sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
-        var result: [OpenClawChatSessionEntry] = []
-        var included = Set<String>()
-
-        if Self.isRecentChatSession(currentSessionKey, defaultSessionKey: defaultSessionKey),
-           let current = sorted.first(where: { $0.key == currentSessionKey })
-        {
-            result.append(current)
-            included.insert(current.key)
-        }
-
-        for session in sorted {
-            guard !included.contains(session.key) else { continue }
-            guard Self.isRecentChatSession(session.key, defaultSessionKey: defaultSessionKey) else { continue }
-            result.append(session)
-            included.insert(session.key)
-            if result.count >= 4 { break }
-        }
-
-        return result
+        await self.recentSessionsStore.send(.refreshRequested(
+            sceneActive: self.scenePhase == .active,
+            sessionsAvailable: self.sessionListAvailable,
+            currentSessionKey: self.appModel.chatSessionKey,
+            defaultSessionKey: self.appModel.defaultChatSessionKey)).finish()
     }
 
     static func sessionWorkItem(

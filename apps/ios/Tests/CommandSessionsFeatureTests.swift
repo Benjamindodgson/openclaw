@@ -95,6 +95,140 @@ struct CommandSessionsFeatureTests {
     }
 }
 
+@MainActor
+struct CommandCenterRecentSessionsFeatureTests {
+    @Test func `inactive refresh leaves cached overview sessions unchanged`() async {
+        let probe = CommandSessionsProbe()
+        var initialState = CommandCenterRecentSessionsFeature.State()
+        initialState.defaultChatSessionEntry = Self.session(key: "main", updatedAt: 2)
+        initialState.recentChatSessions = [Self.session(key: "chat-existing", updatedAt: 1)]
+        let store = TestStore(initialState: initialState) {
+            CommandCenterRecentSessionsFeature(client: probe.client)
+        }
+
+        await store.send(.refreshRequested(
+            sceneActive: false,
+            sessionsAvailable: true,
+            currentSessionKey: "chat-existing",
+            defaultSessionKey: "main"))
+        await store.finish()
+
+        #expect(probe.requestedLimits.isEmpty)
+    }
+
+    @Test func `unavailable refresh clears cached overview sessions without loading`() async {
+        let probe = CommandSessionsProbe()
+        var initialState = CommandCenterRecentSessionsFeature.State()
+        initialState.defaultChatSessionEntry = Self.session(key: "main", updatedAt: 2)
+        initialState.recentChatSessions = [Self.session(key: "chat-existing", updatedAt: 1)]
+        let store = TestStore(initialState: initialState) {
+            CommandCenterRecentSessionsFeature(client: probe.client)
+        }
+
+        await store.send(.refreshRequested(
+            sceneActive: true,
+            sessionsAvailable: false,
+            currentSessionKey: "chat-existing",
+            defaultSessionKey: "main"))
+        {
+            $0.defaultChatSessionEntry = nil
+            $0.recentChatSessions = []
+        }
+        await store.finish()
+
+        #expect(probe.requestedLimits.isEmpty)
+    }
+
+    @Test func `available refresh selects default and recent overview sessions`() async {
+        let probe = CommandSessionsProbe()
+        let defaultSession = Self.session(key: "main", updatedAt: 3)
+        let currentSession = Self.session(key: "chat-current", updatedAt: 2)
+        let newestSession = Self.session(key: "chat-newest", updatedAt: 4)
+        let oldSession = Self.session(key: "chat-old", updatedAt: 1)
+        probe.result = .success([
+            oldSession,
+            Self.session(key: "agent:main:main", updatedAt: 6),
+            currentSession,
+            defaultSession,
+            newestSession,
+        ])
+        let store = TestStore(initialState: CommandCenterRecentSessionsFeature.State()) {
+            CommandCenterRecentSessionsFeature(client: probe.client)
+        }
+        let expectedSnapshot = CommandCenterRecentSessionsFeature.Snapshot(
+            defaultChatSessionEntry: defaultSession,
+            recentChatSessions: [
+                currentSession,
+                newestSession,
+                oldSession,
+            ])
+
+        await store.send(.refreshRequested(
+            sceneActive: true,
+            sessionsAvailable: true,
+            currentSessionKey: currentSession.key,
+            defaultSessionKey: defaultSession.key))
+        await store.receive(.refreshResponse(.success(expectedSnapshot))) {
+            $0.defaultChatSessionEntry = defaultSession
+            $0.recentChatSessions = [
+                currentSession,
+                newestSession,
+                oldSession,
+            ]
+        }
+        await store.finish()
+
+        #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
+    }
+
+    @Test func `available refresh clears cached overview sessions on failure`() async {
+        let probe = CommandSessionsProbe()
+        probe.result = .failure(CommandSessionsProbeError.failed)
+        var initialState = CommandCenterRecentSessionsFeature.State()
+        initialState.defaultChatSessionEntry = Self.session(key: "main", updatedAt: 2)
+        initialState.recentChatSessions = [Self.session(key: "chat-existing", updatedAt: 1)]
+        let store = TestStore(initialState: initialState) {
+            CommandCenterRecentSessionsFeature(client: probe.client)
+        }
+
+        await store.send(.refreshRequested(
+            sceneActive: true,
+            sessionsAvailable: true,
+            currentSessionKey: "chat-existing",
+            defaultSessionKey: "main"))
+        await store.receive(.refreshResponse(.failure(.failed))) {
+            $0.defaultChatSessionEntry = nil
+            $0.recentChatSessions = []
+        }
+        await store.finish()
+
+        #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
+    }
+
+    private static func session(key: String, updatedAt: Double) -> OpenClawChatSessionEntry {
+        OpenClawChatSessionEntry(
+            key: key,
+            kind: "chat",
+            displayName: key,
+            surface: "ios",
+            subject: "Test session",
+            room: nil,
+            space: nil,
+            updatedAt: updatedAt,
+            sessionId: key,
+            systemSent: true,
+            abortedLastRun: false,
+            thinkingLevel: nil,
+            verboseLevel: nil,
+            inputTokens: nil,
+            outputTokens: nil,
+            totalTokens: nil,
+            modelProvider: "openai",
+            model: "gpt-5.5",
+            contextTokens: 128_000)
+    }
+}
+
 private enum CommandSessionsProbeError: Error {
     case failed
 }

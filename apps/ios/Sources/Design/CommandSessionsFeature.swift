@@ -106,3 +106,126 @@ enum CommandSessionsStoreFactory {
         }
     }
 }
+
+@Reducer
+struct CommandCenterRecentSessionsFeature {
+    private let clientOverride: CommandSessionsClient?
+
+    init(client: CommandSessionsClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var defaultChatSessionEntry: OpenClawChatSessionEntry?
+        var recentChatSessions: [OpenClawChatSessionEntry] = []
+    }
+
+    struct Snapshot: Equatable, Sendable {
+        var defaultChatSessionEntry: OpenClawChatSessionEntry?
+        var recentChatSessions: [OpenClawChatSessionEntry]
+    }
+
+    enum Action: Equatable, Sendable {
+        case refreshRequested(
+            sceneActive: Bool,
+            sessionsAvailable: Bool,
+            currentSessionKey: String,
+            defaultSessionKey: String)
+        case refreshResponse(Result<Snapshot, CommandSessionsError>)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            @Dependency(\.commandSessions) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case let .refreshRequested(sceneActive, sessionsAvailable, currentSessionKey, defaultSessionKey):
+                guard sceneActive else { return .none }
+                guard sessionsAvailable else {
+                    state.defaultChatSessionEntry = nil
+                    state.recentChatSessions = []
+                    return .none
+                }
+
+                return .run { send in
+                    do {
+                        let sessions = try await client.listSessions(CommandCenterTab.recentSessionsFetchLimit)
+                        let snapshot = Self.snapshot(
+                            from: sessions,
+                            currentSessionKey: currentSessionKey,
+                            defaultSessionKey: defaultSessionKey)
+                        await send(.refreshResponse(.success(snapshot)))
+                    } catch {
+                        await send(.refreshResponse(.failure(.failed)))
+                    }
+                }
+
+            case let .refreshResponse(.success(snapshot)):
+                state.defaultChatSessionEntry = snapshot.defaultChatSessionEntry
+                state.recentChatSessions = snapshot.recentChatSessions
+                return .none
+
+            case .refreshResponse(.failure):
+                state.defaultChatSessionEntry = nil
+                state.recentChatSessions = []
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    private static func snapshot(
+        from sessions: [OpenClawChatSessionEntry],
+        currentSessionKey: String,
+        defaultSessionKey: String) -> Snapshot
+    {
+        Snapshot(
+            defaultChatSessionEntry: sessions.first { $0.key == defaultSessionKey },
+            recentChatSessions: self.sessionChoices(
+                sessions,
+                currentSessionKey: currentSessionKey,
+                defaultSessionKey: defaultSessionKey))
+    }
+
+    private static func sessionChoices(
+        _ sessions: [OpenClawChatSessionEntry],
+        currentSessionKey: String,
+        defaultSessionKey: String) -> [OpenClawChatSessionEntry]
+    {
+        let sorted = sessions.sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
+        var result: [OpenClawChatSessionEntry] = []
+        var included = Set<String>()
+
+        if CommandCenterTab.isRecentChatSession(currentSessionKey, defaultSessionKey: defaultSessionKey),
+           let current = sorted.first(where: { $0.key == currentSessionKey })
+        {
+            result.append(current)
+            included.insert(current.key)
+        }
+
+        for session in sorted {
+            guard !included.contains(session.key) else { continue }
+            guard CommandCenterTab.isRecentChatSession(session.key, defaultSessionKey: defaultSessionKey)
+            else { continue }
+            result.append(session)
+            included.insert(session.key)
+            if result.count >= 4 { break }
+        }
+
+        return result
+    }
+}
+
+enum CommandCenterRecentSessionsStoreFactory {
+    @MainActor
+    static func live(appModel: NodeAppModel) -> StoreOf<CommandCenterRecentSessionsFeature> {
+        Store(initialState: CommandCenterRecentSessionsFeature.State()) {
+            CommandCenterRecentSessionsFeature(client: .live(appModel: appModel))
+        }
+    }
+}
