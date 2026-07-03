@@ -1212,6 +1212,11 @@ struct SettingsProTab: View {
         {
             ExecApprovalPromptFeature()
         },
+        manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature> = Store(
+            initialState: SettingsManualGatewayEndpointFeature.State())
+        {
+            SettingsManualGatewayEndpointFeature()
+        },
         navigationStore: StoreOf<SettingsNavigationFeature> = Store(
             initialState: SettingsNavigationFeature.State())
         {
@@ -1225,6 +1230,7 @@ struct SettingsProTab: View {
         self.ownsNavigationStack = ownsNavigationStack
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
+        self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._navigationStore = State(wrappedValue: navigationStore)
         self.onRouteChange = onRouteChange
     }

@@ -861,7 +861,7 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.gatewayController.refreshActiveGatewayRegistrationFromSettings()"))
         #expect(actionsSource.contains("self.gatewayController.restartDiscovery()"))
         #expect(actionsSource.contains("await self.appModel.refreshGatewayOverviewIfConnected()"))
-        #expect(actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
         #expect(gatewaySetupFeaturesSource
             .contains("state.preflightResult = .requestLocalNetworkAccess(reason: \"settings_preflight\")"))
         #expect(controllerSource.contains("await self.tcpReachabilityProbe("))
@@ -902,6 +902,9 @@ struct RootTabsSourceGuardTests {
 
         #expect(rootSource.contains("self.maybeRequestLocalNetworkAccess(reason: \"scene_active\")"))
         #expect(rootSource.contains("self.requestLocalNetworkAccess(reason: reason)"))
+        #expect(rootSource.contains("self.makeSettingsManualGatewayEndpointStore()"))
+        #expect(rootSource.contains("SettingsManualGatewayEndpointFeature("))
+        #expect(rootSource.contains("localNetworkAccessClient: .live(gatewayController: self.gatewayController))"))
         #expect(rootSource.contains("self.handlePresentationCommand()"))
         #expect(rootSource.contains("self.presentationStore.send(.localNetworkAccessRequested("))
         #expect(rootSource.contains("self.presentationStore.send(.onboardingVisibilityChanged("))
@@ -935,7 +938,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartFeature"))
         #expect(onboardingStateSource.contains("struct OnboardingQRPhotoImportFeature"))
         #expect(onboardingStateSource.contains(".cancellable(id: CancelID.restart, cancelInFlight: true)"))
-        #expect(actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
         #expect(gatewaySetupFeaturesSource
             .contains("state.preflightResult = .requestLocalNetworkAccess(reason: \"settings_preflight\")"))
     }
@@ -1171,11 +1174,16 @@ struct RootTabsSourceGuardTests {
 
         #expect(gatewaySetupFeaturesSource.contains("enum GatewayPreflightResult: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("case preflightRequested(host: String, hasTailnetIPv4: Bool)"))
+        #expect(gatewaySetupFeaturesSource.contains("struct SettingsLocalNetworkAccessClient"))
+        #expect(gatewaySetupFeaturesSource.contains("case localNetworkAccessRequested(reason: String)"))
+        #expect(gatewaySetupFeaturesSource.contains("@Dependency(\\.settingsLocalNetworkAccess)"))
+        #expect(gatewaySetupFeaturesSource.contains("await localNetworkAccessClient.requestLocalNetworkAccess(reason)"))
         #expect(gatewaySetupFeaturesSource
             .contains("state.preflightResult = .requestLocalNetworkAccess(reason: \"settings_preflight\")"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.preflightRequested("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.preflightResultHandled)"))
-        #expect(actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
+        #expect(!actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
         #expect(!preflightFunction.contains("SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP"))
         #expect(!preflightFunction.contains("\"Tailscale is off on this device. Turn it on, then try again.\""))
         #expect(!preflightFunction.contains("requestLocalNetworkAccess(reason: \"settings_preflight\")"))
