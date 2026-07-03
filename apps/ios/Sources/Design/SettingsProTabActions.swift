@@ -340,26 +340,13 @@ extension SettingsProTab {
         self.applyManualGatewaySetupLink(host: link.host, tls: link.tls)
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(link.port))
         self.gatewayCredentialsStore.send(.setupLinkApplied(link))
-        guard let setupAuth = self.gatewayCredentialsStore.setupAuthPersistenceRequest else { return }
+        guard let request = self.gatewayCredentialsStore.setupAuthPersistenceRequest else { return }
         defer { self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled) }
 
-        let instanceId = GatewaySettingsStore.currentInstanceID()
-        if setupAuth.hasBootstrapToken {
-            GatewayOnboardingReset.prepareForBootstrapPairing(appModel: self.appModel, instanceId: instanceId)
+        if request.hasBootstrapToken {
+            GatewayOnboardingReset.prepareForBootstrapPairing(appModel: self.appModel, instanceId: request.instanceId)
         }
-        if !instanceId.isEmpty {
-            GatewaySettingsStore.saveGatewayBootstrapToken(setupAuth.bootstrapToken, instanceId: instanceId)
-        }
-        if setupAuth.shouldApplyTokenField {
-            if !instanceId.isEmpty {
-                GatewaySettingsStore.saveGatewayToken(setupAuth.token, instanceId: instanceId)
-            }
-        }
-        if setupAuth.shouldApplyPasswordField {
-            if !instanceId.isEmpty {
-                GatewaySettingsStore.saveGatewayPassword(setupAuth.password, instanceId: instanceId)
-            }
-        }
+        self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request))
     }
 
     func openGatewayQRScanner() {

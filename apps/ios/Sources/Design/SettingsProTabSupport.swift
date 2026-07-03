@@ -57,6 +57,52 @@ extension DependencyValues {
     }
 }
 
+struct SettingsGatewaySetupAuthPersistenceClient {
+    var currentInstanceID: @Sendable () -> String
+    var saveSetupAuth: @MainActor @Sendable (_ request: SettingsGatewaySetupAuthPersistenceRequest) -> Void
+}
+
+struct SettingsGatewaySetupAuthPersistenceRequest: Equatable {
+    let setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth
+    let instanceId: String
+
+    var hasBootstrapToken: Bool {
+        self.setupAuth.hasBootstrapToken
+    }
+}
+
+extension SettingsGatewaySetupAuthPersistenceClient: DependencyKey {
+    static let liveValue = SettingsGatewaySetupAuthPersistenceClient(
+        currentInstanceID: {
+            GatewaySettingsStore.currentInstanceID()
+        },
+        saveSetupAuth: { request in
+            let instanceId = request.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !instanceId.isEmpty else { return }
+
+            GatewaySettingsStore.saveGatewayBootstrapToken(
+                request.setupAuth.bootstrapToken,
+                instanceId: instanceId)
+            if request.setupAuth.shouldApplyTokenField {
+                GatewaySettingsStore.saveGatewayToken(request.setupAuth.token, instanceId: instanceId)
+            }
+            if request.setupAuth.shouldApplyPasswordField {
+                GatewaySettingsStore.saveGatewayPassword(request.setupAuth.password, instanceId: instanceId)
+            }
+        })
+
+    static let testValue = SettingsGatewaySetupAuthPersistenceClient(
+        currentInstanceID: { "" },
+        saveSetupAuth: { _ in })
+}
+
+extension DependencyValues {
+    var settingsGatewaySetupAuthPersistence: SettingsGatewaySetupAuthPersistenceClient {
+        get { self[SettingsGatewaySetupAuthPersistenceClient.self] }
+        set { self[SettingsGatewaySetupAuthPersistenceClient.self] = newValue }
+    }
+}
+
 struct SettingsShareInstructionPersistenceClient {
     var loadDefaultInstruction: @Sendable () -> String
     var saveDefaultInstruction: @MainActor @Sendable (_ value: String) -> Void
