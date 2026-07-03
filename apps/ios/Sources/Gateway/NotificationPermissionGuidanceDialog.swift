@@ -1,8 +1,109 @@
+import ComposableArchitecture
 import SwiftUI
+
+struct NotificationPermissionGuidanceClient {
+    var dismissNotificationPermissionGuidancePrompt: @Sendable @MainActor (Bool) async -> Void
+    var openNotifications: @Sendable @MainActor (String) async -> Void
+}
+
+extension NotificationPermissionGuidanceClient: DependencyKey {
+    static let liveValue = NotificationPermissionGuidanceClient(
+        dismissNotificationPermissionGuidancePrompt: { _ in },
+        openNotifications: { _ in })
+
+    static let testValue = NotificationPermissionGuidanceClient(
+        dismissNotificationPermissionGuidancePrompt: { _ in },
+        openNotifications: { _ in })
+
+    @MainActor
+    static func live(
+        appModel: NodeAppModel,
+        openNotifications: @escaping @Sendable @MainActor (String) -> Void)
+        -> Self
+    {
+        NotificationPermissionGuidanceClient(
+            dismissNotificationPermissionGuidancePrompt: { suppressFuture in
+                appModel.dismissNotificationPermissionGuidancePrompt(suppressFuture: suppressFuture)
+            },
+            openNotifications: { approvalID in
+                openNotifications(approvalID)
+            })
+    }
+}
+
+extension DependencyValues {
+    var notificationPermissionGuidance: NotificationPermissionGuidanceClient {
+        get { self[NotificationPermissionGuidanceClient.self] }
+        set { self[NotificationPermissionGuidanceClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct NotificationPermissionGuidanceFeature {
+    private let clientOverride: NotificationPermissionGuidanceClient?
+
+    init(client: NotificationPermissionGuidanceClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case dontShowAgainButtonTapped
+        case notNowButtonTapped
+        case openNotificationsButtonTapped(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.notificationPermissionGuidance) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case .dontShowAgainButtonTapped:
+                return self.dismiss(suppressFuture: true, client: client)
+
+            case .notNowButtonTapped:
+                return self.dismiss(suppressFuture: false, client: client)
+
+            case let .openNotificationsButtonTapped(approvalID):
+                return .run { _ in
+                    await client.dismissNotificationPermissionGuidancePrompt(false)
+                    await client.openNotifications(approvalID)
+                }
+            }
+        }
+        .autoLogActions()
+    }
+
+    private func dismiss(
+        suppressFuture: Bool,
+        client: NotificationPermissionGuidanceClient)
+        -> Effect<Action>
+    {
+        .run { _ in
+            await client.dismissNotificationPermissionGuidancePrompt(suppressFuture)
+        }
+    }
+}
 
 private struct NotificationPermissionGuidanceDialogModifier: ViewModifier {
     @Environment(NodeAppModel.self) private var appModel: NodeAppModel
-    let openNotifications: (String) -> Void
+    @State private var store: StoreOf<NotificationPermissionGuidanceFeature>
+
+    init(
+        store: StoreOf<NotificationPermissionGuidanceFeature> = Store(
+            initialState: NotificationPermissionGuidanceFeature.State())
+        {
+            NotificationPermissionGuidanceFeature()
+        })
+    {
+        self._store = State(wrappedValue: store)
+    }
 
     func body(content: Content) -> some View {
         content
@@ -14,18 +115,13 @@ private struct NotificationPermissionGuidanceDialogModifier: ViewModifier {
 
                         NotificationPermissionGuidanceCard(
                             onOpenNotifications: {
-                                let approvalId = prompt.approvalId
-                                self.appModel.dismissNotificationPermissionGuidancePrompt(
-                                    suppressFuture: false)
-                                self.openNotifications(approvalId)
+                                self.store.send(.openNotificationsButtonTapped(prompt.approvalId))
                             },
                             onDismiss: {
-                                self.appModel.dismissNotificationPermissionGuidancePrompt(
-                                    suppressFuture: false)
+                                self.store.send(.notNowButtonTapped)
                             },
                             onSuppressFuture: {
-                                self.appModel.dismissNotificationPermissionGuidancePrompt(
-                                    suppressFuture: true)
+                                self.store.send(.dontShowAgainButtonTapped)
                             })
                             .padding(.horizontal, 20)
                             .frame(maxWidth: 460)
@@ -96,7 +192,13 @@ private struct NotificationPermissionGuidanceCard: View {
 }
 
 extension View {
-    func notificationPermissionGuidanceDialog(openNotifications: @escaping (String) -> Void) -> some View {
-        self.modifier(NotificationPermissionGuidanceDialogModifier(openNotifications: openNotifications))
+    func notificationPermissionGuidanceDialog(
+        store: StoreOf<NotificationPermissionGuidanceFeature> = Store(
+            initialState: NotificationPermissionGuidanceFeature.State())
+        {
+            NotificationPermissionGuidanceFeature()
+        }) -> some View
+    {
+        self.modifier(NotificationPermissionGuidanceDialogModifier(store: store))
     }
 }
