@@ -967,10 +967,8 @@ extension SettingsProTab {
     var diagnosticsAdvancedCard: some View {
         ProCard(radius: SettingsLayout.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                self.settingsButtonToggle("Discovery Debug Logs", isOn: self.$discoveryDebugLogsEnabled) { enabled in
-                    self.gatewayController.setDiscoveryDebugLoggingEnabled(enabled)
-                }
-                self.settingsButtonToggle("Debug Screen Status", isOn: self.$canvasDebugStatusEnabled)
+                self.settingsButtonToggle("Discovery Debug Logs", isOn: self.discoveryDebugLogsBinding)
+                self.settingsButtonToggle("Debug Screen Status", isOn: self.canvasDebugStatusBinding)
                 NavigationLink {
                     GatewayDiscoveryDebugLogView()
                 } label: {
