@@ -167,6 +167,9 @@ extension SettingsProTab {
 
     func syncSettingsState() {
         self.pushEnrollmentConsentStore.send(.refresh)
+        self.deviceCapabilityStore.send(.capabilitiesSynced(
+            cameraEnabled: self.storedCameraEnabled,
+            preventSleep: self.storedPreventSleep))
         self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
         self.manualGatewayEndpointStore.send(.endpointSynced(
             enabled: self.storedManualGatewayEnabled,
@@ -535,6 +538,36 @@ extension SettingsProTab {
             set: { self.updateGatewayAutoConnect($0) })
     }
 
+    var cameraEnabled: Bool {
+        self.deviceCapabilityStore.cameraEnabled
+    }
+
+    var preventSleep: Bool {
+        self.deviceCapabilityStore.preventSleep
+    }
+
+    var cameraEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { self.deviceCapabilityStore.cameraEnabled },
+            set: { self.updateCameraEnabled($0) })
+    }
+
+    var preventSleepBinding: Binding<Bool> {
+        Binding(
+            get: { self.deviceCapabilityStore.preventSleep },
+            set: { self.updatePreventSleep($0) })
+    }
+
+    func updateCameraEnabled(_ enabled: Bool) {
+        self.deviceCapabilityStore.send(.cameraEnabledChanged(enabled))
+        self.storedCameraEnabled = enabled
+    }
+
+    func updatePreventSleep(_ enabled: Bool) {
+        self.deviceCapabilityStore.send(.preventSleepChanged(enabled))
+        self.storedPreventSleep = enabled
+    }
+
     func updateGatewayAutoConnect(_ enabled: Bool) {
         self.gatewayAutoConnectStore.send(.enabledChanged(enabled))
         self.storedGatewayAutoConnect = enabled
@@ -822,10 +855,8 @@ extension SettingsProTab {
     }
 
     var permissionsDetail: String {
-        var enabled = 0
-        if self.cameraEnabled { enabled += 1 }
+        var enabled = self.deviceCapabilityStore.enabledCount
         if self.locationModeRaw != OpenClawLocationMode.off.rawValue { enabled += 1 }
-        if self.preventSleep { enabled += 1 }
         return "\(enabled) enabled"
     }
 

@@ -581,4 +581,39 @@ struct SettingsNavigationFeatureTests {
             $0.isEnabled = false
         }
     }
+
+    @Test func `settings device capabilities sync persisted values`() async {
+        let store = TestStore(initialState: SettingsDeviceCapabilityFeature.State()) {
+            SettingsDeviceCapabilityFeature()
+        }
+
+        await store.send(.capabilitiesSynced(cameraEnabled: false, preventSleep: true)) {
+            $0.cameraEnabled = false
+            $0.preventSleep = true
+        }
+    }
+
+    @Test func `settings device capabilities record field changes`() async {
+        let store = TestStore(initialState: SettingsDeviceCapabilityFeature.State()) {
+            SettingsDeviceCapabilityFeature()
+        }
+
+        await store.send(.cameraEnabledChanged(false)) {
+            $0.cameraEnabled = false
+        }
+        await store.send(.preventSleepChanged(false)) {
+            $0.preventSleep = false
+        }
+    }
+
+    @Test func `settings device capabilities count enabled permissions`() async {
+        var state = SettingsDeviceCapabilityFeature.State()
+        #expect(state.enabledCount == 2)
+
+        state.cameraEnabled = false
+        #expect(state.enabledCount == 1)
+
+        state.preventSleep = false
+        #expect(state.enabledCount == 0)
+    }
 }
