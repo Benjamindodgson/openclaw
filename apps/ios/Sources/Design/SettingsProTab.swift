@@ -450,8 +450,40 @@ struct SettingsGatewaySetupLinkFeature {
     private static let appleReviewDemoStatusText = "Apple Review demo mode enabled."
 }
 
+struct SettingsGatewayCredentialsPersistenceClient {
+    var saveGatewayPassword: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
+    var saveGatewayToken: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
+}
+
+extension SettingsGatewayCredentialsPersistenceClient: DependencyKey {
+    static let liveValue = SettingsGatewayCredentialsPersistenceClient(
+        saveGatewayPassword: { value, instanceId in
+            GatewaySettingsStore.saveGatewayPassword(value, instanceId: instanceId)
+        },
+        saveGatewayToken: { value, instanceId in
+            GatewaySettingsStore.saveGatewayToken(value, instanceId: instanceId)
+        })
+
+    static let testValue = SettingsGatewayCredentialsPersistenceClient(
+        saveGatewayPassword: { _, _ in },
+        saveGatewayToken: { _, _ in })
+}
+
+extension DependencyValues {
+    var settingsGatewayCredentialsPersistence: SettingsGatewayCredentialsPersistenceClient {
+        get { self[SettingsGatewayCredentialsPersistenceClient.self] }
+        set { self[SettingsGatewayCredentialsPersistenceClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct SettingsGatewayCredentialsFeature {
+    private let persistenceClientOverride: SettingsGatewayCredentialsPersistenceClient?
+
+    init(persistenceClient: SettingsGatewayCredentialsPersistenceClient? = nil) {
+        self.persistenceClientOverride = persistenceClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -465,7 +497,9 @@ struct SettingsGatewayCredentialsFeature {
         case credentialsClearedForOnboardingReset
         case credentialsLoaded(token: String, password: String)
         case gatewayPasswordChanged(String)
+        case gatewayPasswordPersistenceRequested(value: String, instanceId: String)
         case gatewayTokenChanged(String)
+        case gatewayTokenPersistenceRequested(value: String, instanceId: String)
         case pendingManualAuthOverrideConsumed
         case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)
         case setupAuthPersistenceRequestHandled
@@ -476,6 +510,9 @@ struct SettingsGatewayCredentialsFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsGatewayCredentialsPersistence) var dependencyPersistenceClient
+            let persistenceClient = self.persistenceClientOverride ?? dependencyPersistenceClient
+
             switch action {
             case .credentialsClearedForOnboardingReset:
                 state.gatewayToken = ""
@@ -492,9 +529,23 @@ struct SettingsGatewayCredentialsFeature {
                 state.gatewayPassword = password
                 return .none
 
+            case let .gatewayPasswordPersistenceRequested(value, instanceId):
+                guard let request = Self.manualCredentialPersistenceRequest(value: value, instanceId: instanceId)
+                else { return .none }
+                return .run { _ in
+                    await persistenceClient.saveGatewayPassword(request.value, request.instanceId)
+                }
+
             case let .gatewayTokenChanged(token):
                 state.gatewayToken = token
                 return .none
+
+            case let .gatewayTokenPersistenceRequested(value, instanceId):
+                guard let request = Self.manualCredentialPersistenceRequest(value: value, instanceId: instanceId)
+                else { return .none }
+                return .run { _ in
+                    await persistenceClient.saveGatewayToken(request.value, request.instanceId)
+                }
 
             case .pendingManualAuthOverrideConsumed:
                 state.pendingManualAuthOverride = nil
@@ -529,6 +580,18 @@ struct SettingsGatewayCredentialsFeature {
             state.gatewayPassword = setupAuth.password
         }
         state.pendingManualAuthOverride = setupAuth.manualAuthOverride
+    }
+
+    private static func manualCredentialPersistenceRequest(
+        value: String,
+        instanceId: String)
+        -> (value: String, instanceId: String)?
+    {
+        let trimmedInstanceId = instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedInstanceId.isEmpty else { return nil }
+        return (
+            value.trimmingCharacters(in: .whitespacesAndNewlines),
+            trimmedInstanceId)
     }
 }
 

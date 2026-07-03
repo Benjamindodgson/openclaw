@@ -1203,6 +1203,28 @@ struct RootTabsSourceGuardTests {
         #expect(!applyGatewayLinkFunction.contains(".setupAuthApplied(setupAuth)"))
     }
 
+    @Test func `settings manual credential persistence is reducer effect owned`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let updateCredentialsFunction = try Self.extract(
+            actionsSource,
+            from: "func updateGatewayToken(_ value: String)",
+            to: "var manualPortIsValid")
+
+        #expect(settingsSource.contains("struct SettingsGatewayCredentialsPersistenceClient"))
+        #expect(settingsSource.contains("case gatewayTokenPersistenceRequested(value: String, instanceId: String)"))
+        #expect(settingsSource.contains("case gatewayPasswordPersistenceRequested(value: String, instanceId: String)"))
+        #expect(settingsSource.contains("await persistenceClient.saveGatewayToken("))
+        #expect(settingsSource.contains("await persistenceClient.saveGatewayPassword("))
+        #expect(settingsSource.contains("manualCredentialPersistenceRequest(value: value, instanceId: instanceId)"))
+        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.gatewayTokenPersistenceRequested("))
+        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.gatewayPasswordPersistenceRequested("))
+        #expect(actionsSource.contains("func persistGatewayToken") == false)
+        #expect(actionsSource.contains("func persistGatewayPassword") == false)
+        #expect(updateCredentialsFunction.contains("GatewaySettingsStore.saveGatewayToken") == false)
+        #expect(updateCredentialsFunction.contains("GatewaySettingsStore.saveGatewayPassword") == false)
+    }
+
     @Test func `onboarding setup code apply result is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
