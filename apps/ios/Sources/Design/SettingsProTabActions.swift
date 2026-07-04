@@ -865,14 +865,12 @@ extension SettingsProTab {
         self.talkPreferencesStore.send(.providerSelectionChanged(rawValue))
         let selection = TalkModeProviderSelection.resolved(rawValue)
         self.storedTalkProviderSelectionRaw = selection.rawValue
-        self.appModel.setTalkProviderSelection(selection.rawValue)
     }
 
     func updateTalkRealtimeVoiceSelection(_ rawValue: String) {
         self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(rawValue))
         let voice = TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
         self.storedTalkRealtimeVoiceSelectionRaw = voice
-        self.appModel.setTalkRealtimeVoiceSelection(voice)
     }
 
     func updateTalkSpeechLocale(_ speechLocale: String) {
@@ -893,7 +891,6 @@ extension SettingsProTab {
     func updateTalkSpeakerphoneEnabled(_ enabled: Bool) {
         self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(enabled))
         self.storedTalkSpeakerphoneEnabled = enabled
-        self.appModel.setTalkSpeakerphoneEnabled(enabled)
     }
 
     var talkApiKeyStatus: String {
