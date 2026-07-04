@@ -268,7 +268,7 @@ struct AgentProTab: View {
     var skillEditorSelectionBinding: Binding<SkillEditorSelection?> {
         Binding(
             get: { self.skillEditorStore.selection },
-            set: { self.skillEditorStore.send(.selectionChanged($0)) })
+            set: { self.skillEditorStore.send(.selectionChanged(.init(selection: $0))) })
     }
 
     var cronActionBusyIDs: Set<String> {
@@ -479,6 +479,10 @@ struct AgentSkillEditorFeature {
             var id: String
         }
 
+        struct SelectionChange: Equatable, Sendable {
+            var selection: AgentProTab.SkillEditorSelection?
+        }
+
         case apiKeyDraftChanged(APIKeyDraftChange)
         case apiKeyDraftCleared(APIKeyDraftKey)
         case editorDismissed
@@ -487,7 +491,7 @@ struct AgentSkillEditorFeature {
         case mutationFinished(MutationKey)
         case mutationStarted(MutationKey)
         case mutationSucceeded(MutationSuccess)
-        case selectionChanged(AgentProTab.SkillEditorSelection?)
+        case selectionChanged(SelectionChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -511,8 +515,8 @@ struct AgentSkillEditorFeature {
                 state.selection = AgentProTab.SkillEditorSelection(id: editor.id)
                 return .none
 
-            case let .selectionChanged(selection):
-                state.selection = selection
+            case let .selectionChanged(change):
+                state.selection = change.selection
                 return .none
 
             case let .mutationStarted(mutation):
@@ -670,12 +674,16 @@ struct AgentClawHubSearchFeature {
             var message: String
         }
 
+        struct SearchResults: Equatable, Sendable {
+            var results: [ClawHubSearchResultLite]
+        }
+
         case installFailed(InstallFailure)
         case installFinished(InstallSlug)
         case installRequested(InstallSlug)
         case queryChanged(QueryChange)
         case searchFailed(SearchFailure)
-        case searchFinished([ClawHubSearchResultLite])
+        case searchFinished(SearchResults)
         case searchRequested
     }
 
@@ -693,8 +701,8 @@ struct AgentClawHubSearchFeature {
                 state.errorText = nil
                 return .none
 
-            case let .searchFinished(results):
-                state.results = results
+            case let .searchFinished(response):
+                state.results = response.results
                 state.isLoading = false
                 return .none
 

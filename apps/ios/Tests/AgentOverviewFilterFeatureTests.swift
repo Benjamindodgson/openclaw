@@ -92,7 +92,7 @@ struct AgentSkillEditorFeatureTests {
         await store.send(.editorOpened(.init(id: "skill-a"))) {
             $0.selection = AgentProTab.SkillEditorSelection(id: "skill-a")
         }
-        await store.send(.selectionChanged(AgentProTab.SkillEditorSelection(id: "skill-b"))) {
+        await store.send(.selectionChanged(.init(selection: AgentProTab.SkillEditorSelection(id: "skill-b")))) {
             $0.selection = AgentProTab.SkillEditorSelection(id: "skill-b")
         }
         await store.send(.editorDismissed) {
@@ -285,7 +285,7 @@ struct AgentClawHubSearchFeatureTests {
         await store.send(.searchRequested) {
             $0.isLoading = true
         }
-        await store.send(.searchFinished([result])) {
+        await store.send(.searchFinished(.init(results: [result]))) {
             $0.results = [result]
             $0.isLoading = false
         }
