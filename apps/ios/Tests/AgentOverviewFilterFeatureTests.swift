@@ -325,7 +325,7 @@ struct AgentClawHubSearchFeatureTests {
             AgentClawHubSearchFeature()
         }
 
-        await store.send(.installFailed(slug: "memory-plus", message: "Install failed.")) {
+        await store.send(.installFailed(.init(slug: "memory-plus", message: "Install failed."))) {
             $0.errorText = "Install failed."
             $0.installingSlug = nil
         }

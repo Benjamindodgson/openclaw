@@ -691,9 +691,9 @@ extension AgentProTab {
             await self.refreshOverview(force: true)
             self.clawHubStore.send(.installFinished(.init(slug: result.slug)))
         } catch {
-            self.clawHubStore.send(.installFailed(
+            self.clawHubStore.send(.installFailed(.init(
                 slug: result.slug,
-                message: Self.skillMutationMessage(error)))
+                message: Self.skillMutationMessage(error))))
         }
     }
 

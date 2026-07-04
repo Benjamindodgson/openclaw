@@ -609,7 +609,12 @@ struct AgentClawHubSearchFeature {
             var slug: String
         }
 
-        case installFailed(slug: String, message: String)
+        struct InstallFailure: Equatable, Sendable {
+            var slug: String
+            var message: String
+        }
+
+        case installFailed(InstallFailure)
         case installFinished(InstallSlug)
         case installRequested(InstallSlug)
         case queryChanged(QueryChange)
@@ -653,9 +658,9 @@ struct AgentClawHubSearchFeature {
                 }
                 return .none
 
-            case let .installFailed(slug, message):
-                state.errorText = message
-                if state.installingSlug == slug {
+            case let .installFailed(failure):
+                state.errorText = failure.message
+                if state.installingSlug == failure.slug {
                     state.installingSlug = nil
                 }
                 return .none
