@@ -1062,7 +1062,8 @@ extension RootTabs {
     }
 
     private func maybeOpenSettingsForGatewaySetup() {
-        self.presentationStore.send(.gatewaySetupRequestChanged(self.appModel.gatewaySetupRequestID))
+        self.presentationStore.send(.gatewaySetupRequestChanged(RootPresentationFeature.GatewaySetupRequest(
+            requestID: self.appModel.gatewaySetupRequestID)))
         self.handlePresentationCommand()
     }
 
