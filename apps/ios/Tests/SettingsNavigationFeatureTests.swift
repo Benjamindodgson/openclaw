@@ -1943,7 +1943,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: true))) {
-            $0.manualConnectionResult = .failure("Failed: host required")
+            $0.manualConnectionResult = .failure(.init(message: "Failed: host required"))
         }
 
         await store.send(.manualConnectionResultHandled) {
@@ -1955,7 +1955,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: false))) {
-            $0.manualConnectionResult = .failure("Failed: invalid port")
+            $0.manualConnectionResult = .failure(.init(message: "Failed: invalid port"))
         }
 
         await store.send(.manualConnectionResultHandled) {
