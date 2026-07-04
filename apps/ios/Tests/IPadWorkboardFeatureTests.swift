@@ -253,12 +253,12 @@ struct IPadWorkboardFeatureTests {
 
     private static func failingClient() -> IPadWorkboardClient {
         IPadWorkboardClient(
-            listCards: { _ in throw IPadWorkboardError.failed("unexpected listCards") },
-            listBoards: { throw IPadWorkboardError.failed("unexpected listBoards") },
-            create: { _ in throw IPadWorkboardError.failed("unexpected create") },
-            move: { _ in throw IPadWorkboardError.failed("unexpected move") },
-            archive: { _ in throw IPadWorkboardError.failed("unexpected archive") },
-            dispatch: { _ in throw IPadWorkboardError.failed("unexpected dispatch") })
+            listCards: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected listCards")) },
+            listBoards: { throw IPadWorkboardError.failed(.init(message: "unexpected listBoards")) },
+            create: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected create")) },
+            move: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected move")) },
+            archive: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected archive")) },
+            dispatch: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected dispatch")) })
     }
 
     private static func card(
