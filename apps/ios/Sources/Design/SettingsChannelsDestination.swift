@@ -146,10 +146,14 @@ struct SettingsChannelsFeature {
             var canAdmin: Bool
         }
 
+        struct OperationResponse: Equatable, Sendable {
+            var result: Result<[SettingsChannelEntry], SettingsChannelsError>
+        }
+
         case refreshRequested(RefreshRequest)
         case refreshResponse(RefreshResponse)
         case operationRequested(OperationRequest)
-        case operationResponse(Result<[SettingsChannelEntry], SettingsChannelsError>)
+        case operationResponse(OperationResponse)
     }
 
     // swiftformat:enable redundantSendable
@@ -227,22 +231,25 @@ struct SettingsChannelsFeature {
                             try await client.logout(request.channelID, request.accountID)
                         }
                         let snapshot = try await client.status()
-                        await send(.operationResponse(.success(Self.entries(from: snapshot))))
+                        await send(.operationResponse(.init(result: .success(Self.entries(from: snapshot)))))
                     } catch {
-                        await send(.operationResponse(.failure(.failed(Self.message(for: error)))))
+                        await send(.operationResponse(.init(result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .operationResponse(.success(entries)):
-                state.busyOperation = nil
-                state.entries = entries
-                state.errorText = nil
-                return .none
+            case let .operationResponse(response):
+                switch response.result {
+                case let .success(entries):
+                    state.busyOperation = nil
+                    state.entries = entries
+                    state.errorText = nil
+                    return .none
 
-            case let .operationResponse(.failure(error)):
-                state.busyOperation = nil
-                state.errorText = error.message
-                return .none
+                case let .failure(error):
+                    state.busyOperation = nil
+                    state.errorText = error.message
+                    return .none
+                }
             }
         }
         .autoLogActions()

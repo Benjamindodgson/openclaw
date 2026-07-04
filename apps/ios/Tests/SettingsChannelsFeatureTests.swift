@@ -82,7 +82,7 @@ struct SettingsChannelsFeatureTests {
         {
             $0.busyOperation = operation
         }
-        await store.receive(.operationResponse(.success(Self.connectedEntries))) {
+        await store.receive(.operationResponse(.init(result: .success(Self.connectedEntries)))) {
             $0.busyOperation = nil
             $0.entries = Self.connectedEntries
         }
