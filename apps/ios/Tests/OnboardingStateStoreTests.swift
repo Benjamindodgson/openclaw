@@ -336,7 +336,7 @@ import Testing
             $0.statusLine = "QR loaded. Connecting to gateway.local:18789..."
         }
 
-        await store.send(.connectionActivityStarted(id: "retry-auto")) {
+        await store.send(.connectionActivityStarted(.init(id: "retry-auto"))) {
             $0.connectingGatewayID = "retry-auto"
         }
 
@@ -468,7 +468,7 @@ import Testing
             $0.shouldResumePairingAutomatically = true
         }
 
-        await store.send(.connectionActivityStarted(id: "retry-auto")) {
+        await store.send(.connectionActivityStarted(.init(id: "retry-auto"))) {
             $0.connectingGatewayID = "retry-auto"
         }
 

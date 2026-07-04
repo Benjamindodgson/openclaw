@@ -1040,7 +1040,7 @@ extension OnboardingWizardView {
                 statusLine: "Retrying last connection…",
                 clearsIssue: false)))
         } else {
-            self.statusStore.send(.connectionActivityStarted(id: connectionID))
+            self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))
         }
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connectLastKnown()

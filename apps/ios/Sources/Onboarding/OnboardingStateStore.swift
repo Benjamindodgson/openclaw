@@ -234,6 +234,7 @@ struct OnboardingStatusFeature {
             var statusText: String
         }
 
+        struct ConnectionActivityStart: Equatable, Sendable { var id: String }
         struct ScannerError: Equatable, Sendable { var message: String }
 
         case automaticPairingResumeRequested(now: Date)
@@ -241,7 +242,7 @@ struct OnboardingStatusFeature {
         case connectionFinished
         case connectionIssueDetected(ConnectionIssueDetection)
         case connectionStarted(ConnectionStart)
-        case connectionActivityStarted(id: String)
+        case connectionActivityStarted(ConnectionActivityStart)
         case connectionStatusUpdated(ConnectionStatusUpdate)
         case freshQRScanStarted
         case gatewayConnected(markedCompleted: Bool)
@@ -313,8 +314,8 @@ struct OnboardingStatusFeature {
                 state.statusLine = start.statusLine
                 return .none
 
-            case let .connectionActivityStarted(id):
-                state.connectingGatewayID = id
+            case let .connectionActivityStarted(start):
+                state.connectingGatewayID = start.id
                 return .none
 
             case let .connectionStatusUpdated(update):
