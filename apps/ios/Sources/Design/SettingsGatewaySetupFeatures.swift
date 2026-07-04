@@ -43,11 +43,19 @@ struct SettingsGatewaySetupStatusFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case gatewayStatusSynced(problemMessage: String?, gatewayStatusText: String)
-        case qrScannerErrorReceived(String)
+        struct GatewayStatusSync: Equatable, Sendable {
+            var problemMessage: String?
+            var gatewayStatusText: String
+        }
+
+        struct QRScannerError: Equatable, Sendable { var message: String }
+        struct SetupStatusChange: Equatable, Sendable { var statusText: String? }
+
+        case gatewayStatusSynced(GatewayStatusSync)
+        case qrScannerErrorReceived(QRScannerError)
         case qrScannerOpeningStarted
         case setupConnectionStarted
-        case statusChanged(String?)
+        case statusChanged(SetupStatusChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -55,13 +63,13 @@ struct SettingsGatewaySetupStatusFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .gatewayStatusSynced(problemMessage, gatewayStatusText):
-                state.gatewayProblemMessage = problemMessage
-                state.gatewayStatusText = gatewayStatusText
+            case let .gatewayStatusSynced(sync):
+                state.gatewayProblemMessage = sync.problemMessage
+                state.gatewayStatusText = sync.gatewayStatusText
                 return .none
 
             case let .qrScannerErrorReceived(error):
-                state.statusText = Self.qrScannerErrorStatusText(error)
+                state.statusText = Self.qrScannerErrorStatusText(error.message)
                 return .none
 
             case .qrScannerOpeningStarted:
@@ -72,8 +80,8 @@ struct SettingsGatewaySetupStatusFeature {
                 state.statusText = Self.setupConnectionStartedStatusText
                 return .none
 
-            case let .statusChanged(statusText):
-                state.statusText = statusText
+            case let .statusChanged(change):
+                state.statusText = change.statusText
                 return .none
             }
         }
