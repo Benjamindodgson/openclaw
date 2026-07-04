@@ -233,8 +233,9 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFinished(.init(key: busyKey)))"))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationSucceeded(.init("))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFailed(.init("))
-        #expect(skillsSource.contains("self.skillEditorStore.send(.editorOpened(id: skill.effectiveSkillKey))"))
-        #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftChanged("))
+        #expect(skillsSource.contains("self.skillEditorStore.send(.editorOpened(.init(id: skill.effectiveSkillKey)))"))
+        #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftChanged(.init("))
+        #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftCleared(.init("))
         #expect(skillsSource.contains("self.skillEditorStore.send(.mutationStarted(.init(key: key)))"))
         #expect(
             skillsSource.contains(

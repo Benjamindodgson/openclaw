@@ -466,10 +466,23 @@ struct AgentSkillEditorFeature {
             var message: String
         }
 
-        case apiKeyDraftChanged(key: String, value: String)
-        case apiKeyDraftCleared(key: String)
+        struct APIKeyDraftChange: Equatable, Sendable {
+            var key: String
+            var value: String
+        }
+
+        struct APIKeyDraftKey: Equatable, Sendable {
+            var key: String
+        }
+
+        struct EditorID: Equatable, Sendable {
+            var id: String
+        }
+
+        case apiKeyDraftChanged(APIKeyDraftChange)
+        case apiKeyDraftCleared(APIKeyDraftKey)
         case editorDismissed
-        case editorOpened(id: String)
+        case editorOpened(EditorID)
         case mutationFailed(MutationFailure)
         case mutationFinished(MutationKey)
         case mutationStarted(MutationKey)
@@ -482,20 +495,20 @@ struct AgentSkillEditorFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .apiKeyDraftChanged(key, value):
-                state.apiKeyDrafts[key] = value
+            case let .apiKeyDraftChanged(draft):
+                state.apiKeyDrafts[draft.key] = draft.value
                 return .none
 
-            case let .apiKeyDraftCleared(key):
-                state.apiKeyDrafts[key] = nil
+            case let .apiKeyDraftCleared(draft):
+                state.apiKeyDrafts[draft.key] = nil
                 return .none
 
             case .editorDismissed:
                 state.selection = nil
                 return .none
 
-            case let .editorOpened(id):
-                state.selection = AgentProTab.SkillEditorSelection(id: id)
+            case let .editorOpened(editor):
+                state.selection = AgentProTab.SkillEditorSelection(id: editor.id)
                 return .none
 
             case let .selectionChanged(selection):

@@ -89,7 +89,7 @@ struct AgentSkillEditorFeatureTests {
             AgentSkillEditorFeature()
         }
 
-        await store.send(.editorOpened(id: "skill-a")) {
+        await store.send(.editorOpened(.init(id: "skill-a"))) {
             $0.selection = AgentProTab.SkillEditorSelection(id: "skill-a")
         }
         await store.send(.selectionChanged(AgentProTab.SkillEditorSelection(id: "skill-b"))) {
@@ -105,10 +105,10 @@ struct AgentSkillEditorFeatureTests {
             AgentSkillEditorFeature()
         }
 
-        await store.send(.apiKeyDraftChanged(key: "skill-a", value: "sk-test")) {
+        await store.send(.apiKeyDraftChanged(.init(key: "skill-a", value: "sk-test"))) {
             $0.apiKeyDrafts = ["skill-a": "sk-test"]
         }
-        await store.send(.apiKeyDraftCleared(key: "skill-a")) {
+        await store.send(.apiKeyDraftCleared(.init(key: "skill-a"))) {
             $0.apiKeyDrafts = [:]
         }
     }
