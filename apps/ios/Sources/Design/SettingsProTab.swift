@@ -1574,7 +1574,7 @@ struct SettingsProTab: View {
                 self.debugOptionsStore.send(.canvasDebugStatusChanged(newValue))
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
-                self.locationStore.send(.locationModeChangeRequested(newValue))
+                self.locationStore.send(.locationModeChangeRequested(.init(rawValue: newValue)))
                 self.deviceCapabilityStore.send(.locationModeChanged(.init(rawValue: newValue)))
                 self.handleLocationModeRequest(self.locationStore.locationModeRequest)
             }

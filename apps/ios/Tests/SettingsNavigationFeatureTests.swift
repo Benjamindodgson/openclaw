@@ -1356,7 +1356,7 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await store.send(.locationModeSynced(OpenClawLocationMode.whileUsing.rawValue)) {
+        await store.send(.locationModeSynced(.init(rawValue: OpenClawLocationMode.whileUsing.rawValue))) {
             $0.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         }
@@ -1371,7 +1371,7 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await store.send(.locationModeSynced(OpenClawLocationMode.off.rawValue))
+        await store.send(.locationModeSynced(.init(rawValue: OpenClawLocationMode.off.rawValue)))
     }
 
     @Test func `settings location records picker changes`() async {
@@ -1379,7 +1379,7 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await store.send(.locationModeChanged(OpenClawLocationMode.always.rawValue)) {
+        await store.send(.locationModeChanged(.init(rawValue: OpenClawLocationMode.always.rawValue))) {
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
         }
     }
@@ -1389,7 +1389,7 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await store.send(.locationModeChangeRequested(OpenClawLocationMode.always.rawValue)) {
+        await store.send(.locationModeChangeRequested(.init(rawValue: OpenClawLocationMode.always.rawValue))) {
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
             $0.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
                 mode: .always,
@@ -1406,7 +1406,8 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await duplicateStore.send(.locationModeChangeRequested(OpenClawLocationMode.always.rawValue))
+        await duplicateStore.send(.locationModeChangeRequested(.init(
+            rawValue: OpenClawLocationMode.always.rawValue)))
 
         var changingState = SettingsLocationFeature.State()
         changingState.isChangingLocationMode = true
@@ -1414,7 +1415,9 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await changingStore.send(.locationModeChangeRequested(OpenClawLocationMode.whileUsing.rawValue)) {
+        await changingStore.send(.locationModeChangeRequested(.init(
+            rawValue: OpenClawLocationMode.whileUsing.rawValue)))
+        {
             $0.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         }
 
@@ -1422,7 +1425,7 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await invalidStore.send(.locationModeChangeRequested("invalid-location-mode")) {
+        await invalidStore.send(.locationModeChangeRequested(.init(rawValue: "invalid-location-mode"))) {
             $0.locationModeRaw = "invalid-location-mode"
         }
     }

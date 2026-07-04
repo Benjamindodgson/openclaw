@@ -109,6 +109,18 @@ struct SettingsLocationFeature {
         let rawValue: String
     }
 
+    struct LocationModeChange: Equatable, Sendable {
+        var rawValue: String
+    }
+
+    struct LocationModeChangeRequest: Equatable, Sendable {
+        var rawValue: String
+    }
+
+    struct LocationModeSync: Equatable, Sendable {
+        var rawValue: String
+    }
+
     enum LocationModeApplyResult: Equatable, Sendable {
         case applied(rawValue: String)
         case denied(previousRawValue: String)
@@ -118,9 +130,9 @@ struct SettingsLocationFeature {
         case locationModeApplyFinished(LocationModeApplyResult)
         case locationModeApplyRequested(LocationModeRequest)
         case locationModeApplyResultHandled
-        case locationModeChanged(String)
-        case locationModeChangeRequested(String)
-        case locationModeSynced(String)
+        case locationModeChanged(LocationModeChange)
+        case locationModeChangeRequested(LocationModeChangeRequest)
+        case locationModeSynced(LocationModeSync)
     }
 
     // swiftformat:enable redundantSendable
@@ -181,11 +193,12 @@ struct SettingsLocationFeature {
                 state.locationModeApplyResult = nil
                 return .none
 
-            case let .locationModeChanged(rawValue):
-                state.locationModeRaw = rawValue
+            case let .locationModeChanged(change):
+                state.locationModeRaw = change.rawValue
                 return .none
 
-            case let .locationModeChangeRequested(rawValue):
+            case let .locationModeChangeRequested(request):
+                let rawValue = request.rawValue
                 state.locationModeRaw = rawValue
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
@@ -198,12 +211,12 @@ struct SettingsLocationFeature {
                     rawValue: rawValue)
                 return .none
 
-            case let .locationModeSynced(rawValue):
+            case let .locationModeSynced(sync):
                 guard !state.isChangingLocationMode else { return .none }
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
-                state.locationModeRaw = rawValue
-                state.previousLocationModeRaw = rawValue
+                state.locationModeRaw = sync.rawValue
+                state.previousLocationModeRaw = sync.rawValue
                 return .none
             }
         }
