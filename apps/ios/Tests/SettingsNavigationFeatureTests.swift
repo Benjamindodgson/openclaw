@@ -233,22 +233,22 @@ struct SettingsNavigationFeatureTests {
             SettingsDiagnosticsFeature()
         }
 
-        await store.send(.diagnosticsCompletionRequested(
+        await store.send(.diagnosticsCompletionRequested(.init(
             gatewayConnected: false,
             discoveredGatewayCount: 0,
             talkConfigLoaded: false,
             notificationsAllowed: false,
-            lastRunText: "4:20 PM"))
+            lastRunText: "4:20 PM")))
         {
             $0.issueCount = 3
             $0.lastRunText = "4:20 PM"
         }
-        await store.send(.diagnosticsCompletionRequested(
+        await store.send(.diagnosticsCompletionRequested(.init(
             gatewayConnected: true,
             discoveredGatewayCount: 1,
             talkConfigLoaded: true,
             notificationsAllowed: true,
-            lastRunText: "4:22 PM"))
+            lastRunText: "4:22 PM")))
         {
             $0.issueCount = 0
             $0.lastRunText = "4:22 PM"
@@ -260,24 +260,24 @@ struct SettingsNavigationFeatureTests {
             SettingsDiagnosticsFeature()
         }
 
-        await store.send(.diagnosticsContextSynced(
+        await store.send(.diagnosticsContextSynced(.init(
             isAppleReviewDemoModeEnabled: false,
             gatewayConnected: true,
             discoveredGatewayCount: 2,
             discoveryStatusText: "2 gateways found",
-            screenRecordActive: true))
+            screenRecordActive: true)))
         {
             $0.gatewayConnected = true
             $0.discoveredGatewayCount = 2
             $0.discoveryStatusText = "2 gateways found"
             $0.screenRecordActive = true
         }
-        await store.send(.diagnosticsContextSynced(
+        await store.send(.diagnosticsContextSynced(.init(
             isAppleReviewDemoModeEnabled: true,
             gatewayConnected: false,
             discoveredGatewayCount: 0,
             discoveryStatusText: "Discovery paused",
-            screenRecordActive: false))
+            screenRecordActive: false)))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayConnected = false
