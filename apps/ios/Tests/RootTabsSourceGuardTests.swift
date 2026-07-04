@@ -799,6 +799,11 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("case dispatchRequested(DispatchRequest)"))
         #expect(source.contains("case dispatchResponse(DispatchResponse)"))
         #expect(source.contains("self.store.send(.dispatchRequested(.init(canWrite: self.canWrite))"))
+        #expect(source.contains("struct MoveRequest: Equatable, Sendable"))
+        #expect(source.contains("struct MoveResponse: Equatable, Sendable"))
+        #expect(source.contains("case moveRequested(MoveRequest)"))
+        #expect(source.contains("case moveResponse(MoveResponse)"))
+        #expect(source.contains("self.store.send(.moveRequested(.init(card: card, status: status"))
     }
 
     @Test func `task scope controls send real gateway params`() throws {
