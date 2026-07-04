@@ -1032,13 +1032,19 @@ extension RootTabs {
             return
         }
 
-        self.presentationStore.send(.startupPresentationEvaluationRequested(
+        let startupSnapshot = self.makeStartupSnapshot(
+            shouldPresentOnLaunch: OnboardingStateStore.shouldPresentOnLaunch(appModel: self.appModel))
+        self.presentationStore.send(.startupPresentationEvaluationRequested(startupSnapshot))
+        self.handlePresentationCommand()
+    }
+
+    private func makeStartupSnapshot(shouldPresentOnLaunch: Bool) -> RootPresentationFeature.StartupSnapshot {
+        RootPresentationFeature.StartupSnapshot(
             gatewayConnected: self.appModel.gatewayServerName != nil,
             hasConnectedOnce: self.hasConnectedOnce,
             onboardingComplete: self.onboardingComplete,
             hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
-            shouldPresentOnLaunch: OnboardingStateStore.shouldPresentOnLaunch(appModel: self.appModel)))
-        self.handlePresentationCommand()
+            shouldPresentOnLaunch: shouldPresentOnLaunch)
     }
 
     private func hasExistingGatewayConfig() -> Bool {
@@ -1050,11 +1056,8 @@ extension RootTabs {
     }
 
     private func maybeAutoOpenSettings() {
-        self.presentationStore.send(.autoOpenSettingsRequested(
-            gatewayConnected: self.appModel.gatewayServerName != nil,
-            hasConnectedOnce: self.hasConnectedOnce,
-            onboardingComplete: self.onboardingComplete,
-            hasExistingGatewayConfig: self.hasExistingGatewayConfig()))
+        let startupSnapshot = self.makeStartupSnapshot(shouldPresentOnLaunch: false)
+        self.presentationStore.send(.autoOpenSettingsRequested(startupSnapshot))
         self.handlePresentationCommand()
     }
 

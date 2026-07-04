@@ -14,6 +14,14 @@ struct RootPresentationFeature {
         }
     }
 
+    struct StartupSnapshot: Equatable, Sendable {
+        var gatewayConnected: Bool
+        var hasConnectedOnce: Bool
+        var onboardingComplete: Bool
+        var hasExistingGatewayConfig: Bool
+        var shouldPresentOnLaunch: Bool
+    }
+
     struct QuickSetupSnapshot: Equatable, Sendable {
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
@@ -104,11 +112,12 @@ struct RootPresentationFeature {
 
         mutating func refreshPresentation() {
             self.startupRoute = Self.startupRoute(
-                gatewayConnected: self.gatewayConnected,
-                hasConnectedOnce: self.hasConnectedOnce,
-                onboardingComplete: self.onboardingComplete,
-                hasExistingGatewayConfig: self.hasExistingGatewayConfig,
-                shouldPresentOnLaunch: self.shouldPresentOnLaunch)
+                snapshot: RootPresentationFeature.StartupSnapshot(
+                    gatewayConnected: self.gatewayConnected,
+                    hasConnectedOnce: self.hasConnectedOnce,
+                    onboardingComplete: self.onboardingComplete,
+                    hasExistingGatewayConfig: self.hasExistingGatewayConfig,
+                    shouldPresentOnLaunch: self.shouldPresentOnLaunch))
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
                 snapshot: RootPresentationFeature.QuickSetupSnapshot(
                     quickSetupDismissed: self.quickSetupDismissed,
@@ -119,21 +128,26 @@ struct RootPresentationFeature {
                 hasPresentedSheet: self.presentedSheet != nil)
         }
 
+        mutating func apply(startupSnapshot snapshot: RootPresentationFeature.StartupSnapshot) {
+            self.gatewayConnected = snapshot.gatewayConnected
+            self.hasConnectedOnce = snapshot.hasConnectedOnce
+            self.onboardingComplete = snapshot.onboardingComplete
+            self.hasExistingGatewayConfig = snapshot.hasExistingGatewayConfig
+            self.shouldPresentOnLaunch = snapshot.shouldPresentOnLaunch
+            self.refreshPresentation()
+        }
+
         static func startupRoute(
-            gatewayConnected: Bool,
-            hasConnectedOnce: Bool,
-            onboardingComplete: Bool,
-            hasExistingGatewayConfig: Bool,
-            shouldPresentOnLaunch: Bool)
+            snapshot: RootPresentationFeature.StartupSnapshot)
             -> RootTabs.StartupPresentationRoute
         {
-            if gatewayConnected {
+            if snapshot.gatewayConnected {
                 return .none
             }
-            if shouldPresentOnLaunch || !hasConnectedOnce || !onboardingComplete {
+            if snapshot.shouldPresentOnLaunch || !snapshot.hasConnectedOnce || !snapshot.onboardingComplete {
                 return .onboarding
             }
-            if !hasExistingGatewayConfig {
+            if !snapshot.hasExistingGatewayConfig {
                 return .settings
             }
             return .none
@@ -179,26 +193,12 @@ struct RootPresentationFeature {
     enum Action: Equatable, Sendable {
         case refreshPresentation
         case sidebarGatewayStatusChanged(GatewayDisplayState)
-        case startupSnapshotChanged(
-            gatewayConnected: Bool,
-            hasConnectedOnce: Bool,
-            onboardingComplete: Bool,
-            hasExistingGatewayConfig: Bool,
-            shouldPresentOnLaunch: Bool)
+        case startupSnapshotChanged(StartupSnapshot)
         case quickSetupSnapshotChanged(QuickSetupSnapshot)
         case presentedSheetChanged(PresentedSheet?)
-        case startupPresentationEvaluationRequested(
-            gatewayConnected: Bool,
-            hasConnectedOnce: Bool,
-            onboardingComplete: Bool,
-            hasExistingGatewayConfig: Bool,
-            shouldPresentOnLaunch: Bool)
+        case startupPresentationEvaluationRequested(StartupSnapshot)
         case forceOnboardingRequested
-        case autoOpenSettingsRequested(
-            gatewayConnected: Bool,
-            hasConnectedOnce: Bool,
-            onboardingComplete: Bool,
-            hasExistingGatewayConfig: Bool)
+        case autoOpenSettingsRequested(StartupSnapshot)
         case gatewaySetupRequestChanged(Int)
         case localNetworkAccessRequested(reason: String, sceneActive: Bool)
         case onboardingVisibilityChanged(isPresented: Bool, sceneActive: Bool)
@@ -220,18 +220,8 @@ struct RootPresentationFeature {
                 state.sidebarGatewayStatus = status
                 return .none
 
-            case let .startupSnapshotChanged(
-                gatewayConnected,
-                hasConnectedOnce,
-                onboardingComplete,
-                hasExistingGatewayConfig,
-                shouldPresentOnLaunch):
-                state.gatewayConnected = gatewayConnected
-                state.hasConnectedOnce = hasConnectedOnce
-                state.onboardingComplete = onboardingComplete
-                state.hasExistingGatewayConfig = hasExistingGatewayConfig
-                state.shouldPresentOnLaunch = shouldPresentOnLaunch
-                state.refreshPresentation()
+            case let .startupSnapshotChanged(snapshot):
+                state.apply(startupSnapshot: snapshot)
                 return .none
 
             case let .quickSetupSnapshotChanged(snapshot):
@@ -252,20 +242,10 @@ struct RootPresentationFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .startupPresentationEvaluationRequested(
-                gatewayConnected,
-                hasConnectedOnce,
-                onboardingComplete,
-                hasExistingGatewayConfig,
-                shouldPresentOnLaunch):
+            case let .startupPresentationEvaluationRequested(snapshot):
                 guard !state.didEvaluateOnboarding else { return .none }
                 state.didEvaluateOnboarding = true
-                state.gatewayConnected = gatewayConnected
-                state.hasConnectedOnce = hasConnectedOnce
-                state.onboardingComplete = onboardingComplete
-                state.hasExistingGatewayConfig = hasExistingGatewayConfig
-                state.shouldPresentOnLaunch = shouldPresentOnLaunch
-                state.refreshPresentation()
+                state.apply(startupSnapshot: snapshot)
 
                 switch state.startupRoute {
                 case .none:
@@ -287,26 +267,11 @@ struct RootPresentationFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .autoOpenSettingsRequested(
-                gatewayConnected,
-                hasConnectedOnce,
-                onboardingComplete,
-                hasExistingGatewayConfig):
+            case let .autoOpenSettingsRequested(snapshot):
                 guard !state.didAutoOpenSettings else { return .none }
                 guard !state.showOnboarding else { return .none }
-                state.gatewayConnected = gatewayConnected
-                state.hasConnectedOnce = hasConnectedOnce
-                state.onboardingComplete = onboardingComplete
-                state.hasExistingGatewayConfig = hasExistingGatewayConfig
-                state.shouldPresentOnLaunch = false
-                state.refreshPresentation()
-                let route = Self.State.startupRoute(
-                    gatewayConnected: gatewayConnected,
-                    hasConnectedOnce: hasConnectedOnce,
-                    onboardingComplete: onboardingComplete,
-                    hasExistingGatewayConfig: hasExistingGatewayConfig,
-                    shouldPresentOnLaunch: false)
-                guard route == .settings else { return .none }
+                state.apply(startupSnapshot: snapshot)
+                guard state.startupRoute == .settings else { return .none }
                 state.didAutoOpenSettings = true
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
                     reason: "auto_open_settings")
@@ -751,18 +716,10 @@ extension RootTabs {
     }
 
     static func startupPresentationRoute(
-        gatewayConnected: Bool,
-        hasConnectedOnce: Bool,
-        onboardingComplete: Bool,
-        hasExistingGatewayConfig: Bool,
-        shouldPresentOnLaunch: Bool) -> StartupPresentationRoute
+        snapshot: RootPresentationFeature.StartupSnapshot) -> StartupPresentationRoute
     {
         RootPresentationFeature.State.startupRoute(
-            gatewayConnected: gatewayConnected,
-            hasConnectedOnce: hasConnectedOnce,
-            onboardingComplete: onboardingComplete,
-            hasExistingGatewayConfig: hasExistingGatewayConfig,
-            shouldPresentOnLaunch: shouldPresentOnLaunch)
+            snapshot: snapshot)
     }
 
     static func shouldPresentQuickSetup(

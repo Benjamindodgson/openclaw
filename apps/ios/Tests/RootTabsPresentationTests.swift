@@ -50,31 +50,32 @@ struct RootTabsPresentationTests {
     @Test func `startup presentation opens onboarding for fresh install`() {
         #expect(
             RootTabs.startupPresentationRoute(
-                gatewayConnected: false,
-                hasConnectedOnce: false,
-                onboardingComplete: false,
-                hasExistingGatewayConfig: false,
-                shouldPresentOnLaunch: false) == .onboarding)
+                snapshot: Self.startupSnapshot(
+                    gatewayConnected: false,
+                    hasConnectedOnce: false,
+                    onboardingComplete: false,
+                    hasExistingGatewayConfig: false)) == .onboarding)
     }
 
     @Test func `startup presentation opens settings when onboarding complete without config`() {
         #expect(
             RootTabs.startupPresentationRoute(
-                gatewayConnected: false,
-                hasConnectedOnce: true,
-                onboardingComplete: true,
-                hasExistingGatewayConfig: false,
-                shouldPresentOnLaunch: false) == .settings)
+                snapshot: Self.startupSnapshot(
+                    gatewayConnected: false,
+                    hasConnectedOnce: true,
+                    onboardingComplete: true,
+                    hasExistingGatewayConfig: false)) == .settings)
     }
 
     @Test func `startup presentation does not interrupt connected gateway`() {
         #expect(
             RootTabs.startupPresentationRoute(
-                gatewayConnected: true,
-                hasConnectedOnce: false,
-                onboardingComplete: false,
-                hasExistingGatewayConfig: false,
-                shouldPresentOnLaunch: true) == .none)
+                snapshot: Self.startupSnapshot(
+                    gatewayConnected: true,
+                    hasConnectedOnce: false,
+                    onboardingComplete: false,
+                    hasExistingGatewayConfig: false,
+                    shouldPresentOnLaunch: true)) == .none)
     }
 
     @Test func `reducer updates startup presentation route`() async {
@@ -88,12 +89,11 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.startupSnapshotChanged(
+        await store.send(.startupSnapshotChanged(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: false,
             onboardingComplete: false,
-            hasExistingGatewayConfig: false,
-            shouldPresentOnLaunch: false))
+            hasExistingGatewayConfig: false)))
         {
             $0.gatewayConnected = false
             $0.hasConnectedOnce = false
@@ -102,24 +102,22 @@ struct RootTabsPresentationTests {
             $0.startupRoute = .onboarding
         }
 
-        await store.send(.startupSnapshotChanged(
+        await store.send(.startupSnapshotChanged(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: false,
-            shouldPresentOnLaunch: false))
+            hasExistingGatewayConfig: false)))
         {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
             $0.startupRoute = .settings
         }
 
-        await store.send(.startupSnapshotChanged(
+        await store.send(.startupSnapshotChanged(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: true,
-            shouldPresentOnLaunch: false))
+            hasExistingGatewayConfig: true)))
         {
             $0.hasExistingGatewayConfig = true
             $0.startupRoute = .none
@@ -131,24 +129,22 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.startupPresentationEvaluationRequested(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: false,
             onboardingComplete: false,
-            hasExistingGatewayConfig: false,
-            shouldPresentOnLaunch: false))
+            hasExistingGatewayConfig: false)))
         {
             $0.didEvaluateOnboarding = true
             $0.showOnboarding = true
             $0.startupRoute = .onboarding
         }
 
-        await store.send(.startupPresentationEvaluationRequested(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: false,
-            shouldPresentOnLaunch: false))
+            hasExistingGatewayConfig: false)))
     }
 
     @Test func `reducer opens settings when startup evaluation needs gateway config`() async {
@@ -156,12 +152,11 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.startupPresentationEvaluationRequested(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: false,
-            shouldPresentOnLaunch: false))
+            hasExistingGatewayConfig: false)))
         {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
@@ -182,11 +177,11 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.autoOpenSettingsRequested(
+        await store.send(.autoOpenSettingsRequested(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: false))
+            hasExistingGatewayConfig: false)))
         {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
@@ -196,11 +191,11 @@ struct RootTabsPresentationTests {
                 reason: "auto_open_settings")
         }
 
-        await store.send(.autoOpenSettingsRequested(
+        await store.send(.autoOpenSettingsRequested(Self.startupSnapshot(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: false))
+            hasExistingGatewayConfig: false)))
     }
 
     @Test func `reducer handles gateway setup request once`() async {
@@ -373,12 +368,11 @@ struct RootTabsPresentationTests {
             $0.showOnboarding = false
         }
 
-        await store.send(.startupPresentationEvaluationRequested(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
             gatewayConnected: true,
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: true,
-            shouldPresentOnLaunch: false))
+            hasExistingGatewayConfig: true)))
         {
             $0.gatewayConnected = true
             $0.hasConnectedOnce = true
@@ -1437,6 +1431,22 @@ struct RootTabsPresentationTests {
             message: "Open settings to review gateway configuration.",
             retryable: false,
             pauseReconnect: true)
+    }
+
+    private static func startupSnapshot(
+        gatewayConnected: Bool,
+        hasConnectedOnce: Bool,
+        onboardingComplete: Bool,
+        hasExistingGatewayConfig: Bool,
+        shouldPresentOnLaunch: Bool = false)
+        -> RootPresentationFeature.StartupSnapshot
+    {
+        RootPresentationFeature.StartupSnapshot(
+            gatewayConnected: gatewayConnected,
+            hasConnectedOnce: hasConnectedOnce,
+            onboardingComplete: onboardingComplete,
+            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            shouldPresentOnLaunch: shouldPresentOnLaunch)
     }
 }
 
