@@ -344,7 +344,7 @@ import Testing
             $0.connectingGatewayID = nil
         }
 
-        await store.send(.gatewayConnected(markedCompleted: true)) {
+        await store.send(.gatewayConnected(.init(markedCompleted: true))) {
             $0.didMarkCompleted = true
             $0.statusLine = "Connected."
         }

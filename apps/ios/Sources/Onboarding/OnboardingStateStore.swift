@@ -226,6 +226,8 @@ struct OnboardingStatusFeature {
             var statusLine: String
         }
 
+        struct GatewayConnectionCompletion: Equatable, Sendable { var markedCompleted: Bool }
+
         struct ConnectionIssueDetection: Equatable, Sendable {
             var issue: GatewayConnectionIssue
             var requestId: String?
@@ -245,7 +247,7 @@ struct OnboardingStatusFeature {
         case connectionActivityStarted(ConnectionActivityStart)
         case connectionStatusUpdated(ConnectionStatusUpdate)
         case freshQRScanStarted
-        case gatewayConnected(markedCompleted: Bool)
+        case gatewayConnected(GatewayConnectionCompletion)
         case gatewayProblemResetScanStarted
         case introAdvanced
         case navigationBackStarted
@@ -334,9 +336,9 @@ struct OnboardingStatusFeature {
                 state.statusLine = "Opening QR scanner…"
                 return .none
 
-            case let .gatewayConnected(markedCompleted):
+            case let .gatewayConnected(completion):
                 state.statusLine = "Connected."
-                if markedCompleted {
+                if completion.markedCompleted {
                     state.didMarkCompleted = true
                 }
                 return .none
