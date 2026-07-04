@@ -813,7 +813,7 @@ extension OnboardingWizardView {
         guard case .appleReviewDemoSetupCode = result else { return }
         self.presentationStore.send(.qrScannerDismissed)
         self.statusStore.send(.appleReviewDemoModeEnabled)
-        self.connectionFormStore.send(.selectedModeChanged(.homeNetwork))
+        self.connectionFormStore.send(.selectedModeChanged(.init(mode: .homeNetwork)))
         self.appModel.enterAppleReviewDemoMode()
     }
 
