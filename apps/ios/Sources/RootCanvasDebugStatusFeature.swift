@@ -78,3 +78,14 @@ struct RootCanvasDebugStatusFeature {
         .autoLogActions()
     }
 }
+
+extension RootCanvasDebugStatusFeature.Snapshot {
+    @MainActor
+    init(appModel: NodeAppModel, isEnabled: Bool) {
+        self.init(
+            isEnabled: isEnabled,
+            gatewayDisplayStatusText: appModel.gatewayDisplayStatusText,
+            gatewayServerName: appModel.gatewayServerName,
+            gatewayRemoteAddress: appModel.gatewayRemoteAddress)
+    }
+}
