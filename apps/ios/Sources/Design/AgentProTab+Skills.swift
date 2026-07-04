@@ -683,13 +683,13 @@ extension AgentProTab {
     @MainActor
     func installClawHubSkill(_ result: ClawHubSearchResultLite) async {
         guard self.liveGatewayConnected else { return }
-        self.clawHubStore.send(.installRequested(slug: result.slug))
+        self.clawHubStore.send(.installRequested(.init(slug: result.slug)))
         do {
             let params = ClawHubInstallParams(slug: result.slug)
             _ = try await self.requestGateway(method: "skills.install", params: params, timeoutSeconds: 125)
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
-            self.clawHubStore.send(.installFinished(slug: result.slug))
+            self.clawHubStore.send(.installFinished(.init(slug: result.slug)))
         } catch {
             self.clawHubStore.send(.installFailed(
                 slug: result.slug,

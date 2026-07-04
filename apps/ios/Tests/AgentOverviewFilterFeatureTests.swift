@@ -310,10 +310,10 @@ struct AgentClawHubSearchFeatureTests {
             AgentClawHubSearchFeature()
         }
 
-        await store.send(.installRequested(slug: "memory-plus")) {
+        await store.send(.installRequested(.init(slug: "memory-plus"))) {
             $0.installingSlug = "memory-plus"
         }
-        await store.send(.installFinished(slug: "memory-plus")) {
+        await store.send(.installFinished(.init(slug: "memory-plus"))) {
             $0.installingSlug = nil
         }
     }

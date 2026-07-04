@@ -225,7 +225,7 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("text: self.clawHubQueryBinding"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchRequested)"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchFinished("))
-        #expect(skillsSource.contains("self.clawHubStore.send(.installRequested(slug: result.slug))"))
+        #expect(skillsSource.contains("self.clawHubStore.send(.installRequested(.init(slug: result.slug)))"))
         #expect(skillsSource.contains("text: self.skillFilterBinding"))
         #expect(skillsSource.contains("selection: self.skillStatusFilterBinding"))
         #expect(skillsSource.contains("self.skillFilterStore.send(.clearSearchTapped)"))

@@ -605,9 +605,13 @@ struct AgentClawHubSearchFeature {
             var message: String
         }
 
+        struct InstallSlug: Equatable, Sendable {
+            var slug: String
+        }
+
         case installFailed(slug: String, message: String)
-        case installFinished(slug: String)
-        case installRequested(slug: String)
+        case installFinished(InstallSlug)
+        case installRequested(InstallSlug)
         case queryChanged(QueryChange)
         case searchFailed(SearchFailure)
         case searchFinished([ClawHubSearchResultLite])
@@ -638,13 +642,13 @@ struct AgentClawHubSearchFeature {
                 state.isLoading = false
                 return .none
 
-            case let .installRequested(slug):
-                state.installingSlug = slug
+            case let .installRequested(install):
+                state.installingSlug = install.slug
                 state.errorText = nil
                 return .none
 
-            case let .installFinished(slug):
-                if state.installingSlug == slug {
+            case let .installFinished(install):
+                if state.installingSlug == install.slug {
                     state.installingSlug = nil
                 }
                 return .none
