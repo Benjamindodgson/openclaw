@@ -39,7 +39,7 @@ struct CommandSessionsFeatureTests {
             $0.isLoading = true
             $0.loadErrorText = nil
         }
-        await store.receive(.refreshResponse(.success(loadedSessions))) {
+        await store.receive(.refreshResponse(.init(result: .success(loadedSessions)))) {
             $0.isLoading = false
             $0.sessions = loadedSessions
         }
@@ -61,7 +61,7 @@ struct CommandSessionsFeatureTests {
             $0.isLoading = true
             $0.loadErrorText = nil
         }
-        await store.receive(.refreshResponse(.failure(.failed))) {
+        await store.receive(.refreshResponse(.init(result: .failure(.failed)))) {
             $0.isLoading = false
             $0.sessions = []
             $0.loadErrorText = "Try again after the gateway reconnects."
