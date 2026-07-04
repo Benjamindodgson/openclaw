@@ -9,10 +9,10 @@ import Testing
             TalkProTabFeature()
         }
 
-        await store.send(.gatewayConnectionChanged(true)) {
+        await store.send(.gatewayConnectionChanged(.init(connected: true))) {
             $0.gatewayConnected = true
         }
-        await store.send(.gatewayConnectionChanged(false)) {
+        await store.send(.gatewayConnectionChanged(.init(connected: false))) {
             $0.gatewayConnected = false
         }
     }
