@@ -122,8 +122,16 @@ struct SettingsLocationFeature {
     }
 
     enum LocationModeApplyResult: Equatable, Sendable {
-        case applied(rawValue: String)
-        case denied(previousRawValue: String)
+        struct Applied: Equatable, Sendable {
+            var rawValue: String
+        }
+
+        struct Denied: Equatable, Sendable {
+            var previousRawValue: String
+        }
+
+        case applied(Applied)
+        case denied(Denied)
     }
 
     enum Action: Equatable, Sendable {
@@ -150,16 +158,16 @@ struct SettingsLocationFeature {
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = result
                 switch result {
-                case let .applied(rawValue):
-                    state.locationModeRaw = rawValue
-                    state.previousLocationModeRaw = rawValue
+                case let .applied(applied):
+                    state.locationModeRaw = applied.rawValue
+                    state.previousLocationModeRaw = applied.rawValue
                     return .run { _ in
                         await gatewayRefreshClient.refreshGatewayRegistration()
                     }
 
-                case let .denied(previousRawValue):
-                    state.locationModeRaw = previousRawValue
-                    state.previousLocationModeRaw = previousRawValue
+                case let .denied(denied):
+                    state.locationModeRaw = denied.previousRawValue
+                    state.previousLocationModeRaw = denied.previousRawValue
                     state.statusText = "Location permission was not granted."
                     return .none
                 }
@@ -173,7 +181,7 @@ struct SettingsLocationFeature {
 
                 guard request.mode != .off else {
                     state.isChangingLocationMode = false
-                    state.locationModeApplyResult = .applied(rawValue: request.rawValue)
+                    state.locationModeApplyResult = .applied(.init(rawValue: request.rawValue))
                     state.locationModeRaw = request.rawValue
                     state.previousLocationModeRaw = request.rawValue
                     return .run { _ in
@@ -184,8 +192,8 @@ struct SettingsLocationFeature {
                 return .run { send in
                     let granted = await permissionClient.requestPermission(request.mode)
                     let result: LocationModeApplyResult = granted
-                        ? .applied(rawValue: request.rawValue)
-                        : .denied(previousRawValue: request.previousRawValue)
+                        ? .applied(.init(rawValue: request.rawValue))
+                        : .denied(.init(previousRawValue: request.previousRawValue))
                     await send(.locationModeApplyFinished(result))
                 }
 

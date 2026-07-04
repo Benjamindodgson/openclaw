@@ -1296,9 +1296,11 @@ struct SettingsNavigationFeatureTests {
             mode: .off,
             previousRawValue: OpenClawLocationMode.whileUsing.rawValue,
             rawValue: OpenClawLocationMode.off.rawValue)
+        let appliedResult = SettingsLocationFeature.LocationModeApplyResult.applied(
+            .init(rawValue: OpenClawLocationMode.off.rawValue))
 
         await store.send(.locationModeApplyRequested(request)) {
-            $0.locationModeApplyResult = .applied(rawValue: OpenClawLocationMode.off.rawValue)
+            $0.locationModeApplyResult = appliedResult
             $0.locationModeRaw = OpenClawLocationMode.off.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
         }
@@ -1314,8 +1316,12 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings location requests permissions through client`() async {
         let probe = SettingsLocationPermissionProbe(granted: true)
         let gatewayRefreshProbe = SettingsLocationGatewayRefreshProbe()
+        let deniedResult = SettingsLocationFeature.LocationModeApplyResult.denied(
+            .init(previousRawValue: OpenClawLocationMode.off.rawValue))
+        let appliedResult = SettingsLocationFeature.LocationModeApplyResult.applied(
+            .init(rawValue: OpenClawLocationMode.always.rawValue))
         var initialState = SettingsLocationFeature.State()
-        initialState.locationModeApplyResult = .denied(previousRawValue: OpenClawLocationMode.off.rawValue)
+        initialState.locationModeApplyResult = deniedResult
         initialState.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
             mode: .always,
             previousRawValue: OpenClawLocationMode.off.rawValue,
@@ -1337,9 +1343,9 @@ struct SettingsNavigationFeatureTests {
             $0.locationModeRequest = nil
             $0.statusText = nil
         }
-        await store.receive(.locationModeApplyFinished(.applied(rawValue: OpenClawLocationMode.always.rawValue))) {
+        await store.receive(.locationModeApplyFinished(appliedResult)) {
             $0.isChangingLocationMode = false
-            $0.locationModeApplyResult = .applied(rawValue: OpenClawLocationMode.always.rawValue)
+            $0.locationModeApplyResult = appliedResult
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
         }
@@ -1470,13 +1476,15 @@ struct SettingsNavigationFeatureTests {
             mode: .always,
             previousRawValue: OpenClawLocationMode.off.rawValue,
             rawValue: OpenClawLocationMode.always.rawValue)
+        let deniedResult = SettingsLocationFeature.LocationModeApplyResult.denied(
+            .init(previousRawValue: OpenClawLocationMode.off.rawValue))
 
         await store.send(.locationModeApplyRequested(request)) {
             $0.isChangingLocationMode = true
         }
-        await store.receive(.locationModeApplyFinished(.denied(previousRawValue: OpenClawLocationMode.off.rawValue))) {
+        await store.receive(.locationModeApplyFinished(deniedResult)) {
             $0.isChangingLocationMode = false
-            $0.locationModeApplyResult = .denied(previousRawValue: OpenClawLocationMode.off.rawValue)
+            $0.locationModeApplyResult = deniedResult
             $0.locationModeRaw = OpenClawLocationMode.off.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
             $0.statusText = "Location permission was not granted."
