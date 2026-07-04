@@ -41,7 +41,11 @@ struct PrivacyAccessFeatureTests {
         }
 
         await store.send(.contactsButtonTapped)
-        await store.receive(.permissionRequestFinished(.contacts, granted: true, snapshot: probe.snapshot)) {
+        await store.receive(.permissionRequestFinished(.init(
+            permission: .contacts,
+            granted: true,
+            snapshot: probe.snapshot)))
+        {
             $0.contactsStatus = .allowed
         }
 
@@ -59,7 +63,11 @@ struct PrivacyAccessFeatureTests {
         }
 
         await store.send(.calendarWriteButtonTapped)
-        await store.receive(.permissionRequestFinished(.calendarWrite, granted: true, snapshot: probe.snapshot)) {
+        await store.receive(.permissionRequestFinished(.init(
+            permission: .calendarWrite,
+            granted: true,
+            snapshot: probe.snapshot)))
+        {
             $0.calendarWriteStatus = .allowed
             $0.calendarReadStatus = .addOnly
         }
@@ -78,7 +86,11 @@ struct PrivacyAccessFeatureTests {
         }
 
         await store.send(.calendarReadButtonTapped)
-        await store.receive(.permissionRequestFinished(.calendarRead, granted: true, snapshot: probe.snapshot)) {
+        await store.receive(.permissionRequestFinished(.init(
+            permission: .calendarRead,
+            granted: true,
+            snapshot: probe.snapshot)))
+        {
             $0.calendarReadStatus = .allowed
         }
 

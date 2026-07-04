@@ -663,6 +663,16 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.store.send(.removeWords(.init(offsets: offsets)))"))
     }
 
+    @Test func `privacy permission request completion action is typed`() throws {
+        let source = try String(contentsOf: Self.privacyAccessSectionSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct PermissionRequestCompletion: Equatable, Sendable"))
+        #expect(source.contains("case permissionRequestFinished(PermissionRequestCompletion)"))
+        #expect(source.contains("state.apply(completion.snapshot)"))
+        #expect(source.contains("state.applyGranted(completion.permission)"))
+        #expect(source.contains("await send(.permissionRequestFinished(.init("))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -2877,6 +2887,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Settings/VoiceWakeWordsSettingsView.swift")
+    }
+
+    private static func privacyAccessSectionSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Settings/PrivacyAccessSectionView.swift")
     }
 
     private static func settingsGatewaySetupFeaturesSourceURL() -> URL {

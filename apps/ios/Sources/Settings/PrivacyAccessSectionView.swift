@@ -270,6 +270,12 @@ struct PrivacyAccessFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct PermissionRequestCompletion: Equatable, Sendable {
+            var permission: PrivacyAccessPermission
+            var granted: Bool
+            var snapshot: PrivacyAccessSnapshot
+        }
+
         case appeared
         case sceneBecameActive
         case contactsButtonTapped
@@ -277,7 +283,7 @@ struct PrivacyAccessFeature {
         case calendarReadButtonTapped
         case remindersButtonTapped
         case snapshotLoaded(PrivacyAccessSnapshot)
-        case permissionRequestFinished(PrivacyAccessPermission, granted: Bool, snapshot: PrivacyAccessSnapshot)
+        case permissionRequestFinished(PermissionRequestCompletion)
     }
 
     // swiftformat:enable redundantSendable
@@ -335,10 +341,10 @@ struct PrivacyAccessFeature {
                 state.apply(snapshot)
                 return .none
 
-            case let .permissionRequestFinished(permission, granted, snapshot):
-                state.apply(snapshot)
-                if granted {
-                    state.applyGranted(permission)
+            case let .permissionRequestFinished(completion):
+                state.apply(completion.snapshot)
+                if completion.granted {
+                    state.applyGranted(completion.permission)
                 }
                 return .none
             }
@@ -364,7 +370,10 @@ struct PrivacyAccessFeature {
             case .reminders:
                 await client.requestRemindersFull()
             }
-            await send(.permissionRequestFinished(permission, granted: granted, snapshot: client.snapshot()))
+            await send(.permissionRequestFinished(.init(
+                permission: permission,
+                granted: granted,
+                snapshot: client.snapshot())))
         }
     }
 
