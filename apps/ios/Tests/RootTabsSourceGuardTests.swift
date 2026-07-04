@@ -280,9 +280,13 @@ struct RootTabsSourceGuardTests {
             to: "extension AgentDreamingMaintenanceError")
 
         #expect(feature.contains("struct DreamActionResponse: Equatable, Sendable"))
+        #expect(source.contains("struct Failure: Equatable, Sendable { var message: String }"))
         #expect(feature.contains("case dreamActionResponse(DreamActionResponse)"))
         #expect(feature.contains("await send(.dreamActionResponse(.init(result: .success(summary))))"))
+        #expect(feature.contains("result: .failure(.failed(.init(message: error.localizedDescription)))"))
         #expect(feature.contains("switch response.result"))
+        #expect(source.contains("case failed(Failure)"))
+        #expect(!source.contains("case failed(String)"))
     }
 
     @Test func `iOS 26 chrome uses native glass while content cards stay quiet`() throws {
