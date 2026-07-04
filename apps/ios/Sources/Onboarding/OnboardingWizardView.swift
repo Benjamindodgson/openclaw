@@ -344,7 +344,8 @@ struct OnboardingWizardView: View {
                 if shouldMarkCompleted, let selectedMode {
                     OnboardingStateStore.markCompleted(mode: selectedMode)
                 }
-                self.statusStore.send(.gatewayConnected(markedCompleted: shouldMarkCompleted && selectedMode != nil))
+                self.statusStore.send(.gatewayConnected(.init(
+                    markedCompleted: shouldMarkCompleted && selectedMode != nil)))
                 self.stepStore.send(.stepChanged(.init(step: .success)))
             }
             .onChange(of: self.scenePhase) { _, newValue in
