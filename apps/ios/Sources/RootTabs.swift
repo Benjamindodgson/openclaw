@@ -880,7 +880,7 @@ struct RootTabs: View {
 
     private func makeIdleTimerSnapshot() -> RootIdleTimerFeature.Snapshot {
         RootIdleTimerFeature.Snapshot(
-            isSceneActive: self.scenePhase == .active,
+            scenePhase: self.scenePhase,
             preventSleep: self.preventSleep,
             talkModeEnabled: self.appModel.talkMode.isEnabled)
     }

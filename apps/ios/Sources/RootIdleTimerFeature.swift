@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import SwiftUI
 import UIKit
 
 struct RootIdleTimerClient {
@@ -68,5 +69,14 @@ struct RootIdleTimerFeature {
             }
         }
         .autoLogActions()
+    }
+}
+
+extension RootIdleTimerFeature.Snapshot {
+    init(scenePhase: ScenePhase, preventSleep: Bool, talkModeEnabled: Bool) {
+        self.init(
+            isSceneActive: scenePhase == .active,
+            preventSleep: preventSleep,
+            talkModeEnabled: talkModeEnabled)
     }
 }
