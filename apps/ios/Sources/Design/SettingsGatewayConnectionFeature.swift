@@ -86,10 +86,18 @@ struct SettingsGatewayConnectionFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ConnectionStart: Equatable, Sendable {
+            var gatewayID: String
+        }
+
+        struct DiscoveredGatewayPersistenceRequest: Equatable, Sendable {
+            var stableID: String
+        }
+
         case connectionFinished
-        case connectionStarted(String)
+        case connectionStarted(ConnectionStart)
         case disconnectRequested
-        case discoveredGatewayPersistenceRequested(stableID: String)
+        case discoveredGatewayPersistenceRequested(DiscoveredGatewayPersistenceRequest)
         case gatewayStatusSynced(
             isAppleReviewDemoModeEnabled: Bool,
             gatewayStatusConnected: Bool,
@@ -113,8 +121,8 @@ struct SettingsGatewayConnectionFeature {
                 state.connectingGatewayID = nil
                 return .none
 
-            case let .connectionStarted(gatewayID):
-                state.connectingGatewayID = gatewayID
+            case let .connectionStarted(start):
+                state.connectingGatewayID = start.gatewayID
                 return .none
 
             case .disconnectRequested:
@@ -123,8 +131,8 @@ struct SettingsGatewayConnectionFeature {
                     await disconnectClient.disconnect()
                 }
 
-            case let .discoveredGatewayPersistenceRequested(stableID):
-                let trimmedStableID = stableID.trimmingCharacters(in: .whitespacesAndNewlines)
+            case let .discoveredGatewayPersistenceRequested(request):
+                let trimmedStableID = request.stableID.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmedStableID.isEmpty else { return .none }
                 return .run { _ in
                     await persistenceClient.saveSelectedGatewayStableID(trimmedStableID)
