@@ -88,17 +88,22 @@ struct IPadSkillWorkshopFeatureTests {
                 run: { _, _, _ in }))
         }
 
-        await store.send(.proposalMutationRequested(
-            .apply,
+        await store.send(.proposalMutationRequested(.init(
+            kind: .apply,
             proposalID: "pending-1",
             sceneActive: true,
             canRead: true,
             canWrite: true,
-            hasOperatorAdminScope: true))
+            hasOperatorAdminScope: true)))
         {
             $0.busyAction = IPadSkillProposalAction(kind: .apply, proposalID: "pending-1")
         }
-        await store.receive(.proposalMutationResponse(.apply, sceneActive: true, canRead: true, .success(true))) {
+        await store.receive(.proposalMutationResponse(.init(
+            kind: .apply,
+            sceneActive: true,
+            canRead: true,
+            result: .success(true))))
+        {
             $0.busyAction = nil
             $0.noticeText = "Proposal applied."
         }

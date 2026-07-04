@@ -192,18 +192,26 @@ struct IPadSkillWorkshopFeature {
         case clearQueryTapped
         case inspectRequested(proposalID: String, canRead: Bool, force: Bool)
         case inspectResponse(proposalID: String, Result<IPadSkillProposalInspectResponse, IPadSkillWorkshopError>)
-        case proposalMutationRequested(
-            IPadSkillProposalAction.Kind,
-            proposalID: String,
-            sceneActive: Bool,
-            canRead: Bool,
-            canWrite: Bool,
-            hasOperatorAdminScope: Bool)
-        case proposalMutationResponse(
-            IPadSkillProposalAction.Kind,
-            sceneActive: Bool,
-            canRead: Bool,
-            Result<Bool, IPadSkillWorkshopError>)
+
+        struct ProposalMutationRequest: Equatable, Sendable {
+            var kind: IPadSkillProposalAction.Kind
+            var proposalID: String
+            var sceneActive: Bool
+            var canRead: Bool
+            var canWrite: Bool
+            var hasOperatorAdminScope: Bool
+        }
+
+        struct ProposalMutationResponse: Equatable, Sendable {
+            var kind: IPadSkillProposalAction.Kind
+            var sceneActive: Bool
+            var canRead: Bool
+            var result: Result<Bool, IPadSkillWorkshopError>
+        }
+
+        case proposalMutationRequested(ProposalMutationRequest)
+        case proposalMutationResponse(ProposalMutationResponse)
+
         struct RefreshRequest: Equatable, Sendable {
             var sceneActive: Bool
             var canRead: Bool
@@ -259,56 +267,53 @@ struct IPadSkillWorkshopFeature {
                 state.errorText = error.message
                 return .none
 
-            case let .proposalMutationRequested(
-                kind,
-                proposalID,
-                sceneActive,
-                canRead,
-                canWrite,
-                hasOperatorAdminScope):
+            case let .proposalMutationRequested(request):
                 guard IPadSkillWorkshopScreen.shouldEnableProposalMutation(
-                    canWrite: canWrite,
-                    hasOperatorAdminScope: hasOperatorAdminScope),
+                    canWrite: request.canWrite,
+                    hasOperatorAdminScope: request.hasOperatorAdminScope),
                     state.busyAction == nil
                 else {
                     return .none
                 }
 
-                state.busyAction = IPadSkillProposalAction(kind: kind, proposalID: proposalID)
+                state.busyAction = IPadSkillProposalAction(kind: request.kind, proposalID: request.proposalID)
                 state.errorText = nil
                 state.noticeText = nil
                 let agentID = state.selectedAgentParam
                 return .run { send in
                     do {
-                        try await client.run(kind, agentID, proposalID)
-                        await send(.proposalMutationResponse(
-                            kind,
-                            sceneActive: sceneActive,
-                            canRead: canRead,
-                            .success(true)))
+                        try await client.run(request.kind, agentID, request.proposalID)
+                        await send(.proposalMutationResponse(.init(
+                            kind: request.kind,
+                            sceneActive: request.sceneActive,
+                            canRead: request.canRead,
+                            result: .success(true))))
                     } catch {
-                        await send(.proposalMutationResponse(
-                            kind,
-                            sceneActive: sceneActive,
-                            canRead: canRead,
-                            .failure(.failed(Self.message(for: error)))))
+                        await send(.proposalMutationResponse(.init(
+                            kind: request.kind,
+                            sceneActive: request.sceneActive,
+                            canRead: request.canRead,
+                            result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .proposalMutationResponse(kind, sceneActive, canRead, .success):
-                state.busyAction = nil
-                state.noticeText = kind == .apply ? "Proposal applied." : "Proposal rejected."
-                return .run { send in
-                    await send(.refreshRequested(.init(
-                        sceneActive: sceneActive,
-                        canRead: canRead,
-                        force: true)))
-                }
+            case let .proposalMutationResponse(response):
+                switch response.result {
+                case .success:
+                    state.busyAction = nil
+                    state.noticeText = response.kind == .apply ? "Proposal applied." : "Proposal rejected."
+                    return .run { send in
+                        await send(.refreshRequested(.init(
+                            sceneActive: response.sceneActive,
+                            canRead: response.canRead,
+                            force: true)))
+                    }
 
-            case let .proposalMutationResponse(_, _, _, .failure(error)):
-                state.busyAction = nil
-                state.errorText = error.message
-                return .none
+                case let .failure(error):
+                    state.busyAction = nil
+                    state.errorText = error.message
+                    return .none
+                }
 
             case let .proposalSelected(proposalID, opensSheet, canRead, forceInspect):
                 state.selectedProposalID = proposalID
@@ -1193,13 +1198,13 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private func run(_ action: IPadSkillProposalAction.Kind, proposal: IPadSkillProposal) async {
-        await self.store.send(.proposalMutationRequested(
-            action,
+        await self.store.send(.proposalMutationRequested(.init(
+            kind: action,
             proposalID: proposal.id,
             sceneActive: self.scenePhase == .active,
             canRead: self.canRead,
             canWrite: self.canWrite,
-            hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)).finish()
+            hasOperatorAdminScope: self.appModel.hasOperatorAdminScope))).finish()
     }
 }
 
