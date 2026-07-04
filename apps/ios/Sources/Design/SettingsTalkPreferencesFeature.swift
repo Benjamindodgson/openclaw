@@ -143,6 +143,30 @@ struct SettingsTalkPreferencesFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ProviderSelectionChange: Equatable, Sendable {
+            var rawValue: String
+        }
+
+        struct RealtimeVoiceSelectionChange: Equatable, Sendable {
+            var rawValue: String
+        }
+
+        struct SpeechLocaleChange: Equatable, Sendable {
+            var locale: String
+        }
+
+        struct TalkBackgroundEnabledChange: Equatable, Sendable {
+            var isEnabled: Bool
+        }
+
+        struct TalkButtonEnabledChange: Equatable, Sendable {
+            var isEnabled: Bool
+        }
+
+        struct TalkSpeakerphoneEnabledChange: Equatable, Sendable {
+            var isEnabled: Bool
+        }
+
         case gatewayTalkConfigSynced(
             configLoaded: Bool,
             apiKeyConfigured: Bool,
@@ -161,12 +185,12 @@ struct SettingsTalkPreferencesFeature {
             talkButtonEnabled: Bool,
             talkBackgroundEnabled: Bool,
             talkSpeakerphoneEnabled: Bool)
-        case providerSelectionChanged(String)
-        case realtimeVoiceSelectionChanged(String)
-        case speechLocaleChanged(String)
-        case talkBackgroundEnabledChanged(Bool)
-        case talkButtonEnabledChanged(Bool)
-        case talkSpeakerphoneEnabledChanged(Bool)
+        case providerSelectionChanged(ProviderSelectionChange)
+        case realtimeVoiceSelectionChanged(RealtimeVoiceSelectionChange)
+        case speechLocaleChanged(SpeechLocaleChange)
+        case talkBackgroundEnabledChanged(TalkBackgroundEnabledChange)
+        case talkButtonEnabledChanged(TalkButtonEnabledChange)
+        case talkSpeakerphoneEnabledChanged(TalkSpeakerphoneEnabledChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -209,33 +233,34 @@ struct SettingsTalkPreferencesFeature {
                 state.talkSpeakerphoneEnabled = talkSpeakerphoneEnabled
                 return .none
 
-            case let .providerSelectionChanged(rawValue):
-                let selection = TalkModeProviderSelection.resolved(rawValue).rawValue
+            case let .providerSelectionChanged(change):
+                let selection = TalkModeProviderSelection.resolved(change.rawValue).rawValue
                 state.providerSelectionRaw = selection
                 return .run { _ in
                     await preferencesClient.setProviderSelection(selection)
                 }
 
-            case let .realtimeVoiceSelectionChanged(rawValue):
-                let voice = Self.normalizedRealtimeVoice(rawValue)
+            case let .realtimeVoiceSelectionChanged(change):
+                let voice = Self.normalizedRealtimeVoice(change.rawValue)
                 state.realtimeVoiceSelectionRaw = voice
                 return .run { _ in
                     await preferencesClient.setRealtimeVoiceSelection(voice)
                 }
 
-            case let .speechLocaleChanged(speechLocale):
-                state.speechLocale = speechLocale
+            case let .speechLocaleChanged(change):
+                state.speechLocale = change.locale
                 return .none
 
-            case let .talkBackgroundEnabledChanged(enabled):
-                state.talkBackgroundEnabled = enabled
+            case let .talkBackgroundEnabledChanged(change):
+                state.talkBackgroundEnabled = change.isEnabled
                 return .none
 
-            case let .talkButtonEnabledChanged(enabled):
-                state.talkButtonEnabled = enabled
+            case let .talkButtonEnabledChanged(change):
+                state.talkButtonEnabled = change.isEnabled
                 return .none
 
-            case let .talkSpeakerphoneEnabledChanged(enabled):
+            case let .talkSpeakerphoneEnabledChanged(change):
+                let enabled = change.isEnabled
                 state.talkSpeakerphoneEnabled = enabled
                 return .run { _ in
                     await preferencesClient.setSpeakerphoneEnabled(enabled)

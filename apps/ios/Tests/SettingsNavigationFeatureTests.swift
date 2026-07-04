@@ -2304,13 +2304,13 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
 
-        await store.send(.providerSelectionChanged("unknown")) {
+        await store.send(.providerSelectionChanged(.init(rawValue: "unknown"))) {
             $0.providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
         }
-        await store.send(.realtimeVoiceSelectionChanged("unknown")) {
+        await store.send(.realtimeVoiceSelectionChanged(.init(rawValue: "unknown"))) {
             $0.realtimeVoiceSelectionRaw = ""
         }
-        await store.send(.realtimeVoiceSelectionChanged(" Cedar ")) {
+        await store.send(.realtimeVoiceSelectionChanged(.init(rawValue: " Cedar "))) {
             $0.realtimeVoiceSelectionRaw = "cedar"
         }
         await store.finish()
@@ -2325,16 +2325,16 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
 
-        await store.send(.speechLocaleChanged("en-US")) {
+        await store.send(.speechLocaleChanged(.init(locale: "en-US"))) {
             $0.speechLocale = "en-US"
         }
-        await store.send(.talkBackgroundEnabledChanged(true)) {
+        await store.send(.talkBackgroundEnabledChanged(.init(isEnabled: true))) {
             $0.talkBackgroundEnabled = true
         }
-        await store.send(.talkButtonEnabledChanged(false)) {
+        await store.send(.talkButtonEnabledChanged(.init(isEnabled: false))) {
             $0.talkButtonEnabled = false
         }
-        await store.send(.talkSpeakerphoneEnabledChanged(false)) {
+        await store.send(.talkSpeakerphoneEnabledChanged(.init(isEnabled: false))) {
             $0.talkSpeakerphoneEnabled = false
         }
         await store.finish()
