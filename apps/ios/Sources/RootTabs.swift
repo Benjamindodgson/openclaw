@@ -182,7 +182,8 @@ struct RootTabs: View {
             NavigationStack {
                 AgentProTab(
                     directRoute: .agents,
-                    openSettings: { self.selectSidebarDestination(.gateway) })
+                    openSettings: { self.selectSidebarDestination(.gateway) },
+                    selectionStore: self.makeAgentSelectionStore())
             }
             .tabItem { Label("Agent", systemImage: "person.2.fill") }
             .tag(AppTab.agent)
@@ -437,14 +438,16 @@ struct RootTabs: View {
                 directRoute: .agents,
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 headerTitle: "Agents",
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
                 .id(self.selectedSidebarDestination.id)
         case .instances:
             AgentProTab(
                 directRoute: .instances,
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 headerTitle: "Instances",
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
                 .id(self.selectedSidebarDestination.id)
         case .sessions:
             CommandSessionsScreen(
@@ -456,21 +459,24 @@ struct RootTabs: View {
                 directRoute: .dreaming,
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 headerTitle: "Dreaming",
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
                 .id(self.selectedSidebarDestination.id)
         case .usage:
             AgentProTab(
                 directRoute: .usage,
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 headerTitle: "Usage",
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
                 .id(self.selectedSidebarDestination.id)
         case .cron:
             AgentProTab(
                 directRoute: .cron,
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 headerTitle: "Cron Jobs",
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
                 .id(self.selectedSidebarDestination.id)
         case .docs:
             OpenClawDocsScreen(
@@ -948,6 +954,13 @@ struct RootTabs: View {
     private func makeTalkProTabStore() -> StoreOf<TalkProTabFeature> {
         Store(initialState: TalkProTabFeature.State()) {
             TalkProTabFeature(client: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
+    private func makeAgentSelectionStore() -> StoreOf<AgentSelectionFeature> {
+        Store(initialState: AgentSelectionFeature.State()) {
+            AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))
         }
     }
 

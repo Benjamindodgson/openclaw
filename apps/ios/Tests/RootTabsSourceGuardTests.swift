@@ -359,6 +359,26 @@ struct RootTabsSourceGuardTests {
         #expect(!speakerphoneBinding.contains("self.appModel.setTalkSpeakerphoneEnabled"))
     }
 
+    @Test func `agent row selection is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let agentSource = try String(contentsOf: Self.agentProTabSourceURL(), encoding: .utf8)
+        let agentOverviewSource = try String(contentsOf: Self.agentProTabOverviewSourceURL(), encoding: .utf8)
+        let phoneControlHubSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
+
+        #expect(agentSource.contains("struct AgentSelectionClient: Sendable"))
+        #expect(agentSource.contains("var agentSelection: AgentSelectionClient"))
+        #expect(agentSource.contains("struct AgentSelectionFeature"))
+        #expect(agentSource.contains("case agentSelected(String)"))
+        #expect(agentSource.contains("await selectionClient.setSelectedAgentId(agentId)"))
+        #expect(agentOverviewSource.contains("self.selectionStore.send(.agentSelected(agent.id))"))
+        #expect(!agentOverviewSource.contains("self.appModel.setSelectedAgentId(agent.id)"))
+        #expect(rootSource.contains("private func makeAgentSelectionStore()"))
+        #expect(rootSource.contains("AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))"))
+        #expect(rootSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 5)
+        #expect(phoneControlHubSource.contains("private func makeAgentSelectionStore()"))
+        #expect(phoneControlHubSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 4)
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)

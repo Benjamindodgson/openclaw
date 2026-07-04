@@ -17,6 +17,7 @@ struct AgentProTab: View {
     @State var skillEditorStore: StoreOf<AgentSkillEditorFeature>
     @State var clawHubStore: StoreOf<AgentClawHubSearchFeature>
     @State var cronActionStore: StoreOf<AgentCronActionFeature>
+    @State var selectionStore: StoreOf<AgentSelectionFeature>
 
     enum AgentRoute: Hashable {
         case agents
@@ -140,6 +141,11 @@ struct AgentProTab: View {
         {
             AgentCronActionFeature()
         },
+        selectionStore: StoreOf<AgentSelectionFeature> = Store(
+            initialState: AgentSelectionFeature.State())
+        {
+            AgentSelectionFeature()
+        },
         filterStore: StoreOf<AgentOverviewFilterFeature> = Store(
             initialState: AgentOverviewFilterFeature.State())
         {
@@ -157,6 +163,7 @@ struct AgentProTab: View {
         self._skillPolicyMutationStore = State(wrappedValue: skillPolicyMutationStore)
         self._skillEditorStore = State(wrappedValue: skillEditorStore)
         self._cronActionStore = State(wrappedValue: cronActionStore)
+        self._selectionStore = State(wrappedValue: selectionStore)
         self._filterStore = State(wrappedValue: filterStore)
     }
 
@@ -309,6 +316,66 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+// swiftformat:disable redundantSendable
+struct AgentSelectionClient: Sendable {
+    var setSelectedAgentId: @MainActor @Sendable (String?) -> Void
+}
+
+// swiftformat:enable redundantSendable
+
+extension AgentSelectionClient: DependencyKey {
+    static let liveValue = AgentSelectionClient(setSelectedAgentId: { _ in })
+    static let testValue = AgentSelectionClient(setSelectedAgentId: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        AgentSelectionClient(setSelectedAgentId: { agentId in
+            appModel.setSelectedAgentId(agentId)
+        })
+    }
+}
+
+extension DependencyValues {
+    var agentSelection: AgentSelectionClient {
+        get { self[AgentSelectionClient.self] }
+        set { self[AgentSelectionClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct AgentSelectionFeature {
+    private let selectionClientOverride: AgentSelectionClient?
+
+    init(selectionClient: AgentSelectionClient? = nil) {
+        self.selectionClientOverride = selectionClient
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case agentSelected(String)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.agentSelection) var dependencySelectionClient
+            let selectionClient = self.selectionClientOverride ?? dependencySelectionClient
+
+            switch action {
+            case let .agentSelected(agentId):
+                return .run { [selectionClient] _ in
+                    await selectionClient.setSelectedAgentId(agentId)
+                }
+            }
+        }
+        .autoLogActions()
     }
 }
 
