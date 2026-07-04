@@ -40,6 +40,10 @@ struct RootPresentationFeature {
         var sceneActive: Bool
     }
 
+    struct GatewaySetupRequest: Equatable, Sendable {
+        var requestID: Int
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected: Bool
@@ -209,7 +213,7 @@ struct RootPresentationFeature {
         case startupPresentationEvaluationRequested(StartupSnapshot)
         case forceOnboardingRequested
         case autoOpenSettingsRequested(StartupSnapshot)
-        case gatewaySetupRequestChanged(Int)
+        case gatewaySetupRequestChanged(GatewaySetupRequest)
         case localNetworkAccessRequested(LocalNetworkAccessRequest)
         case onboardingVisibilityChanged(OnboardingVisibilityChange)
         case presentationCommandHandled
@@ -287,9 +291,11 @@ struct RootPresentationFeature {
                     reason: "auto_open_settings")
                 return .none
 
-            case let .gatewaySetupRequestChanged(requestID):
-                guard requestID != 0, requestID != state.handledGatewaySetupRequestID else { return .none }
-                state.handledGatewaySetupRequestID = requestID
+            case let .gatewaySetupRequestChanged(request):
+                guard request.requestID != 0,
+                      request.requestID != state.handledGatewaySetupRequestID
+                else { return .none }
+                state.handledGatewaySetupRequestID = request.requestID
                 state.showOnboarding = false
                 state.didAutoOpenSettings = true
                 state.presentedSheet = nil

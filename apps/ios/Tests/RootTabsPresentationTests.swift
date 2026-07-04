@@ -206,7 +206,7 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.gatewaySetupRequestChanged(42)) {
+        await store.send(.gatewaySetupRequestChanged(Self.gatewaySetupRequest(requestID: 42))) {
             $0.showOnboarding = false
             $0.didAutoOpenSettings = true
             $0.handledGatewaySetupRequestID = 42
@@ -215,7 +215,7 @@ struct RootTabsPresentationTests {
                 reason: "gateway_setup_deeplink")
         }
 
-        await store.send(.gatewaySetupRequestChanged(42))
+        await store.send(.gatewaySetupRequestChanged(Self.gatewaySetupRequest(requestID: 42)))
     }
 
     @Test func `gateway overview refresh reducer refreshes connected gateway overview`() async {
@@ -1465,6 +1465,10 @@ struct RootTabsPresentationTests {
         RootPresentationFeature.LocalNetworkAccessRequest(
             reason: reason,
             sceneActive: sceneActive)
+    }
+
+    private static func gatewaySetupRequest(requestID: Int) -> RootPresentationFeature.GatewaySetupRequest {
+        RootPresentationFeature.GatewaySetupRequest(requestID: requestID)
     }
 
     private static func onboardingVisibilityChange(
