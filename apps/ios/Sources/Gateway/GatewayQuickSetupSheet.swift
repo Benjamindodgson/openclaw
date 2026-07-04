@@ -64,13 +64,16 @@ struct GatewayQuickSetupFeature {
 
         struct ConnectResponse: Equatable, Sendable { var error: String? }
 
+        struct GatewayProblemPrimaryAction: Equatable, Sendable {
+            var problem: GatewayConnectionProblem
+            var candidate: GatewayDiscoveryModel.DiscoveredGateway?
+        }
+
         case connectButtonTapped(ConnectRequest)
         case connectResponse(ConnectResponse)
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
-        case gatewayProblemPrimaryActionTapped(
-            GatewayConnectionProblem,
-            candidate: GatewayDiscoveryModel.DiscoveredGateway?)
+        case gatewayProblemPrimaryActionTapped(GatewayProblemPrimaryAction)
     }
 
     // swiftformat:enable redundantSendable
@@ -99,18 +102,18 @@ struct GatewayQuickSetupFeature {
                 state.showGatewayProblemDetails = false
                 return .none
 
-            case let .gatewayProblemPrimaryActionTapped(problem, candidate):
-                if problem.canTrustRotatedCertificate {
+            case let .gatewayProblemPrimaryActionTapped(action):
+                if action.problem.canTrustRotatedCertificate {
                     return .run { _ in
-                        _ = await client.trustRotatedGatewayCertificate(problem)
+                        _ = await client.trustRotatedGatewayCertificate(action.problem)
                     }
                 }
-                if problem.kind == .protocolMismatch {
+                if action.problem.kind == .protocolMismatch {
                     return .run { _ in
-                        _ = await client.openProtocolMismatchHelpIfNeeded(problem)
+                        _ = await client.openProtocolMismatchHelpIfNeeded(action.problem)
                     }
                 }
-                guard problem.retryable, let candidate else { return .none }
+                guard action.problem.retryable, let candidate = action.candidate else { return .none }
                 return self.connect(candidate: candidate, state: &state, client: client)
             }
         }
@@ -159,9 +162,9 @@ struct GatewayQuickSetupSheet: View {
                         problem: gatewayProblem,
                         primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
                         onPrimaryAction: {
-                            self.store.send(.gatewayProblemPrimaryActionTapped(
-                                gatewayProblem,
-                                candidate: self.bestCandidate))
+                            self.store.send(.gatewayProblemPrimaryActionTapped(.init(
+                                problem: gatewayProblem,
+                                candidate: self.bestCandidate)))
                         },
                         onShowDetails: {
                             self.store.send(.gatewayProblemDetailsButtonTapped)
@@ -240,9 +243,9 @@ struct GatewayQuickSetupSheet: View {
                     problem: gatewayProblem,
                     primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
                     onPrimaryAction: {
-                        self.store.send(.gatewayProblemPrimaryActionTapped(
-                            gatewayProblem,
-                            candidate: self.bestCandidate))
+                        self.store.send(.gatewayProblemPrimaryActionTapped(.init(
+                            problem: gatewayProblem,
+                            candidate: self.bestCandidate)))
                     })
             }
         }

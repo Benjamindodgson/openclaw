@@ -644,6 +644,16 @@ struct RootTabsSourceGuardTests {
         #expect(quickSetupSource.contains("self.store.send(.connectButtonTapped(.init(candidate: candidate)))"))
     }
 
+    @Test func `gateway quick setup problem primary action is typed`() throws {
+        let quickSetupSource = try String(contentsOf: Self.gatewayQuickSetupSourceURL(), encoding: .utf8)
+
+        #expect(quickSetupSource.contains("struct GatewayProblemPrimaryAction: Equatable, Sendable"))
+        #expect(quickSetupSource.contains("case gatewayProblemPrimaryActionTapped(GatewayProblemPrimaryAction)"))
+        #expect(quickSetupSource.contains("action.problem.canTrustRotatedCertificate"))
+        #expect(quickSetupSource.contains("let candidate = action.candidate"))
+        #expect(quickSetupSource.contains("self.store.send(.gatewayProblemPrimaryActionTapped(.init("))
+    }
+
     @Test func `voice wake trigger word change action is typed`() throws {
         let source = try String(contentsOf: Self.voiceWakeWordsSettingsSourceURL(), encoding: .utf8)
 

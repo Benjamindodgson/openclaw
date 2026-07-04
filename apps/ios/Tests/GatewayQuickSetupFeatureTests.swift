@@ -53,7 +53,7 @@ struct GatewayQuickSetupFeatureTests {
             GatewayQuickSetupFeature(client: probe.client)
         }
 
-        await store.send(.gatewayProblemPrimaryActionTapped(problem, candidate: candidate)) {
+        await store.send(.gatewayProblemPrimaryActionTapped(.init(problem: problem, candidate: candidate))) {
             $0.connecting = true
         }
         await store.receive(.connectResponse(.init(error: nil))) {
@@ -70,7 +70,7 @@ struct GatewayQuickSetupFeatureTests {
             GatewayQuickSetupFeature(client: probe.client)
         }
 
-        await store.send(.gatewayProblemPrimaryActionTapped(Self.retryableProblem(), candidate: nil))
+        await store.send(.gatewayProblemPrimaryActionTapped(.init(problem: Self.retryableProblem(), candidate: nil)))
         await store.finish()
 
         #expect(probe.connectedGateways.isEmpty)
@@ -91,9 +91,9 @@ struct GatewayQuickSetupFeatureTests {
             GatewayQuickSetupFeature(client: probe.client)
         }
 
-        await store.send(.gatewayProblemPrimaryActionTapped(
-            problem,
-            candidate: Self.discoveredGateway(stableID: "ignored-gateway")))
+        await store.send(.gatewayProblemPrimaryActionTapped(.init(
+            problem: problem,
+            candidate: Self.discoveredGateway(stableID: "ignored-gateway"))))
         await store.finish()
 
         #expect(probe.connectedGateways.isEmpty)
@@ -117,9 +117,9 @@ struct GatewayQuickSetupFeatureTests {
             GatewayQuickSetupFeature(client: probe.client)
         }
 
-        await store.send(.gatewayProblemPrimaryActionTapped(
-            problem,
-            candidate: Self.discoveredGateway(stableID: "ignored-gateway")))
+        await store.send(.gatewayProblemPrimaryActionTapped(.init(
+            problem: problem,
+            candidate: Self.discoveredGateway(stableID: "ignored-gateway"))))
         await store.finish()
 
         #expect(probe.connectedGateways.isEmpty)
