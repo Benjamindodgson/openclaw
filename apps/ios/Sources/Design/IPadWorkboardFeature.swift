@@ -350,7 +350,13 @@ struct IPadWorkboardFeature {
         case archiveRequested(ArchiveRequest)
         case archiveResponse(ArchiveResponse)
         case beginCreateCardTapped
-        case boardScopesResponse(force: Bool, Result<[IPadWorkboardBoardSummary], IPadWorkboardError>)
+
+        struct BoardScopesResponse: Equatable, Sendable {
+            var force: Bool
+            var result: Result<[IPadWorkboardBoardSummary], IPadWorkboardError>
+        }
+
+        case boardScopesResponse(BoardScopesResponse)
         case boardScopeChanged(String)
         case cardSheetPresented(IPadWorkboardCard)
         case clearQueryTapped
@@ -457,15 +463,18 @@ struct IPadWorkboardFeature {
                 state.presentedSheet = .create
                 return .none
 
-            case let .boardScopesResponse(_, .success(boards)):
-                state.applyBoardScopes(boards)
-                return .none
+            case let .boardScopesResponse(response):
+                switch response.result {
+                case let .success(boards):
+                    state.applyBoardScopes(boards)
+                    return .none
 
-            case let .boardScopesResponse(force, .failure(error)):
-                if force, state.knownBoardIDs.isEmpty {
-                    state.errorText = error.message
+                case let .failure(error):
+                    if response.force, state.knownBoardIDs.isEmpty {
+                        state.errorText = error.message
+                    }
+                    return .none
                 }
-                return .none
 
             case let .boardScopeChanged(boardID):
                 state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(boardID)
@@ -649,11 +658,11 @@ struct IPadWorkboardFeature {
                     return .run { send in
                         do {
                             let boards = try await client.listBoards()
-                            await send(.boardScopesResponse(force: response.force, .success(boards)))
+                            await send(.boardScopesResponse(.init(force: response.force, result: .success(boards))))
                         } catch {
-                            await send(.boardScopesResponse(
+                            await send(.boardScopesResponse(.init(
                                 force: response.force,
-                                .failure(.failed(Self.message(for: error)))))
+                                result: .failure(.failed(Self.message(for: error))))))
                         }
                     }
 
