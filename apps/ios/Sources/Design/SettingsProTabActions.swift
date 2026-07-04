@@ -432,14 +432,14 @@ extension SettingsProTab {
         self.manualGatewayEndpointStore.send(.preflightResultHandled)
 
         switch result {
-        case let .blocked(statusText):
-            if let statusText {
+        case let .blocked(blocked):
+            if let statusText = blocked.statusText {
                 self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: statusText)))
             }
             return false
 
-        case let .requestLocalNetworkAccess(reason):
-            self.manualGatewayEndpointStore.send(.localNetworkAccessRequested(.init(reason: reason)))
+        case let .requestLocalNetworkAccess(request):
+            self.manualGatewayEndpointStore.send(.localNetworkAccessRequested(.init(reason: request.reason)))
             return true
         }
     }

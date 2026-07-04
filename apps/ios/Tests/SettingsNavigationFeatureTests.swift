@@ -1972,7 +1972,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.preflightRequested(.init(host: "   ", hasTailnetIPv4: true))) {
-            $0.preflightResult = .blocked(statusText: nil)
+            $0.preflightResult = .blocked(.init(statusText: nil))
         }
 
         await store.send(.preflightResultHandled) {
@@ -1980,8 +1980,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.preflightRequested(.init(host: "device.sample.ts.net", hasTailnetIPv4: false))) {
-            $0.preflightResult = .blocked(
-                statusText: "Tailscale is off on this device. Turn it on, then try again.")
+            $0.preflightResult = .blocked(.init(
+                statusText: "Tailscale is off on this device. Turn it on, then try again."))
         }
 
         await store.send(.preflightResultHandled) {
@@ -1989,7 +1989,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.preflightRequested(.init(host: " gateway.example.com ", hasTailnetIPv4: false))) {
-            $0.preflightResult = .requestLocalNetworkAccess(reason: "settings_preflight")
+            $0.preflightResult = .requestLocalNetworkAccess(.init(reason: "settings_preflight"))
         }
     }
 

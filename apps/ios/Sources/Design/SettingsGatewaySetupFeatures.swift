@@ -207,8 +207,16 @@ struct SettingsManualGatewayEndpointFeature {
     }
 
     enum GatewayPreflightResult: Equatable, Sendable {
-        case blocked(statusText: String?)
-        case requestLocalNetworkAccess(reason: String)
+        struct Blocked: Equatable, Sendable {
+            var statusText: String?
+        }
+
+        struct LocalNetworkAccess: Equatable, Sendable {
+            var reason: String
+        }
+
+        case blocked(Blocked)
+        case requestLocalNetworkAccess(LocalNetworkAccess)
     }
 
     enum Action: Equatable, Sendable {
@@ -295,15 +303,15 @@ struct SettingsManualGatewayEndpointFeature {
                 state.preflightResult = nil
                 let trimmed = request.host.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else {
-                    state.preflightResult = .blocked(statusText: nil)
+                    state.preflightResult = .blocked(.init(statusText: nil))
                     return .none
                 }
                 if State.isTailnetHostOrIP(trimmed), !request.hasTailnetIPv4 {
-                    state.preflightResult = .blocked(
-                        statusText: "Tailscale is off on this device. Turn it on, then try again.")
+                    state.preflightResult = .blocked(.init(
+                        statusText: "Tailscale is off on this device. Turn it on, then try again."))
                     return .none
                 }
-                state.preflightResult = .requestLocalNetworkAccess(reason: "settings_preflight")
+                state.preflightResult = .requestLocalNetworkAccess(.init(reason: "settings_preflight"))
                 return .none
 
             case .preflightResultHandled:
