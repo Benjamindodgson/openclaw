@@ -120,7 +120,12 @@ struct AgentDreamingDestinationFeature {
             var dayID: String
         }
 
-        case dreamActionTapped(AgentDreamAction, gatewayConnected: Bool)
+        struct DreamActionTap: Equatable, Sendable {
+            var action: AgentDreamAction
+            var gatewayConnected: Bool
+        }
+
+        case dreamActionTapped(DreamActionTap)
         case dreamActionResponse(Result<String, AgentDreamingMaintenanceError>)
         case dreamDiaryDaySelected(DreamDiaryDaySelection)
     }
@@ -133,13 +138,13 @@ struct AgentDreamingDestinationFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .dreamActionTapped(action, gatewayConnected):
-                guard gatewayConnected, state.busyAction == nil else { return .none }
-                state.busyAction = action
+            case let .dreamActionTapped(tap):
+                guard tap.gatewayConnected, state.busyAction == nil else { return .none }
+                state.busyAction = tap.action
                 state.statusText = nil
                 return .run { send in
                     do {
-                        let summary = try await client.run(action)
+                        let summary = try await client.run(tap.action)
                         await send(.dreamActionResponse(.success(summary)))
                     } catch {
                         await send(.dreamActionResponse(.failure(.failed(error.localizedDescription))))
@@ -692,7 +697,9 @@ struct AgentProDreamingDestination: View {
 
     @MainActor
     private func runDreamAction(_ action: AgentDreamAction) async {
-        await self.store.send(.dreamActionTapped(action, gatewayConnected: self.gatewayConnected)).finish()
+        await self.store.send(.dreamActionTapped(.init(
+            action: action,
+            gatewayConnected: self.gatewayConnected))).finish()
     }
 
     private func normalized(_ value: String?) -> String? {
