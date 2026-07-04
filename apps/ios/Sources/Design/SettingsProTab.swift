@@ -1575,7 +1575,7 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChangeRequested(newValue))
-                self.deviceCapabilityStore.send(.locationModeChanged(newValue))
+                self.deviceCapabilityStore.send(.locationModeChanged(.init(rawValue: newValue)))
                 self.handleLocationModeRequest(self.locationStore.locationModeRequest)
             }
             .onChange(of: self.locationStore.locationModeApplyResult) { _, result in
@@ -1593,10 +1593,10 @@ struct SettingsProTab: View {
                 self.gatewaySetupLinkStore.send(.setupCodeSynced(newValue))
             }
             .onChange(of: self.storedCameraEnabled) { _, newValue in
-                self.deviceCapabilityStore.send(.cameraEnabledChanged(newValue))
+                self.deviceCapabilityStore.send(.cameraEnabledChanged(.init(isEnabled: newValue)))
             }
             .onChange(of: self.storedPreventSleep) { _, newValue in
-                self.deviceCapabilityStore.send(.preventSleepChanged(newValue))
+                self.deviceCapabilityStore.send(.preventSleepChanged(.init(isEnabled: newValue)))
             }
             .onChange(of: self.storedTalkEnabled) { _, _ in
                 self.syncVoiceControlState()

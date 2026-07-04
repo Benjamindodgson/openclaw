@@ -171,9 +171,10 @@ extension SettingsProTab {
         self.gatewaySetupLinkStore.send(.setupCodeSynced(self.storedSetupCode))
         self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
-            cameraEnabled: self.storedCameraEnabled,
-            preventSleep: self.storedPreventSleep,
-            locationModeRaw: self.storedLocationModeRaw))
+            SettingsDeviceCapabilityFeature.CapabilitiesSync(
+                cameraEnabled: self.storedCameraEnabled,
+                preventSleep: self.storedPreventSleep,
+                locationModeRaw: self.storedLocationModeRaw)))
         self.syncVoiceControlState()
         self.syncTalkPreferencesState()
         self.syncTalkRuntimeState()
@@ -592,12 +593,14 @@ extension SettingsProTab {
     }
 
     func updateCameraEnabled(_ enabled: Bool) {
-        self.deviceCapabilityStore.send(.cameraEnabledChanged(enabled))
+        self.deviceCapabilityStore.send(.cameraEnabledChanged(
+            SettingsDeviceCapabilityFeature.CameraEnabledChange(isEnabled: enabled)))
         self.storedCameraEnabled = enabled
     }
 
     func updatePreventSleep(_ enabled: Bool) {
-        self.deviceCapabilityStore.send(.preventSleepChanged(enabled))
+        self.deviceCapabilityStore.send(.preventSleepChanged(
+            SettingsDeviceCapabilityFeature.PreventSleepChange(isEnabled: enabled)))
         self.storedPreventSleep = enabled
     }
 
@@ -685,7 +688,8 @@ extension SettingsProTab {
 
     func updateLocationModeRaw(_ rawValue: String) {
         self.locationStore.send(.locationModeChanged(rawValue))
-        self.deviceCapabilityStore.send(.locationModeChanged(rawValue))
+        self.deviceCapabilityStore.send(.locationModeChanged(
+            SettingsDeviceCapabilityFeature.LocationModeChange(rawValue: rawValue)))
         self.storedLocationModeRaw = rawValue
     }
 

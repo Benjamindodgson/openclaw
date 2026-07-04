@@ -23,11 +23,29 @@ struct SettingsDeviceCapabilityFeature {
         }
     }
 
+    struct CameraEnabledChange: Equatable, Sendable {
+        var isEnabled: Bool
+    }
+
+    struct CapabilitiesSync: Equatable, Sendable {
+        var cameraEnabled: Bool
+        var preventSleep: Bool
+        var locationModeRaw: String
+    }
+
+    struct LocationModeChange: Equatable, Sendable {
+        var rawValue: String
+    }
+
+    struct PreventSleepChange: Equatable, Sendable {
+        var isEnabled: Bool
+    }
+
     enum Action: Equatable, Sendable {
-        case cameraEnabledChanged(Bool)
-        case capabilitiesSynced(cameraEnabled: Bool, preventSleep: Bool, locationModeRaw: String)
-        case locationModeChanged(String)
-        case preventSleepChanged(Bool)
+        case cameraEnabledChanged(CameraEnabledChange)
+        case capabilitiesSynced(CapabilitiesSync)
+        case locationModeChanged(LocationModeChange)
+        case preventSleepChanged(PreventSleepChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -35,22 +53,22 @@ struct SettingsDeviceCapabilityFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .cameraEnabledChanged(enabled):
-                state.cameraEnabled = enabled
+            case let .cameraEnabledChanged(change):
+                state.cameraEnabled = change.isEnabled
                 return .none
 
-            case let .capabilitiesSynced(cameraEnabled, preventSleep, locationModeRaw):
-                state.cameraEnabled = cameraEnabled
-                state.preventSleep = preventSleep
-                state.locationModeRaw = locationModeRaw
+            case let .capabilitiesSynced(sync):
+                state.cameraEnabled = sync.cameraEnabled
+                state.preventSleep = sync.preventSleep
+                state.locationModeRaw = sync.locationModeRaw
                 return .none
 
-            case let .locationModeChanged(rawValue):
-                state.locationModeRaw = rawValue
+            case let .locationModeChanged(change):
+                state.locationModeRaw = change.rawValue
                 return .none
 
-            case let .preventSleepChanged(enabled):
-                state.preventSleep = enabled
+            case let .preventSleepChanged(change):
+                state.preventSleep = change.isEnabled
                 return .none
             }
         }

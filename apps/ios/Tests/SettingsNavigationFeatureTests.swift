@@ -2127,10 +2127,10 @@ struct SettingsNavigationFeatureTests {
             SettingsDeviceCapabilityFeature()
         }
 
-        await store.send(.capabilitiesSynced(
+        await store.send(.capabilitiesSynced(SettingsDeviceCapabilityFeature.CapabilitiesSync(
             cameraEnabled: false,
             preventSleep: true,
-            locationModeRaw: OpenClawLocationMode.always.rawValue))
+            locationModeRaw: OpenClawLocationMode.always.rawValue)))
         {
             $0.cameraEnabled = false
             $0.preventSleep = true
@@ -2143,13 +2143,19 @@ struct SettingsNavigationFeatureTests {
             SettingsDeviceCapabilityFeature()
         }
 
-        await store.send(.cameraEnabledChanged(false)) {
+        await store.send(.cameraEnabledChanged(SettingsDeviceCapabilityFeature.CameraEnabledChange(
+            isEnabled: false)))
+        {
             $0.cameraEnabled = false
         }
-        await store.send(.preventSleepChanged(false)) {
+        await store.send(.preventSleepChanged(SettingsDeviceCapabilityFeature.PreventSleepChange(
+            isEnabled: false)))
+        {
             $0.preventSleep = false
         }
-        await store.send(.locationModeChanged(OpenClawLocationMode.always.rawValue)) {
+        await store.send(.locationModeChanged(SettingsDeviceCapabilityFeature.LocationModeChange(
+            rawValue: OpenClawLocationMode.always.rawValue)))
+        {
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
         }
     }
