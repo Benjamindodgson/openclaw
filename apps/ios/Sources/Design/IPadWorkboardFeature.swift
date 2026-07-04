@@ -394,8 +394,18 @@ struct IPadWorkboardFeature {
 
         case dispatchRequested(DispatchRequest)
         case dispatchResponse(DispatchResponse)
-        case draftNotesChanged(String)
-        case draftTitleChanged(String)
+
+        struct DraftNotesChange: Equatable, Sendable {
+            var notes: String
+        }
+
+        case draftNotesChanged(DraftNotesChange)
+
+        struct DraftTitleChange: Equatable, Sendable {
+            var title: String
+        }
+
+        case draftTitleChanged(DraftTitleChange)
 
         struct MoveRequest: Equatable, Sendable {
             var card: IPadWorkboardCard
@@ -578,12 +588,12 @@ struct IPadWorkboardFeature {
                     return .none
                 }
 
-            case let .draftNotesChanged(notes):
-                state.draftNotes = notes
+            case let .draftNotesChanged(change):
+                state.draftNotes = change.notes
                 return .none
 
-            case let .draftTitleChanged(title):
-                state.draftTitle = title
+            case let .draftTitleChanged(change):
+                state.draftTitle = change.title
                 return .none
 
             case let .moveRequested(request):
