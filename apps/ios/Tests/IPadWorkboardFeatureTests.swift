@@ -209,14 +209,16 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.dispatchRequested(canWrite: true)) {
+        await store.send(.dispatchRequested(.init(canWrite: true))) {
             $0.isDispatching = true
             $0.errorText = nil
             $0.dispatchSummaryText = nil
         }
-        await store.receive(.dispatchResponse(boardID: nil, .success(IPadWorkboardDispatchSnapshot(
-            summary: summary,
-            cardsResponse: response))))
+        await store.receive(.dispatchResponse(.init(
+            boardID: nil,
+            result: .success(IPadWorkboardDispatchSnapshot(
+                summary: summary,
+                cardsResponse: response)))))
         {
             $0.isDispatching = false
             $0.dispatchSummaryText = "1 dispatched: 1 started."
