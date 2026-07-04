@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 import OpenClawKit
 import SwiftUI
 import Testing
@@ -433,7 +434,7 @@ struct RootTabsPresentationTests {
         #expect(store.state.sidebarGatewayStatusColor == .secondary)
     }
 
-    @Test func `home canvas reducer builds connected payload with active agent first`() async {
+    @Test func `home canvas reducer builds connected payload with active agent first`() async throws {
         let snapshot = RootHomeCanvasFeature.Snapshot(
             gatewayStatus: .connected,
             gatewayServerName: "  Local Gateway  ",
@@ -446,47 +447,54 @@ struct RootTabsPresentationTests {
                 RootHomeCanvasFeature.AgentSnapshot(id: "gamma", name: "Gamma Agent", emoji: nil),
                 RootHomeCanvasFeature.AgentSnapshot(id: "alpha", name: "Alpha-Agent", emoji: nil),
             ])
+        let expectedPayload = RootHomeCanvasFeature.Payload(
+            gatewayState: "connected",
+            eyebrow: "Local Gateway online",
+            title: "Command center",
+            subtitle:
+            "Use Chat for code work, Talk for realtime voice, and gateway tools for approved device actions.",
+            gatewayLabel: "Local Gateway",
+            activeAgentName: "Gamma Agent",
+            activeAgentBadge: "GA",
+            activeAgentCaption: "Routes chat and talk",
+            agentCount: 3,
+            agents: [
+                RootHomeCanvasFeature.AgentCard(
+                    id: "gamma",
+                    name: "Gamma Agent",
+                    badge: "GA",
+                    caption: "Routed on this phone",
+                    isActive: true),
+                RootHomeCanvasFeature.AgentCard(
+                    id: "alpha",
+                    name: "Alpha-Agent",
+                    badge: "AA",
+                    caption: "Gateway default",
+                    isActive: false),
+                RootHomeCanvasFeature.AgentCard(
+                    id: "beta",
+                    name: "Beta Agent",
+                    badge: "BA",
+                    caption: "Available",
+                    isActive: false),
+            ],
+            footer: "OpenClaw only runs phone-side capabilities while the app is connected and permitted.")
         let store = TestStore(initialState: RootHomeCanvasFeature.State()) {
             RootHomeCanvasFeature()
         }
 
         await store.send(.snapshotChanged(snapshot)) {
-            $0.payload = RootHomeCanvasFeature.Payload(
-                gatewayState: "connected",
-                eyebrow: "Local Gateway online",
-                title: "Command center",
-                subtitle:
-                "Use Chat for code work, Talk for realtime voice, and gateway tools for approved device actions.",
-                gatewayLabel: "Local Gateway",
-                activeAgentName: "Gamma Agent",
-                activeAgentBadge: "GA",
-                activeAgentCaption: "Routes chat and talk",
-                agentCount: 3,
-                agents: [
-                    RootHomeCanvasFeature.AgentCard(
-                        id: "gamma",
-                        name: "Gamma Agent",
-                        badge: "GA",
-                        caption: "Routed on this phone",
-                        isActive: true),
-                    RootHomeCanvasFeature.AgentCard(
-                        id: "alpha",
-                        name: "Alpha-Agent",
-                        badge: "AA",
-                        caption: "Gateway default",
-                        isActive: false),
-                    RootHomeCanvasFeature.AgentCard(
-                        id: "beta",
-                        name: "Beta Agent",
-                        badge: "BA",
-                        caption: "Available",
-                        isActive: false),
-                ],
-                footer: "OpenClaw only runs phone-side capabilities while the app is connected and permitted.")
+            $0.payload = expectedPayload
+            $0.payloadJSON = RootHomeCanvasFeature.payloadJSON(expectedPayload)
         }
+        let payloadJSON = try #require(store.state.payloadJSON)
+        let decodedPayload = try JSONDecoder().decode(
+            RootHomeCanvasFeature.Payload.self,
+            from: Data(payloadJSON.utf8))
+        #expect(decodedPayload == expectedPayload)
     }
 
-    @Test func `home canvas reducer builds error payload with fallback active agent copy`() async {
+    @Test func `home canvas reducer builds error payload with fallback active agent copy`() async throws {
         let snapshot = RootHomeCanvasFeature.Snapshot(
             gatewayStatus: .error,
             gatewayServerName: "   ",
@@ -497,33 +505,40 @@ struct RootTabsPresentationTests {
             agents: [
                 RootHomeCanvasFeature.AgentSnapshot(id: "main", name: "  Main  ", emoji: " M "),
             ])
+        let expectedPayload = RootHomeCanvasFeature.Payload(
+            gatewayState: "error",
+            eyebrow: "Gateway needs attention",
+            title: "Pair a gateway",
+            subtitle:
+            "Connect this phone as a local node for chat, realtime voice, share intake, and approved device tools.",
+            gatewayLabel: "node.local",
+            activeAgentName: "Main",
+            activeAgentBadge: "OC",
+            activeAgentCaption: "Connect to load your agents",
+            agentCount: 1,
+            agents: [
+                RootHomeCanvasFeature.AgentCard(
+                    id: "main",
+                    name: "Main",
+                    badge: "M",
+                    caption: "Routed on this phone",
+                    isActive: true),
+            ],
+            footer:
+            "Use Settings to scan a pairing QR code or paste a setup code from your OpenClaw gateway.")
         let store = TestStore(initialState: RootHomeCanvasFeature.State()) {
             RootHomeCanvasFeature()
         }
 
         await store.send(.snapshotChanged(snapshot)) {
-            $0.payload = RootHomeCanvasFeature.Payload(
-                gatewayState: "error",
-                eyebrow: "Gateway needs attention",
-                title: "Pair a gateway",
-                subtitle:
-                "Connect this phone as a local node for chat, realtime voice, share intake, and approved device tools.",
-                gatewayLabel: "node.local",
-                activeAgentName: "Main",
-                activeAgentBadge: "OC",
-                activeAgentCaption: "Connect to load your agents",
-                agentCount: 1,
-                agents: [
-                    RootHomeCanvasFeature.AgentCard(
-                        id: "main",
-                        name: "Main",
-                        badge: "M",
-                        caption: "Routed on this phone",
-                        isActive: true),
-                ],
-                footer:
-                "Use Settings to scan a pairing QR code or paste a setup code from your OpenClaw gateway.")
+            $0.payload = expectedPayload
+            $0.payloadJSON = RootHomeCanvasFeature.payloadJSON(expectedPayload)
         }
+        let payloadJSON = try #require(store.state.payloadJSON)
+        let decodedPayload = try JSONDecoder().decode(
+            RootHomeCanvasFeature.Payload.self,
+            from: Data(payloadJSON.utf8))
+        #expect(decodedPayload == expectedPayload)
     }
 
     @Test func `launch reducer applies initial appearance once`() async {

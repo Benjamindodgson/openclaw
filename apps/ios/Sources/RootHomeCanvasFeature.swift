@@ -9,6 +9,7 @@ struct RootHomeCanvasFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var payload: Payload?
+        var payloadJSON: String?
     }
 
     struct Snapshot: Equatable, Sendable {
@@ -59,11 +60,22 @@ struct RootHomeCanvasFeature {
         Reduce { state, action in
             switch action {
             case let .snapshotChanged(snapshot):
-                state.payload = Self.payload(snapshot: snapshot)
+                let payload = Self.payload(snapshot: snapshot)
+                state.payload = payload
+                state.payloadJSON = Self.payloadJSON(payload)
                 return .none
             }
         }
         .autoLogActions()
+    }
+
+    static func payloadJSON(_ payload: Payload?) -> String? {
+        guard let payload else { return nil }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        guard let data = try? encoder.encode(payload)
+        else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 
     static func payload(snapshot: Snapshot) -> Payload {
