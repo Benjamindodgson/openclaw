@@ -534,6 +534,33 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.components(separatedBy: "UIApplication.shared.isIdleTimerDisabled").count == 2)
     }
 
+    @Test func `root launch toast and camera flash reducers live outside root tabs`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let launchSource = try String(contentsOf: Self.rootLaunchSourceURL(), encoding: .utf8)
+        let voiceWakeToastSource = try String(contentsOf: Self.rootVoiceWakeToastSourceURL(), encoding: .utf8)
+        let cameraFlashSource = try String(contentsOf: Self.rootCameraFlashOverlaySourceURL(), encoding: .utf8)
+
+        #expect(launchSource.contains("@Reducer\nstruct RootLaunchFeature"))
+        #expect(launchSource.contains("case initialAppearanceRequested(String?)"))
+        #expect(launchSource.contains("case initialChatSessionRequested(String?)"))
+        #expect(voiceWakeToastSource.contains("@Reducer\nstruct RootVoiceWakeToastFeature"))
+        #expect(voiceWakeToastSource.contains("struct RootVoiceWakeToastSleepClient"))
+        #expect(voiceWakeToastSource.contains("var rootVoiceWakeToastSleep: RootVoiceWakeToastSleepClient"))
+        #expect(cameraFlashSource.contains("struct RootCameraFlashOverlay: View"))
+        #expect(cameraFlashSource.contains("@Reducer\nstruct RootCameraFlashOverlayFeature"))
+        #expect(cameraFlashSource.contains("struct RootCameraFlashOverlaySleepClient"))
+        #expect(cameraFlashSource.contains("var rootCameraFlashOverlaySleep: RootCameraFlashOverlaySleepClient"))
+        #expect(rootSource.contains("@State private var launchStore: StoreOf<RootLaunchFeature>"))
+        #expect(rootSource.contains("@State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature>"))
+        #expect(rootSource.contains("RootCameraFlashOverlay(nonce: self.appModel.cameraFlashNonce)"))
+        #expect(!rootSource.contains("@Reducer\n"))
+        #expect(!rootSource.contains("struct RootLaunchFeature"))
+        #expect(!rootSource.contains("struct RootVoiceWakeToastFeature"))
+        #expect(!rootSource.contains("struct RootCameraFlashOverlayFeature"))
+        #expect(!rootSource.contains("struct RootVoiceWakeToastSleepClient"))
+        #expect(!rootSource.contains("struct RootCameraFlashOverlaySleepClient"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -2014,6 +2041,27 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootHomeCanvasFeature.swift")
+    }
+
+    private static func rootLaunchSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootLaunchFeature.swift")
+    }
+
+    private static func rootVoiceWakeToastSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootVoiceWakeToastFeature.swift")
+    }
+
+    private static func rootCameraFlashOverlaySourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootCameraFlashOverlayFeature.swift")
     }
 
     private static func nodeAppModelSourceURL() -> URL {
