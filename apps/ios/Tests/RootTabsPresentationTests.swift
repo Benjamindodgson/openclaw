@@ -10,36 +10,39 @@ import UIKit
 struct RootTabsPresentationTests {
     @Test func `quick setup does not present when gateway already configured`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
-            quickSetupDismissed: false,
-            showOnboarding: false,
-            hasPresentedSheet: false,
-            gatewayConnected: false,
-            hasExistingGatewayConfig: true,
-            discoveredGatewayCount: 1)
+            snapshot: RootPresentationFeature.QuickSetupSnapshot(
+                quickSetupDismissed: false,
+                showOnboarding: false,
+                gatewayConnected: false,
+                hasExistingGatewayConfig: true,
+                discoveredGatewayCount: 1),
+            hasPresentedSheet: false)
 
         #expect(!shouldPresent)
     }
 
     @Test func `quick setup presents for fresh install with discovered gateway`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
-            quickSetupDismissed: false,
-            showOnboarding: false,
-            hasPresentedSheet: false,
-            gatewayConnected: false,
-            hasExistingGatewayConfig: false,
-            discoveredGatewayCount: 1)
+            snapshot: RootPresentationFeature.QuickSetupSnapshot(
+                quickSetupDismissed: false,
+                showOnboarding: false,
+                gatewayConnected: false,
+                hasExistingGatewayConfig: false,
+                discoveredGatewayCount: 1),
+            hasPresentedSheet: false)
 
         #expect(shouldPresent)
     }
 
     @Test func `quick setup does not present when already connected`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
-            quickSetupDismissed: false,
-            showOnboarding: false,
-            hasPresentedSheet: false,
-            gatewayConnected: true,
-            hasExistingGatewayConfig: false,
-            discoveredGatewayCount: 1)
+            snapshot: RootPresentationFeature.QuickSetupSnapshot(
+                quickSetupDismissed: false,
+                showOnboarding: false,
+                gatewayConnected: true,
+                hasExistingGatewayConfig: false,
+                discoveredGatewayCount: 1),
+            hasPresentedSheet: false)
 
         #expect(!shouldPresent)
     }
@@ -696,12 +699,12 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.quickSetupSnapshotChanged(
+        await store.send(.quickSetupSnapshotChanged(RootPresentationFeature.QuickSetupSnapshot(
             quickSetupDismissed: false,
             showOnboarding: false,
             gatewayConnected: false,
             hasExistingGatewayConfig: false,
-            discoveredGatewayCount: 1))
+            discoveredGatewayCount: 1)))
         {
             $0.discoveredGatewayCount = 1
             $0.presentedSheet = .quickSetup
@@ -712,12 +715,12 @@ struct RootTabsPresentationTests {
             $0.shouldPresentQuickSetup = true
         }
 
-        await store.send(.quickSetupSnapshotChanged(
+        await store.send(.quickSetupSnapshotChanged(RootPresentationFeature.QuickSetupSnapshot(
             quickSetupDismissed: false,
             showOnboarding: true,
             gatewayConnected: false,
             hasExistingGatewayConfig: false,
-            discoveredGatewayCount: 1))
+            discoveredGatewayCount: 1)))
         {
             $0.showOnboarding = true
             $0.shouldPresentQuickSetup = false

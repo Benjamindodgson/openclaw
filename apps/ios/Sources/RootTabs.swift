@@ -1086,12 +1086,12 @@ extension RootTabs {
     }
 
     private func maybeShowQuickSetup() {
-        self.presentationStore.send(.quickSetupSnapshotChanged(
+        self.presentationStore.send(.quickSetupSnapshotChanged(RootPresentationFeature.QuickSetupSnapshot(
             quickSetupDismissed: self.quickSetupDismissed,
             showOnboarding: self.presentationStore.showOnboarding,
             gatewayConnected: self.appModel.gatewayServerName != nil,
             hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
-            discoveredGatewayCount: self.gatewayController.gateways.count))
+            discoveredGatewayCount: self.gatewayController.gateways.count)))
     }
 }
 

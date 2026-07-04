@@ -14,6 +14,14 @@ struct RootPresentationFeature {
         }
     }
 
+    struct QuickSetupSnapshot: Equatable, Sendable {
+        var quickSetupDismissed: Bool
+        var showOnboarding: Bool
+        var gatewayConnected: Bool
+        var hasExistingGatewayConfig: Bool
+        var discoveredGatewayCount: Int
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected: Bool
@@ -102,12 +110,13 @@ struct RootPresentationFeature {
                 hasExistingGatewayConfig: self.hasExistingGatewayConfig,
                 shouldPresentOnLaunch: self.shouldPresentOnLaunch)
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
-                quickSetupDismissed: self.quickSetupDismissed,
-                showOnboarding: self.showOnboarding,
-                hasPresentedSheet: self.presentedSheet != nil,
-                gatewayConnected: self.gatewayConnected,
-                hasExistingGatewayConfig: self.hasExistingGatewayConfig,
-                discoveredGatewayCount: self.discoveredGatewayCount)
+                snapshot: RootPresentationFeature.QuickSetupSnapshot(
+                    quickSetupDismissed: self.quickSetupDismissed,
+                    showOnboarding: self.showOnboarding,
+                    gatewayConnected: self.gatewayConnected,
+                    hasExistingGatewayConfig: self.hasExistingGatewayConfig,
+                    discoveredGatewayCount: self.discoveredGatewayCount),
+                hasPresentedSheet: self.presentedSheet != nil)
         }
 
         static func startupRoute(
@@ -131,20 +140,16 @@ struct RootPresentationFeature {
         }
 
         static func shouldPresentQuickSetup(
-            quickSetupDismissed: Bool,
-            showOnboarding: Bool,
-            hasPresentedSheet: Bool,
-            gatewayConnected: Bool,
-            hasExistingGatewayConfig: Bool,
-            discoveredGatewayCount: Int)
+            snapshot: RootPresentationFeature.QuickSetupSnapshot,
+            hasPresentedSheet: Bool)
             -> Bool
         {
-            guard !quickSetupDismissed else { return false }
-            guard !showOnboarding else { return false }
+            guard !snapshot.quickSetupDismissed else { return false }
+            guard !snapshot.showOnboarding else { return false }
             guard !hasPresentedSheet else { return false }
-            guard !gatewayConnected else { return false }
-            guard !hasExistingGatewayConfig else { return false }
-            return discoveredGatewayCount > 0
+            guard !snapshot.gatewayConnected else { return false }
+            guard !snapshot.hasExistingGatewayConfig else { return false }
+            return snapshot.discoveredGatewayCount > 0
         }
     }
 
@@ -180,12 +185,7 @@ struct RootPresentationFeature {
             onboardingComplete: Bool,
             hasExistingGatewayConfig: Bool,
             shouldPresentOnLaunch: Bool)
-        case quickSetupSnapshotChanged(
-            quickSetupDismissed: Bool,
-            showOnboarding: Bool,
-            gatewayConnected: Bool,
-            hasExistingGatewayConfig: Bool,
-            discoveredGatewayCount: Int)
+        case quickSetupSnapshotChanged(QuickSetupSnapshot)
         case presentedSheetChanged(PresentedSheet?)
         case startupPresentationEvaluationRequested(
             gatewayConnected: Bool,
@@ -234,17 +234,12 @@ struct RootPresentationFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .quickSetupSnapshotChanged(
-                quickSetupDismissed,
-                showOnboarding,
-                gatewayConnected,
-                hasExistingGatewayConfig,
-                discoveredGatewayCount):
-                state.quickSetupDismissed = quickSetupDismissed
-                state.showOnboarding = showOnboarding
-                state.gatewayConnected = gatewayConnected
-                state.hasExistingGatewayConfig = hasExistingGatewayConfig
-                state.discoveredGatewayCount = discoveredGatewayCount
+            case let .quickSetupSnapshotChanged(snapshot):
+                state.quickSetupDismissed = snapshot.quickSetupDismissed
+                state.showOnboarding = snapshot.showOnboarding
+                state.gatewayConnected = snapshot.gatewayConnected
+                state.hasExistingGatewayConfig = snapshot.hasExistingGatewayConfig
+                state.discoveredGatewayCount = snapshot.discoveredGatewayCount
                 state.refreshPresentation()
                 if state.shouldPresentQuickSetup {
                     state.presentedSheet = .quickSetup
@@ -771,20 +766,12 @@ extension RootTabs {
     }
 
     static func shouldPresentQuickSetup(
-        quickSetupDismissed: Bool,
-        showOnboarding: Bool,
-        hasPresentedSheet: Bool,
-        gatewayConnected: Bool,
-        hasExistingGatewayConfig: Bool,
-        discoveredGatewayCount: Int) -> Bool
+        snapshot: RootPresentationFeature.QuickSetupSnapshot,
+        hasPresentedSheet: Bool) -> Bool
     {
         RootPresentationFeature.State.shouldPresentQuickSetup(
-            quickSetupDismissed: quickSetupDismissed,
-            showOnboarding: showOnboarding,
-            hasPresentedSheet: hasPresentedSheet,
-            gatewayConnected: gatewayConnected,
-            hasExistingGatewayConfig: hasExistingGatewayConfig,
-            discoveredGatewayCount: discoveredGatewayCount)
+            snapshot: snapshot,
+            hasPresentedSheet: hasPresentedSheet)
     }
 
     struct SidebarGroup: Identifiable {
