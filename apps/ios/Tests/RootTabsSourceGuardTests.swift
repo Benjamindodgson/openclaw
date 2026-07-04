@@ -835,8 +835,14 @@ struct RootTabsSourceGuardTests {
             encoding: .utf8)
         let sectionsSource = try String(contentsOf: Self.settingsProTabSectionsSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let trustSource = try String(contentsOf: Self.gatewayTrustPromptAlertSourceURL(), encoding: .utf8)
         let controllerSource = try String(contentsOf: Self.gatewayConnectionControllerSourceURL(), encoding: .utf8)
+        let reconnectFunction = try Self.extract(
+            actionsSource,
+            from: "func reconnectGateway() async",
+            to: "@MainActor\n    func runDiagnostics() async")
 
         #expect(sectionsSource.contains("var gatewayDestination: some View"))
         #expect(sectionsSource.contains("self.gatewayActions"))
@@ -857,7 +863,17 @@ struct RootTabsSourceGuardTests {
         #expect(sectionsSource.contains("GatewayProblemBanner("))
         #expect(sectionsSource.contains("Task { await self.handleGatewayProblemPrimaryAction(problem) }"))
 
-        #expect(actionsSource.contains("await self.gatewayController.connectLastKnown()"))
+        #expect(supportSource.contains("struct SettingsGatewayReconnectClient"))
+        #expect(supportSource.contains("var settingsGatewayReconnect: SettingsGatewayReconnectClient"))
+        #expect(settingsSource.contains("case reconnectRequested(isAppleReviewDemoModeEnabled: Bool)"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsGatewayReconnect)"))
+        #expect(settingsSource.contains("await reconnectClient.reconnect()"))
+        #expect(settingsSource.contains("await send(.reconnectFinished)"))
+        #expect(reconnectFunction.contains("self.gatewayActivityStore"))
+        #expect(reconnectFunction.contains("let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled"))
+        #expect(reconnectFunction.contains(".send(.reconnectRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))"))
+        #expect(rootSource.contains("reconnectClient: .live(gatewayController: self.gatewayController)"))
+        #expect(!reconnectFunction.contains("await self.gatewayController.connectLastKnown()"))
         #expect(actionsSource.contains("self.gatewayActivityStore"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
         #expect(gatewaySetupFeaturesSource

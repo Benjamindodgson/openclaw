@@ -243,6 +243,29 @@ extension DependencyValues {
     }
 }
 
+struct SettingsGatewayReconnectClient {
+    var reconnect: @MainActor @Sendable () async -> Void
+}
+
+extension SettingsGatewayReconnectClient: DependencyKey {
+    static let liveValue = SettingsGatewayReconnectClient(reconnect: {})
+    static let testValue = SettingsGatewayReconnectClient(reconnect: {})
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        SettingsGatewayReconnectClient(reconnect: {
+            await gatewayController.connectLastKnown()
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsGatewayReconnect: SettingsGatewayReconnectClient {
+        get { self[SettingsGatewayReconnectClient.self] }
+        set { self[SettingsGatewayReconnectClient.self] = newValue }
+    }
+}
+
 struct SettingsGatewayDiagnosticsRefreshClient {
     var refreshGateway: @MainActor @Sendable () async -> Void
 }

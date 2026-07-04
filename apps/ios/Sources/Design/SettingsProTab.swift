@@ -278,9 +278,14 @@ struct SettingsApprovalsFeature {
 @Reducer
 struct SettingsGatewayActivityFeature {
     private let diagnosticsRefreshClientOverride: SettingsGatewayDiagnosticsRefreshClient?
+    private let reconnectClientOverride: SettingsGatewayReconnectClient?
 
-    init(diagnosticsRefreshClient: SettingsGatewayDiagnosticsRefreshClient? = nil) {
+    init(
+        diagnosticsRefreshClient: SettingsGatewayDiagnosticsRefreshClient? = nil,
+        reconnectClient: SettingsGatewayReconnectClient? = nil)
+    {
         self.diagnosticsRefreshClientOverride = diagnosticsRefreshClient
+        self.reconnectClientOverride = reconnectClient
     }
 
     // swiftformat:disable redundantSendable
@@ -293,6 +298,7 @@ struct SettingsGatewayActivityFeature {
     enum Action: Equatable, Sendable {
         case diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: Bool)
         case reconnectFinished
+        case reconnectRequested(isAppleReviewDemoModeEnabled: Bool)
         case reconnectStarted
         case refreshFinished
         case refreshStarted
@@ -303,7 +309,9 @@ struct SettingsGatewayActivityFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.settingsGatewayDiagnosticsRefresh) var dependencyDiagnosticsRefreshClient
+            @Dependency(\.settingsGatewayReconnect) var dependencyReconnectClient
             let diagnosticsRefreshClient = self.diagnosticsRefreshClientOverride ?? dependencyDiagnosticsRefreshClient
+            let reconnectClient = self.reconnectClientOverride ?? dependencyReconnectClient
 
             switch action {
             case let .diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled):
@@ -319,6 +327,14 @@ struct SettingsGatewayActivityFeature {
             case .reconnectFinished:
                 state.isReconnectingGateway = false
                 return .none
+
+            case let .reconnectRequested(isAppleReviewDemoModeEnabled):
+                guard !isAppleReviewDemoModeEnabled, !state.isReconnectingGateway else { return .none }
+                state.isReconnectingGateway = true
+                return .run { send in
+                    await reconnectClient.reconnect()
+                    await send(.reconnectFinished)
+                }
 
             case .reconnectStarted:
                 state.isReconnectingGateway = true

@@ -840,7 +840,8 @@ struct RootTabs: View {
             SettingsGatewayActivityFeature(
                 diagnosticsRefreshClient: .live(
                     appModel: self.appModel,
-                    gatewayController: self.gatewayController))
+                    gatewayController: self.gatewayController),
+                reconnectClient: .live(gatewayController: self.gatewayController))
         }
     }
 
