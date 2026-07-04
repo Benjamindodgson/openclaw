@@ -92,7 +92,7 @@ struct GatewayStatusBuilderTests {
             ChatProPresentationFeature()
         }
 
-        await store.send(.presentationChanged(presentation)) {
+        await store.send(.presentationChanged(.init(presentation: presentation))) {
             $0.presentation = presentation
         }
 
