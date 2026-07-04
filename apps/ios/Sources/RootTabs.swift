@@ -5,9 +5,9 @@ import SwiftUI
 import UIKit
 
 struct RootTabs: View {
-    @Environment(NodeAppModel.self) private var appModel
+    @Environment(NodeAppModel.self) var appModel
     @Environment(VoiceWakeManager.self) private var voiceWake
-    @Environment(GatewayConnectionController.self) private var gatewayController
+    @Environment(GatewayConnectionController.self) var gatewayController
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.rootTabsUserInterfaceIdiomOverride) private var userInterfaceIdiomOverride
@@ -858,188 +858,6 @@ struct RootTabs: View {
             .notificationPermissionGuidanceDialog(store: self.makeNotificationPermissionGuidanceStore())
     }
 
-    @MainActor
-    private func makeGatewayQuickSetupStore() -> StoreOf<GatewayQuickSetupFeature> {
-        Store(initialState: GatewayQuickSetupFeature.State()) {
-            GatewayQuickSetupFeature()
-        } withDependencies: {
-            $0.gatewayQuickSetup = .live(gatewayController: self.gatewayController)
-        }
-    }
-
-    @MainActor
-    private func makeCanvasPresentationStore() -> StoreOf<RootCanvasPresentationFeature> {
-        Store(initialState: RootCanvasPresentationFeature.State()) {
-            RootCanvasPresentationFeature(client: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeCanvasDebugStatusStore() -> StoreOf<RootCanvasDebugStatusFeature> {
-        Store(initialState: RootCanvasDebugStatusFeature.State()) {
-            RootCanvasDebugStatusFeature(client: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeGatewayProblemPrimaryActionStore() -> StoreOf<RootGatewayProblemPrimaryActionFeature> {
-        Store(initialState: RootGatewayProblemPrimaryActionFeature.State()) {
-            RootGatewayProblemPrimaryActionFeature(
-                client: .live(
-                    gatewayController: self.gatewayController,
-                    openGatewaySettings: { self.selectSidebarDestination(.gateway) }))
-        }
-    }
-
-    @MainActor
-    private func makeGatewayOverviewRefreshStore() -> StoreOf<RootGatewayOverviewRefreshFeature> {
-        Store(initialState: RootGatewayOverviewRefreshFeature.State()) {
-            RootGatewayOverviewRefreshFeature(client: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeGatewayTrustPromptStore() -> StoreOf<GatewayTrustPromptFeature> {
-        Store(initialState: GatewayTrustPromptFeature.State()) {
-            GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsManualGatewayEndpointStore() -> StoreOf<SettingsManualGatewayEndpointFeature> {
-        Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
-            SettingsManualGatewayEndpointFeature(
-                localNetworkAccessClient: .live(gatewayController: self.gatewayController))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsDebugOptionsStore() -> StoreOf<SettingsDebugOptionsFeature> {
-        Store(initialState: SettingsDebugOptionsFeature.State()) {
-            SettingsDebugOptionsFeature(
-                discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsVoiceControlStore() -> StoreOf<SettingsVoiceControlFeature> {
-        Store(initialState: SettingsVoiceControlFeature.State()) {
-            SettingsVoiceControlFeature(
-                voiceControlClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsTalkPreferencesStore() -> StoreOf<SettingsTalkPreferencesFeature> {
-        Store(initialState: SettingsTalkPreferencesFeature.State()) {
-            SettingsTalkPreferencesFeature(
-                preferencesClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsAgentSelectionStore() -> StoreOf<SettingsAgentSelectionFeature> {
-        Store(initialState: SettingsAgentSelectionFeature.State()) {
-            SettingsAgentSelectionFeature(
-                selectedAgentClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsLocationStore() -> StoreOf<SettingsLocationFeature> {
-        Store(initialState: SettingsLocationFeature.State()) {
-            SettingsLocationFeature(
-                gatewayRefreshClient: .live(gatewayController: self.gatewayController))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsGatewayActivityStore() -> StoreOf<SettingsGatewayActivityFeature> {
-        Store(initialState: SettingsGatewayActivityFeature.State()) {
-            SettingsGatewayActivityFeature(
-                diagnosticsRefreshClient: .live(
-                    appModel: self.appModel,
-                    gatewayController: self.gatewayController),
-                problemTrustClient: .live(gatewayController: self.gatewayController),
-                reconnectClient: .live(gatewayController: self.gatewayController))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsGatewayConnectionStore() -> StoreOf<SettingsGatewayConnectionFeature> {
-        Store(initialState: SettingsGatewayConnectionFeature.State()) {
-            SettingsGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsGatewayCredentialsStore() -> StoreOf<SettingsGatewayCredentialsFeature> {
-        Store(initialState: SettingsGatewayCredentialsFeature.State()) {
-            SettingsGatewayCredentialsFeature(
-                setupAuthPersistenceClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsOnboardingStateStore() -> StoreOf<SettingsOnboardingStateFeature> {
-        Store(initialState: SettingsOnboardingStateFeature.State()) {
-            SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeSettingsGatewaySetupLinkStore() -> StoreOf<SettingsGatewaySetupLinkFeature> {
-        Store(initialState: SettingsGatewaySetupLinkFeature.State()) {
-            SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeDeepLinkAgentPromptStore() -> StoreOf<DeepLinkAgentPromptFeature> {
-        Store(initialState: DeepLinkAgentPromptFeature.State()) {
-            DeepLinkAgentPromptFeature(client: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeTalkProTabStore() -> StoreOf<TalkProTabFeature> {
-        Store(initialState: TalkProTabFeature.State()) {
-            TalkProTabFeature(client: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeChatTalkControlStore() -> StoreOf<ChatTalkControlFeature> {
-        Store(initialState: ChatTalkControlFeature.State()) {
-            ChatTalkControlFeature(client: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeAgentSelectionStore() -> StoreOf<AgentSelectionFeature> {
-        Store(initialState: AgentSelectionFeature.State()) {
-            AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeExecApprovalPromptStore() -> StoreOf<ExecApprovalPromptFeature> {
-        Store(initialState: ExecApprovalPromptFeature.State()) {
-            ExecApprovalPromptFeature(client: .live(appModel: self.appModel))
-        }
-    }
-
-    @MainActor
-    private func makeNotificationPermissionGuidanceStore() -> StoreOf<NotificationPermissionGuidanceFeature> {
-        Store(initialState: NotificationPermissionGuidanceFeature.State()) {
-            NotificationPermissionGuidanceFeature(client: .live(
-                appModel: self.appModel,
-                openNotifications: { approvalId in
-                    self.openNotificationSettings(suppressedApprovalID: approvalId)
-                }))
-        }
-    }
-
     private var appearancePreference: AppAppearancePreference {
         AppAppearancePreference.launchArgumentPreference
             ?? AppAppearancePreference(rawValue: self.appearancePreferenceRaw)
@@ -1166,7 +984,7 @@ extension RootTabs {
             recentSessionsStore: CommandCenterRecentSessionsStoreFactory.live(appModel: self.appModel))
     }
 
-    private func selectSidebarDestination(_ destination: SidebarDestination) {
+    func selectSidebarDestination(_ destination: SidebarDestination) {
         self.navigationStore.send(.sidebarDestinationSelected(destination))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
@@ -1176,7 +994,7 @@ extension RootTabs {
         self.collapseSidebarAfterSelectionIfNeeded()
     }
 
-    private func openNotificationSettings(suppressedApprovalID: String) {
+    func openNotificationSettings(suppressedApprovalID: String) {
         self.navigationStore.send(.notificationPermissionSettingsOpened(suppressedApprovalID: suppressedApprovalID))
         self.collapseSidebarAfterSelectionIfNeeded()
     }

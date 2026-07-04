@@ -144,7 +144,7 @@ struct RootTabsSourceGuardTests {
         let sidebarOverview = try Self.extract(
             rootSource,
             from: "private var sidebarOverview: some View",
-            to: "private func selectSidebarDestination")
+            to: "func selectSidebarDestination")
 
         #expect(sidebarDetail.contains("headerTitle: \"Chat\""))
         #expect(sidebarDetail.contains("self.sidebarOverview"))
@@ -340,6 +340,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `talk speakerphone persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let talkSource = try String(contentsOf: Self.talkProTabSourceURL(), encoding: .utf8)
         let speakerphoneBinding = try Self.extract(
             talkSource,
@@ -360,8 +361,8 @@ struct RootTabsSourceGuardTests {
         #expect(talkSource.contains("await client.startTalk(sessionKey)"))
         #expect(talkSource.contains("await client.setTalkEnabled(enabled)"))
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
-        #expect(rootSource.contains("private func makeTalkProTabStore()"))
-        #expect(rootSource.contains("TalkProTabFeature(client: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains("func makeTalkProTabStore()"))
+        #expect(storesSource.contains("TalkProTabFeature(client: .live(appModel: self.appModel))"))
         #expect(speakerphoneBinding.contains("self.talkSpeakerphoneEnabled = enabled"))
         #expect(speakerphoneBinding.contains("self.store.send(.speakerphoneEnabledChanged(enabled))"))
         #expect(!speakerphoneBinding.contains("self.appModel.setTalkSpeakerphoneEnabled"))
@@ -373,6 +374,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `agent row selection is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let agentSource = try String(contentsOf: Self.agentProTabSourceURL(), encoding: .utf8)
         let agentOverviewSource = try String(contentsOf: Self.agentProTabOverviewSourceURL(), encoding: .utf8)
         let phoneControlHubSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
@@ -384,8 +386,8 @@ struct RootTabsSourceGuardTests {
         #expect(agentSource.contains("await selectionClient.setSelectedAgentId(agentId)"))
         #expect(agentOverviewSource.contains("self.selectionStore.send(.agentSelected(agent.id))"))
         #expect(!agentOverviewSource.contains("self.appModel.setSelectedAgentId(agent.id)"))
-        #expect(rootSource.contains("private func makeAgentSelectionStore()"))
-        #expect(rootSource.contains("AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains("func makeAgentSelectionStore()"))
+        #expect(storesSource.contains("AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))"))
         #expect(rootSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 5)
         #expect(phoneControlHubSource.contains("private func makeAgentSelectionStore()"))
         #expect(phoneControlHubSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 4)
@@ -393,6 +395,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `chat talk toggle is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let chatSource = try String(contentsOf: Self.chatProTabSourceURL(), encoding: .utf8)
 
         #expect(chatSource.contains("struct ChatTalkControlClient: Sendable"))
@@ -403,13 +406,14 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource.contains("await client.setTalkEnabled(!isTalkEnabled)"))
         #expect(chatSource.contains("self.talkControlStore.send(.toggleRequested("))
         #expect(!chatSource.contains("self.appModel.setTalkEnabled(!self.appModel.talkMode.isEnabled)"))
-        #expect(rootSource.contains("private func makeChatTalkControlStore()"))
-        #expect(rootSource.contains("ChatTalkControlFeature(client: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains("func makeChatTalkControlStore()"))
+        #expect(storesSource.contains("ChatTalkControlFeature(client: .live(appModel: self.appModel))"))
         #expect(rootSource.matches(of: /talkControlStore: self\.makeChatTalkControlStore\(\)/).count == 2)
     }
 
     @Test func `root gateway problem primary action is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let featureSource = try String(contentsOf: Self.rootGatewayProblemPrimaryActionSourceURL(), encoding: .utf8)
         let actionFunction = try Self.extract(
             rootSource,
@@ -425,7 +429,7 @@ struct RootTabsSourceGuardTests {
         #expect(featureSource.contains("await client.openProtocolMismatchHelpIfNeeded(problem)"))
         #expect(featureSource.contains("await client.connectLastKnown()"))
         #expect(featureSource.contains("await client.openGatewaySettings()"))
-        #expect(rootSource.contains("private func makeGatewayProblemPrimaryActionStore()"))
+        #expect(storesSource.contains("func makeGatewayProblemPrimaryActionStore()"))
         #expect(rootSource.contains("Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }"))
         #expect(actionFunction.contains(".send(.primaryActionTapped(problem))"))
         #expect(!actionFunction.contains("self.gatewayController.trustRotatedGatewayCertificate"))
@@ -435,6 +439,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `root gateway overview scene refresh is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let featureSource = try String(contentsOf: Self.rootGatewayOverviewRefreshSourceURL(), encoding: .utf8)
         let refreshFunction = try Self.extract(
             rootSource,
@@ -447,7 +452,7 @@ struct RootTabsSourceGuardTests {
         #expect(featureSource.contains("case sceneActiveRefreshRequested"))
         #expect(featureSource.contains("@Dependency(\\.rootGatewayOverviewRefresh)"))
         #expect(featureSource.contains("await client.refreshGatewayOverviewIfConnected()"))
-        #expect(rootSource.contains("private func makeGatewayOverviewRefreshStore()"))
+        #expect(storesSource.contains("func makeGatewayOverviewRefreshStore()"))
         #expect(rootSource.contains("Task { await self.refreshGatewayOverviewAfterSceneActivation() }"))
         #expect(refreshFunction.contains(".send(.sceneActiveRefreshRequested)"))
         #expect(refreshFunction.contains("self.updateHomeCanvasState()"))
@@ -456,6 +461,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `root canvas close action is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let featureSource = try String(contentsOf: Self.rootCanvasPresentationSourceURL(), encoding: .utf8)
         let closeFunction = try Self.extract(
             rootSource,
@@ -468,7 +474,7 @@ struct RootTabsSourceGuardTests {
         #expect(featureSource.contains("case closeButtonTapped"))
         #expect(featureSource.contains("@Dependency(\\.rootCanvasPresentation)"))
         #expect(featureSource.contains("await client.hideCanvas()"))
-        #expect(rootSource.contains("private func makeCanvasPresentationStore()"))
+        #expect(storesSource.contains("func makeCanvasPresentationStore()"))
         #expect(rootSource.contains("Task { await self.closeCanvasPresentation() }"))
         #expect(closeFunction.contains(".send(.closeButtonTapped)"))
         #expect(!closeFunction.contains("self.appModel.screen.hideCanvas()"))
@@ -477,6 +483,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `root canvas debug status is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let featureSource = try String(contentsOf: Self.rootCanvasDebugStatusSourceURL(), encoding: .utf8)
         let updateFunction = try Self.extract(
             rootSource,
@@ -493,8 +500,8 @@ struct RootTabsSourceGuardTests {
         #expect(featureSource.contains("case snapshotChanged(Snapshot)"))
         #expect(featureSource.contains("await client.setDebugStatusEnabled(snapshot.isEnabled)"))
         #expect(featureSource.contains("await client.updateDebugStatus(title, subtitle)"))
-        #expect(rootSource.contains("private func makeCanvasDebugStatusStore()"))
-        #expect(rootSource.contains("RootCanvasDebugStatusFeature(client: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains("func makeCanvasDebugStatusStore()"))
+        #expect(storesSource.contains("RootCanvasDebugStatusFeature(client: .live(appModel: self.appModel))"))
         #expect(rootSource.contains(".send(.snapshotChanged(self.makeCanvasDebugStatusSnapshot()))"))
         #expect(updateFunction.contains("Task { await self.applyCanvasDebugStatus() }"))
         #expect(!updateFunction.contains("self.appModel.screen.setDebugStatusEnabled"))
@@ -559,6 +566,25 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("struct RootCameraFlashOverlayFeature"))
         #expect(!rootSource.contains("struct RootVoiceWakeToastSleepClient"))
         #expect(!rootSource.contains("struct RootCameraFlashOverlaySleepClient"))
+    }
+
+    @Test func `root tca store factories live outside root tabs`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+
+        #expect(storesSource.contains("extension RootTabs"))
+        #expect(storesSource.contains("func makeGatewayQuickSetupStore()"))
+        #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
+        #expect(storesSource.contains("func makeNotificationPermissionGuidanceStore()"))
+        #expect(storesSource.contains("withDependencies"))
+        #expect(storesSource.contains("openNotifications: { approvalId in"))
+        #expect(rootSource.contains("GatewayQuickSetupSheet(store: self.makeGatewayQuickSetupStore())"))
+        #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
+        #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
+        #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
+        #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
+        #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
+        #expect(!rootSource.contains("withDependencies"))
     }
 
     @Test func `routed headers use shared adaptive layout`() throws {
@@ -937,6 +963,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `routed gateway pills open gateway settings`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let agentSource = try String(contentsOf: Self.agentProTabSourceURL(), encoding: .utf8)
         let agentOverviewSource = try String(contentsOf: Self.agentProTabOverviewSourceURL(), encoding: .utf8)
@@ -1004,7 +1031,8 @@ struct RootTabsSourceGuardTests {
         #expect(navigationSource.contains("if route == nil"))
         #expect(navigationSource.contains("state.selectedSettingsRoute = nil"))
         #expect(navigationSource.contains("state.selectedSidebarDestination = .settings"))
-        #expect(rootSource.contains("self.openNotificationSettings(suppressedApprovalID: approvalId)"))
+        #expect(rootSource.contains("func openNotificationSettings(suppressedApprovalID: String)"))
+        #expect(storesSource.contains("self.openNotificationSettings(suppressedApprovalID: approvalId)"))
         #expect(rootSource.contains("self.navigationStore.send(.settingsRouteSelected(route))"))
         #expect(rootSource.contains("self.navigationStore.send(.settingsRouteChanged(route))"))
         #expect(rootSource.contains("self.navigationStore.send(.sidebarSettingsRoutePushed(route))"))
@@ -1059,7 +1087,7 @@ struct RootTabsSourceGuardTests {
         let sectionsSource = try String(contentsOf: Self.settingsProTabSectionsSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
-        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let trustSource = try String(contentsOf: Self.gatewayTrustPromptAlertSourceURL(), encoding: .utf8)
         let controllerSource = try String(contentsOf: Self.gatewayConnectionControllerSourceURL(), encoding: .utf8)
         let reconnectFunction = try Self.extract(
@@ -1112,8 +1140,8 @@ struct RootTabsSourceGuardTests {
         #expect(gatewayProblemPrimaryActionFunction.contains(".send(.rotatedCertificateTrustRequested(problem))"))
         #expect(!gatewayProblemPrimaryActionFunction
             .contains("self.gatewayController.trustRotatedGatewayCertificate(from: problem)"))
-        #expect(rootSource.contains("reconnectClient: .live(gatewayController: self.gatewayController)"))
-        #expect(rootSource.contains("problemTrustClient: .live(gatewayController: self.gatewayController)"))
+        #expect(storesSource.contains("reconnectClient: .live(gatewayController: self.gatewayController)"))
+        #expect(storesSource.contains("problemTrustClient: .live(gatewayController: self.gatewayController)"))
         #expect(!reconnectFunction.contains("await self.gatewayController.connectLastKnown()"))
         #expect(problemReconnectFunction.contains("await self.connectManual()"))
         #expect(problemReconnectFunction.contains("self.gatewayActivityStore"))
@@ -1144,6 +1172,7 @@ struct RootTabsSourceGuardTests {
     @Test func `local network access is requested from visible gateway flows`() throws {
         let appSource = try String(contentsOf: Self.openClawAppSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
@@ -1163,8 +1192,8 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("self.maybeRequestLocalNetworkAccess(reason: \"scene_active\")"))
         #expect(rootSource.contains("self.requestLocalNetworkAccess(reason: reason)"))
         #expect(rootSource.contains("self.makeSettingsManualGatewayEndpointStore()"))
-        #expect(rootSource.contains("SettingsManualGatewayEndpointFeature("))
-        #expect(rootSource.contains("localNetworkAccessClient: .live(gatewayController: self.gatewayController))"))
+        #expect(storesSource.contains("SettingsManualGatewayEndpointFeature("))
+        #expect(storesSource.contains("localNetworkAccessClient: .live(gatewayController: self.gatewayController))"))
         #expect(rootSource.contains("self.handlePresentationCommand()"))
         #expect(rootSource.contains("self.presentationStore.send(.localNetworkAccessRequested("))
         #expect(rootSource.contains("self.presentationStore.send(.onboardingVisibilityChanged("))
@@ -1250,6 +1279,7 @@ struct RootTabsSourceGuardTests {
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let applyFunction = try Self.extract(
             actionsSource,
             from: "func applySetupCode() async -> Bool",
@@ -1272,7 +1302,8 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("case let .appleReviewDemo(statusText):"))
         #expect(actionsSource.contains("self.gatewaySetupStatusStore.send(.statusChanged(statusText))"))
         #expect(rootSource.contains("gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore()"))
-        #expect(rootSource.contains("SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains(
+            "SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
         #expect(!actionsSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
         #expect(!actionsSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
         #expect(!applyFunction.contains("self.appModel.enterAppleReviewDemoMode()"))
@@ -1325,6 +1356,7 @@ struct RootTabsSourceGuardTests {
             encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let openScannerFunction = try Self.extract(
             actionsSource,
@@ -1342,7 +1374,7 @@ struct RootTabsSourceGuardTests {
             .contains("private static let qrScannerOpeningStartedStatusText = \"Opening QR scanner...\""))
         #expect(openScannerFunction.contains("self.gatewaySetupStatusStore.send(.qrScannerOpeningStarted)"))
         #expect(rootSource.contains("gatewayConnectionStore: self.makeSettingsGatewayConnectionStore()"))
-        #expect(rootSource.contains("SettingsGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains("SettingsGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))"))
         #expect(!openScannerFunction.contains("self.appModel.disconnectGateway()"))
         #expect(!openScannerFunction.contains("Opening QR scanner..."))
     }
@@ -1483,6 +1515,7 @@ struct RootTabsSourceGuardTests {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let applyGatewayLinkFunction = try Self.extract(
             actionsSource,
@@ -1509,7 +1542,7 @@ struct RootTabsSourceGuardTests {
         #expect(supportSource.contains("GatewaySettingsStore.saveGatewayToken("))
         #expect(supportSource.contains("GatewaySettingsStore.saveGatewayPassword("))
         #expect(rootSource.contains("self.makeSettingsGatewayCredentialsStore()"))
-        #expect(rootSource.contains("setupAuthPersistenceClient: .live(appModel: self.appModel)"))
+        #expect(storesSource.contains("setupAuthPersistenceClient: .live(appModel: self.appModel)"))
         #expect(actionsSource.contains("guard await self.applySetupCode() else { return }"))
         #expect(actionsSource.contains("await self.applyGatewayLink(link)"))
         #expect(actionsSource.contains("await self.applyGatewayLink(scannedLink)"))
@@ -1645,6 +1678,7 @@ struct RootTabsSourceGuardTests {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let resetFunction = try Self.extract(
             actionsSource,
@@ -1658,7 +1692,7 @@ struct RootTabsSourceGuardTests {
         #expect(supportSource.contains("struct SettingsOnboardingResetClient"))
         #expect(supportSource.contains("GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId)"))
         #expect(rootSource.contains("self.makeSettingsOnboardingStateStore()"))
-        #expect(rootSource.contains("SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains("SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))"))
         #expect(actionsSource
             .contains("await self.onboardingStateStore.send(.onboardingResetRequested(instanceId: self.instanceId)).finish()"))
         #expect(actionsSource.contains("self.syncStoredOnboardingResetState()"))
@@ -1688,6 +1722,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `settings voice control persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let updateTalkFunction = try Self.extract(
@@ -1705,8 +1740,8 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("await voiceControlClient.setTalkEnabled(talkEnabled)"))
         #expect(settingsSource.contains("await voiceControlClient.setVoiceWakeEnabled(enabled)"))
         #expect(rootSource.contains("voiceControlStore: self.makeSettingsVoiceControlStore()"))
-        #expect(rootSource.contains("private func makeSettingsVoiceControlStore()"))
-        #expect(rootSource.contains("voiceControlClient: .live(appModel: self.appModel)"))
+        #expect(storesSource.contains("func makeSettingsVoiceControlStore()"))
+        #expect(storesSource.contains("voiceControlClient: .live(appModel: self.appModel)"))
         #expect(updateTalkFunction.contains("self.voiceControlStore.send(.talkEnabledChangeRequested("))
         #expect(updateTalkFunction.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
         #expect(!updateTalkFunction.contains("self.appModel.setTalkEnabled"))
@@ -1717,6 +1752,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `settings talk preference persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let preferencesSource = try String(contentsOf: Self.settingsTalkPreferencesFeatureSourceURL(), encoding: .utf8)
@@ -1741,8 +1777,8 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("await preferencesClient.setSpeakerphoneEnabled(enabled)"))
         #expect(settingsSource.contains("@State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature>"))
         #expect(rootSource.contains("talkPreferencesStore: self.makeSettingsTalkPreferencesStore()"))
-        #expect(rootSource.contains("private func makeSettingsTalkPreferencesStore()"))
-        #expect(rootSource.contains("preferencesClient: .live(appModel: self.appModel)"))
+        #expect(storesSource.contains("func makeSettingsTalkPreferencesStore()"))
+        #expect(storesSource.contains("preferencesClient: .live(appModel: self.appModel)"))
         #expect(updateProviderFunction.contains("self.talkPreferencesStore.send(.providerSelectionChanged(rawValue))"))
         #expect(updateProviderFunction.contains("self.storedTalkProviderSelectionRaw = selection.rawValue"))
         #expect(!updateProviderFunction.contains("self.appModel.setTalkProviderSelection"))
@@ -1836,6 +1872,7 @@ struct RootTabsSourceGuardTests {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let runDiagnosticsFunction = try Self.extract(
             actionsSource,
@@ -1859,8 +1896,8 @@ struct RootTabsSourceGuardTests {
         #expect(runDiagnosticsFunction.contains("await self.notificationStore.send(.statusRefreshRequested).finish()"))
         #expect(runDiagnosticsFunction.contains("self.handleNotificationStatusRefreshResult"))
         #expect(rootSource.contains("gatewayActivityStore: self.makeSettingsGatewayActivityStore()"))
-        #expect(rootSource.contains("SettingsGatewayActivityFeature("))
-        #expect(rootSource.contains("diagnosticsRefreshClient: .live("))
+        #expect(storesSource.contains("SettingsGatewayActivityFeature("))
+        #expect(storesSource.contains("diagnosticsRefreshClient: .live("))
         #expect(!runDiagnosticsFunction.contains("self.gatewayController.refreshActiveGatewayRegistrationFromSettings()"))
         #expect(!runDiagnosticsFunction.contains("self.gatewayController.restartDiscovery()"))
         #expect(!runDiagnosticsFunction.contains("await self.appModel.refreshGatewayOverviewIfConnected()"))
@@ -1894,6 +1931,7 @@ struct RootTabsSourceGuardTests {
         let locationSource = try String(contentsOf: Self.settingsLocationFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let requestFunction = try Self.extract(
             actionsSource,
@@ -1915,8 +1953,8 @@ struct RootTabsSourceGuardTests {
         #expect(locationSource.contains("return .run { send in"))
         #expect(settingsSource.contains(".onChange(of: self.locationStore.locationModeApplyResult)"))
         #expect(rootSource.contains("locationStore: self.makeSettingsLocationStore()"))
-        #expect(rootSource.contains("private func makeSettingsLocationStore()"))
-        #expect(rootSource.contains("gatewayRefreshClient: .live(gatewayController: self.gatewayController)"))
+        #expect(storesSource.contains("func makeSettingsLocationStore()"))
+        #expect(storesSource.contains("gatewayRefreshClient: .live(gatewayController: self.gatewayController)"))
         #expect(actionsSource.contains("self.locationStore.send(.locationModeApplyResultHandled)"))
         #expect(requestFunction.contains("Task {") == false)
         #expect(requestFunction.contains("requestLocationPermissions") == false)
@@ -1928,6 +1966,7 @@ struct RootTabsSourceGuardTests {
     @Test func `settings discovery debug logging is reducer effect owned`() throws {
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let updateFunction = try Self.extract(
             actionsSource,
@@ -1943,8 +1982,8 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("@Dependency(\\.settingsDiscoveryDebugLogging)"))
         #expect(settingsSource.contains("await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(enabled)"))
         #expect(rootSource.contains("debugOptionsStore: self.makeSettingsDebugOptionsStore()"))
-        #expect(rootSource.contains("private func makeSettingsDebugOptionsStore()"))
-        #expect(rootSource.contains("discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController)"))
+        #expect(storesSource.contains("func makeSettingsDebugOptionsStore()"))
+        #expect(storesSource.contains("discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController)"))
         #expect(updateFunction.contains("self.debugOptionsStore.send(.discoveryDebugLogsChanged(enabled))"))
         #expect(!updateFunction.contains("self.gatewayController.setDiscoveryDebugLoggingEnabled(enabled)"))
         #expect(storedDebugChange.contains("self.debugOptionsStore.send(.discoveryDebugLogsChanged(newValue))"))
@@ -1953,6 +1992,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `settings agent selection persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let agentSelectionBinding = try Self.extract(
             settingsSource,
@@ -1968,8 +2008,8 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("@Dependency(\\.settingsSelectedAgent)"))
         #expect(settingsSource.contains("await selectedAgentClient.setSelectedAgentId(selectedAgentId)"))
         #expect(rootSource.contains("agentSelectionStore: self.makeSettingsAgentSelectionStore()"))
-        #expect(rootSource.contains("private func makeSettingsAgentSelectionStore()"))
-        #expect(rootSource.contains("selectedAgentClient: .live(appModel: self.appModel)"))
+        #expect(storesSource.contains("func makeSettingsAgentSelectionStore()"))
+        #expect(storesSource.contains("selectedAgentClient: .live(appModel: self.appModel)"))
         #expect(agentSelectionBinding.contains(".pickerSelectionChanged($0)"))
         #expect(!settingsSource.contains("self.appModel.setSelectedAgentId(trimmed.isEmpty ? nil : trimmed)"))
         #expect(externalAgentSync.contains(".selectedAgentSynced(newValue)"))
@@ -1999,6 +2039,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootTabs.swift")
+    }
+
+    private static func rootTabsStoresSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootTabsStores.swift")
     }
 
     private static func rootGatewayProblemPrimaryActionSourceURL() -> URL {

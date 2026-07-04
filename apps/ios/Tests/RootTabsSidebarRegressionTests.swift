@@ -73,7 +73,7 @@ struct RootTabsSidebarRegressionTests {
             to: "private var usesSidebarTabs: Bool")
         let selection = try Self.extract(
             source,
-            from: "private func selectSidebarDestination(_ destination: SidebarDestination)",
+            from: "func selectSidebarDestination(_ destination: SidebarDestination)",
             to: "private func showSidebar()")
         let reducer = try Self.extract(
             navigationSource,
@@ -102,7 +102,7 @@ struct RootTabsSidebarRegressionTests {
         let iPadOverview = try Self.extract(
             rootTabsSource,
             from: "private var sidebarOverview: some View",
-            to: "private func selectSidebarDestination")
+            to: "func selectSidebarDestination")
         let recentSessions = try Self.extract(
             commandCenterSource,
             from: "private var recentSessions: some View",
