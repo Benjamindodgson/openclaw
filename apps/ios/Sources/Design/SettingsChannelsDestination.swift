@@ -127,8 +127,19 @@ struct SettingsChannelsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case refreshRequested(sceneActive: Bool, canRead: Bool, force: Bool)
-        case refreshResponse(force: Bool, Result<[SettingsChannelEntry], SettingsChannelsError>)
+        struct RefreshRequest: Equatable, Sendable {
+            var sceneActive: Bool
+            var canRead: Bool
+            var force: Bool
+        }
+
+        struct RefreshResponse: Equatable, Sendable {
+            var force: Bool
+            var result: Result<[SettingsChannelEntry], SettingsChannelsError>
+        }
+
+        case refreshRequested(RefreshRequest)
+        case refreshResponse(RefreshResponse)
         case operationRequested(
             SettingsChannelOperation.Kind,
             channelID: String,
@@ -146,12 +157,12 @@ struct SettingsChannelsFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .refreshRequested(sceneActive, canRead, force):
-                guard sceneActive else {
+            case let .refreshRequested(request):
+                guard request.sceneActive else {
                     state.isLoading = false
                     return .none
                 }
-                guard canRead else {
+                guard request.canRead else {
                     state.entries = []
                     state.isLoading = false
                     state.errorText = nil
@@ -164,22 +175,27 @@ struct SettingsChannelsFeature {
                 return .run { send in
                     do {
                         let snapshot = try await client.status()
-                        await send(.refreshResponse(force: force, .success(Self.entries(from: snapshot))))
+                        await send(.refreshResponse(.init(
+                            force: request.force,
+                            result: .success(Self.entries(from: snapshot)))))
                     } catch {
-                        await send(.refreshResponse(force: force, .failure(.failed(Self.message(for: error)))))
+                        await send(.refreshResponse(.init(
+                            force: request.force,
+                            result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .refreshResponse(_, .success(entries)):
+            case let .refreshResponse(response):
                 state.isLoading = false
-                state.entries = entries
-                state.errorText = nil
-                return .none
+                switch response.result {
+                case let .success(entries):
+                    state.entries = entries
+                    state.errorText = nil
 
-            case let .refreshResponse(force, .failure(error)):
-                state.isLoading = false
-                if force || state.entries.isEmpty {
-                    state.errorText = error.message
+                case let .failure(error):
+                    if response.force || state.entries.isEmpty {
+                        state.errorText = error.message
+                    }
                 }
                 return .none
 
@@ -498,10 +514,10 @@ struct SettingsChannelsDestination: View {
     }
 
     private func refreshChannels(force: Bool) async {
-        await self.store.send(.refreshRequested(
+        await self.store.send(.refreshRequested(.init(
             sceneActive: self.scenePhase == .active,
             canRead: self.canRead,
-            force: force)).finish()
+            force: force))).finish()
     }
 
     private func run(_ kind: SettingsChannelOperation.Kind, channelID: String, accountID: String?) async {
