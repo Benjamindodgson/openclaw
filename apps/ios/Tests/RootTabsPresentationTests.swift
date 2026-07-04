@@ -869,7 +869,7 @@ struct RootTabsPresentationTests {
             RootNavigationSelectionFeature()
         }
 
-        await store.send(.sidebarNavigationPathChanged([.voice])) {
+        await store.send(.sidebarNavigationPathChanged(Self.sidebarNavigationPathChange([.voice]))) {
             $0.sidebarNavigationPath = [.voice]
         }
 
@@ -893,7 +893,7 @@ struct RootTabsPresentationTests {
             RootNavigationSelectionFeature()
         }
 
-        await store.send(.sidebarNavigationPathChanged([.privacy])) {
+        await store.send(.sidebarNavigationPathChanged(Self.sidebarNavigationPathChange([.privacy]))) {
             $0.sidebarNavigationPath = [.privacy]
         }
 
@@ -957,13 +957,13 @@ struct RootTabsPresentationTests {
             $0.selectedSettingsRouteRequestID = 1
         }
 
-        await store.send(.sidebarSettingsRoutePushed(.privacy)) {
+        await store.send(.sidebarSettingsRoutePushed(Self.sidebarSettingsRoutePush(.privacy))) {
             $0.sidebarNavigationPath = [.privacy]
         }
 
-        await store.send(.settingsRouteChanged(.notifications))
+        await store.send(.settingsRouteChanged(Self.settingsRouteChange(.notifications)))
 
-        await store.send(.settingsRouteChanged(nil)) {
+        await store.send(.settingsRouteChanged(Self.settingsRouteChange(nil))) {
             $0.selectedSettingsRoute = nil
             $0.selectedSidebarDestination = .settings
         }
@@ -1503,6 +1503,27 @@ struct RootTabsPresentationTests {
         -> RootNavigationSelectionFeature.PendingExecApprovalPromptChange
     {
         RootNavigationSelectionFeature.PendingExecApprovalPromptChange(promptID: promptID)
+    }
+
+    private static func sidebarNavigationPathChange(
+        _ path: [SettingsRoute])
+        -> RootNavigationSelectionFeature.SidebarNavigationPathChange
+    {
+        RootNavigationSelectionFeature.SidebarNavigationPathChange(path: path)
+    }
+
+    private static func sidebarSettingsRoutePush(
+        _ route: SettingsRoute)
+        -> RootNavigationSelectionFeature.SidebarSettingsRoutePush
+    {
+        RootNavigationSelectionFeature.SidebarSettingsRoutePush(route: route)
+    }
+
+    private static func settingsRouteChange(
+        _ route: SettingsRoute?)
+        -> RootNavigationSelectionFeature.SettingsRouteChange
+    {
+        RootNavigationSelectionFeature.SettingsRouteChange(route: route)
     }
 
     private static func onboardingVisibilityChange(

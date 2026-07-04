@@ -943,7 +943,10 @@ extension RootTabs {
     private var sidebarNavigationPathBinding: Binding<[SettingsRoute]> {
         Binding(
             get: { self.navigationStore.sidebarNavigationPath },
-            set: { self.navigationStore.send(.sidebarNavigationPathChanged($0)) })
+            set: {
+                self.navigationStore.send(.sidebarNavigationPathChanged(
+                    RootNavigationSelectionFeature.SidebarNavigationPathChange(path: $0)))
+            })
     }
 
     private var isSidebarVisible: Bool {
@@ -991,11 +994,13 @@ extension RootTabs {
     }
 
     private func pushSidebarSettingsRoute(_ route: SettingsRoute) {
-        self.navigationStore.send(.sidebarSettingsRoutePushed(route))
+        self.navigationStore.send(.sidebarSettingsRoutePushed(
+            RootNavigationSelectionFeature.SidebarSettingsRoutePush(route: route)))
     }
 
     private func handleSettingsRouteChange(_ route: SettingsRoute?) {
-        self.navigationStore.send(.settingsRouteChanged(route))
+        self.navigationStore.send(.settingsRouteChanged(
+            RootNavigationSelectionFeature.SettingsRouteChange(route: route)))
     }
 
     private func showSidebar() {

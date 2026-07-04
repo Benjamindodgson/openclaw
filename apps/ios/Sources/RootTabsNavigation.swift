@@ -424,6 +424,18 @@ struct RootNavigationSelectionFeature {
         var promptID: String?
     }
 
+    struct SidebarNavigationPathChange: Equatable, Sendable {
+        var path: [SettingsRoute]
+    }
+
+    struct SidebarSettingsRoutePush: Equatable, Sendable {
+        var route: SettingsRoute
+    }
+
+    struct SettingsRouteChange: Equatable, Sendable {
+        var route: SettingsRoute?
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var selectedTab: RootTabs.AppTab
@@ -455,9 +467,9 @@ struct RootNavigationSelectionFeature {
         case tabSelected(RootTabs.AppTab)
         case sidebarDestinationSelected(RootTabs.SidebarDestination)
         case settingsRouteSelected(SettingsRoute)
-        case sidebarNavigationPathChanged([SettingsRoute])
-        case sidebarSettingsRoutePushed(SettingsRoute)
-        case settingsRouteChanged(SettingsRoute?)
+        case sidebarNavigationPathChanged(SidebarNavigationPathChange)
+        case sidebarSettingsRoutePushed(SidebarSettingsRoutePush)
+        case settingsRouteChanged(SettingsRouteChange)
         case notificationPermissionSettingsOpened(NotificationPermissionSettingsRequest)
         case pendingExecApprovalPromptChanged(PendingExecApprovalPromptChange)
     }
@@ -485,17 +497,17 @@ struct RootNavigationSelectionFeature {
                 self.selectSettingsRoute(route, state: &state)
                 return .none
 
-            case let .sidebarNavigationPathChanged(path):
-                state.sidebarNavigationPath = path
+            case let .sidebarNavigationPathChanged(change):
+                state.sidebarNavigationPath = change.path
                 return .none
 
-            case let .sidebarSettingsRoutePushed(route):
-                state.sidebarNavigationPath = [route]
-                self.handleSettingsRouteChange(route, state: &state)
+            case let .sidebarSettingsRoutePushed(push):
+                state.sidebarNavigationPath = [push.route]
+                self.handleSettingsRouteChange(push.route, state: &state)
                 return .none
 
-            case let .settingsRouteChanged(route):
-                self.handleSettingsRouteChange(route, state: &state)
+            case let .settingsRouteChanged(change):
+                self.handleSettingsRouteChange(change.route, state: &state)
                 return .none
 
             case let .notificationPermissionSettingsOpened(request):
