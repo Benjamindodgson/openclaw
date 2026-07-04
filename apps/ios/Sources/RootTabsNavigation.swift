@@ -340,6 +340,15 @@ struct RootPresentationFeature {
 @Reducer
 struct RootSidebarFeature {
     // swiftformat:disable redundantSendable
+    struct LayoutModeResolution: Equatable, Sendable {
+        var layoutMode: RootTabs.SidebarLayoutMode
+        var force: Bool
+    }
+
+    struct VisibilityChange: Equatable, Sendable {
+        var isVisible: Bool
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var isVisible: Bool
@@ -360,10 +369,10 @@ struct RootSidebarFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case layoutModeResolved(RootTabs.SidebarLayoutMode, force: Bool)
+        case layoutModeResolved(LayoutModeResolution)
         case showRequested
         case hideRequested
-        case visibilityChanged(Bool)
+        case visibilityChanged(VisibilityChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -371,16 +380,17 @@ struct RootSidebarFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .layoutModeResolved(layoutMode, force):
+            case let .layoutModeResolved(resolution):
                 let previousLayoutMode = state.layoutMode
                 let didResolvePreviousLayout = state.didResolveLayout
+                let layoutMode = resolution.layoutMode
                 let layoutModeDidChange = layoutMode != previousLayoutMode
                 state.didResolveLayout = true
                 state.layoutMode = layoutMode
                 if layoutModeDidChange && didResolvePreviousLayout {
                     state.userOverridden = false
                 }
-                guard force || !state.userOverridden else { return .none }
+                guard resolution.force || !state.userOverridden else { return .none }
                 state.isVisible = State.preferredVisibility(layoutMode: layoutMode)
                 return .none
 
@@ -394,8 +404,8 @@ struct RootSidebarFeature {
                 state.isVisible = false
                 return .none
 
-            case let .visibilityChanged(isVisible):
-                state.isVisible = isVisible
+            case let .visibilityChanged(change):
+                state.isVisible = change.isVisible
                 return .none
             }
         }

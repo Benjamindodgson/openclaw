@@ -1009,11 +1009,13 @@ extension RootTabs {
 
     private func updateSidebarLayout(containerSize: CGSize, force: Bool) {
         let layoutMode = Self.sidebarLayoutMode(containerSize: containerSize)
-        self.sidebarStore.send(.layoutModeResolved(layoutMode, force: force))
+        self.sidebarStore.send(.layoutModeResolved(RootSidebarFeature.LayoutModeResolution(
+            layoutMode: layoutMode,
+            force: force)))
     }
 
     private func setSidebarVisible(_ isVisible: Bool) {
-        self.sidebarStore.send(.visibilityChanged(isVisible))
+        self.sidebarStore.send(.visibilityChanged(RootSidebarFeature.VisibilityChange(isVisible: isVisible)))
     }
 
     private func gatewayProblemPrimaryActionTitle(_ problem: GatewayConnectionProblem) -> String? {

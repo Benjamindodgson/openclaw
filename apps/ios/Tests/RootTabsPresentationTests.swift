@@ -1248,7 +1248,7 @@ struct RootTabsPresentationTests {
             RootSidebarFeature()
         }
 
-        await store.send(.layoutModeResolved(.drawer, force: false)) {
+        await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false))) {
             $0.layoutMode = .drawer
             $0.didResolveLayout = true
         }
@@ -1259,12 +1259,12 @@ struct RootTabsPresentationTests {
             RootSidebarFeature()
         }
 
-        await store.send(.layoutModeResolved(.split, force: false)) {
+        await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.split, force: false))) {
             $0.didResolveLayout = true
             $0.isVisible = true
         }
 
-        await store.send(.layoutModeResolved(.drawer, force: false)) {
+        await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false))) {
             $0.layoutMode = .drawer
             $0.userOverridden = false
             $0.isVisible = false
@@ -1276,7 +1276,7 @@ struct RootTabsPresentationTests {
             RootSidebarFeature()
         }
 
-        await store.send(.layoutModeResolved(.drawer, force: false)) {
+        await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false))) {
             $0.layoutMode = .drawer
             $0.didResolveLayout = true
         }
@@ -1286,9 +1286,9 @@ struct RootTabsPresentationTests {
             $0.isVisible = true
         }
 
-        await store.send(.layoutModeResolved(.drawer, force: false))
+        await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false)))
 
-        await store.send(.layoutModeResolved(.split, force: false)) {
+        await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.split, force: false))) {
             $0.userOverridden = false
             $0.layoutMode = .split
         }
@@ -1299,7 +1299,7 @@ struct RootTabsPresentationTests {
             RootSidebarFeature()
         }
 
-        await store.send(.visibilityChanged(false)) {
+        await store.send(.visibilityChanged(Self.sidebarVisibilityChange(isVisible: false))) {
             $0.isVisible = false
         }
         #expect(store.state.userOverridden)
@@ -1469,6 +1469,20 @@ struct RootTabsPresentationTests {
 
     private static func gatewaySetupRequest(requestID: Int) -> RootPresentationFeature.GatewaySetupRequest {
         RootPresentationFeature.GatewaySetupRequest(requestID: requestID)
+    }
+
+    private static func sidebarLayoutModeResolution(
+        _ layoutMode: RootTabs.SidebarLayoutMode,
+        force: Bool)
+        -> RootSidebarFeature.LayoutModeResolution
+    {
+        RootSidebarFeature.LayoutModeResolution(
+            layoutMode: layoutMode,
+            force: force)
+    }
+
+    private static func sidebarVisibilityChange(isVisible: Bool) -> RootSidebarFeature.VisibilityChange {
+        RootSidebarFeature.VisibilityChange(isVisible: isVisible)
     }
 
     private static func onboardingVisibilityChange(
