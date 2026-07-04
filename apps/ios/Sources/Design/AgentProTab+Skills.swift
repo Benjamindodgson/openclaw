@@ -724,14 +724,14 @@ extension AgentProTab {
 
         do {
             let message = try await action()
-            self.skillEditorStore.send(.mutationSucceeded(key: key, message: message))
+            self.skillEditorStore.send(.mutationSucceeded(.init(key: key, message: message)))
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
             self.skillEditorStore.send(.mutationFinished(.init(key: key)))
         } catch {
-            self.skillEditorStore.send(.mutationFailed(
+            self.skillEditorStore.send(.mutationFailed(.init(
                 key: key,
-                message: Self.skillMutationMessage(error)))
+                message: Self.skillMutationMessage(error))))
         }
     }
 

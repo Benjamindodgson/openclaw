@@ -456,14 +456,24 @@ struct AgentSkillEditorFeature {
             var key: String
         }
 
+        struct MutationFailure: Equatable, Sendable {
+            var key: String
+            var message: String
+        }
+
+        struct MutationSuccess: Equatable, Sendable {
+            var key: String
+            var message: String
+        }
+
         case apiKeyDraftChanged(key: String, value: String)
         case apiKeyDraftCleared(key: String)
         case editorDismissed
         case editorOpened(id: String)
-        case mutationFailed(key: String, message: String)
+        case mutationFailed(MutationFailure)
         case mutationFinished(MutationKey)
         case mutationStarted(MutationKey)
-        case mutationSucceeded(key: String, message: String)
+        case mutationSucceeded(MutationSuccess)
         case selectionChanged(AgentProTab.SkillEditorSelection?)
     }
 
@@ -497,17 +507,21 @@ struct AgentSkillEditorFeature {
                 state.messages[mutation.key] = nil
                 return .none
 
-            case let .mutationSucceeded(key, message):
-                state.messages[key] = AgentProTab.SkillEditorMessage(kind: .success, text: message)
+            case let .mutationSucceeded(result):
+                state.messages[result.key] = AgentProTab.SkillEditorMessage(
+                    kind: .success,
+                    text: result.message)
                 return .none
 
             case let .mutationFinished(mutation):
                 state.busyKeys.remove(mutation.key)
                 return .none
 
-            case let .mutationFailed(key, message):
-                state.busyKeys.remove(key)
-                state.messages[key] = AgentProTab.SkillEditorMessage(kind: .error, text: message)
+            case let .mutationFailed(failure):
+                state.busyKeys.remove(failure.key)
+                state.messages[failure.key] = AgentProTab.SkillEditorMessage(
+                    kind: .error,
+                    text: failure.message)
                 return .none
             }
         }
