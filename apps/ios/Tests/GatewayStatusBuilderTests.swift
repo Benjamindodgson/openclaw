@@ -113,6 +113,20 @@ struct GatewayStatusBuilderTests {
         }
     }
 
+    @Test func `chat talk toggle focuses session and flips enabled state through client`() async {
+        let probe = ChatTalkControlProbe()
+        let store = TestStore(initialState: ChatTalkControlFeature.State()) {
+            ChatTalkControlFeature(client: probe.client)
+        }
+
+        await store.send(.toggleRequested(sessionKey: "session-1", isTalkEnabled: false))
+        await store.send(.toggleRequested(sessionKey: "session-2", isTalkEnabled: true))
+        await store.finish()
+
+        #expect(probe.focusedSessionKeys == ["session-1", "session-2"])
+        #expect(probe.talkEnabledValues == [true, false])
+    }
+
     @Test func `reducer refresh updates display state`() async {
         let problem = GatewayConnectionProblem(
             kind: .pairingRequired,
@@ -152,5 +166,20 @@ struct GatewayStatusBuilderTests {
             headerSubtitle: headerSubtitle,
             showsAgentBadge: showsAgentBadge,
             agentBadgeOverride: agentBadgeOverride)
+    }
+}
+
+private final class ChatTalkControlProbe: @unchecked Sendable {
+    var focusedSessionKeys: [String] = []
+    var talkEnabledValues: [Bool] = []
+
+    var client: ChatTalkControlClient {
+        ChatTalkControlClient(
+            focusChatSession: { sessionKey in
+                self.focusedSessionKeys.append(sessionKey)
+            },
+            setTalkEnabled: { enabled in
+                self.talkEnabledValues.append(enabled)
+            })
     }
 }
