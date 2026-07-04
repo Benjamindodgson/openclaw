@@ -1099,8 +1099,49 @@ struct SettingsDebugOptionsFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct SettingsVoiceControlClient: Sendable {
+    var setTalkEnabled: @MainActor @Sendable (Bool) -> Void
+    var setVoiceWakeEnabled: @MainActor @Sendable (Bool) -> Void
+}
+
+// swiftformat:enable redundantSendable
+
+extension SettingsVoiceControlClient: DependencyKey {
+    static let liveValue = SettingsVoiceControlClient(
+        setTalkEnabled: { _ in },
+        setVoiceWakeEnabled: { _ in })
+    static let testValue = SettingsVoiceControlClient(
+        setTalkEnabled: { _ in },
+        setVoiceWakeEnabled: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsVoiceControlClient(
+            setTalkEnabled: { enabled in
+                appModel.setTalkEnabled(enabled)
+            },
+            setVoiceWakeEnabled: { enabled in
+                appModel.setVoiceWakeEnabled(enabled)
+            })
+    }
+}
+
+extension DependencyValues {
+    var settingsVoiceControl: SettingsVoiceControlClient {
+        get { self[SettingsVoiceControlClient.self] }
+        set { self[SettingsVoiceControlClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct SettingsVoiceControlFeature {
+    private let voiceControlClientOverride: SettingsVoiceControlClient?
+
+    init(voiceControlClient: SettingsVoiceControlClient? = nil) {
+        self.voiceControlClientOverride = voiceControlClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -1143,6 +1184,9 @@ struct SettingsVoiceControlFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsVoiceControl) var dependencyVoiceControlClient
+            let voiceControlClient = self.voiceControlClientOverride ?? dependencyVoiceControlClient
+
             switch action {
             case let .controlsSynced(talkEnabled, voiceWakeEnabled, voiceWakeStatusText):
                 state.talkEnabled = talkEnabled
@@ -1159,12 +1203,17 @@ struct SettingsVoiceControlFeature {
                 return .none
 
             case let .talkEnabledChangeRequested(enabled, isAppleReviewDemoModeEnabled):
-                state.talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled
-                return .none
+                let talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled
+                state.talkEnabled = talkEnabled
+                return .run { _ in
+                    await voiceControlClient.setTalkEnabled(talkEnabled)
+                }
 
             case let .voiceWakeEnabledChanged(enabled):
                 state.voiceWakeEnabled = enabled
-                return .none
+                return .run { _ in
+                    await voiceControlClient.setVoiceWakeEnabled(enabled)
+                }
             }
         }
         .autoLogActions()
@@ -1266,11 +1315,7 @@ struct SettingsProTab: View {
         SettingsDebugOptionsFeature()
     }
 
-    @State var voiceControlStore: StoreOf<SettingsVoiceControlFeature> = Store(
-        initialState: SettingsVoiceControlFeature.State())
-    {
-        SettingsVoiceControlFeature()
-    }
+    @State var voiceControlStore: StoreOf<SettingsVoiceControlFeature>
 
     @State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature> = Store(
         initialState: SettingsTalkPreferencesFeature.State())
@@ -1362,6 +1407,11 @@ struct SettingsProTab: View {
         {
             SettingsDebugOptionsFeature()
         },
+        voiceControlStore: StoreOf<SettingsVoiceControlFeature> = Store(
+            initialState: SettingsVoiceControlFeature.State())
+        {
+            SettingsVoiceControlFeature()
+        },
         agentSelectionStore: StoreOf<SettingsAgentSelectionFeature> = Store(
             initialState: SettingsAgentSelectionFeature.State())
         {
@@ -1416,6 +1466,7 @@ struct SettingsProTab: View {
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
+        self._voiceControlStore = State(wrappedValue: voiceControlStore)
         self._agentSelectionStore = State(wrappedValue: agentSelectionStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)

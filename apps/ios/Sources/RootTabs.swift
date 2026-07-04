@@ -190,6 +190,7 @@ struct RootTabs: View {
                 initialRoute: self.selectedSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 debugOptionsStore: self.makeSettingsDebugOptionsStore(),
+                voiceControlStore: self.makeSettingsVoiceControlStore(),
                 agentSelectionStore: self.makeSettingsAgentSelectionStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
@@ -481,6 +482,7 @@ struct RootTabs: View {
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     debugOptionsStore: self.makeSettingsDebugOptionsStore(),
+                    voiceControlStore: self.makeSettingsVoiceControlStore(),
                     agentSelectionStore: self.makeSettingsAgentSelectionStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
@@ -497,6 +499,7 @@ struct RootTabs: View {
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     debugOptionsStore: self.makeSettingsDebugOptionsStore(),
+                    voiceControlStore: self.makeSettingsVoiceControlStore(),
                     agentSelectionStore: self.makeSettingsAgentSelectionStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
@@ -515,6 +518,7 @@ struct RootTabs: View {
                 navigateToRoute: self.pushSidebarSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 debugOptionsStore: self.makeSettingsDebugOptionsStore(),
+                voiceControlStore: self.makeSettingsVoiceControlStore(),
                 agentSelectionStore: self.makeSettingsAgentSelectionStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
@@ -851,6 +855,14 @@ struct RootTabs: View {
         Store(initialState: SettingsDebugOptionsFeature.State()) {
             SettingsDebugOptionsFeature(
                 discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsVoiceControlStore() -> StoreOf<SettingsVoiceControlFeature> {
+        Store(initialState: SettingsVoiceControlFeature.State()) {
+            SettingsVoiceControlFeature(
+                voiceControlClient: .live(appModel: self.appModel))
         }
     }
 
