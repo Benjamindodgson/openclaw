@@ -234,7 +234,7 @@ extension AgentProTab {
         let state = self.agentRosterState(for: agent)
         return Button {
             guard !isActive else { return }
-            self.selectionStore.send(.agentSelected(agent.id))
+            self.selectionStore.send(.agentSelected(.init(agentId: agent.id)))
         } label: {
             HStack(alignment: .center, spacing: 12) {
                 self.agentAvatar(agent, state: state)
