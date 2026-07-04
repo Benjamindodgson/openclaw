@@ -1033,9 +1033,15 @@ struct SettingsDeviceIdentityFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case displayNameChanged(String)
-        case displayNameSynced(String)
-        case instanceIdSynced(String)
+        struct DisplayNameChange: Equatable, Sendable { var displayName: String }
+
+        struct DisplayNameSync: Equatable, Sendable { var displayName: String }
+
+        struct InstanceIDSync: Equatable, Sendable { var instanceId: String }
+
+        case displayNameChanged(DisplayNameChange)
+        case displayNameSynced(DisplayNameSync)
+        case instanceIdSynced(InstanceIDSync)
     }
 
     // swiftformat:enable redundantSendable
@@ -1043,16 +1049,16 @@ struct SettingsDeviceIdentityFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .displayNameChanged(displayName):
-                state.displayName = displayName
+            case let .displayNameChanged(change):
+                state.displayName = change.displayName
                 return .none
 
-            case let .displayNameSynced(displayName):
-                state.displayName = displayName
+            case let .displayNameSynced(sync):
+                state.displayName = sync.displayName
                 return .none
 
-            case let .instanceIdSynced(instanceId):
-                state.instanceId = instanceId
+            case let .instanceIdSynced(sync):
+                state.instanceId = sync.instanceId
                 return .none
             }
         }
@@ -1601,10 +1607,10 @@ struct SettingsProTab: View {
                 self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: newValue)))
             }
             .onChange(of: self.storedDisplayName) { _, newValue in
-                self.deviceIdentityStore.send(.displayNameSynced(newValue))
+                self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: newValue)))
             }
             .onChange(of: self.storedInstanceId) { _, newValue in
-                self.deviceIdentityStore.send(.instanceIdSynced(newValue))
+                self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: newValue)))
             }
             .onChange(of: self.storedDiscoveryDebugLogsEnabled) { _, newValue in
                 self.debugOptionsStore.send(.discoveryDebugLogsChanged(newValue))
