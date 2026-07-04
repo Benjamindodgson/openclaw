@@ -136,11 +136,11 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.createRequested(canRead: true, canWrite: true)) {
+        await store.send(.createRequested(.init(canRead: true, canWrite: true))) {
             $0.isCreatingCard = true
             $0.errorText = nil
         }
-        await store.receive(.createResponse(.success(created))) {
+        await store.receive(.createResponse(.init(result: .success(created)))) {
             $0.isCreatingCard = false
             $0.draftTitle = ""
             $0.draftNotes = ""

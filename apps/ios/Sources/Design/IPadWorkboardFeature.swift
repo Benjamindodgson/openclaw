@@ -345,8 +345,19 @@ struct IPadWorkboardFeature {
         case boardScopeChanged(String)
         case cardSheetPresented(IPadWorkboardCard)
         case clearQueryTapped
-        case createRequested(canRead: Bool, canWrite: Bool)
-        case createResponse(Result<IPadWorkboardCard, IPadWorkboardError>)
+
+        struct CreateRequest: Equatable, Sendable {
+            var canRead: Bool
+            var canWrite: Bool
+        }
+
+        struct CreateResponse: Equatable, Sendable {
+            var result: Result<IPadWorkboardCard, IPadWorkboardError>
+        }
+
+        case createRequested(CreateRequest)
+        case createResponse(CreateResponse)
+
         case dispatchRequested(canWrite: Bool)
         case dispatchResponse(boardID: String?, Result<IPadWorkboardDispatchSnapshot, IPadWorkboardError>)
         case draftNotesChanged(String)
@@ -423,8 +434,8 @@ struct IPadWorkboardFeature {
                 state.query = ""
                 return .none
 
-            case let .createRequested(canRead, canWrite):
-                if let message = state.createUnavailableMessage(canRead: canRead, canWrite: canWrite) {
+            case let .createRequested(request):
+                if let message = state.createUnavailableMessage(canRead: request.canRead, canWrite: request.canWrite) {
                     state.errorText = message
                     return .none
                 }
@@ -445,24 +456,27 @@ struct IPadWorkboardFeature {
                 return .run { send in
                     do {
                         let card = try await client.create(params)
-                        await send(.createResponse(.success(card)))
+                        await send(.createResponse(.init(result: .success(card))))
                     } catch {
-                        await send(.createResponse(.failure(.failed(Self.message(for: error)))))
+                        await send(.createResponse(.init(result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .createResponse(.success(card)):
-                state.isCreatingCard = false
-                state.draftTitle = ""
-                state.draftNotes = ""
-                state.presentedSheet = nil
-                state.replace(card)
-                return .none
+            case let .createResponse(response):
+                switch response.result {
+                case let .success(card):
+                    state.isCreatingCard = false
+                    state.draftTitle = ""
+                    state.draftNotes = ""
+                    state.presentedSheet = nil
+                    state.replace(card)
+                    return .none
 
-            case let .createResponse(.failure(error)):
-                state.isCreatingCard = false
-                state.errorText = error.message
-                return .none
+                case let .failure(error):
+                    state.isCreatingCard = false
+                    state.errorText = error.message
+                    return .none
+                }
 
             case let .dispatchRequested(canWrite):
                 guard canWrite, !state.isLoading else { return .none }

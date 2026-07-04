@@ -625,7 +625,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private func createCard() async {
-        await self.store.send(.createRequested(canRead: self.canRead, canWrite: self.canWrite)).finish()
+        await self.store.send(.createRequested(.init(canRead: self.canRead, canWrite: self.canWrite))).finish()
     }
 
     private func move(_ card: IPadWorkboardCard, to status: String) async {
