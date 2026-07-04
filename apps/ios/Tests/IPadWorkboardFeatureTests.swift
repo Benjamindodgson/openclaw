@@ -69,7 +69,7 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.boardScopeChanged(" planning ")) {
+        await store.send(.boardScopeChanged(.init(boardID: " planning "))) {
             $0.selectedBoardID = "planning"
         }
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {

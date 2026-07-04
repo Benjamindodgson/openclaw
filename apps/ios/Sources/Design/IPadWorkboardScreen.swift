@@ -246,11 +246,11 @@ struct IPadWorkboardScreen: View {
     private var compactBoardScopeMenu: some View {
         Menu {
             Button("All boards") {
-                self.store.send(.boardScopeChanged(""))
+                self.store.send(.boardScopeChanged(.init(boardID: "")))
             }
             ForEach(self.boardScopeOptions, id: \.self) { boardID in
                 Button(Self.boardScopeLabel(for: boardID)) {
-                    self.store.send(.boardScopeChanged(boardID))
+                    self.store.send(.boardScopeChanged(.init(boardID: boardID)))
                 }
             }
         } label: {
@@ -333,11 +333,11 @@ struct IPadWorkboardScreen: View {
                 .foregroundStyle(.secondary)
             Menu {
                 Button("All boards") {
-                    self.store.send(.boardScopeChanged(""))
+                    self.store.send(.boardScopeChanged(.init(boardID: "")))
                 }
                 ForEach(self.boardScopeOptions, id: \.self) { boardID in
                     Button(Self.boardScopeLabel(for: boardID)) {
-                        self.store.send(.boardScopeChanged(boardID))
+                        self.store.send(.boardScopeChanged(.init(boardID: boardID)))
                     }
                 }
             } label: {
