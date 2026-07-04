@@ -135,7 +135,7 @@ struct AgentSkillEditorFeatureTests {
             AgentSkillEditorFeature()
         }
 
-        await store.send(.mutationSucceeded(key: "skill-a", message: "Skill enabled.")) {
+        await store.send(.mutationSucceeded(.init(key: "skill-a", message: "Skill enabled."))) {
             $0.messages = [
                 "skill-a": AgentProTab.SkillEditorMessage(kind: .success, text: "Skill enabled."),
             ]
@@ -164,7 +164,7 @@ struct AgentSkillEditorFeatureTests {
             AgentSkillEditorFeature()
         }
 
-        await store.send(.mutationFailed(key: "skill-a", message: "Skill failed.")) {
+        await store.send(.mutationFailed(.init(key: "skill-a", message: "Skill failed."))) {
             $0.busyKeys = []
             $0.messages = [
                 "skill-a": AgentProTab.SkillEditorMessage(kind: .error, text: "Skill failed."),
