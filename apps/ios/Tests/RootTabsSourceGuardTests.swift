@@ -1456,10 +1456,40 @@ struct RootTabsSourceGuardTests {
 
         #expect(settingsSource
             .contains("case talkEnabledChangeRequested(enabled: Bool, isAppleReviewDemoModeEnabled: Bool)"))
-        #expect(settingsSource.contains("state.talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled"))
+        #expect(settingsSource.contains("let talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled"))
+        #expect(settingsSource.contains("state.talkEnabled = talkEnabled"))
         #expect(actionsSource.contains("self.voiceControlStore.send(.talkEnabledChangeRequested("))
         #expect(actionsSource.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
         #expect(actionsSource.contains(oldTalkToggleGuard) == false)
+    }
+
+    @Test func `settings voice control persistence is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let updateTalkFunction = try Self.extract(
+            actionsSource,
+            from: "func updateTalkEnabled(_ enabled: Bool)",
+            to: "func updateVoiceWakeEnabled(_ enabled: Bool)")
+        let updateVoiceWakeFunction = try Self.extract(
+            actionsSource,
+            from: "func updateVoiceWakeEnabled(_ enabled: Bool)",
+            to: "var appearancePreferenceBinding")
+
+        #expect(settingsSource.contains("struct SettingsVoiceControlClient: Sendable"))
+        #expect(settingsSource.contains("var settingsVoiceControl: SettingsVoiceControlClient"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsVoiceControl)"))
+        #expect(settingsSource.contains("await voiceControlClient.setTalkEnabled(talkEnabled)"))
+        #expect(settingsSource.contains("await voiceControlClient.setVoiceWakeEnabled(enabled)"))
+        #expect(rootSource.contains("voiceControlStore: self.makeSettingsVoiceControlStore()"))
+        #expect(rootSource.contains("private func makeSettingsVoiceControlStore()"))
+        #expect(rootSource.contains("voiceControlClient: .live(appModel: self.appModel)"))
+        #expect(updateTalkFunction.contains("self.voiceControlStore.send(.talkEnabledChangeRequested("))
+        #expect(updateTalkFunction.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
+        #expect(!updateTalkFunction.contains("self.appModel.setTalkEnabled"))
+        #expect(updateVoiceWakeFunction.contains("self.voiceControlStore.send(.voiceWakeEnabledChanged(enabled))"))
+        #expect(updateVoiceWakeFunction.contains("self.storedVoiceWakeEnabled = enabled"))
+        #expect(!updateVoiceWakeFunction.contains("self.appModel.setVoiceWakeEnabled"))
     }
 
     @Test func `settings notification action decision is reducer owned`() throws {

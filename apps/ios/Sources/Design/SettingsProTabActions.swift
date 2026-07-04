@@ -618,13 +618,11 @@ extension SettingsProTab {
             enabled: enabled,
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled))
         self.storedTalkEnabled = self.voiceControlStore.talkEnabled
-        self.appModel.setTalkEnabled(self.voiceControlStore.talkEnabled)
     }
 
     func updateVoiceWakeEnabled(_ enabled: Bool) {
         self.voiceControlStore.send(.voiceWakeEnabledChanged(enabled))
         self.storedVoiceWakeEnabled = enabled
-        self.appModel.setVoiceWakeEnabled(enabled)
     }
 
     var appearancePreferenceBinding: Binding<String> {

@@ -2189,8 +2189,9 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings voice controls record field changes`() async {
+        let voiceControlProbe = SettingsVoiceControlProbe()
         let store = TestStore(initialState: SettingsVoiceControlFeature.State()) {
-            SettingsVoiceControlFeature()
+            SettingsVoiceControlFeature(voiceControlClient: voiceControlProbe.client)
         }
 
         await store.send(.talkEnabledChanged(true)) {
@@ -2199,6 +2200,9 @@ struct SettingsNavigationFeatureTests {
         await store.send(.voiceWakeEnabledChanged(true)) {
             $0.voiceWakeEnabled = true
         }
+        await store.finish()
+
+        #expect(voiceControlProbe.voiceWakeEnabledValues == [true])
     }
 
     @Test func `settings voice controls disable talk for apple review`() async {
@@ -2215,8 +2219,9 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings voice controls resolve requested talk changes`() async {
+        let voiceControlProbe = SettingsVoiceControlProbe()
         let store = TestStore(initialState: SettingsVoiceControlFeature.State()) {
-            SettingsVoiceControlFeature()
+            SettingsVoiceControlFeature(voiceControlClient: voiceControlProbe.client)
         }
 
         await store.send(.talkEnabledChangeRequested(
@@ -2232,6 +2237,9 @@ struct SettingsNavigationFeatureTests {
         {
             $0.talkEnabled = false
         }
+        await store.finish()
+
+        #expect(voiceControlProbe.talkEnabledValues == [true, false])
     }
 
     @Test func `settings voice controls summarize active modes`() {
@@ -2620,6 +2628,21 @@ private final class SettingsSelectedAgentProbe: @unchecked Sendable {
         SettingsSelectedAgentClient(setSelectedAgentId: { selectedAgentId in
             self.selectedAgentIds.append(selectedAgentId)
         })
+    }
+}
+
+private final class SettingsVoiceControlProbe: @unchecked Sendable {
+    var talkEnabledValues: [Bool] = []
+    var voiceWakeEnabledValues: [Bool] = []
+
+    var client: SettingsVoiceControlClient {
+        SettingsVoiceControlClient(
+            setTalkEnabled: { enabled in
+                self.talkEnabledValues.append(enabled)
+            },
+            setVoiceWakeEnabled: { enabled in
+                self.voiceWakeEnabledValues.append(enabled)
+            })
     }
 }
 
