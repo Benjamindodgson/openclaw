@@ -668,7 +668,6 @@ extension SettingsProTab {
     func updateDiscoveryDebugLogsEnabled(_ enabled: Bool) {
         self.debugOptionsStore.send(.discoveryDebugLogsChanged(enabled))
         self.storedDiscoveryDebugLogsEnabled = enabled
-        self.gatewayController.setDiscoveryDebugLoggingEnabled(enabled)
     }
 
     func updateCanvasDebugStatusEnabled(_ enabled: Bool) {

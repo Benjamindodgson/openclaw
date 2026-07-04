@@ -414,8 +414,9 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings debug options record toggle changes`() async {
+        let discoveryDebugProbe = SettingsDiscoveryDebugLoggingProbe()
         let store = TestStore(initialState: SettingsDebugOptionsFeature.State()) {
-            SettingsDebugOptionsFeature()
+            SettingsDebugOptionsFeature(discoveryDebugLoggingClient: discoveryDebugProbe.client)
         }
 
         await store.send(.discoveryDebugLogsChanged(true)) {
@@ -424,6 +425,9 @@ struct SettingsNavigationFeatureTests {
         await store.send(.canvasDebugStatusChanged(true)) {
             $0.canvasDebugStatusEnabled = true
         }
+        await store.finish()
+
+        #expect(discoveryDebugProbe.enabledValues == [true])
     }
 
     @Test func `settings gateway activity tracks reconnect lifecycle`() async {
@@ -2635,6 +2639,16 @@ private final class SettingsLocationGatewayRefreshProbe: @unchecked Sendable {
     var client: SettingsLocationGatewayRefreshClient {
         SettingsLocationGatewayRefreshClient(refreshGatewayRegistration: {
             self.refreshCount += 1
+        })
+    }
+}
+
+private final class SettingsDiscoveryDebugLoggingProbe: @unchecked Sendable {
+    var enabledValues: [Bool] = []
+
+    var client: SettingsDiscoveryDebugLoggingClient {
+        SettingsDiscoveryDebugLoggingClient(setDiscoveryDebugLoggingEnabled: { enabled in
+            self.enabledValues.append(enabled)
         })
     }
 }
