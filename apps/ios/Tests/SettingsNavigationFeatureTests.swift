@@ -1900,10 +1900,10 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.endpointSynced(
+        await store.send(.endpointSynced(.init(
             enabled: true,
             host: "gateway.example.com",
-            tls: false))
+            useTLS: false)))
         {
             $0.manualGatewayEnabled = true
             $0.manualGatewayHost = "gateway.example.com"
@@ -1916,13 +1916,13 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.manualGatewayEnabledChanged(true)) {
+        await store.send(.manualGatewayEnabledChanged(.init(isEnabled: true))) {
             $0.manualGatewayEnabled = true
         }
-        await store.send(.manualGatewayHostChanged("manual.example.com")) {
+        await store.send(.manualGatewayHostChanged(.init(host: "manual.example.com"))) {
             $0.manualGatewayHost = "manual.example.com"
         }
-        await store.send(.manualGatewayTLSChanged(false)) {
+        await store.send(.manualGatewayTLSChanged(.init(useTLS: false))) {
             $0.manualGatewayTLS = false
         }
     }
@@ -1940,7 +1940,7 @@ struct SettingsNavigationFeatureTests {
             $0.manualConnectionResult = nil
         }
 
-        await store.send(.manualGatewayHostChanged("  gateway.example.com  ")) {
+        await store.send(.manualGatewayHostChanged(.init(host: "  gateway.example.com  "))) {
             $0.manualGatewayHost = "  gateway.example.com  "
         }
 
@@ -1952,7 +1952,7 @@ struct SettingsNavigationFeatureTests {
             $0.manualConnectionResult = nil
         }
 
-        await store.send(.manualGatewayTLSChanged(false)) {
+        await store.send(.manualGatewayTLSChanged(.init(useTLS: false))) {
             $0.manualGatewayTLS = false
         }
 
@@ -2008,7 +2008,7 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.setupLinkApplied(host: "link.example.com", tls: true)) {
+        await store.send(.setupLinkApplied(.init(host: "link.example.com", useTLS: true))) {
             $0.manualGatewayHost = "link.example.com"
             $0.manualGatewayTLS = true
         }
