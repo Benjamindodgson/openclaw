@@ -32,7 +32,7 @@ struct AgentDreamingDestinationFeatureTests {
             $0.busyAction = .repair
             $0.statusText = nil
         }
-        await store.receive(.dreamActionResponse(.init(result: .success("Repair complete.")))) {
+        await store.receive(.dreamActionResponse(.init(result: .success(.init(summary: "Repair complete."))))) {
             $0.busyAction = nil
             $0.statusText = "Repair complete."
         }

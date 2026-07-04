@@ -127,8 +127,12 @@ struct AgentDreamingDestinationFeature {
             var gatewayConnected: Bool
         }
 
+        struct DreamActionSummary: Equatable, Sendable {
+            var summary: String
+        }
+
         struct DreamActionResponse: Equatable, Sendable {
-            var result: Result<String, AgentDreamingMaintenanceError>
+            var result: Result<DreamActionSummary, AgentDreamingMaintenanceError>
         }
 
         case dreamActionTapped(DreamActionTap)
@@ -151,7 +155,7 @@ struct AgentDreamingDestinationFeature {
                 return .run { send in
                     do {
                         let summary = try await client.run(tap.action)
-                        await send(.dreamActionResponse(.init(result: .success(summary))))
+                        await send(.dreamActionResponse(.init(result: .success(.init(summary: summary)))))
                     } catch {
                         await send(.dreamActionResponse(.init(
                             result: .failure(.failed(.init(message: error.localizedDescription))))))
@@ -162,7 +166,7 @@ struct AgentDreamingDestinationFeature {
                 switch response.result {
                 case let .success(summary):
                     state.busyAction = nil
-                    state.statusText = summary
+                    state.statusText = summary.summary
                     return .none
 
                 case let .failure(error):
