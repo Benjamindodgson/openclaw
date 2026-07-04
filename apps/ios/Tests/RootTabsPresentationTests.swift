@@ -919,7 +919,9 @@ struct RootTabsPresentationTests {
             RootNavigationSelectionFeature()
         }
 
-        await store.send(.notificationPermissionSettingsOpened(suppressedApprovalID: "approval-1")) {
+        await store.send(.notificationPermissionSettingsOpened(
+            Self.notificationPermissionSettingsRequest(suppressedApprovalID: "approval-1")))
+        {
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .notifications
@@ -929,10 +931,13 @@ struct RootTabsPresentationTests {
         #expect(store.state.sidebarNavigationPath.isEmpty)
         #expect(store.state.activeExecApprovalPromptSuppressionID == "approval-1")
 
-        await store.send(.pendingExecApprovalPromptChanged("approval-1"))
+        await store.send(.pendingExecApprovalPromptChanged(
+            Self.pendingExecApprovalPromptChange(promptID: "approval-1")))
         #expect(store.state.activeExecApprovalPromptSuppressionID == "approval-1")
 
-        await store.send(.pendingExecApprovalPromptChanged("approval-2")) {
+        await store.send(.pendingExecApprovalPromptChanged(
+            Self.pendingExecApprovalPromptChange(promptID: "approval-2")))
+        {
             $0.suppressedExecApprovalPromptIDForNotificationSettings = nil
         }
         #expect(store.state.activeExecApprovalPromptSuppressionID == nil)
@@ -1483,6 +1488,21 @@ struct RootTabsPresentationTests {
 
     private static func sidebarVisibilityChange(isVisible: Bool) -> RootSidebarFeature.VisibilityChange {
         RootSidebarFeature.VisibilityChange(isVisible: isVisible)
+    }
+
+    private static func notificationPermissionSettingsRequest(
+        suppressedApprovalID: String)
+        -> RootNavigationSelectionFeature.NotificationPermissionSettingsRequest
+    {
+        RootNavigationSelectionFeature.NotificationPermissionSettingsRequest(
+            suppressedApprovalID: suppressedApprovalID)
+    }
+
+    private static func pendingExecApprovalPromptChange(
+        promptID: String?)
+        -> RootNavigationSelectionFeature.PendingExecApprovalPromptChange
+    {
+        RootNavigationSelectionFeature.PendingExecApprovalPromptChange(promptID: promptID)
     }
 
     private static func onboardingVisibilityChange(
