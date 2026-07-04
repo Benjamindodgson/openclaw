@@ -649,9 +649,9 @@ import Testing
             OnboardingSetupCodeFeature()
         }
 
-        await store.send(.scannedSetupCodeReceived("not a demo code"))
+        await store.send(.scannedSetupCodeReceived(.init(code: "not a demo code")))
 
-        await store.send(.scannedSetupCodeReceived("  APPLE-REVIEW-DEMO  ")) {
+        await store.send(.scannedSetupCodeReceived(.init(code: "  APPLE-REVIEW-DEMO  "))) {
             $0.applyResult = .appleReviewDemoSetupCode("APPLE-REVIEW-DEMO")
         }
 
@@ -675,7 +675,7 @@ import Testing
             OnboardingSetupCodeFeature()
         }
 
-        await store.send(.scannedGatewayLinkReceived(link)) {
+        await store.send(.scannedGatewayLinkReceived(.init(link: link))) {
             $0.applyResult = .gatewayLink(link)
             $0.status = nil
         }
