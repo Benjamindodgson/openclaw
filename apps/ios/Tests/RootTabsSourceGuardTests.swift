@@ -1510,6 +1510,10 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("case qrScannerErrorReceived(QRScannerError)"))
         #expect(gatewaySetupFeaturesSource.contains("case statusChanged(SetupStatusChange)"))
         #expect(gatewaySetupFeaturesSource.contains("private static func qrScannerErrorStatusText(_ error: String)"))
+        #expect(settingsSource.contains("struct QRScannerError: Equatable, Sendable"))
+        #expect(settingsSource.contains("case qrScannerErrorReceived(QRScannerError)"))
+        #expect(settingsSource.contains("state.scannerError = error.message"))
+        #expect(qrScannerSheet.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: error)))"))
         #expect(qrScannerSheet.contains("self.gatewaySetupStatusStore.send(.qrScannerErrorReceived(.init("))
         #expect(!qrScannerSheet.contains("Scanner error: \\(error)"))
     }
