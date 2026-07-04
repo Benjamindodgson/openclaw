@@ -1042,14 +1042,11 @@ extension RootTabs {
     }
 
     private func hasExistingGatewayConfig() -> Bool {
-        if self.appModel.activeGatewayConnectConfig != nil { return true }
-        if GatewaySettingsStore.loadLastGatewayConnection() != nil { return true }
-
-        let preferredStableID = self.preferredGatewayStableID.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !preferredStableID.isEmpty { return true }
-
-        let manualHost = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
-        return self.manualGatewayEnabled && !manualHost.isEmpty
+        RootPresentationFeature.hasExistingGatewayConfig(
+            appModel: self.appModel,
+            preferredGatewayStableID: self.preferredGatewayStableID,
+            manualGatewayEnabled: self.manualGatewayEnabled,
+            manualGatewayHost: self.manualGatewayHost)
     }
 
     private func maybeAutoOpenSettings() {

@@ -153,6 +153,24 @@ struct RootPresentationFeature {
         case openGatewaySettingsAndRequestLocalNetworkAccess(reason: String)
     }
 
+    @MainActor
+    static func hasExistingGatewayConfig(
+        appModel: NodeAppModel,
+        preferredGatewayStableID: String,
+        manualGatewayEnabled: Bool,
+        manualGatewayHost: String)
+        -> Bool
+    {
+        if appModel.activeGatewayConnectConfig != nil { return true }
+        if GatewaySettingsStore.loadLastGatewayConnection() != nil { return true }
+
+        let preferredStableID = preferredGatewayStableID.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !preferredStableID.isEmpty { return true }
+
+        let manualHost = manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        return manualGatewayEnabled && !manualHost.isEmpty
+    }
+
     enum Action: Equatable, Sendable {
         case refreshPresentation
         case sidebarGatewayStatusChanged(GatewayDisplayState)

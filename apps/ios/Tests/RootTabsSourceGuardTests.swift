@@ -1033,6 +1033,12 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource
             .contains("private var presentedSheetBinding: Binding<RootPresentationFeature.PresentedSheet?>"))
         #expect(rootSource.contains("self.presentationStore.send(.presentedSheetChanged($0))"))
+        #expect(navigationSource.contains("static func hasExistingGatewayConfig("))
+        #expect(navigationSource.contains("GatewaySettingsStore.loadLastGatewayConnection()"))
+        #expect(navigationSource.contains("manualGatewayEnabled && !manualHost.isEmpty"))
+        #expect(rootSource.contains("RootPresentationFeature.hasExistingGatewayConfig("))
+        #expect(!rootSource.contains("GatewaySettingsStore.loadLastGatewayConnection()"))
+        #expect(!rootSource.contains("let preferredStableID = self.preferredGatewayStableID"))
         #expect(rootSource.matches(of: /SettingsProTab\(\s*initialRoute: self\.selectedSettingsRoute,/).count == 1)
         #expect(rootSource.contains(".id(self.settingsTabViewID)"))
         #expect(rootSource.contains("@State private var navigationStore: StoreOf<RootNavigationSelectionFeature>"))
