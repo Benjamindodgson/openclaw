@@ -626,6 +626,15 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("withDependencies"))
     }
 
+    @Test func `gateway quick setup response action is typed`() throws {
+        let quickSetupSource = try String(contentsOf: Self.gatewayQuickSetupSourceURL(), encoding: .utf8)
+
+        #expect(quickSetupSource.contains("struct ConnectResponse: Equatable, Sendable"))
+        #expect(quickSetupSource.contains("case connectResponse(ConnectResponse)"))
+        #expect(quickSetupSource.contains("state.connectError = response.error"))
+        #expect(quickSetupSource.contains("await send(.connectResponse(.init(error: error)))"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -2889,6 +2898,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Gateway/GatewayTrustPromptAlert.swift")
+    }
+
+    private static func gatewayQuickSetupSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Gateway/GatewayQuickSetupSheet.swift")
     }
 
     private static func gatewayConnectionControllerSourceURL() -> URL {
