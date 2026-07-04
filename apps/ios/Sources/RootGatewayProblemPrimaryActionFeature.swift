@@ -55,6 +55,13 @@ struct RootGatewayProblemPrimaryActionFeature {
         self.clientOverride = client
     }
 
+    static func title(for problem: GatewayConnectionProblem) -> String? {
+        GatewayProblemPrimaryAction.title(
+            for: problem,
+            retryTitle: "Retry",
+            nonRetryableTitle: "Open Settings")
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {}
