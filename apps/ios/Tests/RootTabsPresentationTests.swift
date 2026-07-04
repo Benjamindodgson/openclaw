@@ -164,7 +164,7 @@ struct RootTabsPresentationTests {
             $0.didAutoOpenSettings = true
             $0.startupRoute = .settings
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                reason: "root_appear")
+                Self.localNetworkAccessCommand(reason: "root_appear"))
         }
 
         await store.send(.presentationCommandHandled) {
@@ -188,7 +188,7 @@ struct RootTabsPresentationTests {
             $0.startupRoute = .settings
             $0.didAutoOpenSettings = true
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                reason: "auto_open_settings")
+                Self.localNetworkAccessCommand(reason: "auto_open_settings"))
         }
 
         await store.send(.autoOpenSettingsRequested(Self.autoOpenSettingsRequest(
@@ -212,7 +212,7 @@ struct RootTabsPresentationTests {
             $0.handledGatewaySetupRequestID = 42
             $0.presentedSheet = nil
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                reason: "gateway_setup_deeplink")
+                Self.localNetworkAccessCommand(reason: "gateway_setup_deeplink"))
         }
 
         await store.send(.gatewaySetupRequestChanged(Self.gatewaySetupRequest(requestID: 42)))
@@ -384,7 +384,8 @@ struct RootTabsPresentationTests {
             $0.hasExistingGatewayConfig = true
             $0.didEvaluateOnboarding = true
             $0.startupRoute = .none
-            $0.presentationCommand = .requestLocalNetworkAccess(reason: "root_appear")
+            $0.presentationCommand = .requestLocalNetworkAccess(
+                Self.localNetworkAccessCommand(reason: "root_appear"))
         }
 
         await store.send(.presentationCommandHandled) {
@@ -398,7 +399,8 @@ struct RootTabsPresentationTests {
         await store.send(.localNetworkAccessRequested(Self.localNetworkAccessRequest(
             reason: "scene_active",
             sceneActive: true))) {
-            $0.presentationCommand = .requestLocalNetworkAccess(reason: "scene_active")
+            $0.presentationCommand = .requestLocalNetworkAccess(
+                Self.localNetworkAccessCommand(reason: "scene_active"))
         }
     }
 
@@ -1538,6 +1540,13 @@ struct RootTabsPresentationTests {
         RootPresentationFeature.LocalNetworkAccessRequest(
             reason: reason,
             sceneActive: sceneActive)
+    }
+
+    private static func localNetworkAccessCommand(
+        reason: String)
+        -> RootPresentationFeature.LocalNetworkAccessCommand
+    {
+        RootPresentationFeature.LocalNetworkAccessCommand(reason: reason)
     }
 
     private static func gatewaySetupRequest(requestID: Int) -> RootPresentationFeature.GatewaySetupRequest {

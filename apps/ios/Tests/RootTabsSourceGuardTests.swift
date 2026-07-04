@@ -1084,6 +1084,10 @@ struct RootTabsSourceGuardTests {
         #expect(navigationSource.contains("struct LocalNetworkAccessRequest: Equatable, Sendable"))
         #expect(navigationSource.contains("case localNetworkAccessRequested(LocalNetworkAccessRequest)"))
         #expect(rootSource.contains(".localNetworkAccessRequested(RootPresentationFeature.LocalNetworkAccessRequest("))
+        #expect(navigationSource.contains("struct LocalNetworkAccessCommand: Equatable, Sendable"))
+        #expect(navigationSource.contains("case requestLocalNetworkAccess(LocalNetworkAccessCommand)"))
+        #expect(navigationSource.contains(
+            "case openGatewaySettingsAndRequestLocalNetworkAccess(LocalNetworkAccessCommand)"))
         #expect(navigationSource.contains("struct OnboardingVisibilityChange: Equatable, Sendable"))
         #expect(navigationSource.contains("case onboardingVisibilityChanged(OnboardingVisibilityChange)"))
         #expect(rootSource.contains(".onboardingVisibilityChanged(RootPresentationFeature.OnboardingVisibilityChange("))

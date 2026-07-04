@@ -59,6 +59,10 @@ struct RootPresentationFeature {
         var sceneActive: Bool
     }
 
+    struct LocalNetworkAccessCommand: Equatable, Sendable {
+        var reason: String
+    }
+
     struct OnboardingVisibilityChange: Equatable, Sendable {
         var isPresented: Bool
         var sceneActive: Bool
@@ -206,8 +210,8 @@ struct RootPresentationFeature {
     }
 
     enum PresentationCommand: Equatable, Sendable {
-        case requestLocalNetworkAccess(reason: String)
-        case openGatewaySettingsAndRequestLocalNetworkAccess(reason: String)
+        case requestLocalNetworkAccess(LocalNetworkAccessCommand)
+        case openGatewaySettingsAndRequestLocalNetworkAccess(LocalNetworkAccessCommand)
     }
 
     @MainActor
@@ -288,7 +292,8 @@ struct RootPresentationFeature {
 
                 switch state.startupRoute {
                 case .none:
-                    state.presentationCommand = .requestLocalNetworkAccess(reason: "root_appear")
+                    state.presentationCommand = .requestLocalNetworkAccess(
+                        LocalNetworkAccessCommand(reason: "root_appear"))
                 case .onboarding:
                     state.onboardingAllowSkip = true
                     state.showOnboarding = true
@@ -296,7 +301,7 @@ struct RootPresentationFeature {
                 case .settings:
                     state.didAutoOpenSettings = true
                     state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                        reason: "root_appear")
+                        LocalNetworkAccessCommand(reason: "root_appear"))
                 }
                 return .none
 
@@ -313,7 +318,7 @@ struct RootPresentationFeature {
                 guard state.startupRoute == .settings else { return .none }
                 state.didAutoOpenSettings = true
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                    reason: "auto_open_settings")
+                    LocalNetworkAccessCommand(reason: "auto_open_settings"))
                 return .none
 
             case let .gatewaySetupRequestChanged(request):
@@ -326,14 +331,15 @@ struct RootPresentationFeature {
                 state.presentedSheet = nil
                 state.refreshPresentation()
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                    reason: "gateway_setup_deeplink")
+                    LocalNetworkAccessCommand(reason: "gateway_setup_deeplink"))
                 return .none
 
             case let .localNetworkAccessRequested(request):
                 guard state.didEvaluateOnboarding else { return .none }
                 guard request.sceneActive else { return .none }
                 guard !state.showOnboarding else { return .none }
-                state.presentationCommand = .requestLocalNetworkAccess(reason: request.reason)
+                state.presentationCommand = .requestLocalNetworkAccess(
+                    LocalNetworkAccessCommand(reason: request.reason))
                 return .none
 
             case let .onboardingVisibilityChanged(change):
@@ -342,7 +348,8 @@ struct RootPresentationFeature {
                 state.refreshPresentation()
                 guard wasPresented, !change.isPresented else { return .none }
                 guard state.didEvaluateOnboarding, change.sceneActive else { return .none }
-                state.presentationCommand = .requestLocalNetworkAccess(reason: "onboarding_dismissed")
+                state.presentationCommand = .requestLocalNetworkAccess(
+                    LocalNetworkAccessCommand(reason: "onboarding_dismissed"))
                 return .none
 
             case .presentationCommandHandled:

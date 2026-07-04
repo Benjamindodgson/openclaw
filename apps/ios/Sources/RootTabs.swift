@@ -1156,12 +1156,12 @@ extension RootTabs {
         self.presentationStore.send(.presentationCommandHandled)
 
         switch command {
-        case let .requestLocalNetworkAccess(reason):
-            self.requestLocalNetworkAccess(reason: reason)
+        case let .requestLocalNetworkAccess(command):
+            self.requestLocalNetworkAccess(reason: command.reason)
 
-        case let .openGatewaySettingsAndRequestLocalNetworkAccess(reason):
+        case let .openGatewaySettingsAndRequestLocalNetworkAccess(command):
             self.selectSidebarDestination(.gateway)
-            self.requestLocalNetworkAccess(reason: reason)
+            self.requestLocalNetworkAccess(reason: command.reason)
         }
     }
 
