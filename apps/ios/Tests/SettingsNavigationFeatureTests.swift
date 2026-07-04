@@ -547,7 +547,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature()
         }
 
-        await store.send(.connectionStarted("gateway-1")) {
+        await store.send(.connectionStarted(.init(gatewayID: "gateway-1"))) {
             $0.connectingGatewayID = "gateway-1"
         }
         await store.send(.connectionFinished) {
@@ -577,7 +577,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.discoveredGatewayPersistenceRequested(stableID: " gateway-stable-1 "))
+        await store.send(.discoveredGatewayPersistenceRequested(.init(stableID: " gateway-stable-1 ")))
         await store.finish()
 
         #expect(probe.savedStableIDs == ["gateway-stable-1"])
@@ -589,7 +589,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.discoveredGatewayPersistenceRequested(stableID: " "))
+        await store.send(.discoveredGatewayPersistenceRequested(.init(stableID: " ")))
         await store.finish()
 
         #expect(probe.savedStableIDs.isEmpty)
@@ -600,7 +600,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature()
         }
 
-        await store.send(.connectionStarted("manual")) {
+        await store.send(.connectionStarted(.init(gatewayID: "manual"))) {
             $0.connectingGatewayID = "manual"
         }
         await store.send(.connectionFinished) {

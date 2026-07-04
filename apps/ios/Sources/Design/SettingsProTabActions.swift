@@ -279,10 +279,10 @@ extension SettingsProTab {
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
-        self.gatewayConnectionStore.send(.connectionStarted(gateway.id))
+        self.gatewayConnectionStore.send(.connectionStarted(.init(gatewayID: gateway.id)))
         defer { self.gatewayConnectionStore.send(.connectionFinished) }
         self.updateManualGatewayEnabled(false)
-        self.gatewayConnectionStore.send(.discoveredGatewayPersistenceRequested(stableID: gateway.stableID))
+        self.gatewayConnectionStore.send(.discoveredGatewayPersistenceRequested(.init(stableID: gateway.stableID)))
         if let err = await self.gatewayController.connectWithDiagnostics(gateway) {
             self.gatewaySetupStatusStore.send(.statusChanged(err))
         }
@@ -408,7 +408,7 @@ extension SettingsProTab {
             self.gatewaySetupStatusStore.send(.statusChanged(message))
 
         case let .request(request):
-            self.gatewayConnectionStore.send(.connectionStarted("manual"))
+            self.gatewayConnectionStore.send(.connectionStarted(.init(gatewayID: "manual")))
             self.updateManualGatewayEnabled(true)
             defer { self.gatewayConnectionStore.send(.connectionFinished) }
             let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
