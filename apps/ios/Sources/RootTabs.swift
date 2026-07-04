@@ -1100,12 +1100,15 @@ extension RootTabs {
     }
 
     private func applyInitialChatSessionIfNeeded() {
-        self.launchStore.send(.initialChatSessionRequested(Self.initialChatSessionKey))
+        self.launchStore.send(.initialChatSessionRequested(
+            RootLaunchFeature.InitialChatSessionRequest(sessionKey: Self.initialChatSessionKey)))
         self.handleLaunchCommand()
     }
 
     private func applyInitialAppearanceIfNeeded() {
-        self.launchStore.send(.initialAppearanceRequested(AppAppearancePreference.launchArgumentPreference?.rawValue))
+        self.launchStore.send(.initialAppearanceRequested(
+            RootLaunchFeature.InitialAppearanceRequest(
+                rawValue: AppAppearancePreference.launchArgumentPreference?.rawValue)))
         self.handleLaunchCommand()
     }
 

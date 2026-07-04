@@ -3,6 +3,14 @@ import ComposableArchitecture
 @Reducer
 struct RootLaunchFeature {
     // swiftformat:disable redundantSendable
+    struct InitialAppearanceRequest: Equatable, Sendable {
+        var rawValue: String?
+    }
+
+    struct InitialChatSessionRequest: Equatable, Sendable {
+        var sessionKey: String?
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var didApplyInitialAppearance = false
@@ -16,8 +24,8 @@ struct RootLaunchFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case initialAppearanceRequested(String?)
-        case initialChatSessionRequested(String?)
+        case initialAppearanceRequested(InitialAppearanceRequest)
+        case initialChatSessionRequested(InitialChatSessionRequest)
         case commandHandled
     }
 
@@ -26,17 +34,18 @@ struct RootLaunchFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .initialAppearanceRequested(rawValue):
+            case let .initialAppearanceRequested(request):
                 guard !state.didApplyInitialAppearance else { return .none }
                 state.didApplyInitialAppearance = true
+                let rawValue = request.rawValue
                 guard let rawValue else { return .none }
                 state.command = .applyAppearance(rawValue: rawValue)
                 return .none
 
-            case let .initialChatSessionRequested(sessionKey):
+            case let .initialChatSessionRequested(request):
                 guard !state.didApplyInitialChatSession else { return .none }
                 state.didApplyInitialChatSession = true
-                state.command = .focusChatSession(sessionKey)
+                state.command = .focusChatSession(request.sessionKey)
                 return .none
 
             case .commandHandled:
