@@ -218,16 +218,28 @@ struct SettingsManualGatewayEndpointFeature {
             var useTLS: Bool
         }
 
+        struct ManualConnectionAttempt: Equatable, Sendable {
+            var port: Int
+            var isPortValid: Bool
+        }
+
+        struct GatewayPreflightRequest: Equatable, Sendable {
+            var host: String
+            var hasTailnetIPv4: Bool
+        }
+
+        struct LocalNetworkAccessRequest: Equatable, Sendable { var reason: String }
+
         case endpointClearedForOnboardingReset
         case endpointSynced(EndpointSync)
-        case manualConnectionRequested(port: Int, isPortValid: Bool)
+        case manualConnectionRequested(ManualConnectionAttempt)
         case manualConnectionResultHandled
         case manualGatewayEnabledChanged(ManualGatewayEnabledChange)
         case manualGatewayHostChanged(ManualGatewayHostChange)
         case manualGatewayTLSChanged(ManualGatewayTLSChange)
-        case preflightRequested(host: String, hasTailnetIPv4: Bool)
+        case preflightRequested(GatewayPreflightRequest)
         case preflightResultHandled
-        case localNetworkAccessRequested(reason: String)
+        case localNetworkAccessRequested(LocalNetworkAccessRequest)
         case setupLinkApplied(SetupLinkApplication)
     }
 
@@ -250,20 +262,20 @@ struct SettingsManualGatewayEndpointFeature {
                 state.manualGatewayTLS = sync.useTLS
                 return .none
 
-            case let .manualConnectionRequested(port, isPortValid):
+            case let .manualConnectionRequested(request):
                 state.manualConnectionResult = nil
                 let host = state.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !host.isEmpty else {
                     state.manualConnectionResult = .failure("Failed: host required")
                     return .none
                 }
-                guard isPortValid else {
+                guard request.isPortValid else {
                     state.manualConnectionResult = .failure("Failed: invalid port")
                     return .none
                 }
                 state.manualConnectionResult = .request(ManualConnectionRequest(
                     host: host,
-                    port: port,
+                    port: request.port,
                     useTLS: state.manualGatewayTLS))
                 return .none
 
@@ -271,14 +283,14 @@ struct SettingsManualGatewayEndpointFeature {
                 state.manualConnectionResult = nil
                 return .none
 
-            case let .preflightRequested(host, hasTailnetIPv4):
+            case let .preflightRequested(request):
                 state.preflightResult = nil
-                let trimmed = host.trimmingCharacters(in: .whitespacesAndNewlines)
+                let trimmed = request.host.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else {
                     state.preflightResult = .blocked(statusText: nil)
                     return .none
                 }
-                if State.isTailnetHostOrIP(trimmed), !hasTailnetIPv4 {
+                if State.isTailnetHostOrIP(trimmed), !request.hasTailnetIPv4 {
                     state.preflightResult = .blocked(
                         statusText: "Tailscale is off on this device. Turn it on, then try again.")
                     return .none
@@ -290,9 +302,9 @@ struct SettingsManualGatewayEndpointFeature {
                 state.preflightResult = nil
                 return .none
 
-            case let .localNetworkAccessRequested(reason):
+            case let .localNetworkAccessRequested(request):
                 return .run { _ in
-                    await localNetworkAccessClient.requestLocalNetworkAccess(reason)
+                    await localNetworkAccessClient.requestLocalNetworkAccess(request.reason)
                 }
 
             case let .manualGatewayEnabledChanged(change):

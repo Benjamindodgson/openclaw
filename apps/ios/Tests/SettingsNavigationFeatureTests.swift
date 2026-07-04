@@ -1932,7 +1932,7 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.manualConnectionRequested(port: 18789, isPortValid: true)) {
+        await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: true))) {
             $0.manualConnectionResult = .failure("Failed: host required")
         }
 
@@ -1944,7 +1944,7 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayHost = "  gateway.example.com  "
         }
 
-        await store.send(.manualConnectionRequested(port: 18789, isPortValid: false)) {
+        await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: false))) {
             $0.manualConnectionResult = .failure("Failed: invalid port")
         }
 
@@ -1956,7 +1956,7 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayTLS = false
         }
 
-        await store.send(.manualConnectionRequested(port: 18789, isPortValid: true)) {
+        await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: true))) {
             $0.manualConnectionResult = .request(SettingsManualGatewayEndpointFeature.ManualConnectionRequest(
                 host: "gateway.example.com",
                 port: 18789,
@@ -1969,7 +1969,7 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.preflightRequested(host: "   ", hasTailnetIPv4: true)) {
+        await store.send(.preflightRequested(.init(host: "   ", hasTailnetIPv4: true))) {
             $0.preflightResult = .blocked(statusText: nil)
         }
 
@@ -1977,7 +1977,7 @@ struct SettingsNavigationFeatureTests {
             $0.preflightResult = nil
         }
 
-        await store.send(.preflightRequested(host: "device.sample.ts.net", hasTailnetIPv4: false)) {
+        await store.send(.preflightRequested(.init(host: "device.sample.ts.net", hasTailnetIPv4: false))) {
             $0.preflightResult = .blocked(
                 statusText: "Tailscale is off on this device. Turn it on, then try again.")
         }
@@ -1986,7 +1986,7 @@ struct SettingsNavigationFeatureTests {
             $0.preflightResult = nil
         }
 
-        await store.send(.preflightRequested(host: " gateway.example.com ", hasTailnetIPv4: false)) {
+        await store.send(.preflightRequested(.init(host: " gateway.example.com ", hasTailnetIPv4: false))) {
             $0.preflightResult = .requestLocalNetworkAccess(reason: "settings_preflight")
         }
     }
@@ -1997,7 +1997,7 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature(localNetworkAccessClient: probe.client)
         }
 
-        await store.send(.localNetworkAccessRequested(reason: "settings_preflight"))
+        await store.send(.localNetworkAccessRequested(.init(reason: "settings_preflight")))
         await store.finish()
 
         #expect(probe.requestedReasons == ["settings_preflight"])
