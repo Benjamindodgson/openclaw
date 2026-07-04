@@ -102,17 +102,26 @@ import Testing
             OnboardingStateFeature()
         }
 
-        await store.send(.gatewaySnapshotChanged(gatewayServerName: "gateway", hasSavedGatewayConnection: false)) {
+        await store.send(.gatewaySnapshotChanged(.init(
+            gatewayServerName: "gateway",
+            hasSavedGatewayConnection: false)))
+        {
             $0.gatewayServerName = "gateway"
             $0.shouldPresentOnLaunch = false
         }
 
-        await store.send(.gatewaySnapshotChanged(gatewayServerName: nil, hasSavedGatewayConnection: true)) {
+        await store.send(.gatewaySnapshotChanged(.init(
+            gatewayServerName: nil,
+            hasSavedGatewayConnection: true)))
+        {
             $0.gatewayServerName = nil
             $0.hasSavedGatewayConnection = true
         }
 
-        await store.send(.gatewaySnapshotChanged(gatewayServerName: nil, hasSavedGatewayConnection: false)) {
+        await store.send(.gatewaySnapshotChanged(.init(
+            gatewayServerName: nil,
+            hasSavedGatewayConnection: false)))
+        {
             $0.hasSavedGatewayConnection = false
             $0.shouldPresentOnLaunch = true
         }
