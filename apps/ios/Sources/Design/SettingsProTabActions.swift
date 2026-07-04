@@ -268,13 +268,13 @@ extension SettingsProTab {
     }
 
     func syncGatewayConnectionStatusState() {
-        self.gatewayConnectionStore.send(.gatewayStatusSynced(
+        self.gatewayConnectionStore.send(.gatewayStatusSynced(.init(
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
             gatewayStatusConnected: GatewayStatusBuilder.build(appModel: self.appModel) == .connected,
             gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
             gatewayAgentCount: self.appModel.gatewayAgents.count,
             gatewayRemoteAddress: self.appModel.gatewayRemoteAddress,
-            gatewayServerName: self.appModel.gatewayServerName))
+            gatewayServerName: self.appModel.gatewayServerName)))
         self.syncApprovalState()
     }
 

@@ -2096,6 +2096,16 @@ struct RootTabsSourceGuardTests {
         #expect(connectFunction.contains("GatewaySettingsStore.saveLastDiscoveredGatewayStableID") == false)
     }
 
+    @Test func `settings gateway connection status sync action is typed`() throws {
+        let connectionSource = try String(contentsOf: Self.settingsGatewayConnectionFeatureSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+
+        #expect(connectionSource.contains("struct GatewayStatusSync: Equatable, Sendable"))
+        #expect(connectionSource.contains("case gatewayStatusSynced(GatewayStatusSync)"))
+        #expect(actionsSource.contains("self.gatewayConnectionStore.send(.gatewayStatusSynced(.init("))
+        #expect(!connectionSource.contains("case gatewayStatusSynced(\n            isAppleReviewDemoModeEnabled: Bool"))
+    }
+
     @Test func `settings share instruction persistence is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
