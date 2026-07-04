@@ -598,7 +598,7 @@ struct RootTabsPresentationTests {
             RootVoiceWakeToastFeature(sleeper: RootVoiceWakeToastSleepClient(sleep: {}))
         }
 
-        await store.send(.commandTriggered("  openclaw do this  ")) {
+        await store.send(.commandTriggered(Self.voiceWakeCommandTrigger("  openclaw do this  "))) {
             $0.commandText = "openclaw do this"
         }
         await store.receive(.dismissDelayElapsed) {
@@ -611,7 +611,7 @@ struct RootTabsPresentationTests {
             RootVoiceWakeToastFeature(sleeper: RootVoiceWakeToastSleepClient(sleep: {}))
         }
 
-        await store.send(.commandTriggered("   "))
+        await store.send(.commandTriggered(Self.voiceWakeCommandTrigger("   ")))
         await store.finish()
     }
 
@@ -621,7 +621,7 @@ struct RootTabsPresentationTests {
             RootVoiceWakeToastFeature(sleeper: probe.client)
         }
 
-        await store.send(.commandTriggered("openclaw do this")) {
+        await store.send(.commandTriggered(Self.voiceWakeCommandTrigger("openclaw do this"))) {
             $0.commandText = "openclaw do this"
         }
         await store.send(.disappeared)
@@ -1569,6 +1569,13 @@ struct RootTabsPresentationTests {
         -> RootLaunchFeature.InitialChatSessionRequest
     {
         RootLaunchFeature.InitialChatSessionRequest(sessionKey: sessionKey)
+    }
+
+    private static func voiceWakeCommandTrigger(
+        _ command: String)
+        -> RootVoiceWakeToastFeature.CommandTrigger
+    {
+        RootVoiceWakeToastFeature.CommandTrigger(command: command)
     }
 
     private static func sidebarLayoutModeResolution(

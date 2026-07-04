@@ -730,7 +730,8 @@ struct RootTabs: View {
         content
             .onChange(of: self.voiceWake.lastTriggeredCommand) { _, newValue in
                 guard let newValue else { return }
-                self.voiceWakeToastStore.send(.commandTriggered(newValue))
+                self.voiceWakeToastStore.send(.commandTriggered(
+                    RootVoiceWakeToastFeature.CommandTrigger(command: newValue)))
             }
     }
 
