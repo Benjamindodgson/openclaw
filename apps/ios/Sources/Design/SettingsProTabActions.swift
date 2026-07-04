@@ -199,27 +199,27 @@ extension SettingsProTab {
     }
 
     func syncTalkPreferencesState() {
-        self.talkPreferencesStore.send(.preferencesSynced(
+        self.talkPreferencesStore.send(.preferencesSynced(.init(
             providerSelectionRaw: self.storedTalkProviderSelectionRaw,
             realtimeVoiceSelectionRaw: self.storedTalkRealtimeVoiceSelectionRaw,
             speechLocale: self.storedTalkSpeechLocale,
             talkButtonEnabled: self.storedTalkButtonEnabled,
             talkBackgroundEnabled: self.storedTalkBackgroundEnabled,
-            talkSpeakerphoneEnabled: self.storedTalkSpeakerphoneEnabled))
+            talkSpeakerphoneEnabled: self.storedTalkSpeakerphoneEnabled)))
     }
 
     func syncTalkRuntimeState() {
-        self.talkPreferencesStore.send(.gatewayTalkConfigSynced(
+        self.talkPreferencesStore.send(.gatewayTalkConfigSynced(.init(
             configLoaded: self.appModel.talkMode.gatewayTalkConfigLoaded,
             apiKeyConfigured: self.appModel.talkMode.gatewayTalkApiKeyConfigured,
-            usesRealtime: self.appModel.talkMode.gatewayTalkUsesRealtime))
-        self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(
+            usesRealtime: self.appModel.talkMode.gatewayTalkUsesRealtime)))
+        self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(.init(
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
-            transportLabel: self.appModel.talkMode.gatewayTalkTransportLabel))
-        self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(
+            transportLabel: self.appModel.talkMode.gatewayTalkTransportLabel)))
+        self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(.init(
             activeModeTitle: self.appModel.talkMode.gatewayTalkActiveModeTitle,
             activeModeSubtitle: self.appModel.talkMode.gatewayTalkActiveModeSubtitle,
-            lastIssueText: self.appModel.talkMode.gatewayTalkLastIssueText))
+            lastIssueText: self.appModel.talkMode.gatewayTalkLastIssueText)))
     }
 
     func syncDiagnosticsContextState() {

@@ -2292,13 +2292,13 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature()
         }
 
-        await store.send(.preferencesSynced(
+        await store.send(.preferencesSynced(.init(
             providerSelectionRaw: TalkModeProviderSelection.openAIRealtime.rawValue,
             realtimeVoiceSelectionRaw: " Cedar ",
             speechLocale: "en-US",
             talkButtonEnabled: false,
             talkBackgroundEnabled: true,
-            talkSpeakerphoneEnabled: false))
+            talkSpeakerphoneEnabled: false)))
         {
             $0.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
             $0.realtimeVoiceSelectionRaw = "cedar"
@@ -2361,27 +2361,27 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature()
         }
 
-        await store.send(.gatewayTalkConfigSynced(
+        await store.send(.gatewayTalkConfigSynced(.init(
             configLoaded: true,
             apiKeyConfigured: false,
-            usesRealtime: true))
+            usesRealtime: true)))
         {
             $0.gatewayTalkConfigLoaded = true
             $0.gatewayTalkApiKeyConfigured = false
             $0.gatewayTalkUsesRealtime = true
         }
-        await store.send(.gatewayTalkConfigSynced(
+        await store.send(.gatewayTalkConfigSynced(.init(
             configLoaded: true,
             apiKeyConfigured: true,
-            usesRealtime: false))
+            usesRealtime: false)))
         {
             $0.gatewayTalkConfigLoaded = true
             $0.gatewayTalkApiKeyConfigured = true
             $0.gatewayTalkUsesRealtime = false
         }
-        await store.send(.gatewayTalkDisplayContextSynced(
+        await store.send(.gatewayTalkDisplayContextSynced(.init(
             isAppleReviewDemoModeEnabled: true,
-            transportLabel: "Gateway Relay"))
+            transportLabel: "Gateway Relay")))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayTalkTransportLabel = "Gateway Relay"
@@ -2393,10 +2393,10 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature()
         }
 
-        await store.send(.gatewayTalkRuntimeSynced(
+        await store.send(.gatewayTalkRuntimeSynced(.init(
             activeModeTitle: "Ready",
             activeModeSubtitle: "Listening starts from this phone",
-            lastIssueText: "Fallback active"))
+            lastIssueText: "Fallback active")))
         {
             $0.gatewayTalkActiveModeTitle = "Ready"
             $0.gatewayTalkActiveModeSubtitle = "Listening starts from this phone"
