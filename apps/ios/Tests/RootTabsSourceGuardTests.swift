@@ -524,6 +524,9 @@ struct RootTabsSourceGuardTests {
         #expect(featureSource.contains("struct RootIdleTimerClient"))
         #expect(featureSource.contains("var rootIdleTimer: RootIdleTimerClient"))
         #expect(featureSource.contains("@Reducer\nstruct RootIdleTimerFeature"))
+        #expect(featureSource.contains("extension RootIdleTimerFeature.Snapshot"))
+        #expect(featureSource.contains("init(scenePhase: ScenePhase, preventSleep: Bool, talkModeEnabled: Bool)"))
+        #expect(featureSource.contains("isSceneActive: scenePhase == .active"))
         #expect(featureSource.contains("case snapshotChanged(Snapshot)"))
         #expect(featureSource.contains("case disappeared"))
         #expect(featureSource.contains("try Task.checkCancellation()"))
@@ -534,6 +537,8 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("RootIdleTimerFeature(client: .live)"))
         #expect(!rootSource.contains("Task { await self.applyIdleTimerSnapshot() }"))
         #expect(updateFunction.contains("self.idleTimerStore.send(.snapshotChanged(self.makeIdleTimerSnapshot()))"))
+        #expect(rootSource.contains("RootIdleTimerFeature.Snapshot(\n            scenePhase: self.scenePhase"))
+        #expect(!rootSource.contains("isSceneActive: self.scenePhase == .active"))
         #expect(!updateFunction.contains("UIApplication.shared.isIdleTimerDisabled"))
         #expect(lifecycle.contains(
             "self.idleTimerStore.send(.disappeared)\n                UIApplication.shared.isIdleTimerDisabled = false"))
