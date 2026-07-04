@@ -307,13 +307,19 @@ struct SettingsGatewayActivityFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: Bool)
+        struct DiagnosticsRefreshRequest: Equatable, Sendable { var isAppleReviewDemoModeEnabled: Bool }
+
+        struct ReconnectRequest: Equatable, Sendable { var isAppleReviewDemoModeEnabled: Bool }
+
+        struct RotatedCertificateTrustRequest: Equatable, Sendable { var problem: GatewayConnectionProblem }
+
+        case diagnosticsRefreshRequested(DiagnosticsRefreshRequest)
         case reconnectFinished
-        case reconnectRequested(isAppleReviewDemoModeEnabled: Bool)
+        case reconnectRequested(ReconnectRequest)
         case reconnectStarted
         case refreshFinished
         case refreshStarted
-        case rotatedCertificateTrustRequested(GatewayConnectionProblem)
+        case rotatedCertificateTrustRequested(RotatedCertificateTrustRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -328,11 +334,11 @@ struct SettingsGatewayActivityFeature {
             let reconnectClient = self.reconnectClientOverride ?? dependencyReconnectClient
 
             switch action {
-            case let .diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled):
+            case let .diagnosticsRefreshRequested(request):
                 guard !state.isRefreshingGateway else { return .none }
                 state.isRefreshingGateway = true
                 return .run { send in
-                    if !isAppleReviewDemoModeEnabled {
+                    if !request.isAppleReviewDemoModeEnabled {
                         await diagnosticsRefreshClient.refreshGateway()
                     }
                     await send(.refreshFinished)
@@ -342,8 +348,8 @@ struct SettingsGatewayActivityFeature {
                 state.isReconnectingGateway = false
                 return .none
 
-            case let .reconnectRequested(isAppleReviewDemoModeEnabled):
-                guard !isAppleReviewDemoModeEnabled, !state.isReconnectingGateway else { return .none }
+            case let .reconnectRequested(request):
+                guard !request.isAppleReviewDemoModeEnabled, !state.isReconnectingGateway else { return .none }
                 state.isReconnectingGateway = true
                 return .run { send in
                     await reconnectClient.reconnect()
@@ -362,9 +368,9 @@ struct SettingsGatewayActivityFeature {
                 state.isRefreshingGateway = true
                 return .none
 
-            case let .rotatedCertificateTrustRequested(problem):
+            case let .rotatedCertificateTrustRequested(request):
                 return .run { _ in
-                    _ = await problemTrustClient.trustRotatedCertificate(problem)
+                    _ = await problemTrustClient.trustRotatedCertificate(request.problem)
                 }
             }
         }
