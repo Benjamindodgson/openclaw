@@ -1095,10 +1095,10 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature()
         }
 
-        await store.send(.gatewayTokenChanged("token-2")) {
+        await store.send(.gatewayTokenChanged(.init(value: "token-2"))) {
             $0.gatewayToken = "token-2"
         }
-        await store.send(.gatewayPasswordChanged("password-2")) {
+        await store.send(.gatewayPasswordChanged(.init(value: "password-2"))) {
             $0.gatewayPassword = "password-2"
         }
     }
@@ -1109,8 +1109,10 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.gatewayTokenPersistenceRequested(value: " token-2 ", instanceId: " instance-1 "))
-        await store.send(.gatewayPasswordPersistenceRequested(value: " password-2 ", instanceId: " instance-1 "))
+        await store.send(.gatewayTokenPersistenceRequested(.init(value: " token-2 ", instanceId: " instance-1 ")))
+        await store.send(.gatewayPasswordPersistenceRequested(.init(
+            value: " password-2 ",
+            instanceId: " instance-1 ")))
         await store.finish()
 
         #expect(probe.savedTokens == ["instance-1:token-2"])
@@ -1123,8 +1125,8 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.gatewayTokenPersistenceRequested(value: "token-2", instanceId: " "))
-        await store.send(.gatewayPasswordPersistenceRequested(value: "password-2", instanceId: " "))
+        await store.send(.gatewayTokenPersistenceRequested(.init(value: "token-2", instanceId: " ")))
+        await store.send(.gatewayPasswordPersistenceRequested(.init(value: "password-2", instanceId: " ")))
         await store.finish()
 
         #expect(probe.savedTokens.isEmpty)
