@@ -444,13 +444,17 @@ struct AgentSkillEditorFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct MutationKey: Equatable, Sendable {
+            var key: String
+        }
+
         case apiKeyDraftChanged(key: String, value: String)
         case apiKeyDraftCleared(key: String)
         case editorDismissed
         case editorOpened(id: String)
         case mutationFailed(key: String, message: String)
-        case mutationFinished(key: String)
-        case mutationStarted(key: String)
+        case mutationFinished(MutationKey)
+        case mutationStarted(MutationKey)
         case mutationSucceeded(key: String, message: String)
         case selectionChanged(AgentProTab.SkillEditorSelection?)
     }
@@ -480,17 +484,17 @@ struct AgentSkillEditorFeature {
                 state.selection = selection
                 return .none
 
-            case let .mutationStarted(key):
-                state.busyKeys.insert(key)
-                state.messages[key] = nil
+            case let .mutationStarted(mutation):
+                state.busyKeys.insert(mutation.key)
+                state.messages[mutation.key] = nil
                 return .none
 
             case let .mutationSucceeded(key, message):
                 state.messages[key] = AgentProTab.SkillEditorMessage(kind: .success, text: message)
                 return .none
 
-            case let .mutationFinished(key):
-                state.busyKeys.remove(key)
+            case let .mutationFinished(mutation):
+                state.busyKeys.remove(mutation.key)
                 return .none
 
             case let .mutationFailed(key, message):

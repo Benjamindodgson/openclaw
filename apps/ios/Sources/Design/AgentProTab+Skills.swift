@@ -719,14 +719,14 @@ extension AgentProTab {
     {
         guard self.liveGatewayConnected else { return }
         let key = skill.effectiveSkillKey
-        self.skillEditorStore.send(.mutationStarted(key: key))
+        self.skillEditorStore.send(.mutationStarted(.init(key: key)))
 
         do {
             let message = try await action()
             self.skillEditorStore.send(.mutationSucceeded(key: key, message: message))
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
-            self.skillEditorStore.send(.mutationFinished(key: key))
+            self.skillEditorStore.send(.mutationFinished(.init(key: key)))
         } catch {
             self.skillEditorStore.send(.mutationFailed(
                 key: key,
