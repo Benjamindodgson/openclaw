@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import OpenClawKit
 import SwiftUI
 import Testing
 import UIKit
@@ -216,6 +217,62 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.gatewaySetupRequestChanged(42))
+    }
+
+    @Test func `gateway problem reducer trusts rotated certificate instead of retrying`() async {
+        let probe = RootGatewayProblemPrimaryActionProbe()
+        let problem = Self.rotatedCertificateProblem()
+        let store = TestStore(initialState: RootGatewayProblemPrimaryActionFeature.State()) {
+            RootGatewayProblemPrimaryActionFeature(client: probe.client)
+        }
+
+        await store.send(.primaryActionTapped(problem))
+        await store.finish()
+
+        #expect(probe.trustedProblems == [problem])
+        #expect(probe.reconnectCount == 0)
+        #expect(probe.openSettingsCount == 0)
+    }
+
+    @Test func `gateway problem reducer opens protocol mismatch help instead of retrying`() async {
+        let probe = RootGatewayProblemPrimaryActionProbe()
+        let problem = Self.protocolMismatchProblem()
+        let store = TestStore(initialState: RootGatewayProblemPrimaryActionFeature.State()) {
+            RootGatewayProblemPrimaryActionFeature(client: probe.client)
+        }
+
+        await store.send(.primaryActionTapped(problem))
+        await store.finish()
+
+        #expect(probe.openedProblems == [problem])
+        #expect(probe.reconnectCount == 0)
+        #expect(probe.openSettingsCount == 0)
+    }
+
+    @Test func `gateway problem reducer reconnects retryable problems`() async {
+        let probe = RootGatewayProblemPrimaryActionProbe()
+        let store = TestStore(initialState: RootGatewayProblemPrimaryActionFeature.State()) {
+            RootGatewayProblemPrimaryActionFeature(client: probe.client)
+        }
+
+        await store.send(.primaryActionTapped(Self.retryableGatewayProblem()))
+        await store.finish()
+
+        #expect(probe.reconnectCount == 1)
+        #expect(probe.openSettingsCount == 0)
+    }
+
+    @Test func `gateway problem reducer opens settings for non retryable problems`() async {
+        let probe = RootGatewayProblemPrimaryActionProbe()
+        let store = TestStore(initialState: RootGatewayProblemPrimaryActionFeature.State()) {
+            RootGatewayProblemPrimaryActionFeature(client: probe.client)
+        }
+
+        await store.send(.primaryActionTapped(Self.nonRetryableGatewayProblem()))
+        await store.finish()
+
+        #expect(probe.openSettingsCount == 1)
+        #expect(probe.reconnectCount == 0)
     }
 
     @Test func `reducer gates local network access until evaluated active and onboarding hidden`() async {
@@ -1233,5 +1290,76 @@ struct RootTabsPresentationTests {
     @Test func `phone hub leaves room for floating tab bar`() {
         #expect(RootTabsPhoneControlHub.bottomScrollInset(verticalSizeClass: .regular) == 112)
         #expect(RootTabsPhoneControlHub.bottomScrollInset(verticalSizeClass: .compact) == 72)
+    }
+
+    private static func rotatedCertificateProblem() -> GatewayConnectionProblem {
+        GatewayConnectionProblem(
+            kind: .tlsPinMismatch,
+            owner: .iphone,
+            title: "Gateway certificate changed",
+            message: "The gateway certificate fingerprint changed.",
+            retryable: false,
+            pauseReconnect: true,
+            tlsStoreKey: "gateway-1",
+            tlsExpectedFingerprint: "old",
+            tlsObservedFingerprint: "new",
+            tlsSystemTrustOk: true)
+    }
+
+    private static func protocolMismatchProblem() -> GatewayConnectionProblem {
+        GatewayConnectionProblem(
+            kind: .protocolMismatch,
+            owner: .iphone,
+            title: "App update required",
+            message: "This app is older than the gateway.",
+            actionLabel: "Update app",
+            retryable: false,
+            pauseReconnect: true)
+    }
+
+    private static func retryableGatewayProblem() -> GatewayConnectionProblem {
+        GatewayConnectionProblem(
+            kind: .timeout,
+            owner: .network,
+            title: "Connection timed out",
+            message: "Check the gateway network path.",
+            actionLabel: "Try again",
+            retryable: true,
+            pauseReconnect: false)
+    }
+
+    private static func nonRetryableGatewayProblem() -> GatewayConnectionProblem {
+        GatewayConnectionProblem(
+            kind: .pairingRequired,
+            owner: .gateway,
+            title: "Gateway setup required",
+            message: "Open settings to review gateway configuration.",
+            retryable: false,
+            pauseReconnect: true)
+    }
+}
+
+private final class RootGatewayProblemPrimaryActionProbe: @unchecked Sendable {
+    var openedProblems: [GatewayConnectionProblem] = []
+    var openSettingsCount = 0
+    var reconnectCount = 0
+    var trustedProblems: [GatewayConnectionProblem] = []
+
+    var client: RootGatewayProblemPrimaryActionClient {
+        RootGatewayProblemPrimaryActionClient(
+            connectLastKnown: {
+                self.reconnectCount += 1
+            },
+            openGatewaySettings: {
+                self.openSettingsCount += 1
+            },
+            openProtocolMismatchHelpIfNeeded: { problem in
+                self.openedProblems.append(problem)
+                return true
+            },
+            trustRotatedCertificate: { problem in
+                self.trustedProblems.append(problem)
+                return true
+            })
     }
 }

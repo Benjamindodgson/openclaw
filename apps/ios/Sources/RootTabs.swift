@@ -640,7 +640,7 @@ struct RootTabs: View {
                         problem: gatewayProblem,
                         primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
                         onPrimaryAction: {
-                            self.handleGatewayProblemPrimaryAction(gatewayProblem)
+                            Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }
                         },
                         onShowDetails: {
                             self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
@@ -805,7 +805,7 @@ struct RootTabs: View {
                         problem: gatewayProblem,
                         primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
                         onPrimaryAction: {
-                            self.handleGatewayProblemPrimaryAction(gatewayProblem)
+                            Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }
                         })
                 }
             }
@@ -847,6 +847,16 @@ struct RootTabs: View {
             GatewayQuickSetupFeature()
         } withDependencies: {
             $0.gatewayQuickSetup = .live(gatewayController: self.gatewayController)
+        }
+    }
+
+    @MainActor
+    private func makeGatewayProblemPrimaryActionStore() -> StoreOf<RootGatewayProblemPrimaryActionFeature> {
+        Store(initialState: RootGatewayProblemPrimaryActionFeature.State()) {
+            RootGatewayProblemPrimaryActionFeature(
+                client: .live(
+                    gatewayController: self.gatewayController,
+                    openGatewaySettings: { self.selectSidebarDestination(.gateway) }))
         }
     }
 
@@ -1160,16 +1170,10 @@ extension RootTabs {
             nonRetryableTitle: "Open Settings")
     }
 
-    private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) {
-        if problem.canTrustRotatedCertificate {
-            Task { await self.gatewayController.trustRotatedGatewayCertificate(from: problem) }
-        } else if GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem) {
-            return
-        } else if problem.retryable {
-            Task { await self.gatewayController.connectLastKnown() }
-        } else {
-            self.selectSidebarDestination(.gateway)
-        }
+    private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
+        await self.makeGatewayProblemPrimaryActionStore()
+            .send(.primaryActionTapped(problem))
+            .finish()
     }
 
     private func evaluateOnboardingPresentation(force: Bool) {
