@@ -571,6 +571,12 @@ struct SettingsGatewayCredentialsFeature {
             var instanceId: String
         }
 
+        struct SetupAuthApplication: Equatable, Sendable {
+            var setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth
+        }
+
+        struct SetupLinkApplication: Equatable, Sendable { var link: GatewayConnectDeepLink }
+
         case credentialsClearedForOnboardingReset
         case credentialsLoadRequested(CredentialsLoadRequest)
         case credentialsLoaded(LoadedCredentials)
@@ -579,10 +585,10 @@ struct SettingsGatewayCredentialsFeature {
         case gatewayTokenChanged(ManualCredentialChange)
         case gatewayTokenPersistenceRequested(ManualCredentialPersistenceRequest)
         case pendingManualAuthOverrideConsumed
-        case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)
+        case setupAuthApplied(SetupAuthApplication)
         case setupAuthPersistenceRequested(SettingsGatewaySetupAuthPersistenceRequest)
         case setupAuthPersistenceRequestHandled
-        case setupLinkApplied(GatewayConnectDeepLink)
+        case setupLinkApplied(SetupLinkApplication)
     }
 
     // swiftformat:enable redundantSendable
@@ -643,8 +649,8 @@ struct SettingsGatewayCredentialsFeature {
                 state.pendingManualAuthOverride = nil
                 return .none
 
-            case let .setupAuthApplied(setupAuth):
-                Self.applySetupAuth(setupAuth, to: &state)
+            case let .setupAuthApplied(application):
+                Self.applySetupAuth(application.setupAuth, to: &state)
                 return .none
 
             case let .setupAuthPersistenceRequested(request):
@@ -660,8 +666,8 @@ struct SettingsGatewayCredentialsFeature {
                 state.setupAuthPersistenceRequest = nil
                 return .none
 
-            case let .setupLinkApplied(link):
-                let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
+            case let .setupLinkApplied(application):
+                let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: application.link)
                 Self.applySetupAuth(setupAuth, to: &state)
                 state.setupAuthPersistenceRequest = SettingsGatewaySetupAuthPersistenceRequest(
                     setupAuth: setupAuth,

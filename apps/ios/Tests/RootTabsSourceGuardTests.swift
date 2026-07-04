@@ -1699,12 +1699,16 @@ struct RootTabsSourceGuardTests {
 
         #expect(supportSource.contains("struct SettingsGatewaySetupAuthPersistenceRequest: Equatable"))
         #expect(settingsSource.contains("var setupAuthPersistenceRequest: SettingsGatewaySetupAuthPersistenceRequest?"))
-        #expect(settingsSource.contains("case setupLinkApplied(GatewayConnectDeepLink)"))
+        #expect(settingsSource.contains("struct SetupAuthApplication: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct SetupLinkApplication: Equatable, Sendable"))
+        #expect(settingsSource.contains("case setupAuthApplied(SetupAuthApplication)"))
+        #expect(settingsSource.contains("case setupLinkApplied(SetupLinkApplication)"))
         #expect(settingsSource.contains("case setupAuthPersistenceRequested(SettingsGatewaySetupAuthPersistenceRequest)"))
         #expect(settingsSource.contains("case setupAuthPersistenceRequestHandled"))
         #expect(settingsSource.contains("@Dependency(\\.settingsGatewaySetupAuthPersistence)"))
         #expect(settingsSource
-            .contains("let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)"))
+            .contains("let setupAuth = GatewayConnectionController.ManualAuthOverride." +
+                "setupAuth(from: application.link)"))
         #expect(settingsSource.contains("setupAuthPersistenceClient.currentInstanceID()"))
         #expect(settingsSource.contains("await setupAuthPersistenceClient.prepareForBootstrapPairing(request.instanceId)"))
         #expect(settingsSource.contains("await setupAuthPersistenceClient.saveSetupAuth(request)"))
@@ -1721,7 +1725,7 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("guard await self.applySetupCode() else { return }"))
         #expect(actionsSource.contains("await self.applyGatewayLink(link)"))
         #expect(actionsSource.contains("await self.applyGatewayLink(scannedLink)"))
-        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupLinkApplied(link))"))
+        #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupLinkApplied(.init(link: link)))"))
         #expect(actionsSource
             .contains("await self.gatewayCredentialsStore.send(.setupAuthPersistenceRequested(request)).finish()"))
         #expect(actionsSource.contains("self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled)"))
