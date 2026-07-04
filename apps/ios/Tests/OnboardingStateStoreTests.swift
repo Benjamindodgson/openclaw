@@ -144,7 +144,7 @@ import Testing
             $0.showQRScanner = true
         }
 
-        await store.send(.qrScannerErrorReceived("Camera unavailable")) {
+        await store.send(.qrScannerErrorReceived(.init(message: "Camera unavailable"))) {
             $0.scannerError = "Camera unavailable"
             $0.showQRScanner = false
         }
@@ -304,7 +304,7 @@ import Testing
             $0.statusLine = "Opening QR scanner…"
         }
 
-        await store.send(.scannerErrorReceived("Camera unavailable")) {
+        await store.send(.scannerErrorReceived(.init(message: "Camera unavailable"))) {
             $0.statusLine = "Scanner error: Camera unavailable"
         }
 
