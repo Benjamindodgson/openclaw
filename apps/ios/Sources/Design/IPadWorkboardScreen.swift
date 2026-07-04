@@ -300,7 +300,7 @@ struct IPadWorkboardScreen: View {
 
     private func compactStatusChip(_ status: String) -> some View {
         Button {
-            self.store.send(.statusChanged(status))
+            self.store.send(.statusChanged(.init(status: status)))
         } label: {
             Text(IPadWorkboardDefaults.label(for: status))
                 .font(.caption2.weight(.semibold))
@@ -364,11 +364,11 @@ struct IPadWorkboardScreen: View {
                 .foregroundStyle(.secondary)
             Menu {
                 Button("Active") {
-                    self.store.send(.statusChanged("active"))
+                    self.store.send(.statusChanged(.init(status: "active")))
                 }
                 ForEach(self.store.statuses, id: \.self) { status in
                     Button(IPadWorkboardDefaults.label(for: status)) {
-                        self.store.send(.statusChanged(status))
+                        self.store.send(.statusChanged(.init(status: status)))
                     }
                 }
             } label: {
@@ -411,13 +411,13 @@ struct IPadWorkboardScreen: View {
     private var queryBinding: Binding<String> {
         Binding(
             get: { self.store.query },
-            set: { self.store.send(.queryChanged($0)) })
+            set: { self.store.send(.queryChanged(.init(query: $0))) })
     }
 
     private var selectedStatusBinding: Binding<String> {
         Binding(
             get: { self.store.selectedStatus },
-            set: { self.store.send(.statusChanged($0)) })
+            set: { self.store.send(.statusChanged(.init(status: $0))) })
     }
 
     private var neutralControlTint: Color {
