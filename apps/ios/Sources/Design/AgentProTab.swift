@@ -601,11 +601,15 @@ struct AgentClawHubSearchFeature {
             var query: String
         }
 
+        struct SearchFailure: Equatable, Sendable {
+            var message: String
+        }
+
         case installFailed(slug: String, message: String)
         case installFinished(slug: String)
         case installRequested(slug: String)
         case queryChanged(QueryChange)
-        case searchFailed(String)
+        case searchFailed(SearchFailure)
         case searchFinished([ClawHubSearchResultLite])
         case searchRequested
     }
@@ -629,8 +633,8 @@ struct AgentClawHubSearchFeature {
                 state.isLoading = false
                 return .none
 
-            case let .searchFailed(message):
-                state.errorText = message
+            case let .searchFailed(failure):
+                state.errorText = failure.message
                 state.isLoading = false
                 return .none
 

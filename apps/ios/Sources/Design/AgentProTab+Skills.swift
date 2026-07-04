@@ -708,7 +708,7 @@ extension AgentProTab {
             let results = try JSONDecoder().decode(ClawHubSearchResponseLite.self, from: data).results
             self.clawHubStore.send(.searchFinished(results))
         } catch {
-            self.clawHubStore.send(.searchFailed(Self.skillMutationMessage(error)))
+            self.clawHubStore.send(.searchFailed(.init(message: Self.skillMutationMessage(error))))
         }
     }
 
