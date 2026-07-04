@@ -90,6 +90,7 @@ Sources/Push/PushRegistrationManager.swift
 Sources/Push/PushRelayClient.swift
 Sources/Push/PushRelayKeychainStore.swift
 Sources/Reminders/RemindersService.swift
+Sources/RootCanvasDebugStatusFeature.swift
 Sources/RootCanvasPresentationFeature.swift
 Sources/RootGatewayOverviewRefreshFeature.swift
 Sources/RootGatewayProblemPrimaryActionFeature.swift

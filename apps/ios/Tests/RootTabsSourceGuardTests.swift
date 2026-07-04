@@ -475,6 +475,33 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("Button {\n                self.appModel.screen.hideCanvas()"))
     }
 
+    @Test func `root canvas debug status is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let featureSource = try String(contentsOf: Self.rootCanvasDebugStatusSourceURL(), encoding: .utf8)
+        let updateFunction = try Self.extract(
+            rootSource,
+            from: "private func updateCanvasDebugStatus()",
+            to: "private func applyCanvasDebugStatus() async")
+        let applyFunction = try Self.extract(
+            rootSource,
+            from: "private func applyCanvasDebugStatus() async",
+            to: "private func makeCanvasDebugStatusSnapshot()")
+
+        #expect(featureSource.contains("struct RootCanvasDebugStatusClient"))
+        #expect(featureSource.contains("var rootCanvasDebugStatus: RootCanvasDebugStatusClient"))
+        #expect(featureSource.contains("@Reducer\nstruct RootCanvasDebugStatusFeature"))
+        #expect(featureSource.contains("case snapshotChanged(Snapshot)"))
+        #expect(featureSource.contains("await client.setDebugStatusEnabled(snapshot.isEnabled)"))
+        #expect(featureSource.contains("await client.updateDebugStatus(title, subtitle)"))
+        #expect(rootSource.contains("private func makeCanvasDebugStatusStore()"))
+        #expect(rootSource.contains("RootCanvasDebugStatusFeature(client: .live(appModel: self.appModel))"))
+        #expect(rootSource.contains(".send(.snapshotChanged(self.makeCanvasDebugStatusSnapshot()))"))
+        #expect(updateFunction.contains("Task { await self.applyCanvasDebugStatus() }"))
+        #expect(!updateFunction.contains("self.appModel.screen.setDebugStatusEnabled"))
+        #expect(!updateFunction.contains("self.appModel.screen.updateDebugStatus"))
+        #expect(applyFunction.contains(".send(.snapshotChanged(self.makeCanvasDebugStatusSnapshot()))"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -1929,6 +1956,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootCanvasPresentationFeature.swift")
+    }
+
+    private static func rootCanvasDebugStatusSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootCanvasDebugStatusFeature.swift")
     }
 
     private static func nodeAppModelSourceURL() -> URL {
