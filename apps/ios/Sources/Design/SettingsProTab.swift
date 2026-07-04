@@ -394,20 +394,24 @@ struct SettingsGatewaySetupLinkFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ScannedGatewayLink: Equatable, Sendable { var link: GatewayConnectDeepLink }
+
         struct ScannedSetupCode: Equatable, Sendable { var code: String }
 
         struct SetupCodeChange: Equatable, Sendable { var setupCode: String }
 
         struct SetupCodeSync: Equatable, Sendable { var setupCode: String }
 
+        struct SetupLinkStage: Equatable, Sendable { var link: GatewayConnectDeepLink? }
+
         case applyRequested
         case applyResultHandled
-        case scannedGatewayLinkReceived(GatewayConnectDeepLink)
+        case scannedGatewayLinkReceived(ScannedGatewayLink)
         case scannedGatewayLinkStatusHandled
         case scannedSetupCodeReceived(ScannedSetupCode)
         case setupCodeChanged(SetupCodeChange)
         case setupCodeSynced(SetupCodeSync)
-        case setupLinkStaged(GatewayConnectDeepLink?)
+        case setupLinkStaged(SetupLinkStage)
         case setupLinkStatusHandled
     }
 
@@ -448,7 +452,8 @@ struct SettingsGatewaySetupLinkFeature {
                 state.applyResult = nil
                 return .none
 
-            case let .scannedGatewayLinkReceived(link):
+            case let .scannedGatewayLinkReceived(scan):
+                let link = scan.link
                 state.applyResult = nil
                 state.setupCode = ""
                 state.stagedGatewaySetupLink = nil
@@ -486,9 +491,9 @@ struct SettingsGatewaySetupLinkFeature {
                 }
                 return .none
 
-            case let .setupLinkStaged(link):
-                state.stagedGatewaySetupLink = link
-                if let link {
+            case let .setupLinkStaged(stage):
+                state.stagedGatewaySetupLink = stage.link
+                if let link = stage.link {
                     state.setupCode = ""
                     state.setupLinkStatusText = Self.setupLinkLoadedStatusText(link)
                 } else {
