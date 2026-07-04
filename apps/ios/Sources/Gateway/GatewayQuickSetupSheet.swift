@@ -58,8 +58,10 @@ struct GatewayQuickSetupFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ConnectResponse: Equatable, Sendable { var error: String? }
+
         case connectButtonTapped(GatewayDiscoveryModel.DiscoveredGateway)
-        case connectResponse(String?)
+        case connectResponse(ConnectResponse)
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
         case gatewayProblemPrimaryActionTapped(
@@ -80,9 +82,9 @@ struct GatewayQuickSetupFeature {
             case let .connectButtonTapped(candidate):
                 return self.connect(candidate: candidate, state: &state, client: client)
 
-            case let .connectResponse(error):
+            case let .connectResponse(response):
                 state.connecting = false
-                state.connectError = error
+                state.connectError = response.error
                 return .none
 
             case .gatewayProblemDetailsButtonTapped:
@@ -120,7 +122,7 @@ struct GatewayQuickSetupFeature {
         state.connecting = true
         return .run { send in
             let error = await client.connect(candidate)
-            await send(.connectResponse(error))
+            await send(.connectResponse(.init(error: error)))
         }
         .cancellable(id: CancelID.connect, cancelInFlight: true)
     }
