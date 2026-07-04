@@ -654,6 +654,15 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.store.send(.focusedTriggerIndexChanged(.init(index: newValue)))"))
     }
 
+    @Test func `voice wake word removal action is typed`() throws {
+        let source = try String(contentsOf: Self.voiceWakeWordsSettingsSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct WordRemoval: Equatable, Sendable"))
+        #expect(source.contains("case removeWords(WordRemoval)"))
+        #expect(source.contains("state.triggerWords.remove(atOffsets: removal.offsets)"))
+        #expect(source.contains("self.store.send(.removeWords(.init(offsets: offsets)))"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)

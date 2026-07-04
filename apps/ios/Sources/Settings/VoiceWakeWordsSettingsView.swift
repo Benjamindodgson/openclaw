@@ -104,9 +104,13 @@ struct VoiceWakeWordsSettingsFeature {
             var index: Int?
         }
 
+        struct WordRemoval: Equatable, Sendable {
+            var offsets: IndexSet
+        }
+
         case appeared
         case addWordButtonTapped
-        case removeWords(IndexSet)
+        case removeWords(WordRemoval)
         case triggerWordChanged(TriggerWordChange)
         case resetDefaultsButtonTapped
         case focusedTriggerIndexChanged(FocusedTriggerIndexChange)
@@ -133,8 +137,8 @@ struct VoiceWakeWordsSettingsFeature {
                 state.triggerWords.append("")
                 return .none
 
-            case let .removeWords(offsets):
-                state.triggerWords.remove(atOffsets: offsets)
+            case let .removeWords(removal):
+                state.triggerWords.remove(atOffsets: removal.offsets)
                 if state.triggerWords.isEmpty {
                     state.triggerWords = preferences.defaultTriggerWords()
                 }
@@ -224,7 +228,7 @@ struct VoiceWakeWordsSettingsView: View {
                         }
                 }
                 .onDelete { offsets in
-                    self.store.send(.removeWords(offsets))
+                    self.store.send(.removeWords(.init(offsets: offsets)))
                 }
 
                 Button {
