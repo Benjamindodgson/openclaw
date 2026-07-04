@@ -868,6 +868,13 @@ struct RootTabs: View {
     }
 
     @MainActor
+    private func makeCanvasDebugStatusStore() -> StoreOf<RootCanvasDebugStatusFeature> {
+        Store(initialState: RootCanvasDebugStatusFeature.State()) {
+            RootCanvasDebugStatusFeature(client: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
     private func makeGatewayProblemPrimaryActionStore() -> StoreOf<RootGatewayProblemPrimaryActionFeature> {
         Store(initialState: RootGatewayProblemPrimaryActionFeature.State()) {
             RootGatewayProblemPrimaryActionFeature(
@@ -1053,11 +1060,21 @@ struct RootTabs: View {
     }
 
     private func updateCanvasDebugStatus() {
-        self.appModel.screen.setDebugStatusEnabled(self.canvasDebugStatusEnabled)
-        guard self.canvasDebugStatusEnabled else { return }
-        let title = self.appModel.gatewayDisplayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let subtitle = self.appModel.gatewayServerName ?? self.appModel.gatewayRemoteAddress
-        self.appModel.screen.updateDebugStatus(title: title, subtitle: subtitle)
+        Task { await self.applyCanvasDebugStatus() }
+    }
+
+    private func applyCanvasDebugStatus() async {
+        await self.makeCanvasDebugStatusStore()
+            .send(.snapshotChanged(self.makeCanvasDebugStatusSnapshot()))
+            .finish()
+    }
+
+    private func makeCanvasDebugStatusSnapshot() -> RootCanvasDebugStatusFeature.Snapshot {
+        RootCanvasDebugStatusFeature.Snapshot(
+            isEnabled: self.canvasDebugStatusEnabled,
+            gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
+            gatewayServerName: self.appModel.gatewayServerName,
+            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress)
     }
 
     private func updateHomeCanvasState() {

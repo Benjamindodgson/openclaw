@@ -243,6 +243,35 @@ struct RootTabsPresentationTests {
         #expect(probe.hideCount == 1)
     }
 
+    @Test func `canvas debug status reducer syncs enabled state and labels through client`() async {
+        let probe = RootCanvasDebugStatusProbe()
+        let store = TestStore(initialState: RootCanvasDebugStatusFeature.State()) {
+            RootCanvasDebugStatusFeature(client: probe.client)
+        }
+
+        await store.send(.snapshotChanged(RootCanvasDebugStatusFeature.Snapshot(
+            isEnabled: false,
+            gatewayDisplayStatusText: "  Offline  ",
+            gatewayServerName: "Gateway",
+            gatewayRemoteAddress: "100.64.0.2")))
+        await store.finish()
+
+        #expect(probe.enabledValues == [false])
+        #expect(probe.titles.isEmpty)
+        #expect(probe.subtitles.isEmpty)
+
+        await store.send(.snapshotChanged(RootCanvasDebugStatusFeature.Snapshot(
+            isEnabled: true,
+            gatewayDisplayStatusText: "  Online  ",
+            gatewayServerName: "Gateway",
+            gatewayRemoteAddress: "100.64.0.2")))
+        await store.finish()
+
+        #expect(probe.enabledValues == [false, true])
+        #expect(probe.titles == ["Online"])
+        #expect(probe.subtitles == ["Gateway"])
+    }
+
     @Test func `gateway problem reducer trusts rotated certificate instead of retrying`() async {
         let probe = RootGatewayProblemPrimaryActionProbe()
         let problem = Self.rotatedCertificateProblem()
@@ -1370,6 +1399,23 @@ private final class RootCanvasPresentationProbe: @unchecked Sendable {
         RootCanvasPresentationClient(hideCanvas: {
             self.hideCount += 1
         })
+    }
+}
+
+private final class RootCanvasDebugStatusProbe: @unchecked Sendable {
+    var enabledValues: [Bool] = []
+    var titles: [String?] = []
+    var subtitles: [String?] = []
+
+    var client: RootCanvasDebugStatusClient {
+        RootCanvasDebugStatusClient(
+            setDebugStatusEnabled: { enabled in
+                self.enabledValues.append(enabled)
+            },
+            updateDebugStatus: { title, subtitle in
+                self.titles.append(title)
+                self.subtitles.append(subtitle)
+            })
     }
 }
 
