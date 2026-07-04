@@ -784,9 +784,11 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("TextField(\"New card\""))
         #expect(!source.contains(".disabled(!self.canWrite || self.draftTitle"))
         #expect(createFunction
-            .contains("self.store.send(.createRequested(canRead: self.canRead, canWrite: self.canWrite))"))
-        #expect(source.contains("case createRequested(canRead: Bool, canWrite: Bool)"))
-        #expect(source.contains("case createResponse(Result<IPadWorkboardCard, IPadWorkboardError>)"))
+            .contains("self.store.send(.createRequested(.init(canRead: self.canRead, canWrite: self.canWrite))"))
+        #expect(source.contains("struct CreateRequest: Equatable, Sendable"))
+        #expect(source.contains("struct CreateResponse: Equatable, Sendable"))
+        #expect(source.contains("case createRequested(CreateRequest)"))
+        #expect(source.contains("case createResponse(CreateResponse)"))
     }
 
     @Test func `task scope controls send real gateway params`() throws {
