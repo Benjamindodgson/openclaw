@@ -864,7 +864,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupLinkFeature()
         }
 
-        await store.send(.setupCodeChanged("setup-code")) {
+        await store.send(.setupCodeChanged(.init(setupCode: "setup-code"))) {
             $0.setupCode = "setup-code"
             $0.stagedGatewaySetupLink = nil
         }
@@ -875,7 +875,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupLinkFeature()
         }
 
-        await store.send(.setupCodeSynced("persisted-code")) {
+        await store.send(.setupCodeSynced(.init(setupCode: "persisted-code"))) {
             $0.setupCode = "persisted-code"
         }
     }
@@ -955,7 +955,7 @@ struct SettingsNavigationFeatureTests {
             $0.applyResult = nil
         }
 
-        await store.send(.setupCodeChanged("not a setup code")) {
+        await store.send(.setupCodeChanged(.init(setupCode: "not a setup code"))) {
             $0.setupCode = "not a setup code"
         }
 
@@ -997,9 +997,9 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupLinkFeature(appleReviewDemoClient: probe.client)
         }
 
-        await store.send(.scannedSetupCodeReceived("not a demo code"))
+        await store.send(.scannedSetupCodeReceived(.init(code: "not a demo code")))
 
-        await store.send(.scannedSetupCodeReceived("  APPLE-REVIEW-DEMO  ")) {
+        await store.send(.scannedSetupCodeReceived(.init(code: "  APPLE-REVIEW-DEMO  "))) {
             $0.applyResult = .appleReviewDemo(statusText: "Apple Review demo mode enabled.")
             $0.setupCode = ""
             $0.stagedGatewaySetupLink = nil

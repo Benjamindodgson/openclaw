@@ -1518,10 +1518,16 @@ struct RootTabsSourceGuardTests {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
 
-        #expect(settingsSource.contains("case scannedSetupCodeReceived(String)"))
+        #expect(settingsSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct SetupCodeChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct SetupCodeSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("case scannedSetupCodeReceived(ScannedSetupCode)"))
+        #expect(settingsSource.contains("case setupCodeChanged(SetupCodeChange)"))
+        #expect(settingsSource.contains("case setupCodeSynced(SetupCodeSync)"))
         #expect(settingsSource
             .contains("state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)"))
-        #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(code))"))
+        #expect(settingsActionsSource.contains(
+            "self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(.init(code: code)))"))
         #expect(settingsActionsSource.contains("guard case let .appleReviewDemo(statusText)?"))
         #expect(onboardingStateSource.contains("case scannedSetupCodeReceived(String)"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedSetupCodeReceived(code))"))
