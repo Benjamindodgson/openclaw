@@ -345,18 +345,30 @@ struct RootTabsSourceGuardTests {
             talkSource,
             from: "private var talkSpeakerphoneBinding: Binding<Bool>",
             to: "private func handlePrimaryAction()")
+        let talkActionFunctions = try Self.extract(
+            talkSource,
+            from: "private func alignPersistedTalkState()",
+            to: "private var permissionPromptBinding: Binding<Bool>")
 
         #expect(talkSource.contains("struct TalkProTabClient: Sendable"))
         #expect(talkSource.contains("var talkProTab: TalkProTabClient"))
         #expect(talkSource.contains("@Dependency(\\.talkProTab)"))
         #expect(talkSource.contains("case speakerphoneEnabledChanged(Bool)"))
+        #expect(talkSource.contains("case startTalkRequested(sessionKey: String?)"))
+        #expect(talkSource.contains("case talkEnabledChanged(Bool)"))
         #expect(talkSource.contains("await client.setSpeakerphoneEnabled(enabled)"))
+        #expect(talkSource.contains("await client.startTalk(sessionKey)"))
+        #expect(talkSource.contains("await client.setTalkEnabled(enabled)"))
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
         #expect(rootSource.contains("private func makeTalkProTabStore()"))
         #expect(rootSource.contains("TalkProTabFeature(client: .live(appModel: self.appModel))"))
         #expect(speakerphoneBinding.contains("self.talkSpeakerphoneEnabled = enabled"))
         #expect(speakerphoneBinding.contains("self.store.send(.speakerphoneEnabledChanged(enabled))"))
         #expect(!speakerphoneBinding.contains("self.appModel.setTalkSpeakerphoneEnabled"))
+        #expect(talkActionFunctions.contains("self.store.send(.talkEnabledChanged(self.talkEnabled))"))
+        #expect(talkActionFunctions.contains("self.store.send(.startTalkRequested(sessionKey: self.appModel.chatSessionKey))"))
+        #expect(talkActionFunctions.contains("self.store.send(.talkEnabledChanged(false))"))
+        #expect(!talkActionFunctions.contains("self.appModel.setTalkEnabled"))
     }
 
     @Test func `agent row selection is reducer effect owned`() throws {
