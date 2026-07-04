@@ -73,12 +73,12 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { Self.connectedStatus }))
         }
 
-        await store.send(.operationRequested(
-            .start,
+        await store.send(.operationRequested(.init(
+            kind: .start,
             channelID: "telegram",
             accountID: "main",
             canRead: true,
-            canAdmin: true))
+            canAdmin: true)))
         {
             $0.busyOperation = operation
         }
@@ -93,12 +93,12 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { Self.connectedStatus }))
         }
 
-        await store.send(.operationRequested(
-            .stop,
+        await store.send(.operationRequested(.init(
+            kind: .stop,
             channelID: "telegram",
             accountID: "main",
             canRead: true,
-            canAdmin: false))
+            canAdmin: false)))
     }
 
     private static var connectedEntries: [SettingsChannelEntry] {
