@@ -387,8 +387,8 @@ extension SettingsProTab {
         self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)
 
         switch result {
-        case let .failure(message):
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: message)))
+        case let .failure(failure):
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))
             return false
 
         case .resolved:

@@ -866,7 +866,9 @@ struct SettingsManualGatewayPortFeature {
     }
 
     enum ManualGatewayPortResolutionResult: Equatable, Sendable {
-        case failure(String)
+        struct Failure: Equatable, Sendable { var message: String }
+
+        case failure(Failure)
         case resolved
     }
 
@@ -893,7 +895,7 @@ struct SettingsManualGatewayPortFeature {
             case let .manualGatewayPortResolutionRequested(request):
                 state.manualGatewayPortResolutionResult = nil
                 guard state.resolvedManualPort(host: request.host, useTLS: request.useTLS) != nil else {
-                    state.manualGatewayPortResolutionResult = .failure("Failed: invalid port")
+                    state.manualGatewayPortResolutionResult = .failure(.init(message: "Failed: invalid port"))
                     return .none
                 }
                 state.manualGatewayPortResolutionResult = .resolved
