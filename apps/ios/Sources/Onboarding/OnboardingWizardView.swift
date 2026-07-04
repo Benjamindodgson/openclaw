@@ -782,9 +782,9 @@ extension OnboardingWizardView {
         self.setupCodeStore.send(.applyResultHandled)
         self.applyGatewayLink(scannedLink)
         self.presentationStore.send(.qrScannerDismissed)
-        self.statusStore.send(.connectionStatusUpdated(
+        self.statusStore.send(.connectionStatusUpdated(.init(
             message: "Connecting via QR code...",
-            statusLine: "QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)..."))
+            statusLine: "QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)...")))
         self.stepStore.send(.stepChanged(.connect))
         Task { await self.connectManual() }
     }
