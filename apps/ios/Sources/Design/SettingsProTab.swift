@@ -394,13 +394,19 @@ struct SettingsGatewaySetupLinkFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ScannedSetupCode: Equatable, Sendable { var code: String }
+
+        struct SetupCodeChange: Equatable, Sendable { var setupCode: String }
+
+        struct SetupCodeSync: Equatable, Sendable { var setupCode: String }
+
         case applyRequested
         case applyResultHandled
         case scannedGatewayLinkReceived(GatewayConnectDeepLink)
         case scannedGatewayLinkStatusHandled
-        case scannedSetupCodeReceived(String)
-        case setupCodeChanged(String)
-        case setupCodeSynced(String)
+        case scannedSetupCodeReceived(ScannedSetupCode)
+        case setupCodeChanged(SetupCodeChange)
+        case setupCodeSynced(SetupCodeSync)
         case setupLinkStaged(GatewayConnectDeepLink?)
         case setupLinkStatusHandled
     }
@@ -454,9 +460,9 @@ struct SettingsGatewaySetupLinkFeature {
                 state.scannedGatewayLinkStatusText = nil
                 return .none
 
-            case let .scannedSetupCodeReceived(code):
+            case let .scannedSetupCodeReceived(scan):
                 state.applyResult = nil
-                guard AppleReviewDemoMode.isSetupCode(code) else {
+                guard AppleReviewDemoMode.isSetupCode(scan.code) else {
                     return .none
                 }
                 state.setupCode = ""
@@ -466,16 +472,16 @@ struct SettingsGatewaySetupLinkFeature {
                     await appleReviewDemoClient.enter()
                 }
 
-            case let .setupCodeChanged(setupCode):
-                state.setupCode = setupCode
-                if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            case let .setupCodeChanged(change):
+                state.setupCode = change.setupCode
+                if !change.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     state.stagedGatewaySetupLink = nil
                 }
                 return .none
 
-            case let .setupCodeSynced(setupCode):
-                state.setupCode = setupCode
-                if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            case let .setupCodeSynced(sync):
+                state.setupCode = sync.setupCode
+                if !sync.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     state.stagedGatewaySetupLink = nil
                 }
                 return .none
@@ -1661,7 +1667,7 @@ struct SettingsProTab: View {
                 }
             }
             .onChange(of: self.storedSetupCode) { _, newValue in
-                self.gatewaySetupLinkStore.send(.setupCodeSynced(newValue))
+                self.gatewaySetupLinkStore.send(.setupCodeSynced(.init(setupCode: newValue)))
             }
             .onChange(of: self.storedCameraEnabled) { _, newValue in
                 self.deviceCapabilityStore.send(.cameraEnabledChanged(.init(isEnabled: newValue)))
