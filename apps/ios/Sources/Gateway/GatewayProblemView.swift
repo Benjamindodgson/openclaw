@@ -39,8 +39,16 @@ struct GatewayProblemDetailsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case copyRequestIDButtonTapped(String)
-        case copyCommandButtonTapped(String)
+        struct CommandCopyRequest: Equatable, Sendable {
+            var command: String
+        }
+
+        struct RequestIDCopyRequest: Equatable, Sendable {
+            var requestID: String
+        }
+
+        case copyRequestIDButtonTapped(RequestIDCopyRequest)
+        case copyCommandButtonTapped(CommandCopyRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -51,16 +59,16 @@ struct GatewayProblemDetailsFeature {
             let clipboard = self.clipboardOverride ?? dependencyClipboard
 
             switch action {
-            case let .copyRequestIDButtonTapped(requestID):
+            case let .copyRequestIDButtonTapped(request):
                 state.copyFeedback = "Copied request ID"
                 return .run { _ in
-                    await clipboard.copy(requestID)
+                    await clipboard.copy(request.requestID)
                 }
 
-            case let .copyCommandButtonTapped(command):
+            case let .copyCommandButtonTapped(request):
                 state.copyFeedback = "Copied command"
                 return .run { _ in
-                    await clipboard.copy(command)
+                    await clipboard.copy(request.command)
                 }
             }
         }
@@ -188,7 +196,7 @@ struct GatewayProblemDetailsSheet: View {
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Button("Copy request ID") {
-                            self.store.send(.copyRequestIDButtonTapped(requestId))
+                            self.store.send(.copyRequestIDButtonTapped(.init(requestID: requestId)))
                         }
                     }
                 }
@@ -199,7 +207,7 @@ struct GatewayProblemDetailsSheet: View {
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Button("Copy command") {
-                            self.store.send(.copyCommandButtonTapped(actionCommand))
+                            self.store.send(.copyCommandButtonTapped(.init(command: actionCommand)))
                         }
                     }
                 }
