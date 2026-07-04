@@ -214,6 +214,8 @@ struct OnboardingStatusFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct AutomaticPairingResumeRequest: Equatable, Sendable { var now: Date }
+
         struct ConnectionStart: Equatable, Sendable {
             var id: String
             var message: String
@@ -239,7 +241,7 @@ struct OnboardingStatusFeature {
         struct ConnectionActivityStart: Equatable, Sendable { var id: String }
         struct ScannerError: Equatable, Sendable { var message: String }
 
-        case automaticPairingResumeRequested(now: Date)
+        case automaticPairingResumeRequested(AutomaticPairingResumeRequest)
         case appleReviewDemoModeEnabled
         case connectionFinished
         case connectionIssueDetected(ConnectionIssueDetection)
@@ -262,13 +264,16 @@ struct OnboardingStatusFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .automaticPairingResumeRequested(now):
+            case let .automaticPairingResumeRequested(request):
                 state.shouldResumePairingAutomatically = false
                 guard state.issue.needsPairing, state.connectingGatewayID == nil else { return .none }
-                if let last = state.lastPairingAutoResumeAttemptAt, now.timeIntervalSince(last) < 6 {
-                    return .none
+                if let last = state.lastPairingAutoResumeAttemptAt {
+                    let elapsedSinceLastAttempt = request.now.timeIntervalSince(last)
+                    if elapsedSinceLastAttempt < 6 {
+                        return .none
+                    }
                 }
-                state.lastPairingAutoResumeAttemptAt = now
+                state.lastPairingAutoResumeAttemptAt = request.now
                 state.shouldResumePairingAutomatically = true
                 return .none
 
