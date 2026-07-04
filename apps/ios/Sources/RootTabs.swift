@@ -902,10 +902,8 @@ struct RootTabs: View {
 
     private func makeCanvasDebugStatusSnapshot() -> RootCanvasDebugStatusFeature.Snapshot {
         RootCanvasDebugStatusFeature.Snapshot(
-            isEnabled: self.canvasDebugStatusEnabled,
-            gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
-            gatewayServerName: self.appModel.gatewayServerName,
-            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress)
+            appModel: self.appModel,
+            isEnabled: self.canvasDebugStatusEnabled)
     }
 
     private func updateHomeCanvasState() {
