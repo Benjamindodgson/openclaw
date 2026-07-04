@@ -777,7 +777,7 @@ extension OnboardingWizardView {
     }
 
     private func handleScannedLink(_ link: GatewayConnectDeepLink) {
-        self.setupCodeStore.send(.scannedGatewayLinkReceived(link))
+        self.setupCodeStore.send(.scannedGatewayLinkReceived(.init(link: link)))
         guard case let .gatewayLink(scannedLink)? = self.setupCodeStore.applyResult else { return }
         self.setupCodeStore.send(.applyResultHandled)
         self.applyGatewayLink(scannedLink)
@@ -806,7 +806,7 @@ extension OnboardingWizardView {
     }
 
     private func handleScannedSetupCode(_ code: String) {
-        self.setupCodeStore.send(.scannedSetupCodeReceived(code))
+        self.setupCodeStore.send(.scannedSetupCodeReceived(.init(code: code)))
         guard let result = self.setupCodeStore.applyResult else { return }
         self.setupCodeStore.send(.applyResultHandled)
 

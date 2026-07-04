@@ -697,6 +697,8 @@ struct OnboardingSetupCodeFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ScannedGatewayLink: Equatable, Sendable { var link: GatewayConnectDeepLink }
+        struct ScannedSetupCode: Equatable, Sendable { var code: String }
         struct SetupCodeChange: Equatable, Sendable { var code: String }
 
         case appleReviewDemoCodeAccepted
@@ -705,8 +707,8 @@ struct OnboardingSetupCodeFeature {
         case applyStarted
         case emptyCodeSubmitted
         case invalidSetupCodeSubmitted
-        case scannedGatewayLinkReceived(GatewayConnectDeepLink)
-        case scannedSetupCodeReceived(String)
+        case scannedGatewayLinkReceived(ScannedGatewayLink)
+        case scannedSetupCodeReceived(ScannedSetupCode)
         case setupCodeAccepted
         case setupCodeChanged(SetupCodeChange)
         case statusCleared
@@ -767,18 +769,18 @@ struct OnboardingSetupCodeFeature {
                 state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
                 return .none
 
-            case let .scannedGatewayLinkReceived(link):
+            case let .scannedGatewayLinkReceived(scan):
                 state.applyResult = nil
                 state.status = nil
-                state.applyResult = .gatewayLink(link)
+                state.applyResult = .gatewayLink(scan.link)
                 return .none
 
-            case let .scannedSetupCodeReceived(code):
+            case let .scannedSetupCodeReceived(scan):
                 state.applyResult = nil
-                guard AppleReviewDemoMode.isSetupCode(code) else {
+                guard AppleReviewDemoMode.isSetupCode(scan.code) else {
                     return .none
                 }
-                state.applyResult = .appleReviewDemoSetupCode(code.trimmingCharacters(in: .whitespacesAndNewlines))
+                state.applyResult = .appleReviewDemoSetupCode(scan.code.trimmingCharacters(in: .whitespacesAndNewlines))
                 return .none
 
             case .setupCodeAccepted:
