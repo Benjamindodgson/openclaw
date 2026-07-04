@@ -120,13 +120,13 @@ struct OnboardingWizardView: View {
     private var gatewayPasswordBinding: Binding<String> {
         Binding(
             get: { self.credentialsStore.gatewayPassword },
-            set: { self.credentialsStore.send(.gatewayPasswordChanged($0)) })
+            set: { self.credentialsStore.send(.gatewayPasswordChanged(.init(value: $0))) })
     }
 
     private var gatewayTokenBinding: Binding<String> {
         Binding(
             get: { self.credentialsStore.gatewayToken },
-            set: { self.credentialsStore.send(.gatewayTokenChanged($0)) })
+            set: { self.credentialsStore.send(.gatewayTokenChanged(.init(value: $0))) })
     }
 
     private var currentProblem: GatewayConnectionProblem? {
