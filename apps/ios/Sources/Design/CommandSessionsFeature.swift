@@ -50,7 +50,11 @@ struct CommandSessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case refreshRequested(sessionsAvailable: Bool)
+        struct RefreshRequest: Equatable, Sendable {
+            var sessionsAvailable: Bool
+        }
+
+        case refreshRequested(RefreshRequest)
         case refreshResponse(Result<[OpenClawChatSessionEntry], CommandSessionsError>)
     }
 
@@ -62,8 +66,8 @@ struct CommandSessionsFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .refreshRequested(sessionsAvailable):
-                guard sessionsAvailable else {
+            case let .refreshRequested(request):
+                guard request.sessionsAvailable else {
                     state.isLoading = false
                     state.sessions = []
                     state.loadErrorText = nil
