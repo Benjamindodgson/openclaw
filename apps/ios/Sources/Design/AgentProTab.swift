@@ -517,9 +517,13 @@ struct AgentCronActionFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case actionFinished(id: String)
+        struct ActionID: Equatable, Sendable {
+            var id: String
+        }
+
+        case actionFinished(ActionID)
         case actionFailed(id: String, message: String)
-        case actionStarted(id: String)
+        case actionStarted(ActionID)
         case actionSucceeded(message: String)
     }
 
@@ -528,8 +532,8 @@ struct AgentCronActionFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .actionStarted(id):
-                state.busyIDs.insert(id)
+            case let .actionStarted(action):
+                state.busyIDs.insert(action.id)
                 state.statusText = nil
                 return .none
 
@@ -537,8 +541,8 @@ struct AgentCronActionFeature {
                 state.statusText = message
                 return .none
 
-            case let .actionFinished(id):
-                state.busyIDs.remove(id)
+            case let .actionFinished(action):
+                state.busyIDs.remove(action.id)
                 return .none
 
             case let .actionFailed(id, message):

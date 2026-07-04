@@ -182,7 +182,7 @@ struct AgentCronActionFeatureTests {
             AgentCronActionFeature()
         }
 
-        await store.send(.actionStarted(id: "job-1")) {
+        await store.send(.actionStarted(.init(id: "job-1"))) {
             $0.busyIDs = ["job-1"]
             $0.statusText = nil
         }
@@ -209,7 +209,7 @@ struct AgentCronActionFeatureTests {
             AgentCronActionFeature()
         }
 
-        await store.send(.actionFinished(id: "job-1")) {
+        await store.send(.actionFinished(.init(id: "job-1"))) {
             $0.busyIDs = ["job-2"]
         }
     }
