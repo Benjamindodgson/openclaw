@@ -502,6 +502,38 @@ struct RootTabsSourceGuardTests {
         #expect(applyFunction.contains(".send(.snapshotChanged(self.makeCanvasDebugStatusSnapshot()))"))
     }
 
+    @Test func `root idle timer is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let featureSource = try String(contentsOf: Self.rootIdleTimerSourceURL(), encoding: .utf8)
+        let lifecycle = try Self.extract(
+            rootSource,
+            from: "private func rootAppearLifecycle",
+            to: "private func rootGatewayLifecycle")
+        let updateFunction = try Self.extract(
+            rootSource,
+            from: "private func updateIdleTimer()",
+            to: "private func makeIdleTimerSnapshot()")
+
+        #expect(featureSource.contains("struct RootIdleTimerClient"))
+        #expect(featureSource.contains("var rootIdleTimer: RootIdleTimerClient"))
+        #expect(featureSource.contains("@Reducer\nstruct RootIdleTimerFeature"))
+        #expect(featureSource.contains("case snapshotChanged(Snapshot)"))
+        #expect(featureSource.contains("case disappeared"))
+        #expect(featureSource.contains("try Task.checkCancellation()"))
+        #expect(featureSource.contains("await client.setIdleTimerDisabled(isDisabled)"))
+        #expect(featureSource.contains("return .cancel(id: CancelID.idleTimer)"))
+        #expect(featureSource.contains(".cancellable(id: CancelID.idleTimer, cancelInFlight: true)"))
+        #expect(rootSource.contains("@State private var idleTimerStore: StoreOf<RootIdleTimerFeature>"))
+        #expect(rootSource.contains("RootIdleTimerFeature(client: .live)"))
+        #expect(!rootSource.contains("Task { await self.applyIdleTimerSnapshot() }"))
+        #expect(updateFunction.contains("self.idleTimerStore.send(.snapshotChanged(self.makeIdleTimerSnapshot()))"))
+        #expect(!updateFunction.contains("UIApplication.shared.isIdleTimerDisabled"))
+        #expect(lifecycle.contains(
+            "self.idleTimerStore.send(.disappeared)\n                UIApplication.shared.isIdleTimerDisabled = false"))
+        #expect(lifecycle.contains("UIApplication.shared.isIdleTimerDisabled = false"))
+        #expect(rootSource.components(separatedBy: "UIApplication.shared.isIdleTimerDisabled").count == 2)
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -1963,6 +1995,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootCanvasDebugStatusFeature.swift")
+    }
+
+    private static func rootIdleTimerSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootIdleTimerFeature.swift")
     }
 
     private static func nodeAppModelSourceURL() -> URL {

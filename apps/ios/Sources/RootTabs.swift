@@ -55,6 +55,12 @@ struct RootTabs: View {
         RootPresentationFeature()
     }
 
+    @State private var idleTimerStore: StoreOf<RootIdleTimerFeature> = Store(
+        initialState: RootIdleTimerFeature.State())
+    {
+        RootIdleTimerFeature(client: .live)
+    }
+
     @State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature> = Store(
         initialState: RootHomeCanvasFeature.State())
     {
@@ -757,6 +763,7 @@ struct RootTabs: View {
                 Task { await self.refreshGatewayOverviewAfterSceneActivation() }
             }
             .onDisappear {
+                self.idleTimerStore.send(.disappeared)
                 UIApplication.shared.isIdleTimerDisabled = false
                 self.voiceWakeToastStore.send(.disappeared)
             }
@@ -1050,8 +1057,14 @@ struct RootTabs: View {
     }
 
     private func updateIdleTimer() {
-        UIApplication.shared.isIdleTimerDisabled =
-            self.scenePhase == .active && (self.preventSleep || self.appModel.talkMode.isEnabled)
+        self.idleTimerStore.send(.snapshotChanged(self.makeIdleTimerSnapshot()))
+    }
+
+    private func makeIdleTimerSnapshot() -> RootIdleTimerFeature.Snapshot {
+        RootIdleTimerFeature.Snapshot(
+            isSceneActive: self.scenePhase == .active,
+            preventSleep: self.preventSleep,
+            talkModeEnabled: self.appModel.talkMode.isEnabled)
     }
 
     private func updateCanvasState() {

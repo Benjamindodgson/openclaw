@@ -272,6 +272,36 @@ struct RootTabsPresentationTests {
         #expect(probe.subtitles == ["Gateway"])
     }
 
+    @Test func `idle timer reducer syncs lifecycle state through client`() async {
+        let probe = RootIdleTimerProbe()
+        let store = TestStore(initialState: RootIdleTimerFeature.State()) {
+            RootIdleTimerFeature(client: probe.client)
+        }
+
+        await store.send(.snapshotChanged(RootIdleTimerFeature.Snapshot(
+            isSceneActive: true,
+            preventSleep: false,
+            talkModeEnabled: false)))
+        await store.finish()
+
+        await store.send(.snapshotChanged(RootIdleTimerFeature.Snapshot(
+            isSceneActive: true,
+            preventSleep: true,
+            talkModeEnabled: false)))
+        await store.finish()
+
+        await store.send(.snapshotChanged(RootIdleTimerFeature.Snapshot(
+            isSceneActive: false,
+            preventSleep: true,
+            talkModeEnabled: true)))
+        await store.finish()
+
+        await store.send(.disappeared)
+        await store.finish()
+
+        #expect(probe.disabledValues == [false, true, false])
+    }
+
     @Test func `gateway problem reducer trusts rotated certificate instead of retrying`() async {
         let probe = RootGatewayProblemPrimaryActionProbe()
         let problem = Self.rotatedCertificateProblem()
@@ -1416,6 +1446,16 @@ private final class RootCanvasDebugStatusProbe: @unchecked Sendable {
                 self.titles.append(title)
                 self.subtitles.append(subtitle)
             })
+    }
+}
+
+private final class RootIdleTimerProbe: @unchecked Sendable {
+    var disabledValues: [Bool] = []
+
+    var client: RootIdleTimerClient {
+        RootIdleTimerClient(setIdleTimerDisabled: { disabled in
+            self.disabledValues.append(disabled)
+        })
     }
 }
 
