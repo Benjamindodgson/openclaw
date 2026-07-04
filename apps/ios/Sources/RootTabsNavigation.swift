@@ -30,6 +30,14 @@ struct RootPresentationFeature {
         var discoveredGatewayCount: Int
     }
 
+    struct SidebarGatewayStatusChange: Equatable, Sendable {
+        var status: GatewayDisplayState
+    }
+
+    struct PresentedSheetChange: Equatable, Sendable {
+        var sheet: PresentedSheet?
+    }
+
     struct LocalNetworkAccessRequest: Equatable, Sendable {
         var reason: String
         var sceneActive: Bool
@@ -206,10 +214,10 @@ struct RootPresentationFeature {
 
     enum Action: Equatable, Sendable {
         case refreshPresentation
-        case sidebarGatewayStatusChanged(GatewayDisplayState)
+        case sidebarGatewayStatusChanged(SidebarGatewayStatusChange)
         case startupSnapshotChanged(StartupSnapshot)
         case quickSetupSnapshotChanged(QuickSetupSnapshot)
-        case presentedSheetChanged(PresentedSheet?)
+        case presentedSheetChanged(PresentedSheetChange)
         case startupPresentationEvaluationRequested(StartupSnapshot)
         case forceOnboardingRequested
         case autoOpenSettingsRequested(StartupSnapshot)
@@ -230,8 +238,8 @@ struct RootPresentationFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .sidebarGatewayStatusChanged(status):
-                state.sidebarGatewayStatus = status
+            case let .sidebarGatewayStatusChanged(change):
+                state.sidebarGatewayStatus = change.status
                 return .none
 
             case let .startupSnapshotChanged(snapshot):
@@ -251,8 +259,8 @@ struct RootPresentationFeature {
                 }
                 return .none
 
-            case let .presentedSheetChanged(sheet):
-                state.presentedSheet = sheet
+            case let .presentedSheetChanged(change):
+                state.presentedSheet = change.sheet
                 state.refreshPresentation()
                 return .none
 

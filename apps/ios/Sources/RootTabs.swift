@@ -872,7 +872,8 @@ struct RootTabs: View {
     private func syncSidebarGatewayStatus() {
         let status = self.gatewayStatus
         guard self.presentationStore.sidebarGatewayStatus != status else { return }
-        self.presentationStore.send(.sidebarGatewayStatusChanged(status))
+        self.presentationStore.send(.sidebarGatewayStatusChanged(
+            RootPresentationFeature.SidebarGatewayStatusChange(status: status)))
     }
 
     private func updateIdleTimer() {
@@ -1159,7 +1160,10 @@ extension RootTabs {
     private var presentedSheetBinding: Binding<RootPresentationFeature.PresentedSheet?> {
         Binding(
             get: { self.presentationStore.presentedSheet },
-            set: { self.presentationStore.send(.presentedSheetChanged($0)) })
+            set: {
+                self.presentationStore.send(.presentedSheetChanged(
+                    RootPresentationFeature.PresentedSheetChange(sheet: $0)))
+            })
     }
 
     private var gatewayProblemDetailsBinding: Binding<Bool> {
