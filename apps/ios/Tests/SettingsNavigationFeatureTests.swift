@@ -1822,11 +1822,11 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayPortFeature()
         }
 
-        await store.send(.manualGatewayPortTextChanged("44a3")) {
+        await store.send(.manualGatewayPortTextChanged(.init(text: "44a3"))) {
             $0.manualGatewayPortText = "443"
             $0.manualGatewayPort = 443
         }
-        await store.send(.manualGatewayPortTextChanged("")) {
+        await store.send(.manualGatewayPortTextChanged(.init(text: ""))) {
             $0.manualGatewayPortText = ""
             $0.manualGatewayPort = 0
         }
@@ -1837,11 +1837,11 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayPortFeature()
         }
 
-        await store.send(.manualGatewayPortSynced(443)) {
+        await store.send(.manualGatewayPortSynced(.init(port: 443))) {
             $0.manualGatewayPortText = "443"
             $0.manualGatewayPort = 443
         }
-        await store.send(.manualGatewayPortSynced(0)) {
+        await store.send(.manualGatewayPortSynced(.init(port: 0))) {
             $0.manualGatewayPortText = ""
             $0.manualGatewayPort = 0
         }
@@ -1873,7 +1873,9 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayPortFeature()
         }
 
-        await store.send(.manualGatewayPortResolutionRequested(host: "gateway.example.com", useTLS: true)) {
+        await store.send(.manualGatewayPortResolutionRequested(.init(
+            host: "gateway.example.com",
+            useTLS: true))) {
             $0.manualGatewayPortResolutionResult = .failure("Failed: invalid port")
         }
 
@@ -1881,12 +1883,14 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayPortResolutionResult = nil
         }
 
-        await store.send(.manualGatewayPortSynced(0)) {
+        await store.send(.manualGatewayPortSynced(.init(port: 0))) {
             $0.manualGatewayPort = 0
             $0.manualGatewayPortText = ""
         }
 
-        await store.send(.manualGatewayPortResolutionRequested(host: "device.sample.ts.net", useTLS: true)) {
+        await store.send(.manualGatewayPortResolutionRequested(.init(
+            host: "device.sample.ts.net",
+            useTLS: true))) {
             $0.manualGatewayPortResolutionResult = .resolved
         }
     }

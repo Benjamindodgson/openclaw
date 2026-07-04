@@ -1584,9 +1584,18 @@ struct RootTabsSourceGuardTests {
             to: "func connectManual()")
 
         #expect(settingsSource.contains("enum ManualGatewayPortResolutionResult: Equatable, Sendable"))
-        #expect(settingsSource.contains("case manualGatewayPortResolutionRequested(host: String, useTLS: Bool)"))
+        #expect(settingsSource.contains("struct ManualGatewayPortResolutionRequest: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct ManualGatewayPortSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct ManualGatewayPortTextChange: Equatable, Sendable"))
+        #expect(settingsSource.contains(
+            "case manualGatewayPortResolutionRequested(ManualGatewayPortResolutionRequest)"))
+        #expect(settingsSource.contains("case manualGatewayPortSynced(ManualGatewayPortSync)"))
+        #expect(settingsSource.contains("case manualGatewayPortTextChanged(ManualGatewayPortTextChange)"))
         #expect(settingsSource.contains("state.manualGatewayPortResolutionResult = .failure(\"Failed: invalid port\")"))
-        #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested("))
+        #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested(.init("))
+        #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port:"))
+        #expect(actionsSource.contains(
+            "self.manualGatewayPortStore.send(.manualGatewayPortTextChanged(.init(text: $0))"))
         #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)"))
         #expect(applyFunction.contains("self.resolveManualPortForConnection(host: host)"))
         #expect(scannedConnectFunction.contains("self.resolveManualPortForConnection(host: host)"))
