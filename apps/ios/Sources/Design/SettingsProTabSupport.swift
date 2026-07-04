@@ -266,6 +266,29 @@ extension DependencyValues {
     }
 }
 
+struct SettingsGatewayProblemTrustClient {
+    var trustRotatedCertificate: @MainActor @Sendable (GatewayConnectionProblem) async -> Bool
+}
+
+extension SettingsGatewayProblemTrustClient: DependencyKey {
+    static let liveValue = SettingsGatewayProblemTrustClient(trustRotatedCertificate: { _ in false })
+    static let testValue = SettingsGatewayProblemTrustClient(trustRotatedCertificate: { _ in false })
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        SettingsGatewayProblemTrustClient(trustRotatedCertificate: { problem in
+            await gatewayController.trustRotatedGatewayCertificate(from: problem)
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsGatewayProblemTrust: SettingsGatewayProblemTrustClient {
+        get { self[SettingsGatewayProblemTrustClient.self] }
+        set { self[SettingsGatewayProblemTrustClient.self] = newValue }
+    }
+}
+
 struct SettingsGatewayDiagnosticsRefreshClient {
     var refreshGateway: @MainActor @Sendable () async -> Void
 }

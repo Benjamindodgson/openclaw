@@ -470,6 +470,29 @@ struct SettingsNavigationFeatureTests {
         #expect(probe.reconnectCount == 0)
     }
 
+    @Test func `settings gateway activity trusts rotated certificate through client`() async {
+        let probe = SettingsGatewayProblemTrustProbe()
+        let problem = GatewayConnectionProblem(
+            kind: .tlsPinMismatch,
+            owner: .iphone,
+            title: "Gateway certificate changed",
+            message: "The gateway certificate fingerprint changed.",
+            retryable: false,
+            pauseReconnect: true,
+            tlsStoreKey: "gateway-1",
+            tlsExpectedFingerprint: "old",
+            tlsObservedFingerprint: "new",
+            tlsSystemTrustOk: true)
+        let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
+            SettingsGatewayActivityFeature(problemTrustClient: probe.client)
+        }
+
+        await store.send(.rotatedCertificateTrustRequested(problem))
+        await store.finish()
+
+        #expect(probe.trustedProblems == [problem])
+    }
+
     @Test func `settings gateway activity tracks refresh lifecycle`() async {
         let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
             SettingsGatewayActivityFeature()
@@ -2471,6 +2494,17 @@ private final class SettingsGatewayReconnectProbe: @unchecked Sendable {
     var client: SettingsGatewayReconnectClient {
         SettingsGatewayReconnectClient(reconnect: {
             self.reconnectCount += 1
+        })
+    }
+}
+
+private final class SettingsGatewayProblemTrustProbe: @unchecked Sendable {
+    var trustedProblems: [GatewayConnectionProblem] = []
+
+    var client: SettingsGatewayProblemTrustClient {
+        SettingsGatewayProblemTrustClient(trustRotatedCertificate: { problem in
+            self.trustedProblems.append(problem)
+            return true
         })
     }
 }

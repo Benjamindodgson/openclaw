@@ -278,13 +278,16 @@ struct SettingsApprovalsFeature {
 @Reducer
 struct SettingsGatewayActivityFeature {
     private let diagnosticsRefreshClientOverride: SettingsGatewayDiagnosticsRefreshClient?
+    private let problemTrustClientOverride: SettingsGatewayProblemTrustClient?
     private let reconnectClientOverride: SettingsGatewayReconnectClient?
 
     init(
         diagnosticsRefreshClient: SettingsGatewayDiagnosticsRefreshClient? = nil,
+        problemTrustClient: SettingsGatewayProblemTrustClient? = nil,
         reconnectClient: SettingsGatewayReconnectClient? = nil)
     {
         self.diagnosticsRefreshClientOverride = diagnosticsRefreshClient
+        self.problemTrustClientOverride = problemTrustClient
         self.reconnectClientOverride = reconnectClient
     }
 
@@ -302,6 +305,7 @@ struct SettingsGatewayActivityFeature {
         case reconnectStarted
         case refreshFinished
         case refreshStarted
+        case rotatedCertificateTrustRequested(GatewayConnectionProblem)
     }
 
     // swiftformat:enable redundantSendable
@@ -309,8 +313,10 @@ struct SettingsGatewayActivityFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.settingsGatewayDiagnosticsRefresh) var dependencyDiagnosticsRefreshClient
+            @Dependency(\.settingsGatewayProblemTrust) var dependencyProblemTrustClient
             @Dependency(\.settingsGatewayReconnect) var dependencyReconnectClient
             let diagnosticsRefreshClient = self.diagnosticsRefreshClientOverride ?? dependencyDiagnosticsRefreshClient
+            let problemTrustClient = self.problemTrustClientOverride ?? dependencyProblemTrustClient
             let reconnectClient = self.reconnectClientOverride ?? dependencyReconnectClient
 
             switch action {
@@ -347,6 +353,11 @@ struct SettingsGatewayActivityFeature {
             case .refreshStarted:
                 state.isRefreshingGateway = true
                 return .none
+
+            case let .rotatedCertificateTrustRequested(problem):
+                return .run { _ in
+                    _ = await problemTrustClient.trustRotatedCertificate(problem)
+                }
             }
         }
         .autoLogActions()
