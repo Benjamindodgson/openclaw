@@ -72,13 +72,13 @@ struct IPadWorkboardFeatureTests {
         await store.send(.boardScopeChanged(" planning ")) {
             $0.selectedBoardID = "planning"
         }
-        await store.send(.refreshRequested(sceneActive: true, canRead: true, force: false)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
             $0.isRefreshing = true
             $0.activeRefreshBoardID = "planning"
             $0.errorText = nil
             $0.selectedStatus = "active"
         }
-        await store.receive(.refreshResponse(boardID: "planning", force: false, .success(response))) {
+        await store.receive(.refreshResponse(.init(boardID: "planning", force: false, result: .success(response)))) {
             $0.isRefreshing = false
             $0.activeRefreshBoardID = nil
             $0.cards = [card]
@@ -103,9 +103,10 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.refreshResponse(
-            boardID: "old",
-            force: true,
-            .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"]))))
+            .init(
+                boardID: "old",
+                force: true,
+                result: .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"])))))
         {
             $0.isRefreshing = false
             $0.activeRefreshBoardID = nil
@@ -240,7 +241,7 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.refreshResponse(boardID: nil, force: true, .success(response))) {
+        await store.send(.refreshResponse(.init(boardID: nil, force: true, result: .success(response)))) {
             $0.isRefreshing = false
             $0.activeRefreshBoardID = nil
             $0.cards = [refreshed]
