@@ -106,11 +106,11 @@ struct CommandCenterRecentSessionsFeatureTests {
             CommandCenterRecentSessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(
+        await store.send(.refreshRequested(.init(
             sceneActive: false,
             sessionsAvailable: true,
             currentSessionKey: "chat-existing",
-            defaultSessionKey: "main"))
+            defaultSessionKey: "main")))
         await store.finish()
 
         #expect(probe.requestedLimits.isEmpty)
@@ -125,11 +125,11 @@ struct CommandCenterRecentSessionsFeatureTests {
             CommandCenterRecentSessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(
+        await store.send(.refreshRequested(.init(
             sceneActive: true,
             sessionsAvailable: false,
             currentSessionKey: "chat-existing",
-            defaultSessionKey: "main"))
+            defaultSessionKey: "main")))
         {
             $0.defaultChatSessionEntry = nil
             $0.recentChatSessions = []
@@ -163,11 +163,11 @@ struct CommandCenterRecentSessionsFeatureTests {
                 oldSession,
             ])
 
-        await store.send(.refreshRequested(
+        await store.send(.refreshRequested(.init(
             sceneActive: true,
             sessionsAvailable: true,
             currentSessionKey: currentSession.key,
-            defaultSessionKey: defaultSession.key))
+            defaultSessionKey: defaultSession.key)))
         await store.receive(.refreshResponse(.success(expectedSnapshot))) {
             $0.defaultChatSessionEntry = defaultSession
             $0.recentChatSessions = [
@@ -191,11 +191,11 @@ struct CommandCenterRecentSessionsFeatureTests {
             CommandCenterRecentSessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(
+        await store.send(.refreshRequested(.init(
             sceneActive: true,
             sessionsAvailable: true,
             currentSessionKey: "chat-existing",
-            defaultSessionKey: "main"))
+            defaultSessionKey: "main")))
         await store.receive(.refreshResponse(.failure(.failed))) {
             $0.defaultChatSessionEntry = nil
             $0.recentChatSessions = []
