@@ -539,13 +539,20 @@ struct SettingsGatewayCredentialsFeature {
             var password: String
         }
 
+        struct ManualCredentialChange: Equatable, Sendable { var value: String }
+
+        struct ManualCredentialPersistenceRequest: Equatable, Sendable {
+            var value: String
+            var instanceId: String
+        }
+
         case credentialsClearedForOnboardingReset
         case credentialsLoadRequested(CredentialsLoadRequest)
         case credentialsLoaded(LoadedCredentials)
-        case gatewayPasswordChanged(String)
-        case gatewayPasswordPersistenceRequested(value: String, instanceId: String)
-        case gatewayTokenChanged(String)
-        case gatewayTokenPersistenceRequested(value: String, instanceId: String)
+        case gatewayPasswordChanged(ManualCredentialChange)
+        case gatewayPasswordPersistenceRequested(ManualCredentialPersistenceRequest)
+        case gatewayTokenChanged(ManualCredentialChange)
+        case gatewayTokenPersistenceRequested(ManualCredentialPersistenceRequest)
         case pendingManualAuthOverrideConsumed
         case setupAuthApplied(GatewayConnectionController.ManualAuthOverride.SetupAuth)
         case setupAuthPersistenceRequested(SettingsGatewaySetupAuthPersistenceRequest)
@@ -581,23 +588,27 @@ struct SettingsGatewayCredentialsFeature {
                 state.gatewayPassword = credentials.password
                 return .none
 
-            case let .gatewayPasswordChanged(password):
-                state.gatewayPassword = password
+            case let .gatewayPasswordChanged(change):
+                state.gatewayPassword = change.value
                 return .none
 
-            case let .gatewayPasswordPersistenceRequested(value, instanceId):
-                guard let request = Self.manualCredentialPersistenceRequest(value: value, instanceId: instanceId)
+            case let .gatewayPasswordPersistenceRequested(persistence):
+                guard let request = Self.manualCredentialPersistenceRequest(
+                    value: persistence.value,
+                    instanceId: persistence.instanceId)
                 else { return .none }
                 return .run { _ in
                     await persistenceClient.saveGatewayPassword(request.value, request.instanceId)
                 }
 
-            case let .gatewayTokenChanged(token):
-                state.gatewayToken = token
+            case let .gatewayTokenChanged(change):
+                state.gatewayToken = change.value
                 return .none
 
-            case let .gatewayTokenPersistenceRequested(value, instanceId):
-                guard let request = Self.manualCredentialPersistenceRequest(value: value, instanceId: instanceId)
+            case let .gatewayTokenPersistenceRequested(persistence):
+                guard let request = Self.manualCredentialPersistenceRequest(
+                    value: persistence.value,
+                    instanceId: persistence.instanceId)
                 else { return .none }
                 return .run { _ in
                     await persistenceClient.saveGatewayToken(request.value, request.instanceId)

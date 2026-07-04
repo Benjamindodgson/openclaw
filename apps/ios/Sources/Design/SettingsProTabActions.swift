@@ -779,17 +779,17 @@ extension SettingsProTab {
     }
 
     func updateGatewayToken(_ value: String) {
-        self.gatewayCredentialsStore.send(.gatewayTokenChanged(value))
-        self.gatewayCredentialsStore.send(.gatewayTokenPersistenceRequested(
+        self.gatewayCredentialsStore.send(.gatewayTokenChanged(.init(value: value)))
+        self.gatewayCredentialsStore.send(.gatewayTokenPersistenceRequested(.init(
             value: value,
-            instanceId: self.instanceId))
+            instanceId: self.instanceId)))
     }
 
     func updateGatewayPassword(_ value: String) {
-        self.gatewayCredentialsStore.send(.gatewayPasswordChanged(value))
-        self.gatewayCredentialsStore.send(.gatewayPasswordPersistenceRequested(
+        self.gatewayCredentialsStore.send(.gatewayPasswordChanged(.init(value: value)))
+        self.gatewayCredentialsStore.send(.gatewayPasswordPersistenceRequested(.init(
             value: value,
-            instanceId: self.instanceId))
+            instanceId: self.instanceId)))
     }
 
     var manualPortIsValid: Bool {
