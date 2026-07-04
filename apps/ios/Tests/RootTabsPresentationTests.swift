@@ -701,7 +701,7 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.quickSetupSnapshotChanged(RootPresentationFeature.QuickSetupSnapshot(
+        await store.send(.quickSetupSnapshotChanged(Self.quickSetupSnapshotChange(
             quickSetupDismissed: false,
             showOnboarding: false,
             gatewayConnected: false,
@@ -717,7 +717,7 @@ struct RootTabsPresentationTests {
             $0.shouldPresentQuickSetup = true
         }
 
-        await store.send(.quickSetupSnapshotChanged(RootPresentationFeature.QuickSetupSnapshot(
+        await store.send(.quickSetupSnapshotChanged(Self.quickSetupSnapshotChange(
             quickSetupDismissed: false,
             showOnboarding: true,
             gatewayConnected: false,
@@ -1508,6 +1508,22 @@ struct RootTabsPresentationTests {
             onboardingComplete: onboardingComplete,
             hasExistingGatewayConfig: hasExistingGatewayConfig,
             shouldPresentOnLaunch: shouldPresentOnLaunch))
+    }
+
+    private static func quickSetupSnapshotChange(
+        quickSetupDismissed: Bool,
+        showOnboarding: Bool,
+        gatewayConnected: Bool,
+        hasExistingGatewayConfig: Bool,
+        discoveredGatewayCount: Int)
+        -> RootPresentationFeature.QuickSetupSnapshotChange
+    {
+        RootPresentationFeature.QuickSetupSnapshotChange(snapshot: RootPresentationFeature.QuickSetupSnapshot(
+            quickSetupDismissed: quickSetupDismissed,
+            showOnboarding: showOnboarding,
+            gatewayConnected: gatewayConnected,
+            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            discoveredGatewayCount: discoveredGatewayCount))
     }
 
     private static func localNetworkAccessRequest(
