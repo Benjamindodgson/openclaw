@@ -47,7 +47,7 @@ struct AgentDreamingDestinationFeatureTests {
             $0.busyAction = .dedupe
             $0.statusText = nil
         }
-        await store.receive(.dreamActionResponse(.init(result: .failure(.failed("dream failed"))))) {
+        await store.receive(.dreamActionResponse(.init(result: .failure(.failed(.init(message: "dream failed")))))) {
             $0.busyAction = nil
             $0.statusText = "dream failed"
         }
