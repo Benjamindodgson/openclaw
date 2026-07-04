@@ -97,10 +97,10 @@ extension AgentProTab {
     func refreshOverview(force: Bool) async {
         guard self.scenePhase == .active else { return }
         let requestedAgentID = self.activeAgentID
-        self.overviewStore.send(.refreshRequested(
+        self.overviewStore.send(.refreshRequested(.init(
             gatewayConnected: self.liveGatewayConnected,
             force: force,
-            activeAgentID: requestedAgentID))
+            activeAgentID: requestedAgentID)))
         guard let refreshRequest = self.overviewStore.refreshRequest else { return }
 
         let requestID = refreshRequest.id
