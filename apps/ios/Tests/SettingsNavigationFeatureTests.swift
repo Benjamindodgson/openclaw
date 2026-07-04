@@ -1624,7 +1624,7 @@ struct SettingsNavigationFeatureTests {
             SettingsNotificationFeature(registrationClient: probe.client)
         }
 
-        await store.send(.remoteRegistrationRequested(disclosureAccepted: true))
+        await store.send(.remoteRegistrationRequested(.init(disclosureAccepted: true)))
         await store.finish()
 
         #expect(probe.registerCount == 1)
@@ -1638,7 +1638,7 @@ struct SettingsNavigationFeatureTests {
         let missingDisclosureStore = TestStore(initialState: allowedState) {
             SettingsNotificationFeature(registrationClient: probe.client)
         }
-        await missingDisclosureStore.send(.remoteRegistrationRequested(disclosureAccepted: false))
+        await missingDisclosureStore.send(.remoteRegistrationRequested(.init(disclosureAccepted: false)))
         await missingDisclosureStore.finish()
 
         var notAllowedState = SettingsNotificationFeature.State()
@@ -1646,7 +1646,7 @@ struct SettingsNavigationFeatureTests {
         let missingAuthorizationStore = TestStore(initialState: notAllowedState) {
             SettingsNotificationFeature(registrationClient: probe.client)
         }
-        await missingAuthorizationStore.send(.remoteRegistrationRequested(disclosureAccepted: true))
+        await missingAuthorizationStore.send(.remoteRegistrationRequested(.init(disclosureAccepted: true)))
         await missingAuthorizationStore.finish()
 
         #expect(probe.registerCount == 0)
@@ -1714,16 +1714,16 @@ struct SettingsNavigationFeatureTests {
             SettingsNotificationFeature()
         }
 
-        await store.send(.relayConfigSynced(
+        await store.send(.relayConfigSynced(.init(
             usesOpenClawHostedRelay: true,
-            hostedRelayHost: "relay.example.com"))
+            hostedRelayHost: "relay.example.com")))
         {
             $0.usesOpenClawHostedRelay = true
             $0.hostedRelayHost = "relay.example.com"
         }
-        await store.send(.relayConfigSynced(
+        await store.send(.relayConfigSynced(.init(
             usesOpenClawHostedRelay: false,
-            hostedRelayHost: nil))
+            hostedRelayHost: nil)))
         {
             $0.usesOpenClawHostedRelay = false
             $0.hostedRelayHost = "ios-push-relay.openclaw.ai"

@@ -154,14 +154,23 @@ struct SettingsNotificationFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct RelayConfigSync: Equatable, Sendable {
+            var usesOpenClawHostedRelay: Bool
+            var hostedRelayHost: String?
+        }
+
+        struct RemoteRegistrationRequest: Equatable, Sendable {
+            var disclosureAccepted: Bool
+        }
+
         case actionButtonTapped
         case actionRequestHandled
         case authorizationRequestFinished(SettingsNotificationAuthorizationResult)
         case authorizationRequestRequested
         case authorizationRequestResultHandled
         case notificationSettingsOpenRequested
-        case relayConfigSynced(usesOpenClawHostedRelay: Bool, hostedRelayHost: String?)
-        case remoteRegistrationRequested(disclosureAccepted: Bool)
+        case relayConfigSynced(RelayConfigSync)
+        case remoteRegistrationRequested(RemoteRegistrationRequest)
         case statusRefreshFinished(SettingsNotificationStatus)
         case statusRefreshRequested
         case statusRefreshResultHandled
@@ -217,13 +226,13 @@ struct SettingsNotificationFeature {
                     await registrationClient.openNotificationSettings()
                 }
 
-            case let .relayConfigSynced(usesOpenClawHostedRelay, hostedRelayHost):
-                state.usesOpenClawHostedRelay = usesOpenClawHostedRelay
-                state.hostedRelayHost = hostedRelayHost ?? "ios-push-relay.openclaw.ai"
+            case let .relayConfigSynced(sync):
+                state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay
+                state.hostedRelayHost = sync.hostedRelayHost ?? "ios-push-relay.openclaw.ai"
                 return .none
 
-            case let .remoteRegistrationRequested(disclosureAccepted):
-                guard disclosureAccepted, state.status.allowsNotifications else { return .none }
+            case let .remoteRegistrationRequested(request):
+                guard request.disclosureAccepted, state.status.allowsNotifications else { return .none }
                 return .run { _ in
                     await registrationClient.registerForRemoteNotifications()
                 }
