@@ -398,10 +398,18 @@ struct AgentSkillPolicyMutationFeature {
             var key: String
         }
 
-        case mutationFailed(message: String)
+        struct MutationFailure: Equatable, Sendable {
+            var message: String
+        }
+
+        struct MutationSuccess: Equatable, Sendable {
+            var message: String
+        }
+
+        case mutationFailed(MutationFailure)
         case mutationFinished(MutationKey)
         case mutationStarted(MutationKey)
-        case mutationSucceeded(message: String)
+        case mutationSucceeded(MutationSuccess)
     }
 
     // swiftformat:enable redundantSendable
@@ -415,12 +423,12 @@ struct AgentSkillPolicyMutationFeature {
                 state.statusText = nil
                 return .none
 
-            case let .mutationSucceeded(message):
-                state.statusText = message
+            case let .mutationSucceeded(result):
+                state.statusText = result.message
                 return .none
 
-            case let .mutationFailed(message):
-                state.errorText = message
+            case let .mutationFailed(failure):
+                state.errorText = failure.message
                 return .none
 
             case let .mutationFinished(mutation):

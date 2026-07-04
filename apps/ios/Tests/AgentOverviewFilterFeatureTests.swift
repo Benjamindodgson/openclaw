@@ -52,7 +52,7 @@ struct AgentSkillPolicyMutationFeatureTests {
             AgentSkillPolicyMutationFeature()
         }
 
-        await store.send(.mutationSucceeded(message: "Skill policy saved.")) {
+        await store.send(.mutationSucceeded(.init(message: "Skill policy saved."))) {
             $0.statusText = "Skill policy saved."
         }
     }
@@ -64,7 +64,7 @@ struct AgentSkillPolicyMutationFeatureTests {
             AgentSkillPolicyMutationFeature()
         }
 
-        await store.send(.mutationFailed(message: "Skill policy failed.")) {
+        await store.send(.mutationFailed(.init(message: "Skill policy failed."))) {
             $0.errorText = "Skill policy failed."
         }
     }
