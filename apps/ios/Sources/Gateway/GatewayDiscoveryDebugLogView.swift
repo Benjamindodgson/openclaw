@@ -36,7 +36,11 @@ struct GatewayDiscoveryDebugLogFeature {
     struct State: Equatable, Sendable {}
 
     enum Action: Equatable, Sendable {
-        case copyButtonTapped(String)
+        struct CopyRequest: Equatable, Sendable {
+            var log: String
+        }
+
+        case copyButtonTapped(CopyRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -47,9 +51,9 @@ struct GatewayDiscoveryDebugLogFeature {
             let clipboard = self.clipboardOverride ?? dependencyClipboard
 
             switch action {
-            case let .copyButtonTapped(log):
+            case let .copyButtonTapped(request):
                 return .run { _ in
-                    await clipboard.copy(log)
+                    await clipboard.copy(request.log)
                 }
             }
         }
@@ -98,7 +102,7 @@ struct GatewayDiscoveryDebugLogView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Copy") {
-                    self.store.send(.copyButtonTapped(self.formattedLog()))
+                    self.store.send(.copyButtonTapped(.init(log: self.formattedLog())))
                 }
                 .disabled(self.gatewayController.discoveryDebugLog.isEmpty)
             }
