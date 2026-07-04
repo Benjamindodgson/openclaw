@@ -631,8 +631,11 @@ struct OnboardingQRPhotoImportFeature {
     }
 
     enum ImportResult: Equatable, Sendable {
-        case appleReviewSetupCode(String)
-        case failure(String)
+        struct AppleReviewSetupCode: Equatable, Sendable { var code: String }
+        struct Failure: Equatable, Sendable { var message: String }
+
+        case appleReviewSetupCode(AppleReviewSetupCode)
+        case failure(Failure)
         case gatewayLink(GatewayConnectDeepLink)
     }
 
@@ -652,7 +655,7 @@ struct OnboardingQRPhotoImportFeature {
             switch action {
             case .imageLoadFailed:
                 state.isImporting = false
-                state.result = .failure(Self.imageLoadFailureMessage)
+                state.result = .failure(.init(message: Self.imageLoadFailureMessage))
                 return .none
 
             case .importStarted:
@@ -675,15 +678,15 @@ struct OnboardingQRPhotoImportFeature {
 
     private static func importResult(message: String?) -> ImportResult {
         guard let message else {
-            return .failure(self.invalidQRCodeMessage)
+            return .failure(.init(message: self.invalidQRCodeMessage))
         }
         if let link = GatewayConnectDeepLink.fromSetupInput(message) {
             return .gatewayLink(link)
         }
         if AppleReviewDemoMode.isSetupCode(message) {
-            return .appleReviewSetupCode(message)
+            return .appleReviewSetupCode(.init(code: message))
         }
-        return .failure(Self.invalidQRCodeMessage)
+        return .failure(.init(message: Self.invalidQRCodeMessage))
     }
 }
 
@@ -706,7 +709,9 @@ struct OnboardingSetupCodeFeature {
     }
 
     enum ApplyResult: Equatable, Sendable {
-        case appleReviewDemoSetupCode(String)
+        struct AppleReviewDemoSetupCode: Equatable, Sendable { var code: String }
+
+        case appleReviewDemoSetupCode(AppleReviewDemoSetupCode)
         case gatewayLink(GatewayConnectDeepLink)
     }
 
@@ -751,7 +756,7 @@ struct OnboardingSetupCodeFeature {
                 if AppleReviewDemoMode.isSetupCode(raw) {
                     state.setupCode = ""
                     state.status = "Apple Review demo mode enabled."
-                    state.applyResult = .appleReviewDemoSetupCode(raw)
+                    state.applyResult = .appleReviewDemoSetupCode(.init(code: raw))
                     return .none
                 }
 
@@ -794,7 +799,8 @@ struct OnboardingSetupCodeFeature {
                 guard AppleReviewDemoMode.isSetupCode(scan.code) else {
                     return .none
                 }
-                state.applyResult = .appleReviewDemoSetupCode(scan.code.trimmingCharacters(in: .whitespacesAndNewlines))
+                state.applyResult = .appleReviewDemoSetupCode(.init(
+                    code: scan.code.trimmingCharacters(in: .whitespacesAndNewlines)))
                 return .none
 
             case .setupCodeAccepted:

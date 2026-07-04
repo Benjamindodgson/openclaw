@@ -762,8 +762,8 @@ extension OnboardingWizardView {
         self.setupCodeStore.send(.applyResultHandled)
 
         switch result {
-        case let .appleReviewDemoSetupCode(code):
-            self.handleScannedSetupCode(code)
+        case let .appleReviewDemoSetupCode(setupCode):
+            self.handleScannedSetupCode(setupCode.code)
 
         case let .gatewayLink(link):
             self.statusStore.send(.connectionStarted(.init(
@@ -840,10 +840,10 @@ extension OnboardingWizardView {
         switch result {
         case let .gatewayLink(link):
             self.handleScannedLink(link)
-        case let .appleReviewSetupCode(code):
-            self.handleScannedSetupCode(code)
-        case let .failure(message):
-            self.presentationStore.send(.qrScannerErrorReceived(.init(message: message)))
+        case let .appleReviewSetupCode(setupCode):
+            self.handleScannedSetupCode(setupCode.code)
+        case let .failure(failure):
+            self.presentationStore.send(.qrScannerErrorReceived(.init(message: failure.message)))
         }
     }
 
