@@ -232,7 +232,7 @@ struct AgentProTab: View {
     var skillFilterBinding: Binding<String> {
         Binding(
             get: { self.skillFilterStore.searchText },
-            set: { self.skillFilterStore.send(.searchTextChanged($0)) })
+            set: { self.skillFilterStore.send(.searchTextChanged(.init(text: $0))) })
     }
 
     var skillStatusFilter: SkillStatusFilter {
@@ -553,8 +553,12 @@ struct AgentSkillFilterFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SearchTextChange: Equatable, Sendable {
+            var text: String
+        }
+
         case clearSearchTapped
-        case searchTextChanged(String)
+        case searchTextChanged(SearchTextChange)
         case statusFilterChanged(AgentProTab.SkillStatusFilter)
     }
 
@@ -567,8 +571,8 @@ struct AgentSkillFilterFeature {
                 state.searchText = ""
                 return .none
 
-            case let .searchTextChanged(searchText):
-                state.searchText = searchText
+            case let .searchTextChanged(change):
+                state.searchText = change.text
                 return .none
 
             case let .statusFilterChanged(statusFilter):
