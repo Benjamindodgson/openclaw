@@ -256,7 +256,7 @@ struct RootTabsSourceGuardTests {
         #expect(destinationsSource.contains("AgentDreamingDestinationStoreFactory.live("))
         #expect(dreamingSource.contains("@Reducer\nstruct AgentDreamingDestinationFeature"))
         #expect(dreamingSource.contains("await self.store.send(.dreamActionTapped("))
-        #expect(dreamingSource.contains("self.store.send(.dreamDiaryDaySelected(day.id))"))
+        #expect(dreamingSource.contains("self.store.send(.dreamDiaryDaySelected(.init(dayID: day.id)))"))
         #expect(destinationsSource.contains("self.directHeader(\n                        for: .usage"))
         #expect(destinationsSource.contains("self.directHeader(\n                        for: .cron"))
         #expect(destinationsSource.contains("self.directRoute == route ? self.headerLeadingAction : nil"))
