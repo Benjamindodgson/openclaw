@@ -362,7 +362,9 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.localNetworkAccessRequested(reason: "scene_active", sceneActive: true))
+        await store.send(.localNetworkAccessRequested(Self.localNetworkAccessRequest(
+            reason: "scene_active",
+            sceneActive: true)))
 
         await store.send(.onboardingVisibilityChanged(isPresented: false, sceneActive: true)) {
             $0.showOnboarding = false
@@ -387,9 +389,13 @@ struct RootTabsPresentationTests {
             $0.presentationCommand = nil
         }
 
-        await store.send(.localNetworkAccessRequested(reason: "scene_active", sceneActive: false))
+        await store.send(.localNetworkAccessRequested(Self.localNetworkAccessRequest(
+            reason: "scene_active",
+            sceneActive: false)))
 
-        await store.send(.localNetworkAccessRequested(reason: "scene_active", sceneActive: true)) {
+        await store.send(.localNetworkAccessRequested(Self.localNetworkAccessRequest(
+            reason: "scene_active",
+            sceneActive: true))) {
             $0.presentationCommand = .requestLocalNetworkAccess(reason: "scene_active")
         }
     }
@@ -1447,6 +1453,16 @@ struct RootTabsPresentationTests {
             onboardingComplete: onboardingComplete,
             hasExistingGatewayConfig: hasExistingGatewayConfig,
             shouldPresentOnLaunch: shouldPresentOnLaunch)
+    }
+
+    private static func localNetworkAccessRequest(
+        reason: String,
+        sceneActive: Bool)
+        -> RootPresentationFeature.LocalNetworkAccessRequest
+    {
+        RootPresentationFeature.LocalNetworkAccessRequest(
+            reason: reason,
+            sceneActive: sceneActive)
     }
 }
 
