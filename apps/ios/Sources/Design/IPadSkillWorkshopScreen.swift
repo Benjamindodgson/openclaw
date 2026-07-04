@@ -13,12 +13,12 @@ struct IPadSkillWorkshopClient {
 extension IPadSkillWorkshopClient: DependencyKey {
     static let liveValue = IPadSkillWorkshopClient(
         list: { _ in IPadSkillProposalManifest(proposals: []) },
-        inspect: { _, _ in throw IPadSkillWorkshopError.failed("Proposal unavailable.") },
+        inspect: { _, _ in throw IPadSkillWorkshopError.failed(.init(message: "Proposal unavailable.")) },
         run: { _, _, _ in })
 
     static let testValue = IPadSkillWorkshopClient(
         list: { _ in IPadSkillProposalManifest(proposals: []) },
-        inspect: { _, _ in throw IPadSkillWorkshopError.failed("Proposal unavailable.") },
+        inspect: { _, _ in throw IPadSkillWorkshopError.failed(.init(message: "Proposal unavailable.")) },
         run: { _, _, _ in })
 
     @MainActor
@@ -81,12 +81,14 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 enum IPadSkillWorkshopError: Error, Equatable, Sendable {
-    case failed(String)
+    struct Failure: Equatable, Sendable { var message: String }
+
+    case failed(Failure)
 
     var message: String {
         switch self {
-        case let .failed(message):
-            message
+        case let .failed(failure):
+            failure.message
         }
     }
 }
@@ -326,7 +328,7 @@ struct IPadSkillWorkshopFeature {
                             kind: request.kind,
                             sceneActive: request.sceneActive,
                             canRead: request.canRead,
-                            result: .failure(.failed(Self.message(for: error))))))
+                            result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -396,7 +398,7 @@ struct IPadSkillWorkshopFeature {
                     } catch {
                         await send(.refreshResponse(.init(
                             force: request.force,
-                            result: .failure(.failed(Self.message(for: error))))))
+                            result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -456,7 +458,7 @@ struct IPadSkillWorkshopFeature {
             } catch {
                 await send(.inspectResponse(.init(
                     proposalID: request.proposalID,
-                    result: .failure(.failed(Self.message(for: error))))))
+                    result: .failure(Self.failure(for: error)))))
             }
         }
     }
@@ -469,6 +471,10 @@ struct IPadSkillWorkshopFeature {
             return gatewayError.message
         }
         return error.localizedDescription
+    }
+
+    private static func failure(for error: Error) -> IPadSkillWorkshopError {
+        .failed(.init(message: self.message(for: error)))
     }
 }
 
