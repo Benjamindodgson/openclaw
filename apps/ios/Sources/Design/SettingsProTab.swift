@@ -866,9 +866,12 @@ struct SettingsGatewayAutoConnectFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct EnabledChange: Equatable, Sendable { var isEnabled: Bool }
+        struct EnabledSync: Equatable, Sendable { var isEnabled: Bool }
+
         case disabledForOnboardingReset
-        case enabledChanged(Bool)
-        case enabledSynced(Bool)
+        case enabledChanged(EnabledChange)
+        case enabledSynced(EnabledSync)
     }
 
     // swiftformat:enable redundantSendable
@@ -880,12 +883,12 @@ struct SettingsGatewayAutoConnectFeature {
                 state.isEnabled = false
                 return .none
 
-            case let .enabledChanged(enabled):
-                state.isEnabled = enabled
+            case let .enabledChanged(change):
+                state.isEnabled = change.isEnabled
                 return .none
 
-            case let .enabledSynced(enabled):
-                state.isEnabled = enabled
+            case let .enabledSynced(sync):
+                state.isEnabled = sync.isEnabled
                 return .none
             }
         }
@@ -1626,7 +1629,7 @@ struct SettingsProTab: View {
                 self.syncTalkPreferencesState()
             }
             .onChange(of: self.storedGatewayAutoConnect) { _, newValue in
-                self.gatewayAutoConnectStore.send(.enabledSynced(newValue))
+                self.gatewayAutoConnectStore.send(.enabledSynced(.init(isEnabled: newValue)))
             }
             .onChange(of: self.storedOnboardingComplete) { _, _ in
                 self.syncOnboardingState()

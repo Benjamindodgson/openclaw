@@ -180,7 +180,7 @@ extension SettingsProTab {
         self.syncTalkRuntimeState()
         self.locationStore.send(.locationModeSynced(.init(rawValue: self.storedLocationModeRaw)))
         self.syncNotificationRelayState()
-        self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
+        self.gatewayAutoConnectStore.send(.enabledSynced(.init(isEnabled: self.storedGatewayAutoConnect)))
         self.manualGatewayEndpointStore.send(.endpointSynced(
             enabled: self.storedManualGatewayEnabled,
             host: self.storedManualGatewayHost,
@@ -694,7 +694,7 @@ extension SettingsProTab {
     }
 
     func updateGatewayAutoConnect(_ enabled: Bool) {
-        self.gatewayAutoConnectStore.send(.enabledChanged(enabled))
+        self.gatewayAutoConnectStore.send(.enabledChanged(.init(isEnabled: enabled)))
         self.storedGatewayAutoConnect = enabled
     }
 
