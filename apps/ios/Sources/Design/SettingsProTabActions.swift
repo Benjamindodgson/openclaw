@@ -192,10 +192,10 @@ extension SettingsProTab {
     }
 
     func syncVoiceControlState() {
-        self.voiceControlStore.send(.controlsSynced(
+        self.voiceControlStore.send(.controlsSynced(.init(
             talkEnabled: self.storedTalkEnabled,
             voiceWakeEnabled: self.storedVoiceWakeEnabled,
-            voiceWakeStatusText: self.appModel.voiceWake.statusText))
+            voiceWakeStatusText: self.appModel.voiceWake.statusText)))
     }
 
     func syncTalkPreferencesState() {
@@ -617,14 +617,14 @@ extension SettingsProTab {
     }
 
     func updateTalkEnabled(_ enabled: Bool) {
-        self.voiceControlStore.send(.talkEnabledChangeRequested(
+        self.voiceControlStore.send(.talkEnabledChangeRequested(.init(
             enabled: enabled,
-            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled))
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled)))
         self.storedTalkEnabled = self.voiceControlStore.talkEnabled
     }
 
     func updateVoiceWakeEnabled(_ enabled: Bool) {
-        self.voiceControlStore.send(.voiceWakeEnabledChanged(enabled))
+        self.voiceControlStore.send(.voiceWakeEnabledChanged(.init(enabled: enabled)))
         self.storedVoiceWakeEnabled = enabled
     }
 

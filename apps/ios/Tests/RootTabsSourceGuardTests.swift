@@ -1873,11 +1873,12 @@ struct RootTabsSourceGuardTests {
         let oldTalkToggleGuard = "func updateTalkEnabled(_ enabled: Bool) {\n"
             + "        guard !self.appModel.isAppleReviewDemoModeEnabled else"
 
+        #expect(settingsSource.contains("struct TalkEnabledChangeRequest: Equatable, Sendable"))
+        #expect(settingsSource.contains("case talkEnabledChangeRequested(TalkEnabledChangeRequest)"))
         #expect(settingsSource
-            .contains("case talkEnabledChangeRequested(enabled: Bool, isAppleReviewDemoModeEnabled: Bool)"))
-        #expect(settingsSource.contains("let talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled"))
+            .contains("let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : request.enabled"))
         #expect(settingsSource.contains("state.talkEnabled = talkEnabled"))
-        #expect(actionsSource.contains("self.voiceControlStore.send(.talkEnabledChangeRequested("))
+        #expect(actionsSource.contains("self.voiceControlStore.send(.talkEnabledChangeRequested(.init("))
         #expect(actionsSource.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
         #expect(actionsSource.contains(oldTalkToggleGuard) == false)
     }
@@ -1898,16 +1899,23 @@ struct RootTabsSourceGuardTests {
 
         #expect(settingsSource.contains("struct SettingsVoiceControlClient: Sendable"))
         #expect(settingsSource.contains("var settingsVoiceControl: SettingsVoiceControlClient"))
+        #expect(settingsSource.contains("struct TalkEnabledChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct VoiceControlSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct VoiceWakeEnabledChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("case controlsSynced(VoiceControlSync)"))
+        #expect(settingsSource.contains("case talkEnabledChanged(TalkEnabledChange)"))
+        #expect(settingsSource.contains("case voiceWakeEnabledChanged(VoiceWakeEnabledChange)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsVoiceControl)"))
         #expect(settingsSource.contains("await voiceControlClient.setTalkEnabled(talkEnabled)"))
-        #expect(settingsSource.contains("await voiceControlClient.setVoiceWakeEnabled(enabled)"))
+        #expect(settingsSource.contains("await voiceControlClient.setVoiceWakeEnabled(change.enabled)"))
         #expect(rootSource.contains("voiceControlStore: self.makeSettingsVoiceControlStore()"))
         #expect(storesSource.contains("func makeSettingsVoiceControlStore()"))
         #expect(storesSource.contains("voiceControlClient: .live(appModel: self.appModel)"))
-        #expect(updateTalkFunction.contains("self.voiceControlStore.send(.talkEnabledChangeRequested("))
+        #expect(updateTalkFunction.contains("self.voiceControlStore.send(.talkEnabledChangeRequested(.init("))
         #expect(updateTalkFunction.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
         #expect(!updateTalkFunction.contains("self.appModel.setTalkEnabled"))
-        #expect(updateVoiceWakeFunction.contains("self.voiceControlStore.send(.voiceWakeEnabledChanged(enabled))"))
+        #expect(updateVoiceWakeFunction.contains(
+            "self.voiceControlStore.send(.voiceWakeEnabledChanged(.init(enabled: enabled)))"))
         #expect(updateVoiceWakeFunction.contains("self.storedVoiceWakeEnabled = enabled"))
         #expect(!updateVoiceWakeFunction.contains("self.appModel.setVoiceWakeEnabled"))
     }

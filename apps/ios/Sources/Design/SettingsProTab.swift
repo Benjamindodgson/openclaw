@@ -1222,14 +1222,26 @@ struct SettingsVoiceControlFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case controlsSynced(
-            talkEnabled: Bool,
-            voiceWakeEnabled: Bool,
-            voiceWakeStatusText: String)
+        struct TalkEnabledChange: Equatable, Sendable { var enabled: Bool }
+
+        struct TalkEnabledChangeRequest: Equatable, Sendable {
+            var enabled: Bool
+            var isAppleReviewDemoModeEnabled: Bool
+        }
+
+        struct VoiceControlSync: Equatable, Sendable {
+            var talkEnabled: Bool
+            var voiceWakeEnabled: Bool
+            var voiceWakeStatusText: String
+        }
+
+        struct VoiceWakeEnabledChange: Equatable, Sendable { var enabled: Bool }
+
+        case controlsSynced(VoiceControlSync)
         case talkDisabledForAppleReview
-        case talkEnabledChanged(Bool)
-        case talkEnabledChangeRequested(enabled: Bool, isAppleReviewDemoModeEnabled: Bool)
-        case voiceWakeEnabledChanged(Bool)
+        case talkEnabledChanged(TalkEnabledChange)
+        case talkEnabledChangeRequested(TalkEnabledChangeRequest)
+        case voiceWakeEnabledChanged(VoiceWakeEnabledChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -1240,31 +1252,31 @@ struct SettingsVoiceControlFeature {
             let voiceControlClient = self.voiceControlClientOverride ?? dependencyVoiceControlClient
 
             switch action {
-            case let .controlsSynced(talkEnabled, voiceWakeEnabled, voiceWakeStatusText):
-                state.talkEnabled = talkEnabled
-                state.voiceWakeEnabled = voiceWakeEnabled
-                state.voiceWakeStatusText = voiceWakeStatusText
+            case let .controlsSynced(sync):
+                state.talkEnabled = sync.talkEnabled
+                state.voiceWakeEnabled = sync.voiceWakeEnabled
+                state.voiceWakeStatusText = sync.voiceWakeStatusText
                 return .none
 
             case .talkDisabledForAppleReview:
                 state.talkEnabled = false
                 return .none
 
-            case let .talkEnabledChanged(enabled):
-                state.talkEnabled = enabled
+            case let .talkEnabledChanged(change):
+                state.talkEnabled = change.enabled
                 return .none
 
-            case let .talkEnabledChangeRequested(enabled, isAppleReviewDemoModeEnabled):
-                let talkEnabled = isAppleReviewDemoModeEnabled ? false : enabled
+            case let .talkEnabledChangeRequested(request):
+                let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : request.enabled
                 state.talkEnabled = talkEnabled
                 return .run { _ in
                     await voiceControlClient.setTalkEnabled(talkEnabled)
                 }
 
-            case let .voiceWakeEnabledChanged(enabled):
-                state.voiceWakeEnabled = enabled
+            case let .voiceWakeEnabledChanged(change):
+                state.voiceWakeEnabled = change.enabled
                 return .run { _ in
-                    await voiceControlClient.setVoiceWakeEnabled(enabled)
+                    await voiceControlClient.setVoiceWakeEnabled(change.enabled)
                 }
             }
         }
