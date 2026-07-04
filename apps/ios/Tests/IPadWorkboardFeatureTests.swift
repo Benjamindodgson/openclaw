@@ -85,7 +85,7 @@ struct IPadWorkboardFeatureTests {
             $0.statuses = ["todo", "done"]
             $0.knownBoardIDs = ["planning"]
         }
-        await store.receive(.boardScopesResponse(force: false, .success(boards))) {
+        await store.receive(.boardScopesResponse(.init(force: false, result: .success(boards)))) {
             $0.knownBoardIDs = ["ops", "planning"]
         }
     }
@@ -248,7 +248,7 @@ struct IPadWorkboardFeatureTests {
             $0.statuses = ["todo"]
             $0.knownBoardIDs = ["default"]
         }
-        await store.receive(.boardScopesResponse(force: true, .success([])))
+        await store.receive(.boardScopesResponse(.init(force: true, result: .success([]))))
     }
 
     private static func failingClient() -> IPadWorkboardClient {
