@@ -58,9 +58,13 @@ struct GatewayQuickSetupFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ConnectRequest: Equatable, Sendable {
+            var candidate: GatewayDiscoveryModel.DiscoveredGateway
+        }
+
         struct ConnectResponse: Equatable, Sendable { var error: String? }
 
-        case connectButtonTapped(GatewayDiscoveryModel.DiscoveredGateway)
+        case connectButtonTapped(ConnectRequest)
         case connectResponse(ConnectResponse)
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
@@ -79,8 +83,8 @@ struct GatewayQuickSetupFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .connectButtonTapped(candidate):
-                return self.connect(candidate: candidate, state: &state, client: client)
+            case let .connectButtonTapped(request):
+                return self.connect(candidate: request.candidate, state: &state, client: client)
 
             case let .connectResponse(response):
                 state.connecting = false
@@ -174,7 +178,7 @@ struct GatewayQuickSetupSheet: View {
                         operatorStatusText: self.appModel.operatorStatusText)
 
                     Button {
-                        self.store.send(.connectButtonTapped(candidate))
+                        self.store.send(.connectButtonTapped(.init(candidate: candidate)))
                     } label: {
                         Group {
                             if self.store.connecting {

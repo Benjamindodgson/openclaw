@@ -635,6 +635,15 @@ struct RootTabsSourceGuardTests {
         #expect(quickSetupSource.contains("await send(.connectResponse(.init(error: error)))"))
     }
 
+    @Test func `gateway quick setup connect action is typed`() throws {
+        let quickSetupSource = try String(contentsOf: Self.gatewayQuickSetupSourceURL(), encoding: .utf8)
+
+        #expect(quickSetupSource.contains("struct ConnectRequest: Equatable, Sendable"))
+        #expect(quickSetupSource.contains("case connectButtonTapped(ConnectRequest)"))
+        #expect(quickSetupSource.contains("request.candidate"))
+        #expect(quickSetupSource.contains("self.store.send(.connectButtonTapped(.init(candidate: candidate)))"))
+    }
+
     @Test func `voice wake trigger word change action is typed`() throws {
         let source = try String(contentsOf: Self.voiceWakeWordsSettingsSourceURL(), encoding: .utf8)
 

@@ -17,7 +17,7 @@ struct GatewayQuickSetupFeatureTests {
             GatewayQuickSetupFeature(client: probe.client)
         }
 
-        await store.send(.connectButtonTapped(candidate)) {
+        await store.send(.connectButtonTapped(.init(candidate: candidate))) {
             $0.connectError = nil
             $0.connecting = true
         }
