@@ -32,7 +32,7 @@ struct IPadWorkboardFeatureTests {
         await store.send(.draftNotesChanged(.init(notes: "notes"))) {
             $0.draftNotes = "notes"
         }
-        await store.send(.queryChanged("gateway")) {
+        await store.send(.queryChanged(.init(query: "gateway"))) {
             $0.query = "gateway"
         }
         await store.send(.clearQueryTapped) {

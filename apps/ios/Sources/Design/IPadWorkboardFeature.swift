@@ -419,7 +419,12 @@ struct IPadWorkboardFeature {
 
         case moveRequested(MoveRequest)
         case moveResponse(MoveResponse)
-        case queryChanged(String)
+
+        struct QueryChange: Equatable, Sendable {
+            var query: String
+        }
+
+        case queryChanged(QueryChange)
 
         struct RefreshRequest: Equatable, Sendable {
             var sceneActive: Bool
@@ -436,7 +441,12 @@ struct IPadWorkboardFeature {
         case refreshRequested(RefreshRequest)
         case refreshResponse(RefreshResponse)
         case sheetDismissed
-        case statusChanged(String)
+
+        struct StatusChange: Equatable, Sendable {
+            var status: String
+        }
+
+        case statusChanged(StatusChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -626,8 +636,8 @@ struct IPadWorkboardFeature {
                     return .none
                 }
 
-            case let .queryChanged(query):
-                state.query = query
+            case let .queryChanged(change):
+                state.query = change.query
                 return .none
 
             case let .refreshRequested(request):
@@ -697,8 +707,8 @@ struct IPadWorkboardFeature {
                 state.presentedSheet = nil
                 return .none
 
-            case let .statusChanged(status):
-                state.selectedStatus = status
+            case let .statusChanged(change):
+                state.selectedStatus = change.status
                 return .none
             }
         }
