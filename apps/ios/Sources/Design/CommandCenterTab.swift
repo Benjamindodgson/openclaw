@@ -313,7 +313,7 @@ struct CommandCenterTab: View {
     private func syncGatewayPresentation() {
         let presentation = self.currentGatewayPresentation
         guard self.gatewayStore.presentation != presentation else { return }
-        self.gatewayStore.send(.presentationChanged(presentation))
+        self.gatewayStore.send(.presentationChanged(.init(presentation: presentation)))
     }
 
     private var defaultChatWorkItem: WorkItem {
@@ -540,7 +540,11 @@ struct CommandCenterGatewayPresentationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case presentationChanged(CommandCenterGatewayPresentationState)
+        struct PresentationChange: Equatable, Sendable {
+            var presentation: CommandCenterGatewayPresentationState
+        }
+
+        case presentationChanged(PresentationChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -548,8 +552,8 @@ struct CommandCenterGatewayPresentationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .presentationChanged(presentation):
-                state.presentation = presentation
+            case let .presentationChanged(change):
+                state.presentation = change.presentation
                 return .none
             }
         }
