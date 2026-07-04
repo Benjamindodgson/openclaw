@@ -125,8 +125,12 @@ struct AgentDreamingDestinationFeature {
             var gatewayConnected: Bool
         }
 
+        struct DreamActionResponse: Equatable, Sendable {
+            var result: Result<String, AgentDreamingMaintenanceError>
+        }
+
         case dreamActionTapped(DreamActionTap)
-        case dreamActionResponse(Result<String, AgentDreamingMaintenanceError>)
+        case dreamActionResponse(DreamActionResponse)
         case dreamDiaryDaySelected(DreamDiaryDaySelection)
     }
 
@@ -145,21 +149,24 @@ struct AgentDreamingDestinationFeature {
                 return .run { send in
                     do {
                         let summary = try await client.run(tap.action)
-                        await send(.dreamActionResponse(.success(summary)))
+                        await send(.dreamActionResponse(.init(result: .success(summary))))
                     } catch {
-                        await send(.dreamActionResponse(.failure(.failed(error.localizedDescription))))
+                        await send(.dreamActionResponse(.init(result: .failure(.failed(error.localizedDescription)))))
                     }
                 }
 
-            case let .dreamActionResponse(.success(summary)):
-                state.busyAction = nil
-                state.statusText = summary
-                return .none
+            case let .dreamActionResponse(response):
+                switch response.result {
+                case let .success(summary):
+                    state.busyAction = nil
+                    state.statusText = summary
+                    return .none
 
-            case let .dreamActionResponse(.failure(error)):
-                state.busyAction = nil
-                state.statusText = error.message
-                return .none
+                case let .failure(error):
+                    state.busyAction = nil
+                    state.statusText = error.message
+                    return .none
+                }
 
             case let .dreamDiaryDaySelected(selection):
                 state.selectedDreamDiaryDayID = selection.dayID
