@@ -843,6 +843,10 @@ struct RootTabsSourceGuardTests {
             actionsSource,
             from: "func reconnectGateway() async",
             to: "@MainActor\n    func runDiagnostics() async")
+        let problemReconnectFunction = try Self.extract(
+            actionsSource,
+            from: "func retryGatewayConnectionFromProblem() async",
+            to: "func gatewayProblemPrimaryActionTitle")
 
         #expect(sectionsSource.contains("var gatewayDestination: some View"))
         #expect(sectionsSource.contains("self.gatewayActions"))
@@ -874,6 +878,12 @@ struct RootTabsSourceGuardTests {
         #expect(reconnectFunction.contains(".send(.reconnectRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))"))
         #expect(rootSource.contains("reconnectClient: .live(gatewayController: self.gatewayController)"))
         #expect(!reconnectFunction.contains("await self.gatewayController.connectLastKnown()"))
+        #expect(problemReconnectFunction.contains("await self.connectManual()"))
+        #expect(problemReconnectFunction.contains("self.gatewayActivityStore"))
+        #expect(problemReconnectFunction.contains(".send(.reconnectRequested("))
+        #expect(problemReconnectFunction
+            .contains("isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled"))
+        #expect(!problemReconnectFunction.contains("await self.gatewayController.connectLastKnown()"))
         #expect(actionsSource.contains("self.gatewayActivityStore"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
         #expect(gatewaySetupFeaturesSource

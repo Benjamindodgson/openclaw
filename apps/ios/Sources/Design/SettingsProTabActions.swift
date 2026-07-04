@@ -458,7 +458,10 @@ extension SettingsProTab {
         if self.manualGatewayEnabled || self.connectingGatewayID == "manual" {
             await self.connectManual()
         } else {
-            await self.gatewayController.connectLastKnown()
+            await self.gatewayActivityStore
+                .send(.reconnectRequested(
+                    isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled))
+                .finish()
         }
     }
 
