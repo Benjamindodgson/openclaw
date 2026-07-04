@@ -633,7 +633,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private func archive(_ card: IPadWorkboardCard) async {
-        await self.store.send(.archiveRequested(card, canWrite: self.canWrite)).finish()
+        await self.store.send(.archiveRequested(.init(card: card, canWrite: self.canWrite))).finish()
     }
 
     private func dispatchCards() async {
