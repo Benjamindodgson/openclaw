@@ -95,10 +95,15 @@ struct VoiceWakeWordsSettingsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct TriggerWordChange: Equatable, Sendable {
+            var index: Int
+            var value: String
+        }
+
         case appeared
         case addWordButtonTapped
         case removeWords(IndexSet)
-        case triggerWordChanged(index: Int, value: String)
+        case triggerWordChanged(TriggerWordChange)
         case resetDefaultsButtonTapped
         case focusedTriggerIndexChanged(Int?)
         case commitTriggerWords
@@ -131,9 +136,9 @@ struct VoiceWakeWordsSettingsFeature {
                 }
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
-            case let .triggerWordChanged(index, value):
-                guard state.triggerWords.indices.contains(index) else { return .none }
-                state.triggerWords[index] = value
+            case let .triggerWordChanged(change):
+                guard state.triggerWords.indices.contains(change.index) else { return .none }
+                state.triggerWords[change.index] = change.value
                 return .none
 
             case .resetDefaultsButtonTapped:
@@ -257,7 +262,7 @@ struct VoiceWakeWordsSettingsView: View {
                 return self.store.triggerWords[index]
             },
             set: { newValue in
-                self.store.send(.triggerWordChanged(index: index, value: newValue))
+                self.store.send(.triggerWordChanged(.init(index: index, value: newValue)))
             })
     }
 }

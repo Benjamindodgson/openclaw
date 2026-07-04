@@ -635,6 +635,16 @@ struct RootTabsSourceGuardTests {
         #expect(quickSetupSource.contains("await send(.connectResponse(.init(error: error)))"))
     }
 
+    @Test func `voice wake trigger word change action is typed`() throws {
+        let source = try String(contentsOf: Self.voiceWakeWordsSettingsSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct TriggerWordChange: Equatable, Sendable"))
+        #expect(source.contains("case triggerWordChanged(TriggerWordChange)"))
+        #expect(source.contains("state.triggerWords[change.index] = change.value"))
+        #expect(source.contains(
+            "self.store.send(.triggerWordChanged(.init(index: index, value: newValue)))"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -2842,6 +2852,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsTalkPreferencesFeature.swift")
+    }
+
+    private static func voiceWakeWordsSettingsSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Settings/VoiceWakeWordsSettingsView.swift")
     }
 
     private static func settingsGatewaySetupFeaturesSourceURL() -> URL {
