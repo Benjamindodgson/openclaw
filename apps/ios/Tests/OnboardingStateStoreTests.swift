@@ -328,6 +328,14 @@ import Testing
             $0.statusLine = "Connecting to gateway:18789…"
         }
 
+        await store.send(.connectionStatusUpdated(.init(
+            message: "Connecting via QR code...",
+            statusLine: "QR loaded. Connecting to gateway.local:18789...")))
+        {
+            $0.connectMessage = "Connecting via QR code..."
+            $0.statusLine = "QR loaded. Connecting to gateway.local:18789..."
+        }
+
         await store.send(.connectionActivityStarted(id: "retry-auto")) {
             $0.connectingGatewayID = "retry-auto"
         }
