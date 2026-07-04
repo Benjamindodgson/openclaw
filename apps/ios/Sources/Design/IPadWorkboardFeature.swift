@@ -367,8 +367,17 @@ struct IPadWorkboardFeature {
         case createRequested(CreateRequest)
         case createResponse(CreateResponse)
 
-        case dispatchRequested(canWrite: Bool)
-        case dispatchResponse(boardID: String?, Result<IPadWorkboardDispatchSnapshot, IPadWorkboardError>)
+        struct DispatchRequest: Equatable, Sendable {
+            var canWrite: Bool
+        }
+
+        struct DispatchResponse: Equatable, Sendable {
+            var boardID: String?
+            var result: Result<IPadWorkboardDispatchSnapshot, IPadWorkboardError>
+        }
+
+        case dispatchRequested(DispatchRequest)
+        case dispatchResponse(DispatchResponse)
         case draftNotesChanged(String)
         case draftTitleChanged(String)
         case moveRequested(IPadWorkboardCard, status: String, canWrite: Bool)
@@ -490,8 +499,8 @@ struct IPadWorkboardFeature {
                     return .none
                 }
 
-            case let .dispatchRequested(canWrite):
-                guard canWrite, !state.isLoading else { return .none }
+            case let .dispatchRequested(request):
+                guard request.canWrite, !state.isLoading else { return .none }
                 state.isDispatching = true
                 state.errorText = nil
                 state.dispatchSummaryText = nil
@@ -500,26 +509,31 @@ struct IPadWorkboardFeature {
                     do {
                         let summary = try await client.dispatch(boardID)
                         let cardsResponse = try await client.listCards(boardID)
-                        await send(.dispatchResponse(boardID: boardID, .success(IPadWorkboardDispatchSnapshot(
-                            summary: summary,
-                            cardsResponse: cardsResponse))))
+                        await send(.dispatchResponse(.init(
+                            boardID: boardID,
+                            result: .success(IPadWorkboardDispatchSnapshot(
+                                summary: summary,
+                                cardsResponse: cardsResponse)))))
                     } catch {
-                        await send(.dispatchResponse(boardID: boardID, .failure(.failed(Self.message(for: error)))))
+                        await send(.dispatchResponse(.init(
+                            boardID: boardID,
+                            result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .dispatchResponse(boardID, .success(snapshot)):
+            case let .dispatchResponse(response):
                 state.isDispatching = false
-                guard state.selectedBoardParam == boardID else { return .none }
-                state.dispatchSummaryText = snapshot.summary.summaryText
-                state.applyCardsResponse(snapshot.cardsResponse)
-                return .none
+                guard state.selectedBoardParam == response.boardID else { return .none }
+                switch response.result {
+                case let .success(snapshot):
+                    state.dispatchSummaryText = snapshot.summary.summaryText
+                    state.applyCardsResponse(snapshot.cardsResponse)
+                    return .none
 
-            case let .dispatchResponse(boardID, .failure(error)):
-                state.isDispatching = false
-                guard state.selectedBoardParam == boardID else { return .none }
-                state.errorText = error.message
-                return .none
+                case let .failure(error):
+                    state.errorText = error.message
+                    return .none
+                }
 
             case let .draftNotesChanged(notes):
                 state.draftNotes = notes
