@@ -419,9 +419,14 @@ struct OnboardingCredentialsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct LoadedCredentials: Equatable, Sendable {
+            var token: String
+            var password: String
+        }
+
         struct ManualCredentialChange: Equatable, Sendable { var value: String }
 
-        case credentialsLoaded(token: String, password: String)
+        case credentialsLoaded(LoadedCredentials)
         case gatewayPasswordChanged(ManualCredentialChange)
         case gatewayTokenChanged(ManualCredentialChange)
         case pendingManualAuthOverrideConsumed
@@ -434,9 +439,9 @@ struct OnboardingCredentialsFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .credentialsLoaded(token, password):
-                state.gatewayToken = token
-                state.gatewayPassword = password
+            case let .credentialsLoaded(credentials):
+                state.gatewayToken = credentials.token
+                state.gatewayPassword = credentials.password
                 return .none
 
             case let .gatewayPasswordChanged(change):
