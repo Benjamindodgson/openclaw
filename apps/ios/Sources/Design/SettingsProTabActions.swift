@@ -249,9 +249,9 @@ extension SettingsProTab {
         let host = config.relayBaseURL.flatMap {
             URLComponents(url: $0, resolvingAgainstBaseURL: false)?.host
         }
-        self.notificationStore.send(.relayConfigSynced(
+        self.notificationStore.send(.relayConfigSynced(.init(
             usesOpenClawHostedRelay: config.usesOpenClawHostedRelay,
-            hostedRelayHost: host))
+            hostedRelayHost: host)))
     }
 
     func syncOnboardingState() {
@@ -548,8 +548,8 @@ extension SettingsProTab {
 
     @MainActor
     func registerForRemoteNotificationsIfEnrollmentReady() {
-        self.notificationStore.send(.remoteRegistrationRequested(
-            disclosureAccepted: self.pushEnrollmentConsentStore.disclosureAccepted))
+        self.notificationStore.send(.remoteRegistrationRequested(.init(
+            disclosureAccepted: self.pushEnrollmentConsentStore.disclosureAccepted)))
     }
 
     var manualPortBinding: Binding<String> {
