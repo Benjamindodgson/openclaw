@@ -801,7 +801,7 @@ extension OnboardingWizardView {
                 instanceId: GatewaySettingsStore.currentInstanceID())
         }
         self.saveGatewayBootstrapToken(setupAuth.bootstrapToken)
-        self.credentialsStore.send(.setupAuthApplied(setupAuth))
+        self.credentialsStore.send(.setupAuthApplied(.init(setupAuth: setupAuth)))
         self.saveGatewayCredentials(token: self.gatewayToken, password: self.gatewayPassword)
     }
 
