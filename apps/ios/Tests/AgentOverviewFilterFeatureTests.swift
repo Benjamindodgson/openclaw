@@ -4,6 +4,31 @@ import Testing
 @testable import OpenClaw
 
 @MainActor
+struct AgentSelectionFeatureTests {
+    @Test func `agent selection persists through client`() async {
+        let probe = AgentSelectionProbe()
+        let store = TestStore(initialState: AgentSelectionFeature.State()) {
+            AgentSelectionFeature(selectionClient: probe.client)
+        }
+
+        await store.send(.agentSelected("agent-1"))
+        await store.finish()
+
+        #expect(probe.selectedAgentIds == ["agent-1"])
+    }
+}
+
+private final class AgentSelectionProbe: @unchecked Sendable {
+    var selectedAgentIds: [String?] = []
+
+    var client: AgentSelectionClient {
+        AgentSelectionClient(setSelectedAgentId: { agentId in
+            self.selectedAgentIds.append(agentId)
+        })
+    }
+}
+
+@MainActor
 struct AgentSkillPolicyMutationFeatureTests {
     @Test func `mutation start records busy key and clears messages`() async {
         var initialState = AgentSkillPolicyMutationFeature.State()

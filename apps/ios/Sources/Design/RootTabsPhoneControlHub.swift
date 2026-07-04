@@ -257,7 +257,8 @@ struct RootTabsPhoneControlHub: View {
                 directRoute: .instances,
                 headerLeadingAction: self.phoneDetailBackAction,
                 headerTitle: "Instances",
-                openSettings: { self.openPhoneRootDestination(.gateway) })
+                openSettings: { self.openPhoneRootDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
         case .sessions:
             CommandSessionsScreen(
                 headerLeadingAction: self.phoneDetailBackAction,
@@ -268,19 +269,22 @@ struct RootTabsPhoneControlHub: View {
                 directRoute: .dreaming,
                 headerLeadingAction: self.phoneDetailBackAction,
                 headerTitle: "Dreaming",
-                openSettings: { self.openPhoneRootDestination(.gateway) })
+                openSettings: { self.openPhoneRootDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
         case .usage:
             AgentProTab(
                 directRoute: .usage,
                 headerLeadingAction: self.phoneDetailBackAction,
                 headerTitle: "Usage",
-                openSettings: { self.openPhoneRootDestination(.gateway) })
+                openSettings: { self.openPhoneRootDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
         case .cron:
             AgentProTab(
                 directRoute: .cron,
                 headerLeadingAction: self.phoneDetailBackAction,
                 headerTitle: "Cron Jobs",
-                openSettings: { self.openPhoneRootDestination(.gateway) })
+                openSettings: { self.openPhoneRootDestination(.gateway) },
+                selectionStore: self.makeAgentSelectionStore())
         case .docs:
             OpenClawDocsScreen(
                 headerLeadingAction: self.phoneDetailBackAction,
@@ -313,6 +317,13 @@ struct RootTabsPhoneControlHub: View {
 
     private func opensRootTab(_ destination: RootTabs.SidebarDestination) -> Bool {
         RootTabs.shouldOpenRootTabFromPhoneHub(destination)
+    }
+
+    @MainActor
+    private func makeAgentSelectionStore() -> StoreOf<AgentSelectionFeature> {
+        Store(initialState: AgentSelectionFeature.State()) {
+            AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))
+        }
     }
 
     private func applyInitialDestinationIfNeeded() {
