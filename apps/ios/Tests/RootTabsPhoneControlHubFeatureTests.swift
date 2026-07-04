@@ -44,11 +44,11 @@ struct RootTabsPhoneControlHubFeatureTests {
             RootTabsPhoneControlHubFeature()
         }
 
-        await store.send(.initialDestinationAppeared(destination: .sessions, opensRootTab: false)) {
+        await store.send(.initialDestinationAppeared(.init(destination: .sessions, opensRootTab: false))) {
             $0.didApplyInitialDestination = true
             $0.navigationPath = [.sessions]
         }
-        await store.send(.initialDestinationAppeared(destination: .docs, opensRootTab: false))
+        await store.send(.initialDestinationAppeared(.init(destination: .docs, opensRootTab: false)))
     }
 
     @Test func `initial root destination only marks initial application`() async {
@@ -58,7 +58,7 @@ struct RootTabsPhoneControlHubFeatureTests {
             RootTabsPhoneControlHubFeature()
         }
 
-        await store.send(.initialDestinationAppeared(destination: .gateway, opensRootTab: true)) {
+        await store.send(.initialDestinationAppeared(.init(destination: .gateway, opensRootTab: true))) {
             $0.didApplyInitialDestination = true
             $0.navigationPath = []
         }
