@@ -925,7 +925,10 @@ extension RootTabs {
     private var selectedTabBinding: Binding<AppTab> {
         Binding(
             get: { self.navigationStore.selectedTab },
-            set: { self.navigationStore.send(.tabSelected($0)) })
+            set: {
+                self.navigationStore.send(.tabSelected(
+                    RootNavigationSelectionFeature.TabSelection(tab: $0)))
+            })
     }
 
     private var selectedSidebarDestination: SidebarDestination {
@@ -970,12 +973,15 @@ extension RootTabs {
     }
 
     func selectSidebarDestination(_ destination: SidebarDestination) {
-        self.navigationStore.send(.sidebarDestinationSelected(destination))
+        self.navigationStore.send(.sidebarDestinationSelected(
+            RootNavigationSelectionFeature.SidebarDestinationSelection(
+                destination: destination)))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
 
     private func selectSettingsRoute(_ route: SettingsRoute) {
-        self.navigationStore.send(.settingsRouteSelected(route))
+        self.navigationStore.send(.settingsRouteSelected(
+            RootNavigationSelectionFeature.SettingsRouteSelection(route: route)))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
 

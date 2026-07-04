@@ -87,7 +87,9 @@ struct RootTabsSidebarRegressionTests {
         #expect(navigationShell.contains("NavigationStack(path: self.sidebarNavigationPathBinding)"))
         #expect(sidebarDetail.contains("case .settings:"))
         #expect(sidebarDetail.contains("ownsNavigationStack: false"))
-        #expect(selection.contains("self.navigationStore.send(.sidebarDestinationSelected(destination))"))
+        #expect(selection.contains(".sidebarDestinationSelected("))
+        #expect(selection.contains("RootNavigationSelectionFeature.SidebarDestinationSelection("))
+        #expect(selection.contains("destination: destination"))
         #expect(resetRange.lowerBound < destinationRange.lowerBound)
     }
 

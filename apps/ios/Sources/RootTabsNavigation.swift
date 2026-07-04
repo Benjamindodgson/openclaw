@@ -416,6 +416,18 @@ struct RootSidebarFeature {
 @Reducer
 struct RootNavigationSelectionFeature {
     // swiftformat:disable redundantSendable
+    struct TabSelection: Equatable, Sendable {
+        var tab: RootTabs.AppTab
+    }
+
+    struct SidebarDestinationSelection: Equatable, Sendable {
+        var destination: RootTabs.SidebarDestination
+    }
+
+    struct SettingsRouteSelection: Equatable, Sendable {
+        var route: SettingsRoute
+    }
+
     struct NotificationPermissionSettingsRequest: Equatable, Sendable {
         var suppressedApprovalID: String
     }
@@ -464,9 +476,9 @@ struct RootNavigationSelectionFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case tabSelected(RootTabs.AppTab)
-        case sidebarDestinationSelected(RootTabs.SidebarDestination)
-        case settingsRouteSelected(SettingsRoute)
+        case tabSelected(TabSelection)
+        case sidebarDestinationSelected(SidebarDestinationSelection)
+        case settingsRouteSelected(SettingsRouteSelection)
         case sidebarNavigationPathChanged(SidebarNavigationPathChange)
         case sidebarSettingsRoutePushed(SidebarSettingsRoutePush)
         case settingsRouteChanged(SettingsRouteChange)
@@ -479,11 +491,12 @@ struct RootNavigationSelectionFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .tabSelected(tab):
-                state.selectedTab = tab
+            case let .tabSelected(selection):
+                state.selectedTab = selection.tab
                 return .none
 
-            case let .sidebarDestinationSelected(destination):
+            case let .sidebarDestinationSelected(selection):
+                let destination = selection.destination
                 state.sidebarNavigationPath.removeAll()
                 if destination.settingsRoute != .notifications {
                     state.suppressedExecApprovalPromptIDForNotificationSettings = nil
@@ -493,8 +506,8 @@ struct RootNavigationSelectionFeature {
                 state.selectedTab = destination.appTab
                 return .none
 
-            case let .settingsRouteSelected(route):
-                self.selectSettingsRoute(route, state: &state)
+            case let .settingsRouteSelected(selection):
+                self.selectSettingsRoute(selection.route, state: &state)
                 return .none
 
             case let .sidebarNavigationPathChanged(change):

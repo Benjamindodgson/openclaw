@@ -873,14 +873,14 @@ struct RootTabsPresentationTests {
             $0.sidebarNavigationPath = [.voice]
         }
 
-        await store.send(.sidebarDestinationSelected(.gateway)) {
+        await store.send(.sidebarDestinationSelected(Self.sidebarDestinationSelection(.gateway))) {
             $0.sidebarNavigationPath = []
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .gateway
             $0.selectedSettingsRoute = .gateway
         }
 
-        await store.send(.tabSelected(.talk)) {
+        await store.send(.tabSelected(Self.tabSelection(.talk))) {
             $0.selectedTab = .talk
         }
     }
@@ -897,7 +897,7 @@ struct RootTabsPresentationTests {
             $0.sidebarNavigationPath = [.privacy]
         }
 
-        await store.send(.settingsRouteSelected(.voice)) {
+        await store.send(.settingsRouteSelected(Self.settingsRouteSelection(.voice))) {
             $0.sidebarNavigationPath = []
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .settings
@@ -905,7 +905,7 @@ struct RootTabsPresentationTests {
             $0.selectedSettingsRouteRequestID = 1
         }
 
-        await store.send(.settingsRouteSelected(.gateway)) {
+        await store.send(.settingsRouteSelected(Self.settingsRouteSelection(.gateway))) {
             $0.selectedSettingsRoute = .gateway
             $0.selectedSettingsRouteRequestID = 2
         }
@@ -951,7 +951,7 @@ struct RootTabsPresentationTests {
             RootNavigationSelectionFeature()
         }
 
-        await store.send(.settingsRouteSelected(.voice)) {
+        await store.send(.settingsRouteSelected(Self.settingsRouteSelection(.voice))) {
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .voice
             $0.selectedSettingsRouteRequestID = 1
@@ -1488,6 +1488,24 @@ struct RootTabsPresentationTests {
 
     private static func sidebarVisibilityChange(isVisible: Bool) -> RootSidebarFeature.VisibilityChange {
         RootSidebarFeature.VisibilityChange(isVisible: isVisible)
+    }
+
+    private static func tabSelection(_ tab: RootTabs.AppTab) -> RootNavigationSelectionFeature.TabSelection {
+        RootNavigationSelectionFeature.TabSelection(tab: tab)
+    }
+
+    private static func sidebarDestinationSelection(
+        _ destination: RootTabs.SidebarDestination)
+        -> RootNavigationSelectionFeature.SidebarDestinationSelection
+    {
+        RootNavigationSelectionFeature.SidebarDestinationSelection(destination: destination)
+    }
+
+    private static func settingsRouteSelection(
+        _ route: SettingsRoute)
+        -> RootNavigationSelectionFeature.SettingsRouteSelection
+    {
+        RootNavigationSelectionFeature.SettingsRouteSelection(route: route)
     }
 
     private static func notificationPermissionSettingsRequest(
