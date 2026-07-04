@@ -162,7 +162,8 @@ struct RootTabs: View {
 
             TalkProTab(
                 openSettings: { self.selectSidebarDestination(.gateway) },
-                openVoiceSettings: { self.selectSettingsRoute(.voice) })
+                openVoiceSettings: { self.selectSettingsRoute(.voice) },
+                store: self.makeTalkProTabStore())
                 .tabItem {
                     Label(
                         "Talk",
@@ -410,7 +411,8 @@ struct RootTabs: View {
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 ownsNavigationStack: false,
                 openSettings: { self.selectSidebarDestination(.gateway) },
-                openVoiceSettings: { self.selectSettingsRoute(.voice) })
+                openVoiceSettings: { self.selectSettingsRoute(.voice) },
+                store: self.makeTalkProTabStore())
         case .overview:
             self.sidebarOverview
         case .activity:
@@ -939,6 +941,13 @@ struct RootTabs: View {
     private func makeDeepLinkAgentPromptStore() -> StoreOf<DeepLinkAgentPromptFeature> {
         Store(initialState: DeepLinkAgentPromptFeature.State()) {
             DeepLinkAgentPromptFeature(client: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
+    private func makeTalkProTabStore() -> StoreOf<TalkProTabFeature> {
+        Store(initialState: TalkProTabFeature.State()) {
+            TalkProTabFeature(client: .live(appModel: self.appModel))
         }
     }
 

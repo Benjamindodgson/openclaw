@@ -39,4 +39,28 @@ struct TalkProTabFeatureTests {
             $0.showTalkIssueDetails = false
         }
     }
+
+    @Test func `speakerphone toggle persists through client`() async {
+        let probe = TalkProTabProbe()
+        let store = TestStore(initialState: TalkProTabFeature.State()) {
+            TalkProTabFeature(client: probe.client)
+        }
+
+        await store.send(.speakerphoneEnabledChanged(false)) {
+            $0.speakerphoneEnabled = false
+        }
+        await store.finish()
+
+        #expect(probe.speakerphoneEnabledValues == [false])
+    }
+}
+
+private final class TalkProTabProbe: @unchecked Sendable {
+    var speakerphoneEnabledValues: [Bool] = []
+
+    var client: TalkProTabClient {
+        TalkProTabClient(setSpeakerphoneEnabled: { enabled in
+            self.speakerphoneEnabledValues.append(enabled)
+        })
+    }
 }

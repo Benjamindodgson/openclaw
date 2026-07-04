@@ -1,14 +1,47 @@
 import ComposableArchitecture
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct TalkProTabClient: Sendable {
+    var setSpeakerphoneEnabled: @MainActor @Sendable (Bool) -> Void
+}
+
+// swiftformat:enable redundantSendable
+
+extension TalkProTabClient: DependencyKey {
+    static let liveValue = TalkProTabClient(setSpeakerphoneEnabled: { _ in })
+    static let testValue = TalkProTabClient(setSpeakerphoneEnabled: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        TalkProTabClient(setSpeakerphoneEnabled: { enabled in
+            appModel.setTalkSpeakerphoneEnabled(enabled)
+        })
+    }
+}
+
+extension DependencyValues {
+    var talkProTab: TalkProTabClient {
+        get { self[TalkProTabClient.self] }
+        set { self[TalkProTabClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct TalkProTabFeature {
+    private let clientOverride: TalkProTabClient?
+
+    init(client: TalkProTabClient? = nil) {
+        self.clientOverride = client
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected = false
         var showPermissionPrompt = false
         var showTalkIssueDetails = false
+        var speakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
     }
 
     enum Action: Equatable, Sendable {
@@ -18,12 +51,16 @@ struct TalkProTabFeature {
         case permissionReady
         case runtimeIssueDetailsButtonTapped
         case runtimeIssueDetailsDismissed
+        case speakerphoneEnabledChanged(Bool)
     }
 
     // swiftformat:enable redundantSendable
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.talkProTab) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
             switch action {
             case let .gatewayConnectionChanged(connected):
                 state.gatewayConnected = connected
@@ -44,6 +81,12 @@ struct TalkProTabFeature {
             case .runtimeIssueDetailsDismissed:
                 state.showTalkIssueDetails = false
                 return .none
+
+            case let .speakerphoneEnabledChanged(enabled):
+                state.speakerphoneEnabled = enabled
+                return .run { _ in
+                    await client.setSpeakerphoneEnabled(enabled)
+                }
             }
         }
         .autoLogActions()
@@ -297,7 +340,7 @@ struct TalkProTab: View {
             get: { self.talkSpeakerphoneEnabled },
             set: { enabled in
                 self.talkSpeakerphoneEnabled = enabled
-                self.appModel.setTalkSpeakerphoneEnabled(enabled)
+                self.store.send(.speakerphoneEnabledChanged(enabled))
             })
     }
 

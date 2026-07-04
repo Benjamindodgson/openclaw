@@ -338,6 +338,27 @@ struct RootTabsSourceGuardTests {
         #expect(overviewRowsSource.matches(of: /.contentShape\(Rectangle\(\)\)/).count >= 2)
     }
 
+    @Test func `talk speakerphone persistence is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let talkSource = try String(contentsOf: Self.talkProTabSourceURL(), encoding: .utf8)
+        let speakerphoneBinding = try Self.extract(
+            talkSource,
+            from: "private var talkSpeakerphoneBinding: Binding<Bool>",
+            to: "private func handlePrimaryAction()")
+
+        #expect(talkSource.contains("struct TalkProTabClient: Sendable"))
+        #expect(talkSource.contains("var talkProTab: TalkProTabClient"))
+        #expect(talkSource.contains("@Dependency(\\.talkProTab)"))
+        #expect(talkSource.contains("case speakerphoneEnabledChanged(Bool)"))
+        #expect(talkSource.contains("await client.setSpeakerphoneEnabled(enabled)"))
+        #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
+        #expect(rootSource.contains("private func makeTalkProTabStore()"))
+        #expect(rootSource.contains("TalkProTabFeature(client: .live(appModel: self.appModel))"))
+        #expect(speakerphoneBinding.contains("self.talkSpeakerphoneEnabled = enabled"))
+        #expect(speakerphoneBinding.contains("self.store.send(.speakerphoneEnabledChanged(enabled))"))
+        #expect(!speakerphoneBinding.contains("self.appModel.setTalkSpeakerphoneEnabled"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
