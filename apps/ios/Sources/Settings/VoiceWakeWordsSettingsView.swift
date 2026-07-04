@@ -100,12 +100,16 @@ struct VoiceWakeWordsSettingsFeature {
             var value: String
         }
 
+        struct FocusedTriggerIndexChange: Equatable, Sendable {
+            var index: Int?
+        }
+
         case appeared
         case addWordButtonTapped
         case removeWords(IndexSet)
         case triggerWordChanged(TriggerWordChange)
         case resetDefaultsButtonTapped
-        case focusedTriggerIndexChanged(Int?)
+        case focusedTriggerIndexChanged(FocusedTriggerIndexChange)
         case commitTriggerWords
         case externalPreferencesChanged
     }
@@ -145,9 +149,9 @@ struct VoiceWakeWordsSettingsFeature {
                 state.triggerWords = preferences.defaultTriggerWords()
                 return .none
 
-            case let .focusedTriggerIndexChanged(index):
-                let shouldCommit = state.focusedTriggerIndex != nil && state.focusedTriggerIndex != index
-                state.focusedTriggerIndex = index
+            case let .focusedTriggerIndexChanged(change):
+                let shouldCommit = state.focusedTriggerIndex != nil && state.focusedTriggerIndex != change.index
+                state.focusedTriggerIndex = change.index
                 return shouldCommit ? self.commit(&state, preferences: preferences, gateway: gateway) : .none
 
             case .commitTriggerWords:
@@ -247,7 +251,7 @@ struct VoiceWakeWordsSettingsView: View {
             self.store.send(.appeared)
         }
         .onChange(of: self.focusedTriggerIndex) { _, newValue in
-            self.store.send(.focusedTriggerIndexChanged(newValue))
+            self.store.send(.focusedTriggerIndexChanged(.init(index: newValue)))
         }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
             guard self.focusedTriggerIndex == nil else { return }
