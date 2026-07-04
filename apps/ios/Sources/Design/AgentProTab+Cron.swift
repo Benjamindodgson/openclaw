@@ -150,12 +150,12 @@ extension AgentProTab {
         action: () async throws -> Void) async
     {
         guard self.liveGatewayConnected else { return }
-        self.cronActionStore.send(.actionStarted(id: job.id))
+        self.cronActionStore.send(.actionStarted(.init(id: job.id)))
         do {
             try await action()
             self.cronActionStore.send(.actionSucceeded(message: success))
             await self.refreshOverview(force: true)
-            self.cronActionStore.send(.actionFinished(id: job.id))
+            self.cronActionStore.send(.actionFinished(.init(id: job.id)))
         } catch {
             self.cronActionStore.send(.actionFailed(
                 id: job.id,
