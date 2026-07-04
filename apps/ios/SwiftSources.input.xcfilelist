@@ -90,14 +90,17 @@ Sources/Push/PushRegistrationManager.swift
 Sources/Push/PushRelayClient.swift
 Sources/Push/PushRelayKeychainStore.swift
 Sources/Reminders/RemindersService.swift
+Sources/RootCameraFlashOverlayFeature.swift
 Sources/RootCanvasDebugStatusFeature.swift
 Sources/RootCanvasPresentationFeature.swift
 Sources/RootGatewayOverviewRefreshFeature.swift
 Sources/RootGatewayProblemPrimaryActionFeature.swift
 Sources/RootHomeCanvasFeature.swift
 Sources/RootIdleTimerFeature.swift
+Sources/RootLaunchFeature.swift
 Sources/RootTabs.swift
 Sources/RootTabsNavigation.swift
+Sources/RootVoiceWakeToastFeature.swift
 Sources/Screen/ScreenController.swift
 Sources/Screen/ScreenRecordService.swift
 Sources/Screen/ScreenWebView.swift
