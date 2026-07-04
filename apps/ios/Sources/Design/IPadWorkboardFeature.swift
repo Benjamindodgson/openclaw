@@ -394,8 +394,21 @@ struct IPadWorkboardFeature {
         case moveRequested(MoveRequest)
         case moveResponse(MoveResponse)
         case queryChanged(String)
-        case refreshRequested(sceneActive: Bool, canRead: Bool, force: Bool)
-        case refreshResponse(boardID: String?, force: Bool, Result<IPadWorkboardCardsResponse, IPadWorkboardError>)
+
+        struct RefreshRequest: Equatable, Sendable {
+            var sceneActive: Bool
+            var canRead: Bool
+            var force: Bool
+        }
+
+        struct RefreshResponse: Equatable, Sendable {
+            var boardID: String?
+            var force: Bool
+            var result: Result<IPadWorkboardCardsResponse, IPadWorkboardError>
+        }
+
+        case refreshRequested(RefreshRequest)
+        case refreshResponse(RefreshResponse)
         case sheetDismissed
         case statusChanged(String)
     }
@@ -588,13 +601,13 @@ struct IPadWorkboardFeature {
                 state.query = query
                 return .none
 
-            case let .refreshRequested(sceneActive, canRead, force):
-                guard sceneActive else {
+            case let .refreshRequested(request):
+                guard request.sceneActive else {
                     state.isRefreshing = false
                     state.activeRefreshBoardID = nil
                     return .cancel(id: CancelID.refresh)
                 }
-                guard canRead else {
+                guard request.canRead else {
                     state.cards = []
                     state.errorText = nil
                     state.isRefreshing = false
@@ -612,40 +625,44 @@ struct IPadWorkboardFeature {
                 return .run { send in
                     do {
                         let response = try await client.listCards(boardID)
-                        await send(.refreshResponse(boardID: boardID, force: force, .success(response)))
-                    } catch {
-                        await send(.refreshResponse(
+                        await send(.refreshResponse(.init(
                             boardID: boardID,
-                            force: force,
-                            .failure(.failed(Self.message(for: error)))))
+                            force: request.force,
+                            result: .success(response))))
+                    } catch {
+                        await send(.refreshResponse(.init(
+                            boardID: boardID,
+                            force: request.force,
+                            result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
                 .cancellable(id: CancelID.refresh, cancelInFlight: true)
 
-            case let .refreshResponse(boardID, force, .success(response)):
-                guard state.activeRefreshBoardID == boardID else { return .none }
+            case let .refreshResponse(response):
+                guard state.activeRefreshBoardID == response.boardID else { return .none }
                 state.isRefreshing = false
                 state.activeRefreshBoardID = nil
-                guard state.selectedBoardParam == boardID else { return .none }
-                state.applyCardsResponse(response)
-                return .run { send in
-                    do {
-                        let boards = try await client.listBoards()
-                        await send(.boardScopesResponse(force: force, .success(boards)))
-                    } catch {
-                        await send(.boardScopesResponse(force: force, .failure(.failed(Self.message(for: error)))))
+                guard state.selectedBoardParam == response.boardID else { return .none }
+                switch response.result {
+                case let .success(cardsResponse):
+                    state.applyCardsResponse(cardsResponse)
+                    return .run { send in
+                        do {
+                            let boards = try await client.listBoards()
+                            await send(.boardScopesResponse(force: response.force, .success(boards)))
+                        } catch {
+                            await send(.boardScopesResponse(
+                                force: response.force,
+                                .failure(.failed(Self.message(for: error)))))
+                        }
                     }
-                }
 
-            case let .refreshResponse(boardID, force, .failure(error)):
-                guard state.activeRefreshBoardID == boardID else { return .none }
-                state.isRefreshing = false
-                state.activeRefreshBoardID = nil
-                guard state.selectedBoardParam == boardID else { return .none }
-                if force || state.cards.isEmpty {
-                    state.errorText = error.message
+                case let .failure(error):
+                    if response.force || state.cards.isEmpty {
+                        state.errorText = error.message
+                    }
+                    return .none
                 }
-                return .none
 
             case .sheetDismissed:
                 state.presentedSheet = nil

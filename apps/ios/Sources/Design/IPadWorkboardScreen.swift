@@ -614,10 +614,10 @@ struct IPadWorkboardScreen: View {
     }
 
     private func loadCards(force: Bool) async {
-        await self.store.send(.refreshRequested(
+        await self.store.send(.refreshRequested(.init(
             sceneActive: self.scenePhase == .active,
             canRead: self.canRead,
-            force: force)).finish()
+            force: force))).finish()
     }
 
     private func beginCreateCard() {
