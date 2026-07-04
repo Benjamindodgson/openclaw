@@ -167,24 +167,36 @@ struct SettingsTalkPreferencesFeature {
             var isEnabled: Bool
         }
 
-        case gatewayTalkConfigSynced(
-            configLoaded: Bool,
-            apiKeyConfigured: Bool,
-            usesRealtime: Bool)
-        case gatewayTalkDisplayContextSynced(
-            isAppleReviewDemoModeEnabled: Bool,
-            transportLabel: String)
-        case gatewayTalkRuntimeSynced(
-            activeModeTitle: String,
-            activeModeSubtitle: String?,
-            lastIssueText: String?)
-        case preferencesSynced(
-            providerSelectionRaw: String,
-            realtimeVoiceSelectionRaw: String,
-            speechLocale: String,
-            talkButtonEnabled: Bool,
-            talkBackgroundEnabled: Bool,
-            talkSpeakerphoneEnabled: Bool)
+        struct GatewayTalkConfigSync: Equatable, Sendable {
+            var configLoaded: Bool
+            var apiKeyConfigured: Bool
+            var usesRealtime: Bool
+        }
+
+        struct GatewayTalkDisplayContextSync: Equatable, Sendable {
+            var isAppleReviewDemoModeEnabled: Bool
+            var transportLabel: String
+        }
+
+        struct GatewayTalkRuntimeSync: Equatable, Sendable {
+            var activeModeTitle: String
+            var activeModeSubtitle: String?
+            var lastIssueText: String?
+        }
+
+        struct PreferencesSync: Equatable, Sendable {
+            var providerSelectionRaw: String
+            var realtimeVoiceSelectionRaw: String
+            var speechLocale: String
+            var talkButtonEnabled: Bool
+            var talkBackgroundEnabled: Bool
+            var talkSpeakerphoneEnabled: Bool
+        }
+
+        case gatewayTalkConfigSynced(GatewayTalkConfigSync)
+        case gatewayTalkDisplayContextSynced(GatewayTalkDisplayContextSync)
+        case gatewayTalkRuntimeSynced(GatewayTalkRuntimeSync)
+        case preferencesSynced(PreferencesSync)
         case providerSelectionChanged(ProviderSelectionChange)
         case realtimeVoiceSelectionChanged(RealtimeVoiceSelectionChange)
         case speechLocaleChanged(SpeechLocaleChange)
@@ -201,36 +213,30 @@ struct SettingsTalkPreferencesFeature {
             let preferencesClient = self.preferencesClientOverride ?? dependencyPreferencesClient
 
             switch action {
-            case let .gatewayTalkConfigSynced(configLoaded, apiKeyConfigured, usesRealtime):
-                state.gatewayTalkConfigLoaded = configLoaded
-                state.gatewayTalkApiKeyConfigured = apiKeyConfigured
-                state.gatewayTalkUsesRealtime = usesRealtime
+            case let .gatewayTalkConfigSynced(sync):
+                state.gatewayTalkConfigLoaded = sync.configLoaded
+                state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured
+                state.gatewayTalkUsesRealtime = sync.usesRealtime
                 return .none
 
-            case let .gatewayTalkDisplayContextSynced(isAppleReviewDemoModeEnabled, transportLabel):
-                state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
-                state.gatewayTalkTransportLabel = transportLabel
+            case let .gatewayTalkDisplayContextSynced(sync):
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
+                state.gatewayTalkTransportLabel = sync.transportLabel
                 return .none
 
-            case let .gatewayTalkRuntimeSynced(activeModeTitle, activeModeSubtitle, lastIssueText):
-                state.gatewayTalkActiveModeTitle = activeModeTitle
-                state.gatewayTalkActiveModeSubtitle = activeModeSubtitle
-                state.gatewayTalkLastIssueText = lastIssueText
+            case let .gatewayTalkRuntimeSynced(sync):
+                state.gatewayTalkActiveModeTitle = sync.activeModeTitle
+                state.gatewayTalkActiveModeSubtitle = sync.activeModeSubtitle
+                state.gatewayTalkLastIssueText = sync.lastIssueText
                 return .none
 
-            case let .preferencesSynced(
-                providerSelectionRaw,
-                realtimeVoiceSelectionRaw,
-                speechLocale,
-                talkButtonEnabled,
-                talkBackgroundEnabled,
-                talkSpeakerphoneEnabled):
-                state.providerSelectionRaw = TalkModeProviderSelection.resolved(providerSelectionRaw).rawValue
-                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(realtimeVoiceSelectionRaw)
-                state.speechLocale = speechLocale
-                state.talkButtonEnabled = talkButtonEnabled
-                state.talkBackgroundEnabled = talkBackgroundEnabled
-                state.talkSpeakerphoneEnabled = talkSpeakerphoneEnabled
+            case let .preferencesSynced(sync):
+                state.providerSelectionRaw = TalkModeProviderSelection.resolved(sync.providerSelectionRaw).rawValue
+                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(sync.realtimeVoiceSelectionRaw)
+                state.speechLocale = sync.speechLocale
+                state.talkButtonEnabled = sync.talkButtonEnabled
+                state.talkBackgroundEnabled = sync.talkBackgroundEnabled
+                state.talkSpeakerphoneEnabled = sync.talkSpeakerphoneEnabled
                 return .none
 
             case let .providerSelectionChanged(change):

@@ -2379,6 +2379,14 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("struct ProviderSelectionChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct RealtimeVoiceSelectionChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct TalkSpeakerphoneEnabledChange: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct GatewayTalkConfigSync: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct GatewayTalkDisplayContextSync: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct GatewayTalkRuntimeSync: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct PreferencesSync: Equatable, Sendable"))
+        #expect(preferencesSource.contains("case gatewayTalkConfigSynced(GatewayTalkConfigSync)"))
+        #expect(preferencesSource.contains("case gatewayTalkDisplayContextSynced(GatewayTalkDisplayContextSync)"))
+        #expect(preferencesSource.contains("case gatewayTalkRuntimeSynced(GatewayTalkRuntimeSync)"))
+        #expect(preferencesSource.contains("case preferencesSynced(PreferencesSync)"))
         #expect(preferencesSource.contains("await preferencesClient.setProviderSelection(selection)"))
         #expect(preferencesSource.contains("await preferencesClient.setRealtimeVoiceSelection(voice)"))
         #expect(preferencesSource.contains("await preferencesClient.setSpeakerphoneEnabled(enabled)"))
@@ -2398,6 +2406,12 @@ struct RootTabsSourceGuardTests {
             .contains("self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(.init(isEnabled: enabled)))"))
         #expect(updateSpeakerphoneFunction.contains("self.storedTalkSpeakerphoneEnabled = enabled"))
         #expect(!updateSpeakerphoneFunction.contains("self.appModel.setTalkSpeakerphoneEnabled"))
+        #expect(actionsSource.contains("self.talkPreferencesStore.send(.preferencesSynced(.init("))
+        #expect(actionsSource.contains("self.talkPreferencesStore.send(.gatewayTalkConfigSynced(.init("))
+        #expect(actionsSource.contains("self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(.init("))
+        #expect(actionsSource.contains("self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(.init("))
+        #expect(!preferencesSource.contains("case preferencesSynced(\n            providerSelectionRaw: String"))
+        #expect(!preferencesSource.contains("case gatewayTalkConfigSynced(\n            configLoaded: Bool"))
     }
 
     @Test func `settings notification action decision is reducer owned`() throws {
