@@ -194,6 +194,7 @@ struct RootTabs: View {
                 gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
+                locationStore: self.makeSettingsLocationStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
@@ -482,6 +483,7 @@ struct RootTabs: View {
                     gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
+                    locationStore: self.makeSettingsLocationStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
@@ -495,6 +497,7 @@ struct RootTabs: View {
                     gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
+                    locationStore: self.makeSettingsLocationStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
@@ -510,6 +513,7 @@ struct RootTabs: View {
                 gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
+                locationStore: self.makeSettingsLocationStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }
@@ -831,6 +835,14 @@ struct RootTabs: View {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(
                 localNetworkAccessClient: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsLocationStore() -> StoreOf<SettingsLocationFeature> {
+        Store(initialState: SettingsLocationFeature.State()) {
+            SettingsLocationFeature(
+                gatewayRefreshClient: .live(gatewayController: self.gatewayController))
         }
     }
 

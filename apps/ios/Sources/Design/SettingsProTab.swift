@@ -1307,6 +1307,11 @@ struct SettingsProTab: View {
         {
             SettingsGatewaySetupLinkFeature()
         },
+        locationStore: StoreOf<SettingsLocationFeature> = Store(
+            initialState: SettingsLocationFeature.State())
+        {
+            SettingsLocationFeature()
+        },
         onboardingStateStore: StoreOf<SettingsOnboardingStateFeature> = Store(
             initialState: SettingsOnboardingStateFeature.State())
         {
@@ -1330,6 +1335,7 @@ struct SettingsProTab: View {
         self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
         self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
         self._gatewaySetupLinkStore = State(wrappedValue: gatewaySetupLinkStore)
+        self._locationStore = State(wrappedValue: locationStore)
         self._onboardingStateStore = State(wrappedValue: onboardingStateStore)
         self._navigationStore = State(wrappedValue: navigationStore)
         self.onRouteChange = onRouteChange

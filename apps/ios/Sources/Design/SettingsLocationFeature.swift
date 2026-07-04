@@ -8,6 +8,10 @@ struct SettingsLocationPermissionClient: Sendable {
     var requestPermission: @MainActor @Sendable (OpenClawLocationMode) async -> Bool
 }
 
+struct SettingsLocationGatewayRefreshClient: Sendable {
+    var refreshGatewayRegistration: @MainActor @Sendable () -> Void
+}
+
 // swiftformat:enable redundantSendable
 
 extension SettingsLocationPermissionClient: DependencyKey {
@@ -31,18 +35,40 @@ extension SettingsLocationPermissionClient: DependencyKey {
         })
 }
 
+extension SettingsLocationGatewayRefreshClient: DependencyKey {
+    static let liveValue = SettingsLocationGatewayRefreshClient(refreshGatewayRegistration: {})
+    static let testValue = SettingsLocationGatewayRefreshClient(refreshGatewayRegistration: {})
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        SettingsLocationGatewayRefreshClient(refreshGatewayRegistration: {
+            gatewayController.refreshActiveGatewayRegistrationFromSettings()
+        })
+    }
+}
+
 extension DependencyValues {
     var settingsLocationPermission: SettingsLocationPermissionClient {
         get { self[SettingsLocationPermissionClient.self] }
         set { self[SettingsLocationPermissionClient.self] = newValue }
     }
+
+    var settingsLocationGatewayRefresh: SettingsLocationGatewayRefreshClient {
+        get { self[SettingsLocationGatewayRefreshClient.self] }
+        set { self[SettingsLocationGatewayRefreshClient.self] = newValue }
+    }
 }
 
 @Reducer
 struct SettingsLocationFeature {
+    private let gatewayRefreshClientOverride: SettingsLocationGatewayRefreshClient?
     private let permissionClientOverride: SettingsLocationPermissionClient?
 
-    init(permissionClient: SettingsLocationPermissionClient? = nil) {
+    init(
+        gatewayRefreshClient: SettingsLocationGatewayRefreshClient? = nil,
+        permissionClient: SettingsLocationPermissionClient? = nil)
+    {
+        self.gatewayRefreshClientOverride = gatewayRefreshClient
         self.permissionClientOverride = permissionClient
     }
 
@@ -101,7 +127,9 @@ struct SettingsLocationFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsLocationGatewayRefresh) var dependencyGatewayRefreshClient
             @Dependency(\.settingsLocationPermission) var dependencyPermissionClient
+            let gatewayRefreshClient = self.gatewayRefreshClientOverride ?? dependencyGatewayRefreshClient
             let permissionClient = self.permissionClientOverride ?? dependencyPermissionClient
 
             switch action {
@@ -113,13 +141,16 @@ struct SettingsLocationFeature {
                 case let .applied(rawValue):
                     state.locationModeRaw = rawValue
                     state.previousLocationModeRaw = rawValue
+                    return .run { _ in
+                        await gatewayRefreshClient.refreshGatewayRegistration()
+                    }
 
                 case let .denied(previousRawValue):
                     state.locationModeRaw = previousRawValue
                     state.previousLocationModeRaw = previousRawValue
                     state.statusText = "Location permission was not granted."
+                    return .none
                 }
-                return .none
 
             case let .locationModeApplyRequested(request):
                 state.locationModeRequest = nil
@@ -133,7 +164,9 @@ struct SettingsLocationFeature {
                     state.locationModeApplyResult = .applied(rawValue: request.rawValue)
                     state.locationModeRaw = request.rawValue
                     state.previousLocationModeRaw = request.rawValue
-                    return .none
+                    return .run { _ in
+                        await gatewayRefreshClient.refreshGatewayRegistration()
+                    }
                 }
 
                 return .run { send in
