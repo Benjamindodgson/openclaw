@@ -358,7 +358,11 @@ struct AgentSelectionFeature {
     struct State: Equatable, Sendable {}
 
     enum Action: Equatable, Sendable {
-        case agentSelected(String)
+        struct AgentSelection: Equatable, Sendable {
+            var agentId: String
+        }
+
+        case agentSelected(AgentSelection)
     }
 
     // swiftformat:enable redundantSendable
@@ -369,9 +373,9 @@ struct AgentSelectionFeature {
             let selectionClient = self.selectionClientOverride ?? dependencySelectionClient
 
             switch action {
-            case let .agentSelected(agentId):
+            case let .agentSelected(selection):
                 return .run { [selectionClient] _ in
-                    await selectionClient.setSelectedAgentId(agentId)
+                    await selectionClient.setSelectedAgentId(selection.agentId)
                 }
             }
         }

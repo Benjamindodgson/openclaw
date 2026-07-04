@@ -11,7 +11,7 @@ struct AgentSelectionFeatureTests {
             AgentSelectionFeature(selectionClient: probe.client)
         }
 
-        await store.send(.agentSelected("agent-1"))
+        await store.send(.agentSelected(.init(agentId: "agent-1")))
         await store.finish()
 
         #expect(probe.selectedAgentIds == ["agent-1"])
