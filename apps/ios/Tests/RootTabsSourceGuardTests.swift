@@ -407,10 +407,11 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource.contains("struct ChatTalkControlClient: Sendable"))
         #expect(chatSource.contains("var chatTalkControl: ChatTalkControlClient"))
         #expect(chatSource.contains("struct ChatTalkControlFeature"))
-        #expect(chatSource.contains("case toggleRequested(sessionKey: String, isTalkEnabled: Bool)"))
-        #expect(chatSource.contains("await client.focusChatSession(sessionKey)"))
-        #expect(chatSource.contains("await client.setTalkEnabled(!isTalkEnabled)"))
-        #expect(chatSource.contains("self.talkControlStore.send(.toggleRequested("))
+        #expect(chatSource.contains("struct ToggleRequest: Equatable, Sendable"))
+        #expect(chatSource.contains("case toggleRequested(ToggleRequest)"))
+        #expect(chatSource.contains("await client.focusChatSession(request.sessionKey)"))
+        #expect(chatSource.contains("await client.setTalkEnabled(!request.isTalkEnabled)"))
+        #expect(chatSource.contains("self.talkControlStore.send(.toggleRequested(.init("))
         #expect(!chatSource.contains("self.appModel.setTalkEnabled(!self.appModel.talkMode.isEnabled)"))
         #expect(storesSource.contains("func makeChatTalkControlStore()"))
         #expect(storesSource.contains("ChatTalkControlFeature(client: .live(appModel: self.appModel))"))
@@ -1391,7 +1392,11 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource
             .contains("@State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>"))
         #expect(!chatSource.contains("@State private var viewModelTransportModeID"))
-        #expect(chatSource.contains("self.viewModelLifecycleStore.send(.transportModeRecorded(transportModeID))"))
+        #expect(chatSource.contains("struct TransportModeRecord: Equatable, Sendable"))
+        #expect(chatSource.contains("case transportModeRecorded(TransportModeRecord)"))
+        #expect(chatSource
+            .contains("self.viewModelLifecycleStore.send(.transportModeRecorded(.init(" +
+                "transportModeID: transportModeID)))"))
         #expect(appModelSource.contains("return IOSGatewayChatTransport(gateway: self.operatorSession)"))
         #expect(settingsSectionsSource.contains("Connected services and message routing"))
         #expect(settingsSectionsSource.contains("SettingsChannelsStoreFactory.live(appModel: self.appModel)"))

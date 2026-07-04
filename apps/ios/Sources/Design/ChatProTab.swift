@@ -173,7 +173,7 @@ struct ChatProTab: View {
         let sessionKey = self.appModel.chatSessionKey
         let transportModeID = self.appModel.chatTransportModeID
         guard let viewModel else {
-            self.viewModelLifecycleStore.send(.transportModeRecorded(transportModeID))
+            self.viewModelLifecycleStore.send(.transportModeRecorded(.init(transportModeID: transportModeID)))
             self.viewModel = OpenClawChatViewModel(
                 sessionKey: sessionKey,
                 transport: self.appModel.makeChatTransport(),
@@ -186,7 +186,7 @@ struct ChatProTab: View {
             return
         }
         if self.viewModelTransportModeID != transportModeID {
-            self.viewModelLifecycleStore.send(.transportModeRecorded(transportModeID))
+            self.viewModelLifecycleStore.send(.transportModeRecorded(.init(transportModeID: transportModeID)))
             self.viewModel = OpenClawChatViewModel(
                 sessionKey: sessionKey,
                 transport: self.appModel.makeChatTransport(),
@@ -215,9 +215,9 @@ struct ChatProTab: View {
             statusText: self.appModel.talkMode.statusText,
             providerLabel: self.appModel.talkMode.gatewayTalkProviderLabel,
             toggle: { sessionKey in
-                self.talkControlStore.send(.toggleRequested(
+                self.talkControlStore.send(.toggleRequested(.init(
                     sessionKey: sessionKey,
-                    isTalkEnabled: self.appModel.talkMode.isEnabled))
+                    isTalkEnabled: self.appModel.talkMode.isEnabled)))
             })
     }
 
@@ -364,7 +364,12 @@ struct ChatTalkControlFeature {
     struct State: Equatable, Sendable {}
 
     enum Action: Equatable, Sendable {
-        case toggleRequested(sessionKey: String, isTalkEnabled: Bool)
+        struct ToggleRequest: Equatable, Sendable {
+            var sessionKey: String
+            var isTalkEnabled: Bool
+        }
+
+        case toggleRequested(ToggleRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -375,10 +380,10 @@ struct ChatTalkControlFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .toggleRequested(sessionKey, isTalkEnabled):
+            case let .toggleRequested(request):
                 return .run { [client] _ in
-                    await client.focusChatSession(sessionKey)
-                    await client.setTalkEnabled(!isTalkEnabled)
+                    await client.focusChatSession(request.sessionKey)
+                    await client.setTalkEnabled(!request.isTalkEnabled)
                 }
             }
         }
@@ -395,7 +400,9 @@ struct ChatViewModelLifecycleFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case transportModeRecorded(String)
+        struct TransportModeRecord: Equatable, Sendable { var transportModeID: String }
+
+        case transportModeRecorded(TransportModeRecord)
     }
 
     // swiftformat:enable redundantSendable
@@ -403,8 +410,8 @@ struct ChatViewModelLifecycleFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .transportModeRecorded(transportModeID):
-                state.transportModeID = transportModeID
+            case let .transportModeRecorded(record):
+                state.transportModeID = record.transportModeID
                 return .none
             }
         }
