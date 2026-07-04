@@ -11,10 +11,10 @@ struct SettingsNavigationFeatureTests {
             SettingsNavigationFeature()
         }
 
-        await store.send(.initialRouteRequested(.voice)) {
+        await store.send(.initialRouteRequested(.init(route: .voice))) {
             $0.navigationPath = [.voice]
         }
-        await store.send(.initialRouteRequested(.voice))
+        await store.send(.initialRouteRequested(.init(route: .voice)))
     }
 
     @Test func `missing initial route leaves path unchanged`() async {
@@ -22,7 +22,7 @@ struct SettingsNavigationFeatureTests {
             SettingsNavigationFeature()
         }
 
-        await store.send(.initialRouteRequested(nil))
+        await store.send(.initialRouteRequested(.init(route: nil)))
     }
 
     @Test func `route opened replaces navigation path`() async {
@@ -32,7 +32,7 @@ struct SettingsNavigationFeatureTests {
             SettingsNavigationFeature()
         }
 
-        await store.send(.routeOpened(.notifications)) {
+        await store.send(.routeOpened(.init(route: .notifications))) {
             $0.navigationPath = [.notifications]
         }
     }
@@ -44,7 +44,7 @@ struct SettingsNavigationFeatureTests {
             SettingsNavigationFeature()
         }
 
-        await store.send(.navigationPathChanged([.gateway, .voice])) {
+        await store.send(.navigationPathChanged(.init(path: [.gateway, .voice]))) {
             $0.navigationPath = [.gateway, .voice]
         }
     }

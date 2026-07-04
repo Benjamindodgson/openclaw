@@ -39,9 +39,15 @@ struct SettingsNavigationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case initialRouteRequested(SettingsRoute?)
-        case navigationPathChanged([SettingsRoute])
-        case routeOpened(SettingsRoute)
+        struct InitialRouteRequest: Equatable, Sendable { var route: SettingsRoute? }
+
+        struct NavigationPathChange: Equatable, Sendable { var path: [SettingsRoute] }
+
+        struct RouteOpenRequest: Equatable, Sendable { var route: SettingsRoute }
+
+        case initialRouteRequested(InitialRouteRequest)
+        case navigationPathChanged(NavigationPathChange)
+        case routeOpened(RouteOpenRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -49,18 +55,18 @@ struct SettingsNavigationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .initialRouteRequested(route):
-                guard let route else { return .none }
+            case let .initialRouteRequested(request):
+                guard let route = request.route else { return .none }
                 guard state.navigationPath != [route] else { return .none }
                 state.navigationPath = [route]
                 return .none
 
-            case let .navigationPathChanged(navigationPath):
-                state.navigationPath = navigationPath
+            case let .navigationPathChanged(change):
+                state.navigationPath = change.path
                 return .none
 
-            case let .routeOpened(route):
-                state.navigationPath = [route]
+            case let .routeOpened(request):
+                state.navigationPath = [request.route]
                 return .none
             }
         }
@@ -1597,7 +1603,7 @@ struct SettingsProTab: View {
     private var navigationPathBinding: Binding<[SettingsRoute]> {
         Binding(
             get: { self.navigationStore.navigationPath },
-            set: { self.navigationStore.send(.navigationPathChanged($0)) })
+            set: { self.navigationStore.send(.navigationPathChanged(.init(path: $0))) })
     }
 
     private var settingsNavigationContent: some View {
@@ -1905,12 +1911,12 @@ struct SettingsProTab: View {
             navigateToRoute(.notifications)
             return
         }
-        self.navigationStore.send(.routeOpened(.notifications))
+        self.navigationStore.send(.routeOpened(.init(route: .notifications)))
     }
 
     private func applyInitialRouteIfNeeded() {
         guard self.directRoute == nil else { return }
-        self.navigationStore.send(.initialRouteRequested(self.initialRoute))
+        self.navigationStore.send(.initialRouteRequested(.init(route: self.initialRoute)))
     }
 
     private func notifyRouteChange() {
