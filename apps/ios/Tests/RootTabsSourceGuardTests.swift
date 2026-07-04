@@ -1950,16 +1950,21 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `home canvas payload state is reducer owned`() throws {
-        let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let featureSource = try String(contentsOf: Self.rootHomeCanvasSourceURL(), encoding: .utf8)
 
-        #expect(source.contains("@Reducer\nstruct RootHomeCanvasFeature"))
-        #expect(source.contains("@State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>"))
-        #expect(source.contains("self.homeCanvasStore.send(.snapshotChanged(self.makeHomeCanvasSnapshot()))"))
-        #expect(!source.contains("private func makeHomeCanvasPayload() -> RootTabsHomeCanvasPayload"))
-        #expect(!source.contains("private func homeCanvasAgents(activeAgentID: String)"))
-        #expect(!source.contains("private func homeCanvasBadge(for agent: AgentSummary)"))
-        #expect(!source.contains("private struct RootTabsHomeCanvasPayload"))
-        #expect(!source.contains("private struct RootTabsHomeCanvasAgentCard"))
+        #expect(featureSource.contains("@Reducer\nstruct RootHomeCanvasFeature"))
+        #expect(featureSource.contains("struct Snapshot: Equatable, Sendable"))
+        #expect(featureSource.contains("static func payload(snapshot: Snapshot) -> Payload"))
+        #expect(featureSource.contains("extension RootHomeCanvasFeature.AgentSnapshot"))
+        #expect(rootSource.contains("@State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>"))
+        #expect(rootSource.contains("self.homeCanvasStore.send(.snapshotChanged(self.makeHomeCanvasSnapshot()))"))
+        #expect(!rootSource.contains("@Reducer\nstruct RootHomeCanvasFeature"))
+        #expect(!rootSource.contains("private func makeHomeCanvasPayload() -> RootTabsHomeCanvasPayload"))
+        #expect(!rootSource.contains("private func homeCanvasAgents(activeAgentID: String)"))
+        #expect(!rootSource.contains("private func homeCanvasBadge(for agent: AgentSummary)"))
+        #expect(!rootSource.contains("private struct RootTabsHomeCanvasPayload"))
+        #expect(!rootSource.contains("private struct RootTabsHomeCanvasAgentCard"))
     }
 
     private static func rootTabsSourceURL() -> URL {
@@ -2002,6 +2007,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootIdleTimerFeature.swift")
+    }
+
+    private static func rootHomeCanvasSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootHomeCanvasFeature.swift")
     }
 
     private static func nodeAppModelSourceURL() -> URL {
