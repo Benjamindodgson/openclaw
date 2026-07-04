@@ -334,7 +334,7 @@ extension SettingsProTab {
     func applyGatewayLink(_ link: GatewayConnectDeepLink) async {
         self.applyManualGatewaySetupLink(host: link.host, tls: link.tls)
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: link.port)))
-        self.gatewayCredentialsStore.send(.setupLinkApplied(link))
+        self.gatewayCredentialsStore.send(.setupLinkApplied(.init(link: link)))
         guard let request = self.gatewayCredentialsStore.setupAuthPersistenceRequest else { return }
         defer { self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled) }
 

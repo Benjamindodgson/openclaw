@@ -1146,7 +1146,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature()
         }
 
-        await store.send(.setupAuthApplied(setupAuth)) {
+        await store.send(.setupAuthApplied(.init(setupAuth: setupAuth))) {
             $0.gatewayToken = "token-3"
             $0.gatewayPassword = "password-3"
             $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
@@ -1190,7 +1190,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
         }
 
-        await store.send(.setupLinkApplied(link)) {
+        await store.send(.setupLinkApplied(.init(link: link))) {
             $0.gatewayToken = "token-6"
             $0.gatewayPassword = "password-6"
             $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
