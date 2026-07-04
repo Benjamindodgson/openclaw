@@ -89,7 +89,7 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.startupSnapshotChanged(Self.startupSnapshot(
+        await store.send(.startupSnapshotChanged(Self.startupSnapshotChange(
             gatewayConnected: false,
             hasConnectedOnce: false,
             onboardingComplete: false,
@@ -102,7 +102,7 @@ struct RootTabsPresentationTests {
             $0.startupRoute = .onboarding
         }
 
-        await store.send(.startupSnapshotChanged(Self.startupSnapshot(
+        await store.send(.startupSnapshotChanged(Self.startupSnapshotChange(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
@@ -113,7 +113,7 @@ struct RootTabsPresentationTests {
             $0.startupRoute = .settings
         }
 
-        await store.send(.startupSnapshotChanged(Self.startupSnapshot(
+        await store.send(.startupSnapshotChanged(Self.startupSnapshotChange(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
@@ -129,7 +129,7 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupPresentationEvaluationRequest(
             gatewayConnected: false,
             hasConnectedOnce: false,
             onboardingComplete: false,
@@ -140,7 +140,7 @@ struct RootTabsPresentationTests {
             $0.startupRoute = .onboarding
         }
 
-        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupPresentationEvaluationRequest(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
@@ -152,7 +152,7 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupPresentationEvaluationRequest(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
@@ -177,7 +177,7 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.autoOpenSettingsRequested(Self.startupSnapshot(
+        await store.send(.autoOpenSettingsRequested(Self.autoOpenSettingsRequest(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
@@ -191,7 +191,7 @@ struct RootTabsPresentationTests {
                 reason: "auto_open_settings")
         }
 
-        await store.send(.autoOpenSettingsRequested(Self.startupSnapshot(
+        await store.send(.autoOpenSettingsRequested(Self.autoOpenSettingsRequest(
             gatewayConnected: false,
             hasConnectedOnce: true,
             onboardingComplete: true,
@@ -372,7 +372,7 @@ struct RootTabsPresentationTests {
             $0.showOnboarding = false
         }
 
-        await store.send(.startupPresentationEvaluationRequested(Self.startupSnapshot(
+        await store.send(.startupPresentationEvaluationRequested(Self.startupPresentationEvaluationRequest(
             gatewayConnected: true,
             hasConnectedOnce: true,
             onboardingComplete: true,
@@ -1460,6 +1460,54 @@ struct RootTabsPresentationTests {
             onboardingComplete: onboardingComplete,
             hasExistingGatewayConfig: hasExistingGatewayConfig,
             shouldPresentOnLaunch: shouldPresentOnLaunch)
+    }
+
+    private static func startupSnapshotChange(
+        gatewayConnected: Bool,
+        hasConnectedOnce: Bool,
+        onboardingComplete: Bool,
+        hasExistingGatewayConfig: Bool,
+        shouldPresentOnLaunch: Bool = false)
+        -> RootPresentationFeature.StartupSnapshotChange
+    {
+        RootPresentationFeature.StartupSnapshotChange(snapshot: Self.startupSnapshot(
+            gatewayConnected: gatewayConnected,
+            hasConnectedOnce: hasConnectedOnce,
+            onboardingComplete: onboardingComplete,
+            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            shouldPresentOnLaunch: shouldPresentOnLaunch))
+    }
+
+    private static func startupPresentationEvaluationRequest(
+        gatewayConnected: Bool,
+        hasConnectedOnce: Bool,
+        onboardingComplete: Bool,
+        hasExistingGatewayConfig: Bool,
+        shouldPresentOnLaunch: Bool = false)
+        -> RootPresentationFeature.StartupPresentationEvaluationRequest
+    {
+        RootPresentationFeature.StartupPresentationEvaluationRequest(snapshot: Self.startupSnapshot(
+            gatewayConnected: gatewayConnected,
+            hasConnectedOnce: hasConnectedOnce,
+            onboardingComplete: onboardingComplete,
+            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            shouldPresentOnLaunch: shouldPresentOnLaunch))
+    }
+
+    private static func autoOpenSettingsRequest(
+        gatewayConnected: Bool,
+        hasConnectedOnce: Bool,
+        onboardingComplete: Bool,
+        hasExistingGatewayConfig: Bool,
+        shouldPresentOnLaunch: Bool = false)
+        -> RootPresentationFeature.AutoOpenSettingsRequest
+    {
+        RootPresentationFeature.AutoOpenSettingsRequest(snapshot: Self.startupSnapshot(
+            gatewayConnected: gatewayConnected,
+            hasConnectedOnce: hasConnectedOnce,
+            onboardingComplete: onboardingComplete,
+            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            shouldPresentOnLaunch: shouldPresentOnLaunch))
     }
 
     private static func localNetworkAccessRequest(
