@@ -224,6 +224,13 @@ struct IPadSkillWorkshopFeature {
         case proposalMutationRequested(ProposalMutationRequest)
         case proposalMutationResponse(ProposalMutationResponse)
 
+        struct ProposalSelectionRequest: Equatable, Sendable {
+            var proposalID: String
+            var opensSheet: Bool
+            var canRead: Bool
+            var forceInspect: Bool
+        }
+
         struct RefreshRequest: Equatable, Sendable {
             var sceneActive: Bool
             var canRead: Bool
@@ -235,7 +242,7 @@ struct IPadSkillWorkshopFeature {
             var result: Result<IPadSkillProposalManifest, IPadSkillWorkshopError>
         }
 
-        case proposalSelected(proposalID: String, opensSheet: Bool, canRead: Bool, forceInspect: Bool)
+        case proposalSelected(ProposalSelectionRequest)
         case proposalSheetDismissed
         case queryChanged(String)
         case refreshRequested(RefreshRequest)
@@ -328,18 +335,18 @@ struct IPadSkillWorkshopFeature {
                     return .none
                 }
 
-            case let .proposalSelected(proposalID, opensSheet, canRead, forceInspect):
-                state.selectedProposalID = proposalID
-                if opensSheet {
-                    state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: proposalID)
+            case let .proposalSelected(request):
+                state.selectedProposalID = request.proposalID
+                if request.opensSheet {
+                    state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: request.proposalID)
                 }
                 return self.inspectEffect(
                     state: &state,
                     client: client,
                     request: .init(
-                        proposalID: proposalID,
-                        canRead: canRead,
-                        force: forceInspect))
+                        proposalID: request.proposalID,
+                        canRead: request.canRead,
+                        force: request.forceInspect))
 
             case .proposalSheetDismissed:
                 state.presentedProposalRoute = nil
@@ -1193,11 +1200,11 @@ struct IPadSkillWorkshopScreen: View {
         forceInspect: Bool)
     {
         Task {
-            await self.store.send(.proposalSelected(
+            await self.store.send(.proposalSelected(.init(
                 proposalID: proposal.id,
                 opensSheet: opensSheet,
                 canRead: self.canRead,
-                forceInspect: forceInspect)).finish()
+                forceInspect: forceInspect))).finish()
         }
     }
 
