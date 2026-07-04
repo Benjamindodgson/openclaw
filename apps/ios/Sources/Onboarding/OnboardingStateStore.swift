@@ -820,14 +820,18 @@ struct OnboardingConnectionFormFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ManualHostChange: Equatable, Sendable { var host: String }
+        struct ManualPortTextChange: Equatable, Sendable { var text: String }
+        struct ManualTLSChange: Equatable, Sendable { var useTLS: Bool }
+
         case developerModeDisabled
         case gatewayLinkApplied(host: String, port: Int, tls: Bool)
         case initialized(host: String, port: Int, tls: Bool, lastMode: OnboardingConnectionMode?)
         case manualConnectionRequested
         case manualConnectionRequestHandled
-        case manualHostChanged(String)
-        case manualPortTextChanged(String)
-        case manualTLSChanged(Bool)
+        case manualHostChanged(ManualHostChange)
+        case manualPortTextChanged(ManualPortTextChange)
+        case manualTLSChanged(ManualTLSChange)
         case modeSelected(OnboardingConnectionMode)
         case selectedModeChanged(OnboardingConnectionMode?)
     }
@@ -885,12 +889,12 @@ struct OnboardingConnectionFormFeature {
                 state.manualConnectionRequest = nil
                 return .none
 
-            case let .manualHostChanged(host):
-                state.manualHost = host
+            case let .manualHostChanged(change):
+                state.manualHost = change.host
                 return .none
 
-            case let .manualPortTextChanged(portText):
-                let digits = portText.filter(\.isNumber)
+            case let .manualPortTextChanged(change):
+                let digits = change.text.filter(\.isNumber)
                 guard let parsed = Int(digits), parsed > 0 else {
                     state.manualPort = 0
                     state.manualPortText = ""
@@ -900,8 +904,8 @@ struct OnboardingConnectionFormFeature {
                 state.syncManualPortText()
                 return .none
 
-            case let .manualTLSChanged(tls):
-                state.manualTLS = tls
+            case let .manualTLSChanged(change):
+                state.manualTLS = change.useTLS
                 return .none
 
             case let .modeSelected(mode):

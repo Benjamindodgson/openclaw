@@ -684,12 +684,12 @@ import Testing
             $0.manualTLS = false
         }
 
-        await store.send(.manualPortTextChanged("65abc536")) {
+        await store.send(.manualPortTextChanged(.init(text: "65abc536"))) {
             $0.manualPort = 65535
             $0.manualPortText = "65535"
         }
 
-        await store.send(.manualPortTextChanged("0")) {
+        await store.send(.manualPortTextChanged(.init(text: "0"))) {
             $0.manualPort = 0
             $0.manualPortText = ""
         }
@@ -706,8 +706,12 @@ import Testing
             $0.manualTLS = true
         }
 
-        await store.send(.manualHostChanged("gateway.example.com")) {
+        await store.send(.manualHostChanged(.init(host: "gateway.example.com"))) {
             $0.manualHost = "gateway.example.com"
+        }
+
+        await store.send(.manualTLSChanged(.init(useTLS: false))) {
+            $0.manualTLS = false
         }
 
         #expect(store.state.canConnectManual)
