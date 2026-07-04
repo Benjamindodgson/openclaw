@@ -62,15 +62,23 @@ struct TalkProTabFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case gatewayConnectionChanged(Bool)
+        struct GatewayConnectionChange: Equatable, Sendable { var connected: Bool }
+
+        struct SpeakerphoneEnabledChange: Equatable, Sendable { var enabled: Bool }
+
+        struct StartTalkRequest: Equatable, Sendable { var sessionKey: String? }
+
+        struct TalkEnabledChange: Equatable, Sendable { var enabled: Bool }
+
+        case gatewayConnectionChanged(GatewayConnectionChange)
         case permissionRequired
         case permissionPromptDismissed
         case permissionReady
         case runtimeIssueDetailsButtonTapped
         case runtimeIssueDetailsDismissed
-        case speakerphoneEnabledChanged(Bool)
-        case startTalkRequested(sessionKey: String?)
-        case talkEnabledChanged(Bool)
+        case speakerphoneEnabledChanged(SpeakerphoneEnabledChange)
+        case startTalkRequested(StartTalkRequest)
+        case talkEnabledChanged(TalkEnabledChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -81,8 +89,8 @@ struct TalkProTabFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .gatewayConnectionChanged(connected):
-                state.gatewayConnected = connected
+            case let .gatewayConnectionChanged(change):
+                state.gatewayConnected = change.connected
                 return .none
 
             case .permissionRequired:
@@ -101,22 +109,22 @@ struct TalkProTabFeature {
                 state.showTalkIssueDetails = false
                 return .none
 
-            case let .speakerphoneEnabledChanged(enabled):
-                state.speakerphoneEnabled = enabled
+            case let .speakerphoneEnabledChanged(change):
+                state.speakerphoneEnabled = change.enabled
                 return .run { _ in
-                    await client.setSpeakerphoneEnabled(enabled)
+                    await client.setSpeakerphoneEnabled(change.enabled)
                 }
 
-            case let .startTalkRequested(sessionKey):
+            case let .startTalkRequested(request):
                 state.talkEnabled = true
                 return .run { _ in
-                    await client.startTalk(sessionKey)
+                    await client.startTalk(request.sessionKey)
                 }
 
-            case let .talkEnabledChanged(enabled):
-                state.talkEnabled = enabled
+            case let .talkEnabledChanged(change):
+                state.talkEnabled = change.enabled
                 return .run { _ in
-                    await client.setTalkEnabled(enabled)
+                    await client.setTalkEnabled(change.enabled)
                 }
             }
         }
@@ -349,7 +357,7 @@ struct TalkProTab: View {
     private func syncGatewayConnection() {
         let connected = self.currentGatewayConnected
         guard self.store.gatewayConnected != connected else { return }
-        self.store.send(.gatewayConnectionChanged(connected))
+        self.store.send(.gatewayConnectionChanged(.init(connected: connected)))
     }
 
     private func alignPersistedTalkState() {
@@ -362,7 +370,7 @@ struct TalkProTab: View {
         {
             self.stopTalk()
         } else if self.talkEnabled != self.appModel.talkMode.isEnabled {
-            self.store.send(.talkEnabledChanged(self.talkEnabled))
+            self.store.send(.talkEnabledChanged(.init(enabled: self.talkEnabled)))
         }
     }
 
@@ -371,7 +379,7 @@ struct TalkProTab: View {
             get: { self.talkSpeakerphoneEnabled },
             set: { enabled in
                 self.talkSpeakerphoneEnabled = enabled
-                self.store.send(.speakerphoneEnabledChanged(enabled))
+                self.store.send(.speakerphoneEnabledChanged(.init(enabled: enabled)))
             })
     }
 
@@ -394,12 +402,12 @@ struct TalkProTab: View {
     private func startTalk() {
         guard !self.appModel.isAppleReviewDemoModeEnabled else { return }
         self.talkEnabled = true
-        self.store.send(.startTalkRequested(sessionKey: self.appModel.chatSessionKey))
+        self.store.send(.startTalkRequested(.init(sessionKey: self.appModel.chatSessionKey)))
     }
 
     private func stopTalk() {
         self.talkEnabled = false
-        self.store.send(.talkEnabledChanged(false))
+        self.store.send(.talkEnabledChanged(.init(enabled: false)))
     }
 
     private func openPrimarySettings() {
