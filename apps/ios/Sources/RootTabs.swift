@@ -1051,7 +1051,9 @@ extension RootTabs {
 
         let startupSnapshot = self.makeStartupSnapshot(
             shouldPresentOnLaunch: OnboardingStateStore.shouldPresentOnLaunch(appModel: self.appModel))
-        self.presentationStore.send(.startupPresentationEvaluationRequested(startupSnapshot))
+        self.presentationStore.send(.startupPresentationEvaluationRequested(
+            RootPresentationFeature.StartupPresentationEvaluationRequest(
+                snapshot: startupSnapshot)))
         self.handlePresentationCommand()
     }
 
@@ -1074,7 +1076,8 @@ extension RootTabs {
 
     private func maybeAutoOpenSettings() {
         let startupSnapshot = self.makeStartupSnapshot(shouldPresentOnLaunch: false)
-        self.presentationStore.send(.autoOpenSettingsRequested(startupSnapshot))
+        self.presentationStore.send(.autoOpenSettingsRequested(
+            RootPresentationFeature.AutoOpenSettingsRequest(snapshot: startupSnapshot)))
         self.handlePresentationCommand()
     }
 

@@ -22,6 +22,18 @@ struct RootPresentationFeature {
         var shouldPresentOnLaunch: Bool
     }
 
+    struct StartupSnapshotChange: Equatable, Sendable {
+        var snapshot: StartupSnapshot
+    }
+
+    struct StartupPresentationEvaluationRequest: Equatable, Sendable {
+        var snapshot: StartupSnapshot
+    }
+
+    struct AutoOpenSettingsRequest: Equatable, Sendable {
+        var snapshot: StartupSnapshot
+    }
+
     struct QuickSetupSnapshot: Equatable, Sendable {
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
@@ -215,12 +227,12 @@ struct RootPresentationFeature {
     enum Action: Equatable, Sendable {
         case refreshPresentation
         case sidebarGatewayStatusChanged(SidebarGatewayStatusChange)
-        case startupSnapshotChanged(StartupSnapshot)
+        case startupSnapshotChanged(StartupSnapshotChange)
         case quickSetupSnapshotChanged(QuickSetupSnapshot)
         case presentedSheetChanged(PresentedSheetChange)
-        case startupPresentationEvaluationRequested(StartupSnapshot)
+        case startupPresentationEvaluationRequested(StartupPresentationEvaluationRequest)
         case forceOnboardingRequested
-        case autoOpenSettingsRequested(StartupSnapshot)
+        case autoOpenSettingsRequested(AutoOpenSettingsRequest)
         case gatewaySetupRequestChanged(GatewaySetupRequest)
         case localNetworkAccessRequested(LocalNetworkAccessRequest)
         case onboardingVisibilityChanged(OnboardingVisibilityChange)
@@ -242,8 +254,8 @@ struct RootPresentationFeature {
                 state.sidebarGatewayStatus = change.status
                 return .none
 
-            case let .startupSnapshotChanged(snapshot):
-                state.apply(startupSnapshot: snapshot)
+            case let .startupSnapshotChanged(change):
+                state.apply(startupSnapshot: change.snapshot)
                 return .none
 
             case let .quickSetupSnapshotChanged(snapshot):
@@ -264,10 +276,10 @@ struct RootPresentationFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .startupPresentationEvaluationRequested(snapshot):
+            case let .startupPresentationEvaluationRequested(request):
                 guard !state.didEvaluateOnboarding else { return .none }
                 state.didEvaluateOnboarding = true
-                state.apply(startupSnapshot: snapshot)
+                state.apply(startupSnapshot: request.snapshot)
 
                 switch state.startupRoute {
                 case .none:
@@ -289,10 +301,10 @@ struct RootPresentationFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .autoOpenSettingsRequested(snapshot):
+            case let .autoOpenSettingsRequested(request):
                 guard !state.didAutoOpenSettings else { return .none }
                 guard !state.showOnboarding else { return .none }
-                state.apply(startupSnapshot: snapshot)
+                state.apply(startupSnapshot: request.snapshot)
                 guard state.startupRoute == .settings else { return .none }
                 state.didAutoOpenSettings = true
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
