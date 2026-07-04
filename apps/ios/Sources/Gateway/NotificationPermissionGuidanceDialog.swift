@@ -51,9 +51,13 @@ struct NotificationPermissionGuidanceFeature {
     struct State: Equatable, Sendable {}
 
     enum Action: Equatable, Sendable {
+        struct OpenNotificationsRequest: Equatable, Sendable {
+            var approvalID: String
+        }
+
         case dontShowAgainButtonTapped
         case notNowButtonTapped
-        case openNotificationsButtonTapped(String)
+        case openNotificationsButtonTapped(OpenNotificationsRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -70,10 +74,10 @@ struct NotificationPermissionGuidanceFeature {
             case .notNowButtonTapped:
                 return self.dismiss(suppressFuture: false, client: client)
 
-            case let .openNotificationsButtonTapped(approvalID):
+            case let .openNotificationsButtonTapped(request):
                 return .run { _ in
                     await client.dismissNotificationPermissionGuidancePrompt(false)
-                    await client.openNotifications(approvalID)
+                    await client.openNotifications(request.approvalID)
                 }
             }
         }
@@ -115,7 +119,7 @@ private struct NotificationPermissionGuidanceDialogModifier: ViewModifier {
 
                         NotificationPermissionGuidanceCard(
                             onOpenNotifications: {
-                                self.store.send(.openNotificationsButtonTapped(prompt.approvalId))
+                                self.store.send(.openNotificationsButtonTapped(.init(approvalID: prompt.approvalId)))
                             },
                             onDismiss: {
                                 self.store.send(.notNowButtonTapped)

@@ -10,7 +10,7 @@ struct NotificationPermissionGuidanceFeatureTests {
             NotificationPermissionGuidanceFeature(client: probe.client)
         }
 
-        await store.send(.openNotificationsButtonTapped("approval-1"))
+        await store.send(.openNotificationsButtonTapped(.init(approvalID: "approval-1")))
         await store.finish()
 
         #expect(probe.events == [
