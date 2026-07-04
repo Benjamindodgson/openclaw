@@ -270,6 +270,10 @@ struct PrivacyAccessFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SnapshotLoad: Equatable, Sendable {
+            var snapshot: PrivacyAccessSnapshot
+        }
+
         struct PermissionRequestCompletion: Equatable, Sendable {
             var permission: PrivacyAccessPermission
             var granted: Bool
@@ -282,7 +286,7 @@ struct PrivacyAccessFeature {
         case calendarWriteButtonTapped
         case calendarReadButtonTapped
         case remindersButtonTapped
-        case snapshotLoaded(PrivacyAccessSnapshot)
+        case snapshotLoaded(SnapshotLoad)
         case permissionRequestFinished(PermissionRequestCompletion)
     }
 
@@ -337,8 +341,8 @@ struct PrivacyAccessFeature {
                     return .none
                 }
 
-            case let .snapshotLoaded(snapshot):
-                state.apply(snapshot)
+            case let .snapshotLoaded(load):
+                state.apply(load.snapshot)
                 return .none
 
             case let .permissionRequestFinished(completion):
@@ -354,7 +358,7 @@ struct PrivacyAccessFeature {
 
     private func refresh(client: PrivacyAccessClient) -> Effect<Action> {
         .run { send in
-            await send(.snapshotLoaded(client.snapshot()))
+            await send(.snapshotLoaded(.init(snapshot: client.snapshot())))
         }
     }
 
