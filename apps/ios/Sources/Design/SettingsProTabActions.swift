@@ -131,11 +131,10 @@ extension SettingsProTab {
     }
 
     func reconnectGateway() async {
-        guard !self.appModel.isAppleReviewDemoModeEnabled else { return }
-        guard !self.gatewayActivityStore.isReconnectingGateway else { return }
-        self.gatewayActivityStore.send(.reconnectStarted)
-        defer { self.gatewayActivityStore.send(.reconnectFinished) }
-        await self.gatewayController.connectLastKnown()
+        let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled
+        await self.gatewayActivityStore
+            .send(.reconnectRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))
+            .finish()
     }
 
     @MainActor

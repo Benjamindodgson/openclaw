@@ -439,6 +439,37 @@ struct SettingsNavigationFeatureTests {
         }
     }
 
+    @Test func `settings gateway activity reconnects through client`() async {
+        let probe = SettingsGatewayReconnectProbe()
+        let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
+            SettingsGatewayActivityFeature(reconnectClient: probe.client)
+        }
+
+        await store.send(.reconnectRequested(isAppleReviewDemoModeEnabled: false)) {
+            $0.isReconnectingGateway = true
+        }
+        await store.receive(.reconnectFinished) {
+            $0.isReconnectingGateway = false
+        }
+
+        #expect(probe.reconnectCount == 1)
+    }
+
+    @Test func `settings gateway activity skips reconnect in demo mode and while reconnecting`() async {
+        let probe = SettingsGatewayReconnectProbe()
+        var reconnectingState = SettingsGatewayActivityFeature.State()
+        reconnectingState.isReconnectingGateway = true
+        let store = TestStore(initialState: reconnectingState) {
+            SettingsGatewayActivityFeature(reconnectClient: probe.client)
+        }
+
+        await store.send(.reconnectRequested(isAppleReviewDemoModeEnabled: false))
+        await store.send(.reconnectRequested(isAppleReviewDemoModeEnabled: true))
+        await store.finish()
+
+        #expect(probe.reconnectCount == 0)
+    }
+
     @Test func `settings gateway activity tracks refresh lifecycle`() async {
         let store = TestStore(initialState: SettingsGatewayActivityFeature.State()) {
             SettingsGatewayActivityFeature()
@@ -2430,6 +2461,16 @@ private final class SettingsGatewayDiagnosticsRefreshProbe: @unchecked Sendable 
     var client: SettingsGatewayDiagnosticsRefreshClient {
         SettingsGatewayDiagnosticsRefreshClient(refreshGateway: {
             self.refreshCount += 1
+        })
+    }
+}
+
+private final class SettingsGatewayReconnectProbe: @unchecked Sendable {
+    var reconnectCount = 0
+
+    var client: SettingsGatewayReconnectClient {
+        SettingsGatewayReconnectClient(reconnect: {
+            self.reconnectCount += 1
         })
     }
 }
