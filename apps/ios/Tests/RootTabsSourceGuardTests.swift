@@ -1419,7 +1419,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("@State private var photoImportStore"))
         #expect(onboardingSource.contains("self.photoImportStore.send(.importStarted)"))
         #expect(onboardingSource
-            .contains("self.photoImportStore.send(.qrMessageDetected(self.detectQRCode(from: data)))"))
+            .contains("self.photoImportStore.send(.qrMessageDetected(.init(message: self.detectQRCode(from: data))))"))
         #expect(onboardingSource.contains("self.handlePhotoImportResult()"))
         #expect(!onboardingSource.contains("GatewayConnectDeepLink.fromSetupInput(message)"))
         #expect(onboardingStateSource
@@ -1427,6 +1427,9 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("case setupAuthApplied(SetupAuthApplication)"))
         #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartFeature"))
         #expect(onboardingStateSource.contains("struct OnboardingQRPhotoImportFeature"))
+        #expect(onboardingStateSource.contains("struct QRMessageDetection: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case qrMessageDetected(QRMessageDetection)"))
+        #expect(onboardingStateSource.contains("Self.importResult(message: detection.message)"))
         #expect(onboardingStateSource.contains(".cancellable(id: CancelID.restart, cancelInFlight: true)"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
         #expect(gatewaySetupFeaturesSource

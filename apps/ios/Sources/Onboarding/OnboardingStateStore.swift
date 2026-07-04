@@ -625,9 +625,11 @@ struct OnboardingQRPhotoImportFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct QRMessageDetection: Equatable, Sendable { var message: String? }
+
         case imageLoadFailed
         case importStarted
-        case qrMessageDetected(String?)
+        case qrMessageDetected(QRMessageDetection)
         case resultHandled
     }
 
@@ -646,9 +648,9 @@ struct OnboardingQRPhotoImportFeature {
                 state.result = nil
                 return .none
 
-            case let .qrMessageDetected(message):
+            case let .qrMessageDetected(detection):
                 state.isImporting = false
-                state.result = Self.importResult(message: message)
+                state.result = Self.importResult(message: detection.message)
                 return .none
 
             case .resultHandled:
