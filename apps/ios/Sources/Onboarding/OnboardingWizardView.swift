@@ -345,7 +345,7 @@ struct OnboardingWizardView: View {
                     OnboardingStateStore.markCompleted(mode: selectedMode)
                 }
                 self.statusStore.send(.gatewayConnected(markedCompleted: shouldMarkCompleted && selectedMode != nil))
-                self.stepStore.send(.stepChanged(.success))
+                self.stepStore.send(.stepChanged(.init(step: .success)))
             }
             .onChange(of: self.scenePhase) { _, newValue in
                 guard newValue == .active else { return }
@@ -368,7 +368,7 @@ struct OnboardingWizardView: View {
                 self.presentationStore.send(.qrScannerButtonTapped)
             },
             onManualSetup: {
-                self.stepStore.send(.stepChanged(.mode))
+                self.stepStore.send(.stepChanged(.init(step: .mode)))
             })
     }
 
@@ -408,7 +408,7 @@ struct OnboardingWizardView: View {
 
         Section {
             Button("Continue") {
-                self.stepStore.send(.stepChanged(.connect))
+                self.stepStore.send(.stepChanged(.init(step: .connect)))
             }
             .disabled(self.selectedMode == nil)
         }
@@ -485,7 +485,7 @@ struct OnboardingWizardView: View {
             Section {
                 Text("Choose a mode first.")
                 Button("Back to Mode Selection") {
-                    self.stepStore.send(.stepChanged(.mode))
+                    self.stepStore.send(.stepChanged(.init(step: .mode)))
                 }
             }
         }
@@ -771,7 +771,7 @@ extension OnboardingWizardView {
                 statusLine: "Setup code loaded. Connecting to \(link.host):\(link.port)...",
                 clearsIssue: false)))
             self.applyGatewayLink(link)
-            self.stepStore.send(.stepChanged(.connect))
+            self.stepStore.send(.stepChanged(.init(step: .connect)))
             await self.connectManual()
         }
     }
@@ -785,7 +785,7 @@ extension OnboardingWizardView {
         self.statusStore.send(.connectionStatusUpdated(.init(
             message: "Connecting via QR code...",
             statusLine: "QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)...")))
-        self.stepStore.send(.stepChanged(.connect))
+        self.stepStore.send(.stepChanged(.init(step: .connect)))
         Task { await self.connectManual() }
     }
 
@@ -893,7 +893,7 @@ extension OnboardingWizardView {
             statusText: statusText)))
 
         if self.statusStore.shouldShowAuthStep {
-            self.stepStore.send(.stepChanged(.auth))
+            self.stepStore.send(.stepChanged(.init(step: .auth)))
         }
     }
 
@@ -916,7 +916,7 @@ extension OnboardingWizardView {
         OnboardingStateStore.markFirstRunIntroSeen()
         self.requestLocalNetworkAccess(reason: "onboarding_continue")
         self.statusStore.send(.introAdvanced)
-        self.stepStore.send(.stepChanged(.welcome))
+        self.stepStore.send(.stepChanged(.init(step: .welcome)))
     }
 
     private func requestLocalNetworkAccessIfPastIntro(reason: String) {
@@ -1058,7 +1058,7 @@ extension OnboardingWizardView {
             GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
             self.credentialsStore.send(.reset)
             self.statusStore.send(.gatewayProblemResetScanStarted)
-            self.stepStore.send(.stepChanged(.connect))
+            self.stepStore.send(.stepChanged(.init(step: .connect)))
             self.presentationStore.send(.qrScannerButtonTapped)
             return
         }

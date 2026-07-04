@@ -1646,6 +1646,17 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection"))
     }
 
+    @Test func `onboarding step changes are typed`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("struct StepChange: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case stepChanged(StepChange)"))
+        #expect(onboardingStateSource.contains("state.step = change.step"))
+        #expect(onboardingSource.contains("self.stepStore.send(.stepChanged(.init(step:"))
+        #expect(!onboardingSource.contains("self.stepStore.send(.stepChanged(.connect))"))
+    }
+
     @Test func `scanner setup code results are reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
