@@ -790,10 +790,10 @@ extension OnboardingWizardView {
     }
 
     private func applyGatewayLink(_ link: GatewayConnectDeepLink) {
-        self.connectionFormStore.send(.gatewayLinkApplied(
+        self.connectionFormStore.send(.gatewayLinkApplied(.init(
             host: link.host,
             port: link.port,
-            tls: link.tls))
+            tls: link.tls)))
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
         if setupAuth.hasBootstrapToken {
             GatewayOnboardingReset.prepareForBootstrapPairing(

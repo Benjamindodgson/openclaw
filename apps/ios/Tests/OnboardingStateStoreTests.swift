@@ -733,7 +733,7 @@ import Testing
 
         #expect(store.state.canConnectManual)
 
-        await store.send(.gatewayLinkApplied(host: "studio.local", port: 19000, tls: false)) {
+        await store.send(.gatewayLinkApplied(.init(host: "studio.local", port: 19000, tls: false))) {
             $0.manualHost = "studio.local"
             $0.manualPort = 19000
             $0.manualPortText = "19000"
