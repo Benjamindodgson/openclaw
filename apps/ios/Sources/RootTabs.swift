@@ -1017,10 +1017,7 @@ extension RootTabs {
     }
 
     private func gatewayProblemPrimaryActionTitle(_ problem: GatewayConnectionProblem) -> String? {
-        GatewayProblemPrimaryAction.title(
-            for: problem,
-            retryTitle: "Retry",
-            nonRetryableTitle: "Open Settings")
+        RootGatewayProblemPrimaryActionFeature.title(for: problem)
     }
 
     private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
