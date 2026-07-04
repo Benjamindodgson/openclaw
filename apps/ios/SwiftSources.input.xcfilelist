@@ -94,6 +94,7 @@ Sources/RootCanvasDebugStatusFeature.swift
 Sources/RootCanvasPresentationFeature.swift
 Sources/RootGatewayOverviewRefreshFeature.swift
 Sources/RootGatewayProblemPrimaryActionFeature.swift
+Sources/RootHomeCanvasFeature.swift
 Sources/RootIdleTimerFeature.swift
 Sources/RootTabs.swift
 Sources/RootTabsNavigation.swift
