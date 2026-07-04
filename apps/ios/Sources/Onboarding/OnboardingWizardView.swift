@@ -160,7 +160,7 @@ struct OnboardingWizardView: View {
     private var setupCodeBinding: Binding<String> {
         Binding(
             get: { self.setupCodeStore.setupCode },
-            set: { self.setupCodeStore.send(.setupCodeChanged($0)) })
+            set: { self.setupCodeStore.send(.setupCodeChanged(.init(code: $0))) })
     }
 
     private var selectedMode: OnboardingConnectionMode? {

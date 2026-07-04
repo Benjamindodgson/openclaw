@@ -663,6 +663,8 @@ struct OnboardingSetupCodeFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SetupCodeChange: Equatable, Sendable { var code: String }
+
         case appleReviewDemoCodeAccepted
         case applyRequested
         case applyResultHandled
@@ -672,7 +674,7 @@ struct OnboardingSetupCodeFeature {
         case scannedGatewayLinkReceived(GatewayConnectDeepLink)
         case scannedSetupCodeReceived(String)
         case setupCodeAccepted
-        case setupCodeChanged(String)
+        case setupCodeChanged(SetupCodeChange)
         case statusCleared
     }
 
@@ -751,8 +753,8 @@ struct OnboardingSetupCodeFeature {
                 state.status = "Setup code applied. Connecting..."
                 return .none
 
-            case let .setupCodeChanged(setupCode):
-                state.setupCode = setupCode
+            case let .setupCodeChanged(change):
+                state.setupCode = change.code
                 return .none
 
             case .statusCleared:
