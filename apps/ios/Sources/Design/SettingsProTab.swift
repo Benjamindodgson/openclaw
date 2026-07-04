@@ -719,8 +719,12 @@ struct SettingsAgentSelectionFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case pickerSelectionChanged(String)
-        case selectedAgentSynced(String?)
+        struct PickerSelectionChange: Equatable, Sendable { var selectedAgentPickerId: String }
+
+        struct SelectedAgentSync: Equatable, Sendable { var selectedAgentId: String? }
+
+        case pickerSelectionChanged(PickerSelectionChange)
+        case selectedAgentSynced(SelectedAgentSync)
     }
 
     // swiftformat:enable redundantSendable
@@ -731,16 +735,16 @@ struct SettingsAgentSelectionFeature {
             let selectedAgentClient = self.selectedAgentClientOverride ?? dependencySelectedAgentClient
 
             switch action {
-            case let .pickerSelectionChanged(selectedAgentPickerId):
-                state.selectedAgentPickerId = selectedAgentPickerId
-                let trimmed = selectedAgentPickerId.trimmingCharacters(in: .whitespacesAndNewlines)
+            case let .pickerSelectionChanged(change):
+                state.selectedAgentPickerId = change.selectedAgentPickerId
+                let trimmed = change.selectedAgentPickerId.trimmingCharacters(in: .whitespacesAndNewlines)
                 let selectedAgentId = trimmed.isEmpty ? nil : trimmed
                 return .run { _ in
                     await selectedAgentClient.setSelectedAgentId(selectedAgentId)
                 }
 
-            case let .selectedAgentSynced(selectedAgentId):
-                state.selectedAgentPickerId = selectedAgentId ?? ""
+            case let .selectedAgentSynced(sync):
+                state.selectedAgentPickerId = sync.selectedAgentId ?? ""
                 return .none
             }
         }
@@ -1617,7 +1621,7 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.appModel.selectedAgentId ?? "") { _, newValue in
                 if newValue != self.agentSelectionStore.selectedAgentPickerId {
-                    self.agentSelectionStore.send(.selectedAgentSynced(newValue))
+                    self.agentSelectionStore.send(.selectedAgentSynced(.init(selectedAgentId: newValue)))
                 }
             }
             .onChange(of: self.storedSetupCode) { _, newValue in
@@ -1891,7 +1895,7 @@ extension SettingsProTab {
     var agentSelectionBinding: Binding<String> {
         Binding(
             get: { self.agentSelectionStore.selectedAgentPickerId },
-            set: { self.agentSelectionStore.send(.pickerSelectionChanged($0)) })
+            set: { self.agentSelectionStore.send(.pickerSelectionChanged(.init(selectedAgentPickerId: $0))) })
     }
 
     private var gatewayProblemDetailsBinding: Binding<Bool> {
