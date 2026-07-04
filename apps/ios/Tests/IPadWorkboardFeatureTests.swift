@@ -181,11 +181,11 @@ struct IPadWorkboardFeatureTests {
             $0.cards = [moved]
             $0.knownBoardIDs = ["default"]
         }
-        await store.send(.archiveRequested(moved, canWrite: true)) {
+        await store.send(.archiveRequested(.init(card: moved, canWrite: true))) {
             $0.busyCardID = "card-1"
             $0.errorText = nil
         }
-        await store.receive(.archiveResponse(.success(archived))) {
+        await store.receive(.archiveResponse(.init(result: .success(archived)))) {
             $0.busyCardID = nil
             $0.cards = [archived]
             $0.knownBoardIDs = ["default"]

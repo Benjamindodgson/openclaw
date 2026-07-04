@@ -338,8 +338,17 @@ struct IPadWorkboardFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case archiveRequested(IPadWorkboardCard, canWrite: Bool)
-        case archiveResponse(Result<IPadWorkboardCard, IPadWorkboardError>)
+        struct ArchiveRequest: Equatable, Sendable {
+            var card: IPadWorkboardCard
+            var canWrite: Bool
+        }
+
+        struct ArchiveResponse: Equatable, Sendable {
+            var result: Result<IPadWorkboardCard, IPadWorkboardError>
+        }
+
+        case archiveRequested(ArchiveRequest)
+        case archiveResponse(ArchiveResponse)
         case beginCreateCardTapped
         case boardScopesResponse(force: Bool, Result<[IPadWorkboardBoardSummary], IPadWorkboardError>)
         case boardScopeChanged(String)
@@ -379,31 +388,34 @@ struct IPadWorkboardFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .archiveRequested(card, canWrite):
-                guard canWrite, state.busyCardID == nil else { return .none }
-                state.busyCardID = card.id
+            case let .archiveRequested(request):
+                guard request.canWrite, state.busyCardID == nil else { return .none }
+                state.busyCardID = request.card.id
                 state.errorText = nil
                 let params = IPadWorkboardArchiveParams(
-                    id: card.id,
-                    archived: card.metadata?.archivedAt == nil)
+                    id: request.card.id,
+                    archived: request.card.metadata?.archivedAt == nil)
                 return .run { send in
                     do {
                         let card = try await client.archive(params)
-                        await send(.archiveResponse(.success(card)))
+                        await send(.archiveResponse(.init(result: .success(card))))
                     } catch {
-                        await send(.archiveResponse(.failure(.failed(Self.message(for: error)))))
+                        await send(.archiveResponse(.init(result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .archiveResponse(.success(card)):
-                state.busyCardID = nil
-                state.replace(card)
-                return .none
+            case let .archiveResponse(response):
+                switch response.result {
+                case let .success(card):
+                    state.busyCardID = nil
+                    state.replace(card)
+                    return .none
 
-            case let .archiveResponse(.failure(error)):
-                state.busyCardID = nil
-                state.errorText = error.message
-                return .none
+                case let .failure(error):
+                    state.busyCardID = nil
+                    state.errorText = error.message
+                    return .none
+                }
 
             case .beginCreateCardTapped:
                 state.draftTitle = ""
