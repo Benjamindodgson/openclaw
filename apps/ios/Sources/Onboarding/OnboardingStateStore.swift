@@ -850,6 +850,7 @@ struct OnboardingConnectionFormFeature {
         struct ManualPortTextChange: Equatable, Sendable { var text: String }
         struct ManualTLSChange: Equatable, Sendable { var useTLS: Bool }
         struct ModeSelection: Equatable, Sendable { var mode: OnboardingConnectionMode }
+        struct SelectedModeChange: Equatable, Sendable { var mode: OnboardingConnectionMode? }
         struct GatewayLinkApplication: Equatable, Sendable {
             var host: String
             var port: Int
@@ -872,7 +873,7 @@ struct OnboardingConnectionFormFeature {
         case manualPortTextChanged(ManualPortTextChange)
         case manualTLSChanged(ManualTLSChange)
         case modeSelected(ModeSelection)
-        case selectedModeChanged(OnboardingConnectionMode?)
+        case selectedModeChanged(SelectedModeChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -952,8 +953,8 @@ struct OnboardingConnectionFormFeature {
                 state.applyModeDefaults(selection.mode)
                 return .none
 
-            case let .selectedModeChanged(mode):
-                state.selectedMode = mode
+            case let .selectedModeChanged(change):
+                state.selectedMode = change.mode
                 return .none
             }
         }

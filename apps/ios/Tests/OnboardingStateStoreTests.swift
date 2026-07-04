@@ -753,7 +753,7 @@ import Testing
 
         await store.send(.developerModeDisabled)
 
-        await store.send(.selectedModeChanged(.developerLocal)) {
+        await store.send(.selectedModeChanged(.init(mode: .developerLocal))) {
             $0.selectedMode = .developerLocal
         }
 
