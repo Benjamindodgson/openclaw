@@ -402,7 +402,11 @@ struct SettingsGatewaySetupLinkFeature {
     }
 
     enum ApplyResult: Equatable, Sendable {
-        case appleReviewDemo(statusText: String)
+        struct AppleReviewDemo: Equatable, Sendable {
+            var statusText: String
+        }
+
+        case appleReviewDemo(AppleReviewDemo)
         case failure(String)
         case gatewayLink(GatewayConnectDeepLink)
     }
@@ -448,7 +452,7 @@ struct SettingsGatewaySetupLinkFeature {
                 if AppleReviewDemoMode.isSetupCode(raw) {
                     state.setupCode = ""
                     state.stagedGatewaySetupLink = nil
-                    state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)
+                    state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))
                     return .run { _ in
                         await appleReviewDemoClient.enter()
                     }
@@ -486,7 +490,7 @@ struct SettingsGatewaySetupLinkFeature {
                 }
                 state.setupCode = ""
                 state.stagedGatewaySetupLink = nil
-                state.applyResult = .appleReviewDemo(statusText: Self.appleReviewDemoStatusText)
+                state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))
                 return .run { _ in
                     await appleReviewDemoClient.enter()
                 }
