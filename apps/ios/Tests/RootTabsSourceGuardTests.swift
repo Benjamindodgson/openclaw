@@ -220,8 +220,9 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("@State var clawHubInstallSlug"))
         #expect(source.contains("@State var clawHubStore: StoreOf<AgentClawHubSearchFeature>"))
         #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshRequested("))
-        #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshLaunched(requestID: requestID))"))
-        #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshFinished(snapshot, requestID: requestID))"))
+        #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshLaunched(.init(requestID: requestID)))"))
+        #expect(gatewayDataSource
+            .contains("self.overviewStore.send(.refreshFinished(.init(snapshot: snapshot, requestID: requestID)))"))
         #expect(skillsSource.contains("text: self.clawHubQueryBinding"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchRequested)"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchFinished("))

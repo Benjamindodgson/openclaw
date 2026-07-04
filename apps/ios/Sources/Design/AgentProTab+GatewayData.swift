@@ -105,7 +105,7 @@ extension AgentProTab {
 
         let requestID = refreshRequest.id
         let activeAgentID = refreshRequest.activeAgentID
-        self.overviewStore.send(.refreshLaunched(requestID: requestID))
+        self.overviewStore.send(.refreshLaunched(.init(requestID: requestID)))
         let skillsParams = Self.agentScopedParams(agentId: activeAgentID)
         async let skills = self.requestOptional(
             SkillStatusReportLite.self,
@@ -148,7 +148,7 @@ extension AgentProTab {
                 ?? loadedConfig?.effectiveSkillFilter(agentId: activeAgentID),
             loadedAt: Date())
 
-        self.overviewStore.send(.refreshFinished(snapshot, requestID: requestID))
+        self.overviewStore.send(.refreshFinished(.init(snapshot: snapshot, requestID: requestID)))
     }
 
     func requestOptional<T: Decodable>(
