@@ -555,7 +555,8 @@ struct RootTabsPresentationTests {
             AppAppearancePreference.dark.rawValue)))
         {
             $0.didApplyInitialAppearance = true
-            $0.command = .applyAppearance(rawValue: AppAppearancePreference.dark.rawValue)
+            $0.command = .applyAppearance(Self.launchApplyAppearanceCommand(
+                AppAppearancePreference.dark.rawValue))
         }
 
         await store.send(.commandHandled) {
@@ -583,7 +584,7 @@ struct RootTabsPresentationTests {
 
         await store.send(.initialChatSessionRequested(Self.initialChatSessionRequest("session-1"))) {
             $0.didApplyInitialChatSession = true
-            $0.command = .focusChatSession("session-1")
+            $0.command = .focusChatSession(Self.launchFocusChatSessionCommand("session-1"))
         }
 
         await store.send(.commandHandled) {
@@ -1569,6 +1570,20 @@ struct RootTabsPresentationTests {
         -> RootLaunchFeature.InitialChatSessionRequest
     {
         RootLaunchFeature.InitialChatSessionRequest(sessionKey: sessionKey)
+    }
+
+    private static func launchApplyAppearanceCommand(
+        _ rawValue: String)
+        -> RootLaunchFeature.ApplyAppearanceCommand
+    {
+        RootLaunchFeature.ApplyAppearanceCommand(rawValue: rawValue)
+    }
+
+    private static func launchFocusChatSessionCommand(
+        _ sessionKey: String?)
+        -> RootLaunchFeature.FocusChatSessionCommand
+    {
+        RootLaunchFeature.FocusChatSessionCommand(sessionKey: sessionKey)
     }
 
     private static func voiceWakeCommandTrigger(

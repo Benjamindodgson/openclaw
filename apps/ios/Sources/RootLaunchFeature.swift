@@ -11,6 +11,14 @@ struct RootLaunchFeature {
         var sessionKey: String?
     }
 
+    struct ApplyAppearanceCommand: Equatable, Sendable {
+        var rawValue: String
+    }
+
+    struct FocusChatSessionCommand: Equatable, Sendable {
+        var sessionKey: String?
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var didApplyInitialAppearance = false
@@ -19,8 +27,8 @@ struct RootLaunchFeature {
     }
 
     enum Command: Equatable, Sendable {
-        case applyAppearance(rawValue: String)
-        case focusChatSession(String?)
+        case applyAppearance(ApplyAppearanceCommand)
+        case focusChatSession(FocusChatSessionCommand)
     }
 
     enum Action: Equatable, Sendable {
@@ -39,13 +47,13 @@ struct RootLaunchFeature {
                 state.didApplyInitialAppearance = true
                 let rawValue = request.rawValue
                 guard let rawValue else { return .none }
-                state.command = .applyAppearance(rawValue: rawValue)
+                state.command = .applyAppearance(ApplyAppearanceCommand(rawValue: rawValue))
                 return .none
 
             case let .initialChatSessionRequested(request):
                 guard !state.didApplyInitialChatSession else { return .none }
                 state.didApplyInitialChatSession = true
-                state.command = .focusChatSession(request.sessionKey)
+                state.command = .focusChatSession(FocusChatSessionCommand(sessionKey: request.sessionKey))
                 return .none
 
             case .commandHandled:
