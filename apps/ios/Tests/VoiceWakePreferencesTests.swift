@@ -72,6 +72,24 @@ struct VoiceWakePreferencesTests {
         #expect(await gatewayProbe.values() == [["openclaw", "computer"]])
     }
 
+    @Test @MainActor func `reducer removes words and commits sanitized result`() async {
+        let gatewayProbe = VoiceWakeWordsGatewayProbe()
+        let store: TestStoreOf<VoiceWakeWordsSettingsFeature> = TestStore(
+            initialState: VoiceWakeWordsSettingsFeature.State(triggerWords: ["openclaw", " claude "]))
+        {
+            VoiceWakeWordsSettingsFeature(
+                preferences: Self.preferencesClient(),
+                gateway: gatewayProbe.client())
+        }
+
+        await store.send(.removeWords(.init(offsets: IndexSet(integer: 0)))) {
+            $0.triggerWords = [" claude "]
+        }
+        await store.finish()
+
+        #expect(await gatewayProbe.values() == [["claude"]])
+    }
+
     @Test @MainActor func `reducer commits when focus leaves edited word`() async {
         let gatewayProbe = VoiceWakeWordsGatewayProbe()
         let store: TestStoreOf<VoiceWakeWordsSettingsFeature> = TestStore(
