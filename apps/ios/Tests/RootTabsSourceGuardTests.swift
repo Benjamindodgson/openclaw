@@ -433,6 +433,27 @@ struct RootTabsSourceGuardTests {
         #expect(!actionFunction.contains("self.selectSidebarDestination(.gateway)"))
     }
 
+    @Test func `root gateway overview scene refresh is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let featureSource = try String(contentsOf: Self.rootGatewayOverviewRefreshSourceURL(), encoding: .utf8)
+        let refreshFunction = try Self.extract(
+            rootSource,
+            from: "private func refreshGatewayOverviewAfterSceneActivation() async",
+            to: "private func rootAppearLifecycle")
+
+        #expect(featureSource.contains("struct RootGatewayOverviewRefreshClient"))
+        #expect(featureSource.contains("var rootGatewayOverviewRefresh: RootGatewayOverviewRefreshClient"))
+        #expect(featureSource.contains("@Reducer\nstruct RootGatewayOverviewRefreshFeature"))
+        #expect(featureSource.contains("case sceneActiveRefreshRequested"))
+        #expect(featureSource.contains("@Dependency(\\.rootGatewayOverviewRefresh)"))
+        #expect(featureSource.contains("await client.refreshGatewayOverviewIfConnected()"))
+        #expect(rootSource.contains("private func makeGatewayOverviewRefreshStore()"))
+        #expect(rootSource.contains("Task { await self.refreshGatewayOverviewAfterSceneActivation() }"))
+        #expect(refreshFunction.contains(".send(.sceneActiveRefreshRequested)"))
+        #expect(refreshFunction.contains("self.updateHomeCanvasState()"))
+        #expect(!refreshFunction.contains("await self.appModel.refreshGatewayOverviewIfConnected()"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -1873,6 +1894,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootGatewayProblemPrimaryActionFeature.swift")
+    }
+
+    private static func rootGatewayOverviewRefreshSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootGatewayOverviewRefreshFeature.swift")
     }
 
     private static func nodeAppModelSourceURL() -> URL {

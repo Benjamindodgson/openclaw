@@ -722,6 +722,15 @@ struct RootTabs: View {
             }
     }
 
+    private func refreshGatewayOverviewAfterSceneActivation() async {
+        await self.makeGatewayOverviewRefreshStore()
+            .send(.sceneActiveRefreshRequested)
+            .finish()
+        await MainActor.run {
+            self.updateHomeCanvasState()
+        }
+    }
+
     private func rootAppearLifecycle(_ content: some View) -> some View {
         content
             .onAppear { self.updateIdleTimer() }
@@ -739,12 +748,7 @@ struct RootTabs: View {
                 self.updateHomeCanvasState()
                 guard newValue == .active else { return }
                 self.maybeRequestLocalNetworkAccess(reason: "scene_active")
-                Task {
-                    await self.appModel.refreshGatewayOverviewIfConnected()
-                    await MainActor.run {
-                        self.updateHomeCanvasState()
-                    }
-                }
+                Task { await self.refreshGatewayOverviewAfterSceneActivation() }
             }
             .onDisappear {
                 UIApplication.shared.isIdleTimerDisabled = false
@@ -857,6 +861,13 @@ struct RootTabs: View {
                 client: .live(
                     gatewayController: self.gatewayController,
                     openGatewaySettings: { self.selectSidebarDestination(.gateway) }))
+        }
+    }
+
+    @MainActor
+    private func makeGatewayOverviewRefreshStore() -> StoreOf<RootGatewayOverviewRefreshFeature> {
+        Store(initialState: RootGatewayOverviewRefreshFeature.State()) {
+            RootGatewayOverviewRefreshFeature(client: .live(appModel: self.appModel))
         }
     }
 

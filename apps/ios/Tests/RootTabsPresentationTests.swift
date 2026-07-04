@@ -219,6 +219,18 @@ struct RootTabsPresentationTests {
         await store.send(.gatewaySetupRequestChanged(42))
     }
 
+    @Test func `gateway overview refresh reducer refreshes connected gateway overview`() async {
+        let probe = RootGatewayOverviewRefreshProbe()
+        let store = TestStore(initialState: RootGatewayOverviewRefreshFeature.State()) {
+            RootGatewayOverviewRefreshFeature(client: probe.client)
+        }
+
+        await store.send(.sceneActiveRefreshRequested)
+        await store.finish()
+
+        #expect(probe.refreshCount == 1)
+    }
+
     @Test func `gateway problem reducer trusts rotated certificate instead of retrying`() async {
         let probe = RootGatewayProblemPrimaryActionProbe()
         let problem = Self.rotatedCertificateProblem()
@@ -1336,6 +1348,16 @@ struct RootTabsPresentationTests {
             message: "Open settings to review gateway configuration.",
             retryable: false,
             pauseReconnect: true)
+    }
+}
+
+private final class RootGatewayOverviewRefreshProbe: @unchecked Sendable {
+    var refreshCount = 0
+
+    var client: RootGatewayOverviewRefreshClient {
+        RootGatewayOverviewRefreshClient(refreshGatewayOverviewIfConnected: {
+            self.refreshCount += 1
+        })
     }
 }
 
