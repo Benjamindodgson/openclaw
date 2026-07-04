@@ -363,7 +363,12 @@ struct IPadWorkboardFeature {
         }
 
         case boardScopeChanged(BoardScopeChange)
-        case cardSheetPresented(IPadWorkboardCard)
+
+        struct CardSheetPresentation: Equatable, Sendable {
+            var card: IPadWorkboardCard
+        }
+
+        case cardSheetPresented(CardSheetPresentation)
         case clearQueryTapped
 
         struct CreateRequest: Equatable, Sendable {
@@ -485,8 +490,8 @@ struct IPadWorkboardFeature {
                 state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(change.boardID)
                 return .none
 
-            case let .cardSheetPresented(card):
-                state.presentedSheet = .card(card)
+            case let .cardSheetPresented(presentation):
+                state.presentedSheet = .card(presentation.card)
                 return .none
 
             case .clearQueryTapped:

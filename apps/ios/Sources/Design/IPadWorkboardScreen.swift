@@ -437,7 +437,7 @@ struct IPadWorkboardScreen: View {
                             self.open(card)
                         },
                         inspect: { card in
-                            self.store.send(.cardSheetPresented(card))
+                            self.store.send(.cardSheetPresented(.init(card: card)))
                         },
                         move: { card, status in
                             Task { await self.move(card, to: status) }
@@ -483,7 +483,7 @@ struct IPadWorkboardScreen: View {
                             statuses: self.store.statuses,
                             isBusy: self.store.busyCardID == card.id,
                             inspect: {
-                                self.store.send(.cardSheetPresented(card))
+                                self.store.send(.cardSheetPresented(.init(card: card)))
                             },
                             openSession: {
                                 self.open(card)
