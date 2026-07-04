@@ -744,8 +744,17 @@ struct AgentOverviewLoadFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case refreshFinished(AgentOverviewSnapshot, requestID: Int)
-        case refreshLaunched(requestID: Int)
+        struct RefreshLaunch: Equatable, Sendable {
+            var requestID: Int
+        }
+
+        struct RefreshResult: Equatable, Sendable {
+            var snapshot: AgentOverviewSnapshot
+            var requestID: Int
+        }
+
+        case refreshFinished(RefreshResult)
+        case refreshLaunched(RefreshLaunch)
         case refreshRequested(gatewayConnected: Bool, force: Bool, activeAgentID: String)
     }
 
@@ -776,17 +785,17 @@ struct AgentOverviewLoadFeature {
                 state.errorText = nil
                 return .none
 
-            case let .refreshFinished(snapshot, requestID):
-                state.overview = snapshot
-                state.errorText = snapshot.hasAnyLiveData ? nil : "Live overview could not load yet."
+            case let .refreshFinished(result):
+                state.overview = result.snapshot
+                state.errorText = result.snapshot.hasAnyLiveData ? nil : "Live overview could not load yet."
                 state.isLoading = false
-                if state.refreshRequest?.id == requestID {
+                if state.refreshRequest?.id == result.requestID {
                     state.refreshRequest = nil
                 }
                 return .none
 
-            case let .refreshLaunched(requestID):
-                if state.refreshRequest?.id == requestID {
+            case let .refreshLaunched(launch):
+                if state.refreshRequest?.id == launch.requestID {
                     state.refreshRequest = nil
                 }
                 return .none
