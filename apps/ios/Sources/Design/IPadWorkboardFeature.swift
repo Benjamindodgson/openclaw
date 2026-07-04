@@ -357,7 +357,12 @@ struct IPadWorkboardFeature {
         }
 
         case boardScopesResponse(BoardScopesResponse)
-        case boardScopeChanged(String)
+
+        struct BoardScopeChange: Equatable, Sendable {
+            var boardID: String
+        }
+
+        case boardScopeChanged(BoardScopeChange)
         case cardSheetPresented(IPadWorkboardCard)
         case clearQueryTapped
 
@@ -476,8 +481,8 @@ struct IPadWorkboardFeature {
                     return .none
                 }
 
-            case let .boardScopeChanged(boardID):
-                state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(boardID)
+            case let .boardScopeChanged(change):
+                state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(change.boardID)
                 return .none
 
             case let .cardSheetPresented(card):

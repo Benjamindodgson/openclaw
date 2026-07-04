@@ -791,6 +791,8 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("case createResponse(CreateResponse)"))
         #expect(source.contains("struct BoardScopesResponse: Equatable, Sendable"))
         #expect(source.contains("case boardScopesResponse(BoardScopesResponse)"))
+        #expect(source.contains("struct BoardScopeChange: Equatable, Sendable"))
+        #expect(source.contains("case boardScopeChanged(BoardScopeChange)"))
         #expect(source.contains("struct ArchiveRequest: Equatable, Sendable"))
         #expect(source.contains("struct ArchiveResponse: Equatable, Sendable"))
         #expect(source.contains("case archiveRequested(ArchiveRequest)"))
