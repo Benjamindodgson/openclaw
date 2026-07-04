@@ -94,17 +94,20 @@ struct SettingsGatewayConnectionFeature {
             var stableID: String
         }
 
+        struct GatewayStatusSync: Equatable, Sendable {
+            var isAppleReviewDemoModeEnabled: Bool
+            var gatewayStatusConnected: Bool
+            var gatewayDisplayStatusText: String
+            var gatewayAgentCount: Int
+            var gatewayRemoteAddress: String?
+            var gatewayServerName: String?
+        }
+
         case connectionFinished
         case connectionStarted(ConnectionStart)
         case disconnectRequested
         case discoveredGatewayPersistenceRequested(DiscoveredGatewayPersistenceRequest)
-        case gatewayStatusSynced(
-            isAppleReviewDemoModeEnabled: Bool,
-            gatewayStatusConnected: Bool,
-            gatewayDisplayStatusText: String,
-            gatewayAgentCount: Int,
-            gatewayRemoteAddress: String?,
-            gatewayServerName: String?)
+        case gatewayStatusSynced(GatewayStatusSync)
     }
 
     // swiftformat:enable redundantSendable
@@ -138,19 +141,13 @@ struct SettingsGatewayConnectionFeature {
                     await persistenceClient.saveSelectedGatewayStableID(trimmedStableID)
                 }
 
-            case let .gatewayStatusSynced(
-                isAppleReviewDemoModeEnabled,
-                gatewayStatusConnected,
-                gatewayDisplayStatusText,
-                gatewayAgentCount,
-                gatewayRemoteAddress,
-                gatewayServerName):
-                state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
-                state.gatewayStatusConnected = gatewayStatusConnected
-                state.gatewayDisplayStatusText = gatewayDisplayStatusText
-                state.gatewayAgentCount = gatewayAgentCount
-                state.gatewayRemoteAddress = gatewayRemoteAddress
-                state.gatewayServerName = gatewayServerName
+            case let .gatewayStatusSynced(sync):
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
+                state.gatewayStatusConnected = sync.gatewayStatusConnected
+                state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText
+                state.gatewayAgentCount = sync.gatewayAgentCount
+                state.gatewayRemoteAddress = sync.gatewayRemoteAddress
+                state.gatewayServerName = sync.gatewayServerName
                 return .none
             }
         }
