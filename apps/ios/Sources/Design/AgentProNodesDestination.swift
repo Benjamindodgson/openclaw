@@ -37,7 +37,11 @@ struct AgentNodeDetailCopyFeature {
     struct State: Equatable, Sendable {}
 
     enum Action: Equatable, Sendable {
-        case copyButtonTapped(String)
+        struct CopyRequest: Equatable, Sendable {
+            var value: String
+        }
+
+        case copyButtonTapped(CopyRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -48,9 +52,9 @@ struct AgentNodeDetailCopyFeature {
             let clipboard = self.clipboardOverride ?? dependencyClipboard
 
             switch action {
-            case let .copyButtonTapped(value):
+            case let .copyButtonTapped(request):
                 return .run { _ in
-                    await clipboard.copy(value)
+                    await clipboard.copy(request.value)
                 }
             }
         }
@@ -426,7 +430,7 @@ private struct AgentNodeDetailCopyButton: View {
 
     var body: some View {
         Button {
-            self.store.send(.copyButtonTapped(self.value))
+            self.store.send(.copyButtonTapped(.init(value: self.value)))
         } label: {
             Image(systemName: "doc.on.doc")
         }
