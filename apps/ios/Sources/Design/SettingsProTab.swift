@@ -401,8 +401,10 @@ struct SettingsGatewaySetupLinkFeature {
             var statusText: String
         }
 
+        struct Failure: Equatable, Sendable { var message: String }
+
         case appleReviewDemo(AppleReviewDemo)
-        case failure(String)
+        case failure(Failure)
         case gatewayLink(GatewayConnectDeepLink)
     }
 
@@ -440,7 +442,7 @@ struct SettingsGatewaySetupLinkFeature {
                 let raw = state.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
                 let stagedLink = state.stagedGatewaySetupLink
                 guard !raw.isEmpty || stagedLink != nil else {
-                    state.applyResult = .failure("Paste a setup code to continue.")
+                    state.applyResult = .failure(.init(message: "Paste a setup code to continue."))
                     return .none
                 }
 
@@ -454,7 +456,8 @@ struct SettingsGatewaySetupLinkFeature {
                 }
 
                 guard let link = raw.isEmpty ? stagedLink : GatewayConnectDeepLink.fromSetupInput(raw) else {
-                    state.applyResult = .failure("Setup code not recognized or uses an insecure ws:// gateway URL.")
+                    state.applyResult = .failure(.init(
+                        message: "Setup code not recognized or uses an insecure ws:// gateway URL."))
                     return .none
                 }
                 state.stagedGatewaySetupLink = nil
