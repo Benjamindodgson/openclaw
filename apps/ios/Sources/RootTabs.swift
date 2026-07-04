@@ -1130,11 +1130,11 @@ extension RootTabs {
         self.launchStore.send(.commandHandled)
 
         switch command {
-        case let .applyAppearance(rawValue):
-            self.appearancePreferenceRaw = rawValue
+        case let .applyAppearance(command):
+            self.appearancePreferenceRaw = command.rawValue
 
-        case let .focusChatSession(sessionKey):
-            self.appModel.focusChatSession(sessionKey)
+        case let .focusChatSession(command):
+            self.appModel.focusChatSession(command.sessionKey)
         }
     }
 
