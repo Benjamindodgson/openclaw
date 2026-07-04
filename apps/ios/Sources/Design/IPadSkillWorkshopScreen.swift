@@ -190,8 +190,20 @@ struct IPadSkillWorkshopFeature {
     enum Action: Equatable, Sendable {
         case agentScopeChanged(String)
         case clearQueryTapped
-        case inspectRequested(proposalID: String, canRead: Bool, force: Bool)
-        case inspectResponse(proposalID: String, Result<IPadSkillProposalInspectResponse, IPadSkillWorkshopError>)
+
+        struct InspectRequest: Equatable, Sendable {
+            var proposalID: String
+            var canRead: Bool
+            var force: Bool
+        }
+
+        struct InspectResponse: Equatable, Sendable {
+            var proposalID: String
+            var result: Result<IPadSkillProposalInspectResponse, IPadSkillWorkshopError>
+        }
+
+        case inspectRequested(InspectRequest)
+        case inspectResponse(InspectResponse)
 
         struct ProposalMutationRequest: Equatable, Sendable {
             var kind: IPadSkillProposalAction.Kind
@@ -248,24 +260,25 @@ struct IPadSkillWorkshopFeature {
                 state.syncSelectedProposalIDForVisibleProposals()
                 return .none
 
-            case let .inspectRequested(proposalID, canRead, force):
+            case let .inspectRequested(request):
                 return self.inspectEffect(
                     state: &state,
                     client: client,
-                    proposalID: proposalID,
-                    canRead: canRead,
-                    force: force)
+                    request: request)
 
-            case let .inspectResponse(proposalID, .success(response)):
-                state.inspectingProposalID = nil
-                let previous = state.proposals.first { $0.id == proposalID }
-                state.merge(IPadSkillProposal(inspect: response, previous: previous))
-                return .none
+            case let .inspectResponse(response):
+                switch response.result {
+                case let .success(inspectResponse):
+                    state.inspectingProposalID = nil
+                    let previous = state.proposals.first { $0.id == response.proposalID }
+                    state.merge(IPadSkillProposal(inspect: inspectResponse, previous: previous))
+                    return .none
 
-            case let .inspectResponse(_, .failure(error)):
-                state.inspectingProposalID = nil
-                state.errorText = error.message
-                return .none
+                case let .failure(error):
+                    state.inspectingProposalID = nil
+                    state.errorText = error.message
+                    return .none
+                }
 
             case let .proposalMutationRequested(request):
                 guard IPadSkillWorkshopScreen.shouldEnableProposalMutation(
@@ -323,9 +336,10 @@ struct IPadSkillWorkshopFeature {
                 return self.inspectEffect(
                     state: &state,
                     client: client,
-                    proposalID: proposalID,
-                    canRead: canRead,
-                    force: forceInspect)
+                    request: .init(
+                        proposalID: proposalID,
+                        canRead: canRead,
+                        force: forceInspect))
 
             case .proposalSheetDismissed:
                 state.presentedProposalRoute = nil
@@ -379,9 +393,10 @@ struct IPadSkillWorkshopFeature {
                     return self.inspectEffect(
                         state: &state,
                         client: client,
-                        proposalID: proposalID,
-                        canRead: true,
-                        force: response.force)
+                        request: .init(
+                            proposalID: proposalID,
+                            canRead: true,
+                            force: response.force))
 
                 case let .failure(error):
                     if response.force || state.proposals.isEmpty {
@@ -402,23 +417,26 @@ struct IPadSkillWorkshopFeature {
     private func inspectEffect(
         state: inout State,
         client: IPadSkillWorkshopClient,
-        proposalID: String,
-        canRead: Bool,
-        force: Bool) -> Effect<Action>
+        request: Action.InspectRequest) -> Effect<Action>
     {
-        guard canRead else { return .none }
-        guard force || state.proposals.first(where: { $0.id == proposalID })?.content == nil else { return .none }
+        guard request.canRead else { return .none }
+        guard request.force || state.proposals.first(where: { $0.id == request.proposalID })?.content == nil
+        else { return .none }
         guard state.inspectingProposalID == nil else { return .none }
 
-        state.inspectingProposalID = proposalID
+        state.inspectingProposalID = request.proposalID
         state.errorText = nil
         let agentID = state.selectedAgentParam
         return .run { send in
             do {
-                let response = try await client.inspect(agentID, proposalID)
-                await send(.inspectResponse(proposalID: proposalID, .success(response)))
+                let response = try await client.inspect(agentID, request.proposalID)
+                await send(.inspectResponse(.init(
+                    proposalID: request.proposalID,
+                    result: .success(response))))
             } catch {
-                await send(.inspectResponse(proposalID: proposalID, .failure(.failed(Self.message(for: error)))))
+                await send(.inspectResponse(.init(
+                    proposalID: request.proposalID,
+                    result: .failure(.failed(Self.message(for: error))))))
             }
         }
     }
@@ -1191,10 +1209,10 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private func inspect(proposalID: String, force: Bool) async {
-        await self.store.send(.inspectRequested(
+        await self.store.send(.inspectRequested(.init(
             proposalID: proposalID,
             canRead: self.canRead,
-            force: force)).finish()
+            force: force))).finish()
     }
 
     private func run(_ action: IPadSkillProposalAction.Kind, proposal: IPadSkillProposal) async {

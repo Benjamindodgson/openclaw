@@ -42,7 +42,10 @@ struct IPadSkillWorkshopFeatureTests {
             $0.selectedProposalID = "pending-1"
             $0.inspectingProposalID = "pending-1"
         }
-        await store.receive(.inspectResponse(proposalID: "pending-1", .success(inspect))) {
+        await store.receive(.inspectResponse(.init(
+            proposalID: "pending-1",
+            result: .success(inspect))))
+        {
             $0.inspectingProposalID = nil
             $0.proposals = [IPadSkillProposal(
                 inspect: inspect,
