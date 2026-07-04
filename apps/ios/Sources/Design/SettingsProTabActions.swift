@@ -255,10 +255,10 @@ extension SettingsProTab {
     }
 
     func syncOnboardingState() {
-        self.onboardingStateStore.send(.onboardingStateSynced(
+        self.onboardingStateStore.send(.onboardingStateSynced(.init(
             hasConnectedOnce: self.storedHasConnectedOnce,
             onboardingComplete: self.storedOnboardingComplete,
-            onboardingRequestID: self.storedOnboardingRequestID))
+            onboardingRequestID: self.storedOnboardingRequestID)))
     }
 
     func syncGatewaySetupStatusContext() {
@@ -450,7 +450,9 @@ extension SettingsProTab {
         self.updateSetupCode("")
         self.disableGatewayAutoConnectForOnboardingReset()
         self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
-        await self.onboardingStateStore.send(.onboardingResetRequested(instanceId: self.instanceId)).finish()
+        await self.onboardingStateStore
+            .send(.onboardingResetRequested(.init(instanceId: self.instanceId)))
+            .finish()
         self.syncStoredOnboardingResetState()
         self.clearManualGatewayEndpointForOnboardingReset()
     }

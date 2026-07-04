@@ -2090,10 +2090,10 @@ struct SettingsNavigationFeatureTests {
             SettingsOnboardingStateFeature()
         }
 
-        await store.send(.onboardingStateSynced(
+        await store.send(.onboardingStateSynced(.init(
             hasConnectedOnce: true,
             onboardingComplete: true,
-            onboardingRequestID: 4))
+            onboardingRequestID: 4)))
         {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
@@ -2111,7 +2111,7 @@ struct SettingsNavigationFeatureTests {
             SettingsOnboardingStateFeature(resetClient: resetProbe.client)
         }
 
-        await store.send(.onboardingResetRequested(instanceId: "instance-reset")) {
+        await store.send(.onboardingResetRequested(.init(instanceId: "instance-reset"))) {
             $0.hasConnectedOnce = false
             $0.onboardingComplete = false
             $0.onboardingRequestID = 5
@@ -2126,7 +2126,7 @@ struct SettingsNavigationFeatureTests {
             SettingsOnboardingStateFeature()
         }
 
-        await store.send(.onboardingRequestIDChanged(5)) {
+        await store.send(.onboardingRequestIDChanged(.init(requestID: 5))) {
             $0.onboardingRequestID = 5
         }
     }
