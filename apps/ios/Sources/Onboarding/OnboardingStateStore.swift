@@ -94,8 +94,13 @@ struct OnboardingStateFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct GatewaySnapshotChange: Equatable, Sendable {
+            var gatewayServerName: String?
+            var hasSavedGatewayConnection: Bool
+        }
+
         case refreshPresentation
-        case gatewaySnapshotChanged(gatewayServerName: String?, hasSavedGatewayConnection: Bool)
+        case gatewaySnapshotChanged(GatewaySnapshotChange)
         case markCompleted(OnboardingConnectionMode?)
         case markFirstRunIntroSeen
         case reset
@@ -110,9 +115,9 @@ struct OnboardingStateFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .gatewaySnapshotChanged(gatewayServerName, hasSavedGatewayConnection):
-                state.gatewayServerName = gatewayServerName
-                state.hasSavedGatewayConnection = hasSavedGatewayConnection
+            case let .gatewaySnapshotChanged(snapshot):
+                state.gatewayServerName = snapshot.gatewayServerName
+                state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection
                 state.refreshPresentation()
                 return .none
 

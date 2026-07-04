@@ -1635,6 +1635,15 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: message)))"))
     }
 
+    @Test func `onboarding gateway snapshot action is typed`() throws {
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("struct GatewaySnapshotChange: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case gatewaySnapshotChanged(GatewaySnapshotChange)"))
+        #expect(onboardingStateSource.contains("state.gatewayServerName = snapshot.gatewayServerName"))
+        #expect(onboardingStateSource.contains("state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection"))
+    }
+
     @Test func `scanner setup code results are reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
