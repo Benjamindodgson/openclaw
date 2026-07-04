@@ -645,6 +645,15 @@ struct RootTabsSourceGuardTests {
             "self.store.send(.triggerWordChanged(.init(index: index, value: newValue)))"))
     }
 
+    @Test func `voice wake focus change action is typed`() throws {
+        let source = try String(contentsOf: Self.voiceWakeWordsSettingsSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct FocusedTriggerIndexChange: Equatable, Sendable"))
+        #expect(source.contains("case focusedTriggerIndexChanged(FocusedTriggerIndexChange)"))
+        #expect(source.contains("state.focusedTriggerIndex = change.index"))
+        #expect(source.contains("self.store.send(.focusedTriggerIndexChanged(.init(index: newValue)))"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)

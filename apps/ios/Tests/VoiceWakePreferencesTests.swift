@@ -82,13 +82,13 @@ struct VoiceWakePreferencesTests {
                 gateway: gatewayProbe.client())
         }
 
-        await store.send(.focusedTriggerIndexChanged(0)) {
+        await store.send(.focusedTriggerIndexChanged(.init(index: 0))) {
             $0.focusedTriggerIndex = 0
         }
         await store.send(.triggerWordChanged(.init(index: 0, value: " openclaw "))) {
             $0.triggerWords = [" openclaw "]
         }
-        await store.send(.focusedTriggerIndexChanged(nil)) {
+        await store.send(.focusedTriggerIndexChanged(.init(index: nil))) {
             $0.focusedTriggerIndex = nil
         }
         await store.finish()
