@@ -10,7 +10,7 @@ struct GatewayDiscoveryDebugLogFeatureTests {
             GatewayDiscoveryDebugLogFeature(clipboard: probe.client)
         }
 
-        await store.send(.copyButtonTapped("2026-07-02T20:00:00.000Z found gateway"))
+        await store.send(.copyButtonTapped(.init(log: "2026-07-02T20:00:00.000Z found gateway")))
         await store.finish()
 
         #expect(probe.copiedText == "2026-07-02T20:00:00.000Z found gateway")
