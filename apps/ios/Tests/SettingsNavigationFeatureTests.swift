@@ -2192,10 +2192,10 @@ struct SettingsNavigationFeatureTests {
             SettingsVoiceControlFeature()
         }
 
-        await store.send(.controlsSynced(
+        await store.send(.controlsSynced(.init(
             talkEnabled: true,
             voiceWakeEnabled: true,
-            voiceWakeStatusText: "Listening"))
+            voiceWakeStatusText: "Listening")))
         {
             $0.talkEnabled = true
             $0.voiceWakeEnabled = true
@@ -2209,10 +2209,10 @@ struct SettingsNavigationFeatureTests {
             SettingsVoiceControlFeature(voiceControlClient: voiceControlProbe.client)
         }
 
-        await store.send(.talkEnabledChanged(true)) {
+        await store.send(.talkEnabledChanged(.init(enabled: true))) {
             $0.talkEnabled = true
         }
-        await store.send(.voiceWakeEnabledChanged(true)) {
+        await store.send(.voiceWakeEnabledChanged(.init(enabled: true))) {
             $0.voiceWakeEnabled = true
         }
         await store.finish()
@@ -2239,16 +2239,16 @@ struct SettingsNavigationFeatureTests {
             SettingsVoiceControlFeature(voiceControlClient: voiceControlProbe.client)
         }
 
-        await store.send(.talkEnabledChangeRequested(
+        await store.send(.talkEnabledChangeRequested(.init(
             enabled: true,
-            isAppleReviewDemoModeEnabled: false))
+            isAppleReviewDemoModeEnabled: false)))
         {
             $0.talkEnabled = true
         }
 
-        await store.send(.talkEnabledChangeRequested(
+        await store.send(.talkEnabledChangeRequested(.init(
             enabled: true,
-            isAppleReviewDemoModeEnabled: true))
+            isAppleReviewDemoModeEnabled: true)))
         {
             $0.talkEnabled = false
         }
