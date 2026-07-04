@@ -1649,6 +1649,10 @@ struct RootTabsSourceGuardTests {
             actionsSource,
             from: "func applySetupCode() async -> Bool",
             to: "func applyGatewayLink")
+        let setupLinkFeature = try Self.extract(
+            settingsSource,
+            from: "struct SettingsGatewaySetupLinkFeature",
+            to: "struct SettingsGatewayCredentialsFeature")
 
         #expect(supportSource.contains("struct SettingsAppleReviewDemoClient"))
         #expect(supportSource.contains("var enter: @MainActor @Sendable () -> Void"))
@@ -1658,16 +1662,22 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("await appleReviewDemoClient.enter()"))
         #expect(settingsSource.contains("enum ApplyResult: Equatable, Sendable"))
         #expect(settingsSource.contains("struct AppleReviewDemo: Equatable, Sendable"))
+        #expect(setupLinkFeature.contains("struct Failure: Equatable, Sendable"))
         #expect(settingsSource.contains("case appleReviewDemo(AppleReviewDemo)"))
+        #expect(setupLinkFeature.contains("case failure(Failure)"))
         #expect(settingsSource.contains("case applyRequested"))
         #expect(settingsSource
             .contains("state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))"))
+        #expect(setupLinkFeature.contains("state.applyResult = .failure(.init(message:"))
         #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(actionsSource.contains("await self.gatewaySetupLinkStore.send(.applyRequested).finish()"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
         #expect(actionsSource.contains("case let .appleReviewDemo(demo):"))
         #expect(actionsSource.contains(
             "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: demo.statusText))"))
+        #expect(applyFunction.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))
+        #expect(!setupLinkFeature.contains("case failure(String)"))
         #expect(rootSource.contains("gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore()"))
         #expect(storesSource.contains(
             "SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
