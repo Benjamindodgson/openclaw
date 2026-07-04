@@ -1099,6 +1099,19 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("switch response.result"))
     }
 
+    @Test func `command center recent sessions refresh response action is typed`() throws {
+        let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
+        let feature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct CommandCenterRecentSessionsFeature",
+            to: "private static func snapshot")
+
+        #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
+        #expect(feature.contains("case refreshResponse(RefreshResponse)"))
+        #expect(feature.contains("await send(.refreshResponse(.init(result: .success(snapshot))))"))
+        #expect(feature.contains("switch response.result"))
+    }
+
     @Test func `routed feature screens reuse shared pro components`() throws {
         let source = try Self.iPadTaskFeatureScreensSource()
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)

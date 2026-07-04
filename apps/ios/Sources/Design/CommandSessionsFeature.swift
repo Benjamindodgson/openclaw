@@ -146,8 +146,12 @@ struct CommandCenterRecentSessionsFeature {
             var defaultSessionKey: String
         }
 
+        struct RefreshResponse: Equatable, Sendable {
+            var result: Result<Snapshot, CommandSessionsError>
+        }
+
         case refreshRequested(RefreshRequest)
-        case refreshResponse(Result<Snapshot, CommandSessionsError>)
+        case refreshResponse(RefreshResponse)
     }
 
     // swiftformat:enable redundantSendable
@@ -173,21 +177,24 @@ struct CommandCenterRecentSessionsFeature {
                             from: sessions,
                             currentSessionKey: request.currentSessionKey,
                             defaultSessionKey: request.defaultSessionKey)
-                        await send(.refreshResponse(.success(snapshot)))
+                        await send(.refreshResponse(.init(result: .success(snapshot))))
                     } catch {
-                        await send(.refreshResponse(.failure(.failed)))
+                        await send(.refreshResponse(.init(result: .failure(.failed))))
                     }
                 }
 
-            case let .refreshResponse(.success(snapshot)):
-                state.defaultChatSessionEntry = snapshot.defaultChatSessionEntry
-                state.recentChatSessions = snapshot.recentChatSessions
-                return .none
+            case let .refreshResponse(response):
+                switch response.result {
+                case let .success(snapshot):
+                    state.defaultChatSessionEntry = snapshot.defaultChatSessionEntry
+                    state.recentChatSessions = snapshot.recentChatSessions
+                    return .none
 
-            case .refreshResponse(.failure):
-                state.defaultChatSessionEntry = nil
-                state.recentChatSessions = []
-                return .none
+                case .failure:
+                    state.defaultChatSessionEntry = nil
+                    state.recentChatSessions = []
+                    return .none
+                }
             }
         }
         .autoLogActions()
