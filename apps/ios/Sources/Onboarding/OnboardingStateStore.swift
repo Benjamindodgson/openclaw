@@ -99,9 +99,11 @@ struct OnboardingStateFeature {
             var hasSavedGatewayConnection: Bool
         }
 
+        struct CompletionMark: Equatable, Sendable { var mode: OnboardingConnectionMode? }
+
         case refreshPresentation
         case gatewaySnapshotChanged(GatewaySnapshotChange)
-        case markCompleted(OnboardingConnectionMode?)
+        case markCompleted(CompletionMark)
         case markFirstRunIntroSeen
         case reset
     }
@@ -121,9 +123,9 @@ struct OnboardingStateFeature {
                 state.refreshPresentation()
                 return .none
 
-            case let .markCompleted(mode):
+            case let .markCompleted(mark):
                 state.isCompleted = true
-                if let mode {
+                if let mode = mark.mode {
                     state.lastMode = mode
                 }
                 state.refreshPresentation()

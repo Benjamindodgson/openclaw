@@ -1646,6 +1646,14 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection"))
     }
 
+    @Test func `onboarding completion mark action is typed`() throws {
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("struct CompletionMark: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case markCompleted(CompletionMark)"))
+        #expect(onboardingStateSource.contains("if let mode = mark.mode"))
+    }
+
     @Test func `onboarding step changes are typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)

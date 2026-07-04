@@ -126,7 +126,7 @@ import Testing
             $0.shouldPresentOnLaunch = true
         }
 
-        await store.send(.markCompleted(.remoteDomain)) {
+        await store.send(.markCompleted(.init(mode: .remoteDomain))) {
             $0.isCompleted = true
             $0.lastMode = .remoteDomain
             $0.shouldPresentOnLaunch = false
