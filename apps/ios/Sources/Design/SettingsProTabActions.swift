@@ -302,7 +302,7 @@ extension SettingsProTab {
         guard let link = self.appModel.consumePendingGatewaySetupLink() else { return }
         self.updateSetupCode("")
         self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: nil)))
-        self.gatewaySetupLinkStore.send(.setupLinkStaged(link))
+        self.gatewaySetupLinkStore.send(.setupLinkStaged(.init(link: link)))
         if let statusText = self.gatewaySetupLinkStore.setupLinkStatusText {
             self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: statusText)))
             self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)
@@ -348,7 +348,7 @@ extension SettingsProTab {
     }
 
     func handleScannedGatewayLink(_ link: GatewayConnectDeepLink) {
-        self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(link))
+        self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(.init(link: link)))
         guard case let .gatewayLink(scannedLink)? = self.gatewaySetupLinkStore.applyResult else { return }
         self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)

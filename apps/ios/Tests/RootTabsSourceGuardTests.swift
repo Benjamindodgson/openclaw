@@ -1432,10 +1432,12 @@ struct RootTabsSourceGuardTests {
             to: "@discardableResult")
 
         #expect(settingsSource.contains("var setupLinkStatusText: String?"))
+        #expect(settingsSource.contains("struct SetupLinkStage: Equatable, Sendable"))
+        #expect(settingsSource.contains("case setupLinkStaged(SetupLinkStage)"))
         #expect(settingsSource.contains("case setupLinkStatusHandled"))
         #expect(settingsSource.contains("Self.setupLinkLoadedStatusText(link)"))
         #expect(settingsSource.contains("Setup link loaded for \\(link.host):\\(link.port)"))
-        #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStaged(link))"))
+        #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStaged(.init(link: link)))"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.setupLinkStatusText"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)"))
         #expect(!stagingFunction.contains("let security = link.tls"))
@@ -1547,12 +1549,14 @@ struct RootTabsSourceGuardTests {
             from: "func handleScannedGatewayLink(_ link: GatewayConnectDeepLink)",
             to: "func handleScannedSetupCode")
 
-        #expect(settingsSource.contains("case scannedGatewayLinkReceived(GatewayConnectDeepLink)"))
+        #expect(settingsSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
+        #expect(settingsSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
         #expect(settingsSource.contains("var scannedGatewayLinkStatusText: String?"))
         #expect(settingsSource.contains("case scannedGatewayLinkStatusHandled"))
         #expect(settingsSource.contains("Self.scannedGatewayLinkStatusText(link)"))
         #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
-        #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(link))"))
+        #expect(settingsActionsSource.contains(
+            "self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(.init(link: link)))"))
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.scannedGatewayLinkStatusText"))
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)"))
         #expect(onboardingStateSource.contains("case scannedGatewayLinkReceived(GatewayConnectDeepLink)"))
