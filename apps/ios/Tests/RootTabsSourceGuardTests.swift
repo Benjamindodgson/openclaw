@@ -2021,6 +2021,18 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStatusUpdated(.init("))
     }
 
+    @Test func `onboarding connection issue action is typed`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("struct ConnectionIssueDetection: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case connectionIssueDetected(ConnectionIssueDetection)"))
+        #expect(onboardingStateSource.contains("detected: detection.issue"))
+        #expect(onboardingStateSource.contains("detection.pauseReconnect"))
+        #expect(onboardingStateSource.contains("detection.statusText.trimmingCharacters"))
+        #expect(onboardingSource.contains("self.statusStore.send(.connectionIssueDetected(.init("))
+    }
+
     @Test func `settings onboarding reset is reducer effect owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
