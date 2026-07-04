@@ -276,7 +276,7 @@ import Testing
 
         #expect(store.state.isFullScreenStep)
 
-        await store.send(.stepChanged(.mode)) {
+        await store.send(.stepChanged(.init(step: .mode))) {
             $0.step = .mode
         }
 
@@ -286,7 +286,7 @@ import Testing
             $0.step = .welcome
         }
 
-        await store.send(.stepChanged(.connect)) {
+        await store.send(.stepChanged(.init(step: .connect))) {
             $0.step = .connect
         }
 
@@ -294,7 +294,7 @@ import Testing
             $0.step = .mode
         }
 
-        await store.send(.stepChanged(.success)) {
+        await store.send(.stepChanged(.init(step: .success))) {
             $0.step = .success
         }
 

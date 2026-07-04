@@ -162,8 +162,10 @@ struct OnboardingStepFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct StepChange: Equatable, Sendable { var step: OnboardingStep }
+
         case backButtonTapped
-        case stepChanged(OnboardingStep)
+        case stepChanged(StepChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -176,8 +178,8 @@ struct OnboardingStepFeature {
                 state.step = previous
                 return .none
 
-            case let .stepChanged(step):
-                state.step = step
+            case let .stepChanged(change):
+                state.step = change.step
                 return .none
             }
         }
