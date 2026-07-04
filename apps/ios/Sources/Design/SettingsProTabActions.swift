@@ -178,7 +178,7 @@ extension SettingsProTab {
         self.syncVoiceControlState()
         self.syncTalkPreferencesState()
         self.syncTalkRuntimeState()
-        self.locationStore.send(.locationModeSynced(self.storedLocationModeRaw))
+        self.locationStore.send(.locationModeSynced(.init(rawValue: self.storedLocationModeRaw)))
         self.syncNotificationRelayState()
         self.gatewayAutoConnectStore.send(.enabledSynced(self.storedGatewayAutoConnect))
         self.manualGatewayEndpointStore.send(.endpointSynced(
@@ -687,7 +687,7 @@ extension SettingsProTab {
     }
 
     func updateLocationModeRaw(_ rawValue: String) {
-        self.locationStore.send(.locationModeChanged(rawValue))
+        self.locationStore.send(.locationModeChanged(.init(rawValue: rawValue)))
         self.deviceCapabilityStore.send(.locationModeChanged(
             SettingsDeviceCapabilityFeature.LocationModeChange(rawValue: rawValue)))
         self.storedLocationModeRaw = rawValue
