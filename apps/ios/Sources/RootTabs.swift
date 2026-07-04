@@ -1119,9 +1119,9 @@ extension RootTabs {
     }
 
     private func setOnboardingPresented(_ isPresented: Bool) {
-        self.presentationStore.send(.onboardingVisibilityChanged(
+        self.presentationStore.send(.onboardingVisibilityChanged(RootPresentationFeature.OnboardingVisibilityChange(
             isPresented: isPresented,
-            sceneActive: self.scenePhase == .active))
+            sceneActive: self.scenePhase == .active)))
         self.handlePresentationCommand()
     }
 

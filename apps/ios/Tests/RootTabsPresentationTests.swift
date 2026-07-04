@@ -366,7 +366,9 @@ struct RootTabsPresentationTests {
             reason: "scene_active",
             sceneActive: true)))
 
-        await store.send(.onboardingVisibilityChanged(isPresented: false, sceneActive: true)) {
+        await store.send(.onboardingVisibilityChanged(Self.onboardingVisibilityChange(
+            isPresented: false,
+            sceneActive: true))) {
             $0.showOnboarding = false
         }
 
@@ -1462,6 +1464,16 @@ struct RootTabsPresentationTests {
     {
         RootPresentationFeature.LocalNetworkAccessRequest(
             reason: reason,
+            sceneActive: sceneActive)
+    }
+
+    private static func onboardingVisibilityChange(
+        isPresented: Bool,
+        sceneActive: Bool)
+        -> RootPresentationFeature.OnboardingVisibilityChange
+    {
+        RootPresentationFeature.OnboardingVisibilityChange(
+            isPresented: isPresented,
             sceneActive: sceneActive)
     }
 }
