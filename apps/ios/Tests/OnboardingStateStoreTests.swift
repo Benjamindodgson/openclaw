@@ -512,7 +512,7 @@ import Testing
             password: "password-3")
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
 
-        await store.send(.setupAuthApplied(setupAuth)) {
+        await store.send(.setupAuthApplied(.init(setupAuth: setupAuth))) {
             $0.gatewayToken = "token-3"
             $0.gatewayPassword = "password-3"
             $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
@@ -525,7 +525,7 @@ import Testing
             $0.pendingManualAuthOverride = nil
         }
 
-        await store.send(.setupAuthApplied(setupAuth)) {
+        await store.send(.setupAuthApplied(.init(setupAuth: setupAuth))) {
             $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
                 token: "token-3",
                 bootstrapToken: "bootstrap-1",
