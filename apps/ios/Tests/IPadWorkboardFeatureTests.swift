@@ -172,11 +172,11 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.moveRequested(card, status: "running", canWrite: true)) {
+        await store.send(.moveRequested(.init(card: card, status: "running", canWrite: true))) {
             $0.busyCardID = "card-1"
             $0.errorText = nil
         }
-        await store.receive(.moveResponse(.success(moved))) {
+        await store.receive(.moveResponse(.init(result: .success(moved)))) {
             $0.busyCardID = nil
             $0.cards = [moved]
             $0.knownBoardIDs = ["default"]

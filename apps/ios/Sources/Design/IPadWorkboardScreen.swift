@@ -629,7 +629,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private func move(_ card: IPadWorkboardCard, to status: String) async {
-        await self.store.send(.moveRequested(card, status: status, canWrite: self.canWrite)).finish()
+        await self.store.send(.moveRequested(.init(card: card, status: status, canWrite: self.canWrite))).finish()
     }
 
     private func archive(_ card: IPadWorkboardCard) async {

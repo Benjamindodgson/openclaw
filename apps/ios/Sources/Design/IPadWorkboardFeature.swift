@@ -380,8 +380,19 @@ struct IPadWorkboardFeature {
         case dispatchResponse(DispatchResponse)
         case draftNotesChanged(String)
         case draftTitleChanged(String)
-        case moveRequested(IPadWorkboardCard, status: String, canWrite: Bool)
-        case moveResponse(Result<IPadWorkboardCard, IPadWorkboardError>)
+
+        struct MoveRequest: Equatable, Sendable {
+            var card: IPadWorkboardCard
+            var status: String
+            var canWrite: Bool
+        }
+
+        struct MoveResponse: Equatable, Sendable {
+            var result: Result<IPadWorkboardCard, IPadWorkboardError>
+        }
+
+        case moveRequested(MoveRequest)
+        case moveResponse(MoveResponse)
         case queryChanged(String)
         case refreshRequested(sceneActive: Bool, canRead: Bool, force: Bool)
         case refreshResponse(boardID: String?, force: Bool, Result<IPadWorkboardCardsResponse, IPadWorkboardError>)
@@ -543,32 +554,35 @@ struct IPadWorkboardFeature {
                 state.draftTitle = title
                 return .none
 
-            case let .moveRequested(card, status, canWrite):
-                guard canWrite, state.busyCardID == nil else { return .none }
-                state.busyCardID = card.id
+            case let .moveRequested(request):
+                guard request.canWrite, state.busyCardID == nil else { return .none }
+                state.busyCardID = request.card.id
                 state.errorText = nil
                 let params = IPadWorkboardMoveParams(
-                    id: card.id,
-                    status: status,
-                    position: state.nextPosition(for: status, excluding: card.id))
+                    id: request.card.id,
+                    status: request.status,
+                    position: state.nextPosition(for: request.status, excluding: request.card.id))
                 return .run { send in
                     do {
                         let card = try await client.move(params)
-                        await send(.moveResponse(.success(card)))
+                        await send(.moveResponse(.init(result: .success(card))))
                     } catch {
-                        await send(.moveResponse(.failure(.failed(Self.message(for: error)))))
+                        await send(.moveResponse(.init(result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .moveResponse(.success(card)):
-                state.busyCardID = nil
-                state.replace(card)
-                return .none
+            case let .moveResponse(response):
+                switch response.result {
+                case let .success(card):
+                    state.busyCardID = nil
+                    state.replace(card)
+                    return .none
 
-            case let .moveResponse(.failure(error)):
-                state.busyCardID = nil
-                state.errorText = error.message
-                return .none
+                case let .failure(error):
+                    state.busyCardID = nil
+                    state.errorText = error.message
+                    return .none
+                }
 
             case let .queryChanged(query):
                 state.query = query
