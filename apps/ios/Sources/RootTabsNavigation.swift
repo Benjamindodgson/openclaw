@@ -35,6 +35,11 @@ struct RootPresentationFeature {
         var sceneActive: Bool
     }
 
+    struct OnboardingVisibilityChange: Equatable, Sendable {
+        var isPresented: Bool
+        var sceneActive: Bool
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected: Bool
@@ -206,7 +211,7 @@ struct RootPresentationFeature {
         case autoOpenSettingsRequested(StartupSnapshot)
         case gatewaySetupRequestChanged(Int)
         case localNetworkAccessRequested(LocalNetworkAccessRequest)
-        case onboardingVisibilityChanged(isPresented: Bool, sceneActive: Bool)
+        case onboardingVisibilityChanged(OnboardingVisibilityChange)
         case presentationCommandHandled
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
@@ -300,12 +305,12 @@ struct RootPresentationFeature {
                 state.presentationCommand = .requestLocalNetworkAccess(reason: request.reason)
                 return .none
 
-            case let .onboardingVisibilityChanged(isPresented, sceneActive):
+            case let .onboardingVisibilityChanged(change):
                 let wasPresented = state.showOnboarding
-                state.showOnboarding = isPresented
+                state.showOnboarding = change.isPresented
                 state.refreshPresentation()
-                guard wasPresented, !isPresented else { return .none }
-                guard state.didEvaluateOnboarding, sceneActive else { return .none }
+                guard wasPresented, !change.isPresented else { return .none }
+                guard state.didEvaluateOnboarding, change.sceneActive else { return .none }
                 state.presentationCommand = .requestLocalNetworkAccess(reason: "onboarding_dismissed")
                 return .none
 
