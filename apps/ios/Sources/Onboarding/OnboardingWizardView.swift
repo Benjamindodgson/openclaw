@@ -885,12 +885,12 @@ extension OnboardingWizardView {
         let next = GatewayConnectionIssue.detect(problem: problem)
         let fallback = next == .none ? GatewayConnectionIssue.detect(from: statusText) : next
 
-        self.statusStore.send(.connectionIssueDetected(
+        self.statusStore.send(.connectionIssueDetected(.init(
             issue: fallback,
             requestId: problem?.requestId ?? fallback.requestId,
             pauseReconnect: problem?.pauseReconnect == true,
             message: problem?.message,
-            statusText: statusText))
+            statusText: statusText)))
 
         if self.statusStore.shouldShowAuthStep {
             self.stepStore.send(.stepChanged(.auth))

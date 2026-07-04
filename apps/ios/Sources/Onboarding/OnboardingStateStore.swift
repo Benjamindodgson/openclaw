@@ -222,17 +222,20 @@ struct OnboardingStatusFeature {
             var statusLine: String
         }
 
+        struct ConnectionIssueDetection: Equatable, Sendable {
+            var issue: GatewayConnectionIssue
+            var requestId: String?
+            var pauseReconnect: Bool
+            var message: String?
+            var statusText: String
+        }
+
         struct ScannerError: Equatable, Sendable { var message: String }
 
         case automaticPairingResumeRequested(now: Date)
         case appleReviewDemoModeEnabled
         case connectionFinished
-        case connectionIssueDetected(
-            issue: GatewayConnectionIssue,
-            requestId: String?,
-            pauseReconnect: Bool,
-            message: String?,
-            statusText: String)
+        case connectionIssueDetected(ConnectionIssueDetection)
         case connectionStarted(ConnectionStart)
         case connectionActivityStarted(id: String)
         case connectionStatusUpdated(ConnectionStatusUpdate)
@@ -272,21 +275,23 @@ struct OnboardingStatusFeature {
                 state.connectingGatewayID = nil
                 return .none
 
-            case let .connectionIssueDetected(issue, requestId, pauseReconnect, message, statusText):
+            case let .connectionIssueDetected(detection):
                 state.issue = Self.stickyIssue(
                     current: state.issue,
-                    detected: issue,
+                    detected: detection.issue,
                     pairingRequestId: state.pairingRequestId)
-                if let requestId, !requestId.isEmpty {
+                if let requestId = detection.requestId, !requestId.isEmpty {
                     state.pairingRequestId = requestId
                 }
-                state.shouldShowAuthStep = state.issue.needsAuthToken || state.issue.needsPairing || pauseReconnect
+                state.shouldShowAuthStep = state.issue.needsAuthToken
+                    || state.issue.needsPairing
+                    || detection.pauseReconnect
 
-                if let message {
+                if let message = detection.message {
                     state.connectMessage = message
                     state.statusLine = message
                 } else {
-                    let trimmedStatus = statusText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedStatus = detection.statusText.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !trimmedStatus.isEmpty {
                         state.connectMessage = trimmedStatus
                         state.statusLine = trimmedStatus
