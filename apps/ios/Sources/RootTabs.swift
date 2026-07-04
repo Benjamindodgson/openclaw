@@ -189,6 +189,7 @@ struct RootTabs: View {
             SettingsProTab(
                 initialRoute: self.selectedSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
                 gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
@@ -478,6 +479,7 @@ struct RootTabs: View {
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                    debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
                     gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
@@ -492,6 +494,7 @@ struct RootTabs: View {
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                    debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                     manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                     gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
                     gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
@@ -508,6 +511,7 @@ struct RootTabs: View {
                 ownsNavigationStack: false,
                 navigateToRoute: self.pushSidebarSettingsRoute,
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
+                debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                 manualGatewayEndpointStore: self.makeSettingsManualGatewayEndpointStore(),
                 gatewayActivityStore: self.makeSettingsGatewayActivityStore(),
                 gatewayConnectionStore: self.makeSettingsGatewayConnectionStore(),
@@ -835,6 +839,14 @@ struct RootTabs: View {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(
                 localNetworkAccessClient: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
+    private func makeSettingsDebugOptionsStore() -> StoreOf<SettingsDebugOptionsFeature> {
+        Store(initialState: SettingsDebugOptionsFeature.State()) {
+            SettingsDebugOptionsFeature(
+                discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController))
         }
     }
 

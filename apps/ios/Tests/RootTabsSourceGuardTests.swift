@@ -1631,6 +1631,32 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("func applyLocationMode") == false)
     }
 
+    @Test func `settings discovery debug logging is reducer effect owned`() throws {
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let updateFunction = try Self.extract(
+            actionsSource,
+            from: "func updateDiscoveryDebugLogsEnabled",
+            to: "func updateCanvasDebugStatusEnabled")
+        let storedDebugChange = try Self.extract(
+            settingsSource,
+            from: ".onChange(of: self.storedDiscoveryDebugLogsEnabled)",
+            to: ".onChange(of: self.storedCanvasDebugStatusEnabled)")
+
+        #expect(settingsSource.contains("struct SettingsDiscoveryDebugLoggingClient: Sendable"))
+        #expect(settingsSource.contains("var settingsDiscoveryDebugLogging: SettingsDiscoveryDebugLoggingClient"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsDiscoveryDebugLogging)"))
+        #expect(settingsSource.contains("await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(enabled)"))
+        #expect(rootSource.contains("debugOptionsStore: self.makeSettingsDebugOptionsStore()"))
+        #expect(rootSource.contains("private func makeSettingsDebugOptionsStore()"))
+        #expect(rootSource.contains("discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController)"))
+        #expect(updateFunction.contains("self.debugOptionsStore.send(.discoveryDebugLogsChanged(enabled))"))
+        #expect(!updateFunction.contains("self.gatewayController.setDiscoveryDebugLoggingEnabled(enabled)"))
+        #expect(storedDebugChange.contains("self.debugOptionsStore.send(.discoveryDebugLogsChanged(newValue))"))
+        #expect(!storedDebugChange.contains("self.gatewayController.setDiscoveryDebugLoggingEnabled(newValue)"))
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 

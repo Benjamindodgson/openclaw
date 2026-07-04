@@ -982,8 +982,42 @@ struct SettingsDeviceIdentityFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct SettingsDiscoveryDebugLoggingClient: Sendable {
+    var setDiscoveryDebugLoggingEnabled: @MainActor @Sendable (Bool) -> Void
+}
+
+// swiftformat:enable redundantSendable
+
+extension SettingsDiscoveryDebugLoggingClient: DependencyKey {
+    static let liveValue = SettingsDiscoveryDebugLoggingClient(
+        setDiscoveryDebugLoggingEnabled: { _ in })
+    static let testValue = SettingsDiscoveryDebugLoggingClient(
+        setDiscoveryDebugLoggingEnabled: { _ in })
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        SettingsDiscoveryDebugLoggingClient(setDiscoveryDebugLoggingEnabled: { enabled in
+            gatewayController.setDiscoveryDebugLoggingEnabled(enabled)
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsDiscoveryDebugLogging: SettingsDiscoveryDebugLoggingClient {
+        get { self[SettingsDiscoveryDebugLoggingClient.self] }
+        set { self[SettingsDiscoveryDebugLoggingClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct SettingsDebugOptionsFeature {
+    private let discoveryDebugLoggingClientOverride: SettingsDiscoveryDebugLoggingClient?
+
+    init(discoveryDebugLoggingClient: SettingsDiscoveryDebugLoggingClient? = nil) {
+        self.discoveryDebugLoggingClientOverride = discoveryDebugLoggingClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -1001,6 +1035,10 @@ struct SettingsDebugOptionsFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsDiscoveryDebugLogging) var dependencyDiscoveryDebugLoggingClient
+            let discoveryDebugLoggingClient = self.discoveryDebugLoggingClientOverride
+                ?? dependencyDiscoveryDebugLoggingClient
+
             switch action {
             case let .canvasDebugStatusChanged(enabled):
                 state.canvasDebugStatusEnabled = enabled
@@ -1013,7 +1051,9 @@ struct SettingsDebugOptionsFeature {
 
             case let .discoveryDebugLogsChanged(enabled):
                 state.discoveryDebugLogsEnabled = enabled
-                return .none
+                return .run { _ in
+                    await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(enabled)
+                }
             }
         }
         .autoLogActions()
@@ -1282,6 +1322,11 @@ struct SettingsProTab: View {
         {
             ExecApprovalPromptFeature()
         },
+        debugOptionsStore: StoreOf<SettingsDebugOptionsFeature> = Store(
+            initialState: SettingsDebugOptionsFeature.State())
+        {
+            SettingsDebugOptionsFeature()
+        },
         manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature> = Store(
             initialState: SettingsManualGatewayEndpointFeature.State())
         {
@@ -1330,6 +1375,7 @@ struct SettingsProTab: View {
         self.ownsNavigationStack = ownsNavigationStack
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
+        self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)
         self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
@@ -1429,7 +1475,6 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedDiscoveryDebugLogsEnabled) { _, newValue in
                 self.debugOptionsStore.send(.discoveryDebugLogsChanged(newValue))
-                self.gatewayController.setDiscoveryDebugLoggingEnabled(newValue)
             }
             .onChange(of: self.storedCanvasDebugStatusEnabled) { _, newValue in
                 self.debugOptionsStore.send(.canvasDebugStatusChanged(newValue))
