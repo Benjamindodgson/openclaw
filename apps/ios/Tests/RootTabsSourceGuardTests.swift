@@ -1599,6 +1599,7 @@ struct RootTabsSourceGuardTests {
     @Test func `settings location apply request is reducer effect owned`() throws {
         let locationSource = try String(contentsOf: Self.settingsLocationFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let requestFunction = try Self.extract(
             actionsSource,
@@ -1610,15 +1611,23 @@ struct RootTabsSourceGuardTests {
             to: "func refreshNotificationSettings")
 
         #expect(locationSource.contains("struct SettingsLocationPermissionClient: Sendable"))
+        #expect(locationSource.contains("struct SettingsLocationGatewayRefreshClient: Sendable"))
+        #expect(locationSource.contains("var settingsLocationGatewayRefresh: SettingsLocationGatewayRefreshClient"))
+        #expect(locationSource.contains("@Dependency(\\.settingsLocationGatewayRefresh)"))
         #expect(locationSource.contains("case locationModeApplyRequested(LocationModeRequest)"))
         #expect(locationSource.contains("case locationModeApplyFinished(LocationModeApplyResult)"))
         #expect(locationSource.contains("await permissionClient.requestPermission(request.mode)"))
+        #expect(locationSource.contains("await gatewayRefreshClient.refreshGatewayRegistration()"))
         #expect(locationSource.contains("return .run { send in"))
         #expect(settingsSource.contains(".onChange(of: self.locationStore.locationModeApplyResult)"))
+        #expect(rootSource.contains("locationStore: self.makeSettingsLocationStore()"))
+        #expect(rootSource.contains("private func makeSettingsLocationStore()"))
+        #expect(rootSource.contains("gatewayRefreshClient: .live(gatewayController: self.gatewayController)"))
         #expect(actionsSource.contains("self.locationStore.send(.locationModeApplyResultHandled)"))
         #expect(requestFunction.contains("Task {") == false)
         #expect(requestFunction.contains("requestLocationPermissions") == false)
         #expect(resultFunction.contains("requestLocationPermissions") == false)
+        #expect(!resultFunction.contains("self.gatewayController.refreshActiveGatewayRegistrationFromSettings()"))
         #expect(actionsSource.contains("func applyLocationMode") == false)
     }
 

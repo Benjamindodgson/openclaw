@@ -498,11 +498,7 @@ extension SettingsProTab {
     func handleLocationModeApplyResult(_ result: SettingsLocationFeature.LocationModeApplyResult?) {
         guard let result else { return }
         self.locationStore.send(.locationModeApplyResultHandled)
-        switch result {
-        case .applied:
-            self.gatewayController.refreshActiveGatewayRegistrationFromSettings()
-
-        case let .denied(previousRawValue):
+        if case let .denied(previousRawValue) = result {
             self.storedLocationModeRaw = previousRawValue
         }
     }

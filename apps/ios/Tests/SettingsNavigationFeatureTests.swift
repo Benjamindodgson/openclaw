@@ -1278,10 +1278,13 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings location applies off mode without permission client`() async {
         let probe = SettingsLocationPermissionProbe(granted: false)
+        let gatewayRefreshProbe = SettingsLocationGatewayRefreshProbe()
         var initialState = SettingsLocationFeature.State()
         initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         let store = TestStore(initialState: initialState) {
-            SettingsLocationFeature(permissionClient: probe.client)
+            SettingsLocationFeature(
+                gatewayRefreshClient: gatewayRefreshProbe.client,
+                permissionClient: probe.client)
         }
         let request = SettingsLocationFeature.LocationModeRequest(
             mode: .off,
@@ -1296,12 +1299,15 @@ struct SettingsNavigationFeatureTests {
         await store.send(.locationModeApplyResultHandled) {
             $0.locationModeApplyResult = nil
         }
+        await store.finish()
 
         #expect(probe.requestCount == 0)
+        #expect(gatewayRefreshProbe.refreshCount == 1)
     }
 
     @Test func `settings location requests permissions through client`() async {
         let probe = SettingsLocationPermissionProbe(granted: true)
+        let gatewayRefreshProbe = SettingsLocationGatewayRefreshProbe()
         var initialState = SettingsLocationFeature.State()
         initialState.locationModeApplyResult = .denied(previousRawValue: OpenClawLocationMode.off.rawValue)
         initialState.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
@@ -1310,7 +1316,9 @@ struct SettingsNavigationFeatureTests {
             rawValue: OpenClawLocationMode.always.rawValue)
         initialState.statusText = "Location permission was not granted."
         let store = TestStore(initialState: initialState) {
-            SettingsLocationFeature(permissionClient: probe.client)
+            SettingsLocationFeature(
+                gatewayRefreshClient: gatewayRefreshProbe.client,
+                permissionClient: probe.client)
         }
         let request = SettingsLocationFeature.LocationModeRequest(
             mode: .always,
@@ -1336,6 +1344,7 @@ struct SettingsNavigationFeatureTests {
 
         #expect(probe.requestCount == 1)
         #expect(probe.requestedModes == [.always])
+        #expect(gatewayRefreshProbe.refreshCount == 1)
     }
 
     @Test func `settings location syncs persisted mode`() async {
@@ -1439,11 +1448,14 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings location records permission denial`() async {
         let probe = SettingsLocationPermissionProbe(granted: false)
+        let gatewayRefreshProbe = SettingsLocationGatewayRefreshProbe()
         var initialState = SettingsLocationFeature.State()
         initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
         initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         let store = TestStore(initialState: initialState) {
-            SettingsLocationFeature(permissionClient: probe.client)
+            SettingsLocationFeature(
+                gatewayRefreshClient: gatewayRefreshProbe.client,
+                permissionClient: probe.client)
         }
         let request = SettingsLocationFeature.LocationModeRequest(
             mode: .always,
@@ -1464,6 +1476,7 @@ struct SettingsNavigationFeatureTests {
 
         #expect(probe.requestCount == 1)
         #expect(probe.requestedModes == [.always])
+        #expect(gatewayRefreshProbe.refreshCount == 0)
     }
 
     @Test func `settings notifications record permission status`() async {
@@ -2613,5 +2626,15 @@ private final class SettingsLocationPermissionProbe: @unchecked Sendable {
                 self.requestedModes.append(mode)
                 return self.granted
             })
+    }
+}
+
+private final class SettingsLocationGatewayRefreshProbe: @unchecked Sendable {
+    var refreshCount = 0
+
+    var client: SettingsLocationGatewayRefreshClient {
+        SettingsLocationGatewayRefreshClient(refreshGatewayRegistration: {
+            self.refreshCount += 1
+        })
     }
 }
