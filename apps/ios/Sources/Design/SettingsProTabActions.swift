@@ -188,7 +188,7 @@ extension SettingsProTab {
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: self.storedManualGatewayPort)))
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
         self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)
-        self.gatewayCredentialsStore.send(.credentialsLoadRequested(instanceId: self.instanceId))
+        self.gatewayCredentialsStore.send(.credentialsLoadRequested(.init(instanceId: self.instanceId)))
     }
 
     func syncVoiceControlState() {
