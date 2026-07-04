@@ -188,7 +188,11 @@ struct IPadSkillWorkshopFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case agentScopeChanged(String)
+        struct AgentScopeChange: Equatable, Sendable {
+            var agentID: String
+        }
+
+        case agentScopeChanged(AgentScopeChange)
         case clearQueryTapped
 
         struct InspectRequest: Equatable, Sendable {
@@ -231,6 +235,10 @@ struct IPadSkillWorkshopFeature {
             var forceInspect: Bool
         }
 
+        struct QueryChange: Equatable, Sendable {
+            var query: String
+        }
+
         struct RefreshRequest: Equatable, Sendable {
             var sceneActive: Bool
             var canRead: Bool
@@ -244,10 +252,15 @@ struct IPadSkillWorkshopFeature {
 
         case proposalSelected(ProposalSelectionRequest)
         case proposalSheetDismissed
-        case queryChanged(String)
+        case queryChanged(QueryChange)
         case refreshRequested(RefreshRequest)
         case refreshResponse(RefreshResponse)
-        case statusFilterChanged(String)
+
+        struct StatusFilterChange: Equatable, Sendable {
+            var filter: String
+        }
+
+        case statusFilterChanged(StatusFilterChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -258,8 +271,8 @@ struct IPadSkillWorkshopFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .agentScopeChanged(agentID):
-                state.selectedAgentScopeID = IPadSkillWorkshopScreen.normalizedScopeID(agentID)
+            case let .agentScopeChanged(change):
+                state.selectedAgentScopeID = IPadSkillWorkshopScreen.normalizedScopeID(change.agentID)
                 return .none
 
             case .clearQueryTapped:
@@ -352,8 +365,8 @@ struct IPadSkillWorkshopFeature {
                 state.presentedProposalRoute = nil
                 return .none
 
-            case let .queryChanged(query):
-                state.query = query
+            case let .queryChanged(change):
+                state.query = change.query
                 state.syncSelectedProposalIDForVisibleProposals()
                 return .none
 
@@ -412,8 +425,8 @@ struct IPadSkillWorkshopFeature {
                     return .none
                 }
 
-            case let .statusFilterChanged(filter):
-                state.statusFilter = filter
+            case let .statusFilterChanged(change):
+                state.statusFilter = change.filter
                 state.syncSelectedProposalIDForVisibleProposals()
                 return .none
             }
@@ -678,11 +691,11 @@ struct IPadSkillWorkshopScreen: View {
                 .foregroundStyle(.secondary)
             Menu {
                 Button("Default agent") {
-                    self.store.send(.agentScopeChanged(""))
+                    self.store.send(.agentScopeChanged(.init(agentID: "")))
                 }
                 ForEach(self.agentScopeOptions, id: \.id) { option in
                     Button(option.title) {
-                        self.store.send(.agentScopeChanged(option.id))
+                        self.store.send(.agentScopeChanged(.init(agentID: option.id)))
                     }
                 }
             } label: {
@@ -1146,13 +1159,13 @@ struct IPadSkillWorkshopScreen: View {
     private var queryBinding: Binding<String> {
         Binding(
             get: { self.store.query },
-            set: { self.store.send(.queryChanged($0)) })
+            set: { self.store.send(.queryChanged(.init(query: $0))) })
     }
 
     private var statusFilterBinding: Binding<String> {
         Binding(
             get: { self.store.statusFilter },
-            set: { self.store.send(.statusFilterChanged($0)) })
+            set: { self.store.send(.statusFilterChanged(.init(filter: $0))) })
     }
 
     private var statusFilterLabel: String {

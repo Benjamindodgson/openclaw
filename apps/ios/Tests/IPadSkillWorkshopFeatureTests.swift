@@ -64,11 +64,14 @@ struct IPadSkillWorkshopFeatureTests {
             IPadSkillWorkshopFeature(client: Self.client())
         }
 
-        await store.send(.statusFilterChanged("pending")) {
+        await store.send(.agentScopeChanged(.init(agentID: " agent-1 "))) {
+            $0.selectedAgentScopeID = "agent-1"
+        }
+        await store.send(.statusFilterChanged(.init(filter: "pending"))) {
             $0.statusFilter = "pending"
             $0.selectedProposalID = "pending-1"
         }
-        await store.send(.queryChanged("missing")) {
+        await store.send(.queryChanged(.init(query: "missing"))) {
             $0.query = "missing"
             $0.selectedProposalID = nil
         }
