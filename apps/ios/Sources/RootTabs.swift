@@ -683,7 +683,7 @@ struct RootTabs: View {
             ScreenWebView(controller: self.appModel.screen)
                 .ignoresSafeArea()
             Button {
-                self.appModel.screen.hideCanvas()
+                Task { await self.closeCanvasPresentation() }
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 30, weight: .semibold))
@@ -698,6 +698,12 @@ struct RootTabs: View {
             .safeAreaPadding(.top, 8)
             .padding(.trailing, 12)
         }
+    }
+
+    private func closeCanvasPresentation() async {
+        await self.makeCanvasPresentationStore()
+            .send(.closeButtonTapped)
+            .finish()
     }
 
     private var voiceWakeToastAnimation: Animation? {
@@ -851,6 +857,13 @@ struct RootTabs: View {
             GatewayQuickSetupFeature()
         } withDependencies: {
             $0.gatewayQuickSetup = .live(gatewayController: self.gatewayController)
+        }
+    }
+
+    @MainActor
+    private func makeCanvasPresentationStore() -> StoreOf<RootCanvasPresentationFeature> {
+        Store(initialState: RootCanvasPresentationFeature.State()) {
+            RootCanvasPresentationFeature(client: .live(appModel: self.appModel))
         }
     }
 
