@@ -299,7 +299,7 @@ struct AgentClawHubSearchFeatureTests {
             AgentClawHubSearchFeature()
         }
 
-        await store.send(.searchFailed("Search failed.")) {
+        await store.send(.searchFailed(.init(message: "Search failed."))) {
             $0.errorText = "Search failed."
             $0.isLoading = false
         }
