@@ -1620,6 +1620,21 @@ struct RootTabsSourceGuardTests {
         #expect(!qrScannerSheet.contains("Scanner error: \\(error)"))
     }
 
+    @Test func `onboarding qr scanner errors are reducer owned`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("struct ScannerError: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct QRScannerError: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case scannerErrorReceived(ScannerError)"))
+        #expect(onboardingStateSource.contains("case qrScannerErrorReceived(QRScannerError)"))
+        #expect(onboardingStateSource.contains("state.statusLine = \"Scanner error: \\(error.message)\""))
+        #expect(onboardingStateSource.contains("state.scannerError = error.message"))
+        #expect(onboardingSource.contains("self.statusStore.send(.scannerErrorReceived(.init(message: error)))"))
+        #expect(onboardingSource.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: error)))"))
+        #expect(onboardingSource.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: message)))"))
+    }
+
     @Test func `scanner setup code results are reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
