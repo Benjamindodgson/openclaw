@@ -53,8 +53,13 @@ struct IPadActivitySessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct RefreshRequest: Equatable, Sendable {
+            var sceneActive: Bool
+            var sessionsAvailable: Bool
+        }
+
         case gatewayPresentationChanged(IPadActivityGatewayPresentationState)
-        case refreshRequested(sceneActive: Bool, sessionsAvailable: Bool)
+        case refreshRequested(RefreshRequest)
         case refreshResponse(Result<[OpenClawChatSessionEntry], IPadActivitySessionsError>)
     }
 
@@ -70,12 +75,12 @@ struct IPadActivitySessionsFeature {
                 state.gatewayPresentation = presentation
                 return .none
 
-            case let .refreshRequested(sceneActive, sessionsAvailable):
-                guard sceneActive else {
+            case let .refreshRequested(request):
+                guard request.sceneActive else {
                     state.isLoading = false
                     return .none
                 }
-                guard sessionsAvailable else {
+                guard request.sessionsAvailable else {
                     state.isLoading = false
                     state.sessions = []
                     state.loadErrorText = nil
@@ -326,9 +331,9 @@ struct IPadActivityScreen: View {
     }
 
     private func refreshSessions() async {
-        await self.store.send(.refreshRequested(
+        await self.store.send(.refreshRequested(.init(
             sceneActive: self.scenePhase == .active,
-            sessionsAvailable: self.sessionsAvailable)).finish()
+            sessionsAvailable: self.sessionsAvailable))).finish()
     }
 
     private func open(_ item: CommandCenterTab.WorkItem) {
