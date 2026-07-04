@@ -1492,6 +1492,47 @@ struct RootTabsSourceGuardTests {
         #expect(!updateVoiceWakeFunction.contains("self.appModel.setVoiceWakeEnabled"))
     }
 
+    @Test func `settings talk preference persistence is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let preferencesSource = try String(contentsOf: Self.settingsTalkPreferencesFeatureSourceURL(), encoding: .utf8)
+        let updateProviderFunction = try Self.extract(
+            actionsSource,
+            from: "func updateTalkProviderSelection(_ rawValue: String)",
+            to: "func updateTalkRealtimeVoiceSelection(_ rawValue: String)")
+        let updateRealtimeVoiceFunction = try Self.extract(
+            actionsSource,
+            from: "func updateTalkRealtimeVoiceSelection(_ rawValue: String)",
+            to: "func updateTalkSpeechLocale(_ speechLocale: String)")
+        let updateSpeakerphoneFunction = try Self.extract(
+            actionsSource,
+            from: "func updateTalkSpeakerphoneEnabled(_ enabled: Bool)",
+            to: "var talkApiKeyStatus")
+
+        #expect(preferencesSource.contains("struct SettingsTalkPreferencesClient: Sendable"))
+        #expect(preferencesSource.contains("var settingsTalkPreferences: SettingsTalkPreferencesClient"))
+        #expect(preferencesSource.contains("@Dependency(\\.settingsTalkPreferences)"))
+        #expect(preferencesSource.contains("await preferencesClient.setProviderSelection(selection)"))
+        #expect(preferencesSource.contains("await preferencesClient.setRealtimeVoiceSelection(voice)"))
+        #expect(preferencesSource.contains("await preferencesClient.setSpeakerphoneEnabled(enabled)"))
+        #expect(settingsSource.contains("@State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature>"))
+        #expect(rootSource.contains("talkPreferencesStore: self.makeSettingsTalkPreferencesStore()"))
+        #expect(rootSource.contains("private func makeSettingsTalkPreferencesStore()"))
+        #expect(rootSource.contains("preferencesClient: .live(appModel: self.appModel)"))
+        #expect(updateProviderFunction.contains("self.talkPreferencesStore.send(.providerSelectionChanged(rawValue))"))
+        #expect(updateProviderFunction.contains("self.storedTalkProviderSelectionRaw = selection.rawValue"))
+        #expect(!updateProviderFunction.contains("self.appModel.setTalkProviderSelection"))
+        #expect(updateRealtimeVoiceFunction
+            .contains("self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(rawValue))"))
+        #expect(updateRealtimeVoiceFunction.contains("self.storedTalkRealtimeVoiceSelectionRaw = voice"))
+        #expect(!updateRealtimeVoiceFunction.contains("self.appModel.setTalkRealtimeVoiceSelection"))
+        #expect(updateSpeakerphoneFunction
+            .contains("self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(enabled))"))
+        #expect(updateSpeakerphoneFunction.contains("self.storedTalkSpeakerphoneEnabled = enabled"))
+        #expect(!updateSpeakerphoneFunction.contains("self.appModel.setTalkSpeakerphoneEnabled"))
+    }
+
     @Test func `settings notification action decision is reducer owned`() throws {
         let notificationSource = try String(contentsOf: Self.settingsNotificationFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
@@ -1960,6 +2001,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsLocationFeature.swift")
+    }
+
+    private static func settingsTalkPreferencesFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsTalkPreferencesFeature.swift")
     }
 
     private static func settingsGatewaySetupFeaturesSourceURL() -> URL {

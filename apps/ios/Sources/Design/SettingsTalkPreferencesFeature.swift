@@ -3,8 +3,55 @@ import Foundation
 import OpenClawKit
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct SettingsTalkPreferencesClient: Sendable {
+    var setProviderSelection: @MainActor @Sendable (String) -> Void
+    var setRealtimeVoiceSelection: @MainActor @Sendable (String) -> Void
+    var setSpeakerphoneEnabled: @MainActor @Sendable (Bool) -> Void
+}
+
+// swiftformat:enable redundantSendable
+
+extension SettingsTalkPreferencesClient: DependencyKey {
+    static let liveValue = SettingsTalkPreferencesClient(
+        setProviderSelection: { _ in },
+        setRealtimeVoiceSelection: { _ in },
+        setSpeakerphoneEnabled: { _ in })
+    static let testValue = SettingsTalkPreferencesClient(
+        setProviderSelection: { _ in },
+        setRealtimeVoiceSelection: { _ in },
+        setSpeakerphoneEnabled: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsTalkPreferencesClient(
+            setProviderSelection: { selection in
+                appModel.setTalkProviderSelection(selection)
+            },
+            setRealtimeVoiceSelection: { voice in
+                appModel.setTalkRealtimeVoiceSelection(voice)
+            },
+            setSpeakerphoneEnabled: { enabled in
+                appModel.setTalkSpeakerphoneEnabled(enabled)
+            })
+    }
+}
+
+extension DependencyValues {
+    var settingsTalkPreferences: SettingsTalkPreferencesClient {
+        get { self[SettingsTalkPreferencesClient.self] }
+        set { self[SettingsTalkPreferencesClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct SettingsTalkPreferencesFeature {
+    private let preferencesClientOverride: SettingsTalkPreferencesClient?
+
+    init(preferencesClient: SettingsTalkPreferencesClient? = nil) {
+        self.preferencesClientOverride = preferencesClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -126,6 +173,9 @@ struct SettingsTalkPreferencesFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsTalkPreferences) var dependencyPreferencesClient
+            let preferencesClient = self.preferencesClientOverride ?? dependencyPreferencesClient
+
             switch action {
             case let .gatewayTalkConfigSynced(configLoaded, apiKeyConfigured, usesRealtime):
                 state.gatewayTalkConfigLoaded = configLoaded
@@ -160,12 +210,18 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .providerSelectionChanged(rawValue):
-                state.providerSelectionRaw = TalkModeProviderSelection.resolved(rawValue).rawValue
-                return .none
+                let selection = TalkModeProviderSelection.resolved(rawValue).rawValue
+                state.providerSelectionRaw = selection
+                return .run { _ in
+                    await preferencesClient.setProviderSelection(selection)
+                }
 
             case let .realtimeVoiceSelectionChanged(rawValue):
-                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(rawValue)
-                return .none
+                let voice = Self.normalizedRealtimeVoice(rawValue)
+                state.realtimeVoiceSelectionRaw = voice
+                return .run { _ in
+                    await preferencesClient.setRealtimeVoiceSelection(voice)
+                }
 
             case let .speechLocaleChanged(speechLocale):
                 state.speechLocale = speechLocale
@@ -181,7 +237,9 @@ struct SettingsTalkPreferencesFeature {
 
             case let .talkSpeakerphoneEnabledChanged(enabled):
                 state.talkSpeakerphoneEnabled = enabled
-                return .none
+                return .run { _ in
+                    await preferencesClient.setSpeakerphoneEnabled(enabled)
+                }
             }
         }
         .autoLogActions()

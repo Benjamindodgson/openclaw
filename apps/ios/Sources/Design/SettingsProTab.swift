@@ -1317,11 +1317,7 @@ struct SettingsProTab: View {
 
     @State var voiceControlStore: StoreOf<SettingsVoiceControlFeature>
 
-    @State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature> = Store(
-        initialState: SettingsTalkPreferencesFeature.State())
-    {
-        SettingsTalkPreferencesFeature()
-    }
+    @State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature>
 
     @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
         initialState: SettingsGatewayActivityFeature.State())
@@ -1412,6 +1408,11 @@ struct SettingsProTab: View {
         {
             SettingsVoiceControlFeature()
         },
+        talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature> = Store(
+            initialState: SettingsTalkPreferencesFeature.State())
+        {
+            SettingsTalkPreferencesFeature()
+        },
         agentSelectionStore: StoreOf<SettingsAgentSelectionFeature> = Store(
             initialState: SettingsAgentSelectionFeature.State())
         {
@@ -1467,6 +1468,7 @@ struct SettingsProTab: View {
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
         self._voiceControlStore = State(wrappedValue: voiceControlStore)
+        self._talkPreferencesStore = State(wrappedValue: talkPreferencesStore)
         self._agentSelectionStore = State(wrappedValue: agentSelectionStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)

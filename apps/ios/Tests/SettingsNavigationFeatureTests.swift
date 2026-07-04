@@ -2287,11 +2287,12 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings talk preferences normalize picker values`() async {
+        let preferencesProbe = SettingsTalkPreferencesProbe()
         var initialState = SettingsTalkPreferencesFeature.State()
         initialState.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
         initialState.realtimeVoiceSelectionRaw = "cedar"
         let store = TestStore(initialState: initialState) {
-            SettingsTalkPreferencesFeature()
+            SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
 
         await store.send(.providerSelectionChanged("unknown")) {
@@ -2303,11 +2304,16 @@ struct SettingsNavigationFeatureTests {
         await store.send(.realtimeVoiceSelectionChanged(" Cedar ")) {
             $0.realtimeVoiceSelectionRaw = "cedar"
         }
+        await store.finish()
+
+        #expect(preferencesProbe.providerSelections == [TalkModeProviderSelection.gatewayDefault.rawValue])
+        #expect(preferencesProbe.realtimeVoiceSelections == ["", "cedar"])
     }
 
     @Test func `settings talk preferences record field changes`() async {
+        let preferencesProbe = SettingsTalkPreferencesProbe()
         let store = TestStore(initialState: SettingsTalkPreferencesFeature.State()) {
-            SettingsTalkPreferencesFeature()
+            SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
 
         await store.send(.speechLocaleChanged("en-US")) {
@@ -2322,6 +2328,9 @@ struct SettingsNavigationFeatureTests {
         await store.send(.talkSpeakerphoneEnabledChanged(false)) {
             $0.talkSpeakerphoneEnabled = false
         }
+        await store.finish()
+
+        #expect(preferencesProbe.speakerphoneEnabledValues == [false])
     }
 
     @Test func `settings talk preferences sync gateway config status`() async {
@@ -2642,6 +2651,25 @@ private final class SettingsVoiceControlProbe: @unchecked Sendable {
             },
             setVoiceWakeEnabled: { enabled in
                 self.voiceWakeEnabledValues.append(enabled)
+            })
+    }
+}
+
+private final class SettingsTalkPreferencesProbe: @unchecked Sendable {
+    var providerSelections: [String] = []
+    var realtimeVoiceSelections: [String] = []
+    var speakerphoneEnabledValues: [Bool] = []
+
+    var client: SettingsTalkPreferencesClient {
+        SettingsTalkPreferencesClient(
+            setProviderSelection: { selection in
+                self.providerSelections.append(selection)
+            },
+            setRealtimeVoiceSelection: { voice in
+                self.realtimeVoiceSelections.append(voice)
+            },
+            setSpeakerphoneEnabled: { enabled in
+                self.speakerphoneEnabledValues.append(enabled)
             })
     }
 }
