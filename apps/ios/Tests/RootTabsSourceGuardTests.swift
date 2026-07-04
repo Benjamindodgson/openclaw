@@ -1077,6 +1077,15 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("title: \"Loading sessions\""))
     }
 
+    @Test func `activity sessions refresh response action is typed`() throws {
+        let source = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct RefreshResponse: Equatable, Sendable"))
+        #expect(source.contains("case refreshResponse(RefreshResponse)"))
+        #expect(source.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
+        #expect(source.contains("switch response.result"))
+    }
+
     @Test func `routed feature screens reuse shared pro components`() throws {
         let source = try Self.iPadTaskFeatureScreensSource()
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
