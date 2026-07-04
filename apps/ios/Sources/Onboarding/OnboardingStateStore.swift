@@ -849,6 +849,7 @@ struct OnboardingConnectionFormFeature {
         struct ManualHostChange: Equatable, Sendable { var host: String }
         struct ManualPortTextChange: Equatable, Sendable { var text: String }
         struct ManualTLSChange: Equatable, Sendable { var useTLS: Bool }
+        struct ModeSelection: Equatable, Sendable { var mode: OnboardingConnectionMode }
         struct GatewayLinkApplication: Equatable, Sendable {
             var host: String
             var port: Int
@@ -870,7 +871,7 @@ struct OnboardingConnectionFormFeature {
         case manualHostChanged(ManualHostChange)
         case manualPortTextChanged(ManualPortTextChange)
         case manualTLSChanged(ManualTLSChange)
-        case modeSelected(OnboardingConnectionMode)
+        case modeSelected(ModeSelection)
         case selectedModeChanged(OnboardingConnectionMode?)
     }
 
@@ -946,9 +947,9 @@ struct OnboardingConnectionFormFeature {
                 state.manualTLS = change.useTLS
                 return .none
 
-            case let .modeSelected(mode):
-                state.selectedMode = mode
-                state.applyModeDefaults(mode)
+            case let .modeSelected(selection):
+                state.selectedMode = selection.mode
+                state.applyModeDefaults(selection.mode)
                 return .none
 
             case let .selectedModeChanged(mode):

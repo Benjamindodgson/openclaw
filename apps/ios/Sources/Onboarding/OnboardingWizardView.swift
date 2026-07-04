@@ -997,7 +997,7 @@ extension OnboardingWizardView {
     }
 
     private func selectMode(_ mode: OnboardingConnectionMode) {
-        self.connectionFormStore.send(.modeSelected(mode))
+        self.connectionFormStore.send(.modeSelected(.init(mode: mode)))
     }
 
     private func gatewayHasResolvableHost(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) -> Bool {
