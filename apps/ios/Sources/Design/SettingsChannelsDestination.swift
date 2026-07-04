@@ -138,14 +138,17 @@ struct SettingsChannelsFeature {
             var result: Result<[SettingsChannelEntry], SettingsChannelsError>
         }
 
+        struct OperationRequest: Equatable, Sendable {
+            var kind: SettingsChannelOperation.Kind
+            var channelID: String
+            var accountID: String?
+            var canRead: Bool
+            var canAdmin: Bool
+        }
+
         case refreshRequested(RefreshRequest)
         case refreshResponse(RefreshResponse)
-        case operationRequested(
-            SettingsChannelOperation.Kind,
-            channelID: String,
-            accountID: String?,
-            canRead: Bool,
-            canAdmin: Bool)
+        case operationRequested(OperationRequest)
         case operationResponse(Result<[SettingsChannelEntry], SettingsChannelsError>)
     }
 
@@ -199,29 +202,29 @@ struct SettingsChannelsFeature {
                 }
                 return .none
 
-            case let .operationRequested(kind, channelID, accountID, canRead, canAdmin):
+            case let .operationRequested(request):
                 guard SettingsChannelsDestination.shouldEnableChannelOperation(
-                    canRead: canRead,
-                    hasOperatorAdminScope: canAdmin),
+                    canRead: request.canRead,
+                    hasOperatorAdminScope: request.canAdmin),
                     state.busyOperation == nil
                 else {
                     return .none
                 }
 
                 state.busyOperation = SettingsChannelOperation(
-                    kind: kind,
-                    channelID: channelID,
-                    accountID: accountID)
+                    kind: request.kind,
+                    channelID: request.channelID,
+                    accountID: request.accountID)
                 state.errorText = nil
                 return .run { send in
                     do {
-                        switch kind {
+                        switch request.kind {
                         case .start:
-                            try await client.start(channelID, accountID)
+                            try await client.start(request.channelID, request.accountID)
                         case .stop:
-                            try await client.stop(channelID, accountID)
+                            try await client.stop(request.channelID, request.accountID)
                         case .logout:
-                            try await client.logout(channelID, accountID)
+                            try await client.logout(request.channelID, request.accountID)
                         }
                         let snapshot = try await client.status()
                         await send(.operationResponse(.success(Self.entries(from: snapshot))))
@@ -521,12 +524,12 @@ struct SettingsChannelsDestination: View {
     }
 
     private func run(_ kind: SettingsChannelOperation.Kind, channelID: String, accountID: String?) async {
-        await self.store.send(.operationRequested(
-            kind,
+        await self.store.send(.operationRequested(.init(
+            kind: kind,
             channelID: channelID,
             accountID: accountID,
             canRead: self.canRead,
-            canAdmin: self.canAdmin)).finish()
+            canAdmin: self.canAdmin))).finish()
     }
 
     nonisolated static func fallbackLabel(_ id: String) -> String {
