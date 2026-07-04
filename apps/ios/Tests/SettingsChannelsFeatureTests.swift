@@ -15,7 +15,7 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client())
         }
 
-        await store.send(.refreshRequested(sceneActive: true, canRead: false, force: false)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: false, force: false))) {
             $0.entries = []
             $0.isLoading = false
             $0.errorText = nil
@@ -27,10 +27,10 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { Self.connectedStatus }))
         }
 
-        await store.send(.refreshRequested(sceneActive: true, canRead: true, force: false)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(force: false, .success(Self.connectedEntries))) {
+        await store.receive(.refreshResponse(.init(force: false, result: .success(Self.connectedEntries)))) {
             $0.entries = Self.connectedEntries
             $0.isLoading = false
         }
@@ -43,10 +43,10 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { throw TestChannelsFailure.failed }))
         }
 
-        await store.send(.refreshRequested(sceneActive: true, canRead: true, force: false)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(force: false, .failure(.failed("boom")))) {
+        await store.receive(.refreshResponse(.init(force: false, result: .failure(.failed("boom"))))) {
             $0.isLoading = false
         }
     }
@@ -58,10 +58,10 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { throw TestChannelsFailure.failed }))
         }
 
-        await store.send(.refreshRequested(sceneActive: true, canRead: true, force: true)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(force: true, .failure(.failed("boom")))) {
+        await store.receive(.refreshResponse(.init(force: true, result: .failure(.failed("boom"))))) {
             $0.isLoading = false
             $0.errorText = "boom"
         }
