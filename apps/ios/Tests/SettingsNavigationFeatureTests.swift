@@ -154,7 +154,7 @@ struct SettingsNavigationFeatureTests {
             SettingsApprovalsFeature()
         }
 
-        await store.send(.approvalsSynced(
+        await store.send(.approvalsSynced(.init(
             isAppleReviewDemoModeEnabled: true,
             gatewayConnected: true,
             notificationsNeedAttention: true,
@@ -162,7 +162,7 @@ struct SettingsNavigationFeatureTests {
             pendingCommandPreview: "git status",
             activeAgentName: "Joshtimus Prime",
             isResolvingPendingApproval: true,
-            pendingApprovalAllowsAllowAlways: true))
+            pendingApprovalAllowsAllowAlways: true)))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayConnected = true

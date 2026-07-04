@@ -1405,6 +1405,16 @@ struct RootTabsSourceGuardTests {
         #expect(modelSource.contains("enrollment_disclosure_not_accepted"))
     }
 
+    @Test func `settings approvals sync action is typed`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+
+        #expect(settingsSource.contains("struct ApprovalsSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("case approvalsSynced(ApprovalsSync)"))
+        #expect(actionsSource.contains("self.approvalsStore.send(.approvalsSynced(.init("))
+        #expect(!settingsSource.contains("case approvalsSynced(\n            isAppleReviewDemoModeEnabled: Bool"))
+    }
+
     @Test func `gateway settings keeps pairing trust diagnostics and tailscale actions`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let gatewaySetupFeaturesSource = try String(
