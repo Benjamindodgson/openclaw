@@ -366,15 +366,15 @@ extension AgentProTab {
     }
 
     func openSkillEditor(_ skill: SkillStatusEntryLite) {
-        self.skillEditorStore.send(.editorOpened(id: skill.effectiveSkillKey))
+        self.skillEditorStore.send(.editorOpened(.init(id: skill.effectiveSkillKey)))
     }
 
     func skillAPIKeyBinding(for skill: SkillStatusEntryLite) -> Binding<String> {
         Binding(
             get: { self.skillEditorStore.apiKeyDrafts[skill.effectiveSkillKey] ?? "" },
-            set: { self.skillEditorStore.send(.apiKeyDraftChanged(
+            set: { self.skillEditorStore.send(.apiKeyDraftChanged(.init(
                 key: skill.effectiveSkillKey,
-                value: $0)) })
+                value: $0))) })
     }
 
     var missingSkillEditorSheet: some View {
@@ -659,7 +659,7 @@ extension AgentProTab {
             let apiKey = self.skillEditorStore.apiKeyDrafts[skill.effectiveSkillKey] ?? ""
             let params = SkillUpdateParams(skillKey: skill.effectiveSkillKey, apiKey: apiKey)
             _ = try await self.requestGateway(method: "skills.update", params: params, timeoutSeconds: 20)
-            self.skillEditorStore.send(.apiKeyDraftCleared(key: skill.effectiveSkillKey))
+            self.skillEditorStore.send(.apiKeyDraftCleared(.init(key: skill.effectiveSkillKey)))
             return apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? "API key cleared."
                 : "API key saved."
