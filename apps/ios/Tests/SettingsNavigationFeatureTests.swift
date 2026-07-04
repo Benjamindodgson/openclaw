@@ -1786,7 +1786,7 @@ struct SettingsNavigationFeatureTests {
             SettingsShareInstructionFeature()
         }
 
-        await store.send(.defaultShareInstructionChanged("Summarize this for my agent.")) {
+        await store.send(.defaultShareInstructionChanged(.init(value: "Summarize this for my agent."))) {
             $0.defaultShareInstruction = "Summarize this for my agent."
         }
     }
@@ -1811,7 +1811,7 @@ struct SettingsNavigationFeatureTests {
             SettingsShareInstructionFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.defaultShareInstructionPersistenceRequested("Summarize this."))
+        await store.send(.defaultShareInstructionPersistenceRequested(.init(value: "Summarize this.")))
         await store.finish()
 
         #expect(probe.savedInstructions == ["Summarize this."])
