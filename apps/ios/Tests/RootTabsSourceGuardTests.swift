@@ -251,7 +251,8 @@ struct RootTabsSourceGuardTests {
         #expect(overviewSource.contains("text: self.agentSearchTextBinding"))
         #expect(overviewSource.contains("self.filterStore.send(.clearFiltersTapped)"))
         #expect(source.contains("NavigationStack(path: self.navigationPathBinding)"))
-        #expect(source.contains("set: { self.navigationStore.send(.navigationPathChanged($0)) }"))
+        #expect(source.contains("case navigationPathChanged(NavigationPathChange)"))
+        #expect(source.contains("set: { self.navigationStore.send(.navigationPathChanged(.init(path: $0))) }"))
         #expect(source
             .contains("route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible"))
         #expect(destinationsSource.contains(".toolbar(.hidden, for: .navigationBar)"))
@@ -816,7 +817,8 @@ struct RootTabsSourceGuardTests {
         let openRange = try #require(handoff.range(of: "self.openRootDestination(destination)"))
 
         #expect(source.contains("NavigationStack(path: self.navigationPathBinding)"))
-        #expect(source.contains("set: { self.store.send(.navigationPathChanged($0)) }"))
+        #expect(source.contains("case navigationPathChanged(NavigationPathChange)"))
+        #expect(source.contains("set: { self.store.send(.navigationPathChanged(.init(path: $0))) }"))
         #expect(!source.contains("self.openRootDestination(.gateway)"))
         #expect(source.contains("self.openPhoneRootDestination(.gateway)"))
         #expect(clearRange.lowerBound < openRange.lowerBound)
