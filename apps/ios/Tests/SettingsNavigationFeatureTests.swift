@@ -1886,7 +1886,7 @@ struct SettingsNavigationFeatureTests {
         await store.send(.manualGatewayPortResolutionRequested(.init(
             host: "gateway.example.com",
             useTLS: true))) {
-            $0.manualGatewayPortResolutionResult = .failure("Failed: invalid port")
+            $0.manualGatewayPortResolutionResult = .failure(.init(message: "Failed: invalid port"))
         }
 
         await store.send(.manualGatewayPortResolutionResultHandled) {
