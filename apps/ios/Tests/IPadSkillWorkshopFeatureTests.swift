@@ -108,7 +108,7 @@ struct IPadSkillWorkshopFeatureTests {
             kind: .apply,
             sceneActive: true,
             canRead: true,
-            result: .success(true))))
+            result: .success(.init()))))
         {
             $0.busyAction = nil
             $0.noticeText = "Proposal applied."
