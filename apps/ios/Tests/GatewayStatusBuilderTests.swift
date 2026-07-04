@@ -105,10 +105,10 @@ struct GatewayStatusBuilderTests {
             ChatViewModelLifecycleFeature()
         }
 
-        await store.send(.transportModeRecorded("gateway")) {
+        await store.send(.transportModeRecorded(.init(transportModeID: "gateway"))) {
             $0.transportModeID = "gateway"
         }
-        await store.send(.transportModeRecorded("demo")) {
+        await store.send(.transportModeRecorded(.init(transportModeID: "demo"))) {
             $0.transportModeID = "demo"
         }
     }
@@ -119,8 +119,8 @@ struct GatewayStatusBuilderTests {
             ChatTalkControlFeature(client: probe.client)
         }
 
-        await store.send(.toggleRequested(sessionKey: "session-1", isTalkEnabled: false))
-        await store.send(.toggleRequested(sessionKey: "session-2", isTalkEnabled: true))
+        await store.send(.toggleRequested(.init(sessionKey: "session-1", isTalkEnabled: false)))
+        await store.send(.toggleRequested(.init(sessionKey: "session-2", isTalkEnabled: true)))
         await store.finish()
 
         #expect(probe.focusedSessionKeys == ["session-1", "session-2"])
