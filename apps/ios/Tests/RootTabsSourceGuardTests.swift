@@ -268,6 +268,19 @@ struct RootTabsSourceGuardTests {
         #expect(dreamingSource.contains("OpenClawSidebarHeaderLeadingSlot(action: headerLeadingAction)"))
     }
 
+    @Test func `agent dreaming maintenance response action is typed`() throws {
+        let source = try String(contentsOf: Self.agentProDreamingDestinationSourceURL(), encoding: .utf8)
+        let feature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentDreamingDestinationFeature",
+            to: "extension AgentDreamingMaintenanceError")
+
+        #expect(feature.contains("struct DreamActionResponse: Equatable, Sendable"))
+        #expect(feature.contains("case dreamActionResponse(DreamActionResponse)"))
+        #expect(feature.contains("await send(.dreamActionResponse(.init(result: .success(summary))))"))
+        #expect(feature.contains("switch response.result"))
+    }
+
     @Test func `iOS 26 chrome uses native glass while content cards stay quiet`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
