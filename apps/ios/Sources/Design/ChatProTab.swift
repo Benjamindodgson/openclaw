@@ -9,6 +9,7 @@ struct ChatProTab: View {
     @State private var viewModel: OpenClawChatViewModel?
     @State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>
     @State private var presentationStore: StoreOf<ChatProPresentationFeature>
+    @State private var talkControlStore: StoreOf<ChatTalkControlFeature>
     let headerLeadingAction: OpenClawSidebarHeaderAction?
     let headerTitle: String?
     let headerSubtitle: String?
@@ -32,6 +33,11 @@ struct ChatProTab: View {
             initialState: ChatProPresentationFeature.State())
         {
             ChatProPresentationFeature()
+        },
+        talkControlStore: StoreOf<ChatTalkControlFeature> = Store(
+            initialState: ChatTalkControlFeature.State())
+        {
+            ChatTalkControlFeature()
         })
     {
         self.headerLeadingAction = headerLeadingAction
@@ -42,6 +48,7 @@ struct ChatProTab: View {
         self.openSettings = openSettings
         self._viewModelLifecycleStore = State(wrappedValue: viewModelLifecycleStore)
         self._presentationStore = State(wrappedValue: presentationStore)
+        self._talkControlStore = State(wrappedValue: talkControlStore)
     }
 
     var body: some View {
@@ -208,8 +215,9 @@ struct ChatProTab: View {
             statusText: self.appModel.talkMode.statusText,
             providerLabel: self.appModel.talkMode.gatewayTalkProviderLabel,
             toggle: { sessionKey in
-                self.appModel.focusChatSession(sessionKey)
-                self.appModel.setTalkEnabled(!self.appModel.talkMode.isEnabled)
+                self.talkControlStore.send(.toggleRequested(
+                    sessionKey: sessionKey,
+                    isTalkEnabled: self.appModel.talkMode.isEnabled))
             })
     }
 
@@ -305,6 +313,76 @@ struct ChatProTab: View {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+// swiftformat:disable redundantSendable
+struct ChatTalkControlClient: Sendable {
+    var focusChatSession: @MainActor @Sendable (String) -> Void
+    var setTalkEnabled: @MainActor @Sendable (Bool) -> Void
+}
+
+// swiftformat:enable redundantSendable
+
+extension ChatTalkControlClient: DependencyKey {
+    static let liveValue = ChatTalkControlClient(
+        focusChatSession: { _ in },
+        setTalkEnabled: { _ in })
+    static let testValue = ChatTalkControlClient(
+        focusChatSession: { _ in },
+        setTalkEnabled: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        ChatTalkControlClient(
+            focusChatSession: { sessionKey in
+                appModel.focusChatSession(sessionKey)
+            },
+            setTalkEnabled: { enabled in
+                appModel.setTalkEnabled(enabled)
+            })
+    }
+}
+
+extension DependencyValues {
+    var chatTalkControl: ChatTalkControlClient {
+        get { self[ChatTalkControlClient.self] }
+        set { self[ChatTalkControlClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct ChatTalkControlFeature {
+    private let clientOverride: ChatTalkControlClient?
+
+    init(client: ChatTalkControlClient? = nil) {
+        self.clientOverride = client
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case toggleRequested(sessionKey: String, isTalkEnabled: Bool)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.chatTalkControl) var dependencyClient
+            let client = self.clientOverride ?? dependencyClient
+
+            switch action {
+            case let .toggleRequested(sessionKey, isTalkEnabled):
+                return .run { [client] _ in
+                    await client.focusChatSession(sessionKey)
+                    await client.setTalkEnabled(!isTalkEnabled)
+                }
+            }
+        }
+        .autoLogActions()
     }
 }
 

@@ -156,7 +156,9 @@ struct RootTabs: View {
 
     private var phoneTabContent: some View {
         TabView(selection: self.selectedTabBinding) {
-            ChatProTab(openSettings: { self.selectSidebarDestination(.gateway) })
+            ChatProTab(
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                talkControlStore: self.makeChatTalkControlStore())
                 .tabItem { Label("Chat", systemImage: "bubble.left.fill") }
                 .tag(AppTab.chat)
 
@@ -406,7 +408,8 @@ struct RootTabs: View {
                 headerTitle: "Chat",
                 showsAgentBadge: false,
                 ownsNavigationStack: false,
-                openSettings: { self.selectSidebarDestination(.gateway) })
+                openSettings: { self.selectSidebarDestination(.gateway) },
+                talkControlStore: self.makeChatTalkControlStore())
         case .talk:
             TalkProTab(
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
@@ -954,6 +957,13 @@ struct RootTabs: View {
     private func makeTalkProTabStore() -> StoreOf<TalkProTabFeature> {
         Store(initialState: TalkProTabFeature.State()) {
             TalkProTabFeature(client: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
+    private func makeChatTalkControlStore() -> StoreOf<ChatTalkControlFeature> {
+        Store(initialState: ChatTalkControlFeature.State()) {
+            ChatTalkControlFeature(client: .live(appModel: self.appModel))
         }
     }
 

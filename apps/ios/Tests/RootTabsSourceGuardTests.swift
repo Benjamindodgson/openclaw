@@ -74,7 +74,7 @@ struct RootTabsSourceGuardTests {
             from: "private var phoneTabContent: some View",
             to: "private var sidebarSplitContent: some View")
 
-        let chatRange = try #require(phoneTabContent.range(of: "ChatProTab(openSettings:"))
+        let chatRange = try #require(phoneTabContent.range(of: "ChatProTab("))
         let talkRange = try #require(phoneTabContent.range(of: "TalkProTab("))
         let controlRange = try #require(phoneTabContent.range(of: "RootTabsPhoneControlHub("))
         let agentRange = try #require(phoneTabContent.range(of: "AgentProTab("))
@@ -377,6 +377,23 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 5)
         #expect(phoneControlHubSource.contains("private func makeAgentSelectionStore()"))
         #expect(phoneControlHubSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 4)
+    }
+
+    @Test func `chat talk toggle is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let chatSource = try String(contentsOf: Self.chatProTabSourceURL(), encoding: .utf8)
+
+        #expect(chatSource.contains("struct ChatTalkControlClient: Sendable"))
+        #expect(chatSource.contains("var chatTalkControl: ChatTalkControlClient"))
+        #expect(chatSource.contains("struct ChatTalkControlFeature"))
+        #expect(chatSource.contains("case toggleRequested(sessionKey: String, isTalkEnabled: Bool)"))
+        #expect(chatSource.contains("await client.focusChatSession(sessionKey)"))
+        #expect(chatSource.contains("await client.setTalkEnabled(!isTalkEnabled)"))
+        #expect(chatSource.contains("self.talkControlStore.send(.toggleRequested("))
+        #expect(!chatSource.contains("self.appModel.setTalkEnabled(!self.appModel.talkMode.isEnabled)"))
+        #expect(rootSource.contains("private func makeChatTalkControlStore()"))
+        #expect(rootSource.contains("ChatTalkControlFeature(client: .live(appModel: self.appModel))"))
+        #expect(rootSource.matches(of: /talkControlStore: self\.makeChatTalkControlStore\(\)/).count == 2)
     }
 
     @Test func `routed headers use shared adaptive layout`() throws {
