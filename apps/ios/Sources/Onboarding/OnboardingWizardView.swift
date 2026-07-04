@@ -178,19 +178,19 @@ struct OnboardingWizardView: View {
     private var manualHostBinding: Binding<String> {
         Binding(
             get: { self.connectionFormStore.manualHost },
-            set: { self.connectionFormStore.send(.manualHostChanged($0)) })
+            set: { self.connectionFormStore.send(.manualHostChanged(.init(host: $0))) })
     }
 
     private var manualPortTextBinding: Binding<String> {
         Binding(
             get: { self.connectionFormStore.manualPortText },
-            set: { self.connectionFormStore.send(.manualPortTextChanged($0)) })
+            set: { self.connectionFormStore.send(.manualPortTextChanged(.init(text: $0))) })
     }
 
     private var manualTLSBinding: Binding<Bool> {
         Binding(
             get: { self.connectionFormStore.manualTLS },
-            set: { self.connectionFormStore.send(.manualTLSChanged($0)) })
+            set: { self.connectionFormStore.send(.manualTLSChanged(.init(useTLS: $0))) })
     }
 
     var body: some View {
