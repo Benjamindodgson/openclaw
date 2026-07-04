@@ -1745,13 +1745,22 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings agent selection records picker changes`() async {
+        let selectedAgentProbe = SettingsSelectedAgentProbe()
         let store = TestStore(initialState: SettingsAgentSelectionFeature.State()) {
-            SettingsAgentSelectionFeature()
+            SettingsAgentSelectionFeature(selectedAgentClient: selectedAgentProbe.client)
         }
 
-        await store.send(.pickerSelectionChanged("agent-1")) {
-            $0.selectedAgentPickerId = "agent-1"
+        await store.send(.pickerSelectionChanged(" agent-1 ")) {
+            $0.selectedAgentPickerId = " agent-1 "
         }
+        await store.send(.pickerSelectionChanged("   ")) {
+            $0.selectedAgentPickerId = "   "
+        }
+        await store.finish()
+
+        #expect(selectedAgentProbe.selectedAgentIds.count == 2)
+        #expect(selectedAgentProbe.selectedAgentIds[0] == "agent-1")
+        #expect(selectedAgentProbe.selectedAgentIds[1] == nil)
     }
 
     @Test func `settings agent selection syncs external agent selection`() async {
@@ -2600,6 +2609,16 @@ private final class SettingsAppleReviewDemoProbe: @unchecked Sendable {
     var client: SettingsAppleReviewDemoClient {
         SettingsAppleReviewDemoClient(enter: {
             self.enterCount += 1
+        })
+    }
+}
+
+private final class SettingsSelectedAgentProbe: @unchecked Sendable {
+    var selectedAgentIds: [String?] = []
+
+    var client: SettingsSelectedAgentClient {
+        SettingsSelectedAgentClient(setSelectedAgentId: { selectedAgentId in
+            self.selectedAgentIds.append(selectedAgentId)
         })
     }
 }
