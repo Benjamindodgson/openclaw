@@ -381,10 +381,10 @@ struct SettingsNavigationFeatureTests {
             SettingsDeviceIdentityFeature()
         }
 
-        await store.send(.displayNameSynced("Kitchen iPad")) {
+        await store.send(.displayNameSynced(.init(displayName: "Kitchen iPad"))) {
             $0.displayName = "Kitchen iPad"
         }
-        await store.send(.instanceIdSynced("ios-node-123")) {
+        await store.send(.instanceIdSynced(.init(instanceId: "ios-node-123"))) {
             $0.instanceId = "ios-node-123"
         }
     }
@@ -394,7 +394,7 @@ struct SettingsNavigationFeatureTests {
             SettingsDeviceIdentityFeature()
         }
 
-        await store.send(.displayNameChanged("Field Node")) {
+        await store.send(.displayNameChanged(.init(displayName: "Field Node"))) {
             $0.displayName = "Field Node"
         }
     }
