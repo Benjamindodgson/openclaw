@@ -132,11 +132,14 @@ struct CommandCenterRecentSessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case refreshRequested(
-            sceneActive: Bool,
-            sessionsAvailable: Bool,
-            currentSessionKey: String,
-            defaultSessionKey: String)
+        struct RefreshRequest: Equatable, Sendable {
+            var sceneActive: Bool
+            var sessionsAvailable: Bool
+            var currentSessionKey: String
+            var defaultSessionKey: String
+        }
+
+        case refreshRequested(RefreshRequest)
         case refreshResponse(Result<Snapshot, CommandSessionsError>)
     }
 
@@ -148,9 +151,9 @@ struct CommandCenterRecentSessionsFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .refreshRequested(sceneActive, sessionsAvailable, currentSessionKey, defaultSessionKey):
-                guard sceneActive else { return .none }
-                guard sessionsAvailable else {
+            case let .refreshRequested(request):
+                guard request.sceneActive else { return .none }
+                guard request.sessionsAvailable else {
                     state.defaultChatSessionEntry = nil
                     state.recentChatSessions = []
                     return .none
@@ -161,8 +164,8 @@ struct CommandCenterRecentSessionsFeature {
                         let sessions = try await client.listSessions(CommandCenterTab.recentSessionsFetchLimit)
                         let snapshot = Self.snapshot(
                             from: sessions,
-                            currentSessionKey: currentSessionKey,
-                            defaultSessionKey: defaultSessionKey)
+                            currentSessionKey: request.currentSessionKey,
+                            defaultSessionKey: request.defaultSessionKey)
                         await send(.refreshResponse(.success(snapshot)))
                     } catch {
                         await send(.refreshResponse(.failure(.failed)))
