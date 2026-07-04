@@ -4,19 +4,35 @@ import SwiftUI
 // swiftformat:disable redundantSendable
 struct TalkProTabClient: Sendable {
     var setSpeakerphoneEnabled: @MainActor @Sendable (Bool) -> Void
+    var setTalkEnabled: @MainActor @Sendable (Bool) -> Void
+    var startTalk: @MainActor @Sendable (String?) -> Void
 }
 
 // swiftformat:enable redundantSendable
 
 extension TalkProTabClient: DependencyKey {
-    static let liveValue = TalkProTabClient(setSpeakerphoneEnabled: { _ in })
-    static let testValue = TalkProTabClient(setSpeakerphoneEnabled: { _ in })
+    static let liveValue = TalkProTabClient(
+        setSpeakerphoneEnabled: { _ in },
+        setTalkEnabled: { _ in },
+        startTalk: { _ in })
+    static let testValue = TalkProTabClient(
+        setSpeakerphoneEnabled: { _ in },
+        setTalkEnabled: { _ in },
+        startTalk: { _ in })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
-        TalkProTabClient(setSpeakerphoneEnabled: { enabled in
-            appModel.setTalkSpeakerphoneEnabled(enabled)
-        })
+        TalkProTabClient(
+            setSpeakerphoneEnabled: { enabled in
+                appModel.setTalkSpeakerphoneEnabled(enabled)
+            },
+            setTalkEnabled: { enabled in
+                appModel.setTalkEnabled(enabled)
+            },
+            startTalk: { sessionKey in
+                appModel.talkMode.updateMainSessionKey(sessionKey)
+                appModel.setTalkEnabled(true)
+            })
     }
 }
 
@@ -42,6 +58,7 @@ struct TalkProTabFeature {
         var showPermissionPrompt = false
         var showTalkIssueDetails = false
         var speakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
+        var talkEnabled = false
     }
 
     enum Action: Equatable, Sendable {
@@ -52,6 +69,8 @@ struct TalkProTabFeature {
         case runtimeIssueDetailsButtonTapped
         case runtimeIssueDetailsDismissed
         case speakerphoneEnabledChanged(Bool)
+        case startTalkRequested(sessionKey: String?)
+        case talkEnabledChanged(Bool)
     }
 
     // swiftformat:enable redundantSendable
@@ -86,6 +105,18 @@ struct TalkProTabFeature {
                 state.speakerphoneEnabled = enabled
                 return .run { _ in
                     await client.setSpeakerphoneEnabled(enabled)
+                }
+
+            case let .startTalkRequested(sessionKey):
+                state.talkEnabled = true
+                return .run { _ in
+                    await client.startTalk(sessionKey)
+                }
+
+            case let .talkEnabledChanged(enabled):
+                state.talkEnabled = enabled
+                return .run { _ in
+                    await client.setTalkEnabled(enabled)
                 }
             }
         }
@@ -331,7 +362,7 @@ struct TalkProTab: View {
         {
             self.stopTalk()
         } else if self.talkEnabled != self.appModel.talkMode.isEnabled {
-            self.appModel.setTalkEnabled(self.talkEnabled)
+            self.store.send(.talkEnabledChanged(self.talkEnabled))
         }
     }
 
@@ -363,13 +394,12 @@ struct TalkProTab: View {
     private func startTalk() {
         guard !self.appModel.isAppleReviewDemoModeEnabled else { return }
         self.talkEnabled = true
-        self.appModel.talkMode.updateMainSessionKey(self.appModel.chatSessionKey)
-        self.appModel.setTalkEnabled(true)
+        self.store.send(.startTalkRequested(sessionKey: self.appModel.chatSessionKey))
     }
 
     private func stopTalk() {
         self.talkEnabled = false
-        self.appModel.setTalkEnabled(false)
+        self.store.send(.talkEnabledChanged(false))
     }
 
     private func openPrimarySettings() {
