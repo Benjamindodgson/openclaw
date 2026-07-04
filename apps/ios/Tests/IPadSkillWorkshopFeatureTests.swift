@@ -15,7 +15,7 @@ struct IPadSkillWorkshopFeatureTests {
             IPadSkillWorkshopFeature(client: Self.client())
         }
 
-        await store.send(.refreshRequested(sceneActive: true, canRead: false, force: false)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: false, force: false))) {
             $0.proposals = []
             $0.isLoading = false
             $0.inspectingProposalID = nil
@@ -26,16 +26,17 @@ struct IPadSkillWorkshopFeatureTests {
     @Test func `refresh success stores proposals and inspects selected proposal`() async {
         let entry = Self.entry(id: "pending-1", status: "pending")
         let inspect = Self.inspectResponse(id: "pending-1", status: "pending", content: "inspected body")
+        let manifest = IPadSkillProposalManifest(proposals: [entry])
         let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
             IPadSkillWorkshopFeature(client: Self.client(
-                list: { _ in IPadSkillProposalManifest(proposals: [entry]) },
+                list: { _ in manifest },
                 inspect: { _, _ in inspect }))
         }
 
-        await store.send(.refreshRequested(sceneActive: true, canRead: true, force: false)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(force: false, .success(IPadSkillProposalManifest(proposals: [entry])))) {
+        await store.receive(.refreshResponse(.init(force: false, result: .success(manifest)))) {
             $0.isLoading = false
             $0.proposals = [IPadSkillProposal(entry: entry, previous: nil)]
             $0.selectedProposalID = "pending-1"
@@ -77,12 +78,13 @@ struct IPadSkillWorkshopFeatureTests {
     @Test func `apply success clears busy state and refreshes proposals`() async {
         let before = Self.entry(id: "pending-1", status: "pending")
         let after = Self.entry(id: "pending-1", status: "applied")
+        let refreshedManifest = IPadSkillProposalManifest(proposals: [after])
         var initialState = IPadSkillWorkshopFeature.State()
         initialState.proposals = [IPadSkillProposal(entry: before, previous: nil)]
         initialState.selectedProposalID = "pending-1"
         let store = TestStore(initialState: initialState) {
             IPadSkillWorkshopFeature(client: Self.client(
-                list: { _ in IPadSkillProposalManifest(proposals: [after]) },
+                list: { _ in refreshedManifest },
                 run: { _, _, _ in }))
         }
 
@@ -100,10 +102,10 @@ struct IPadSkillWorkshopFeatureTests {
             $0.busyAction = nil
             $0.noticeText = "Proposal applied."
         }
-        await store.receive(.refreshRequested(sceneActive: true, canRead: true, force: true)) {
+        await store.receive(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(force: true, .success(IPadSkillProposalManifest(proposals: [after])))) {
+        await store.receive(.refreshResponse(.init(force: true, result: .success(refreshedManifest)))) {
             $0.isLoading = false
             $0.proposals = [IPadSkillProposal(entry: after, previous: IPadSkillProposal(entry: before, previous: nil))]
             $0.selectedProposalID = nil

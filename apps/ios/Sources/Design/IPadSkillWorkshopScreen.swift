@@ -204,11 +204,22 @@ struct IPadSkillWorkshopFeature {
             sceneActive: Bool,
             canRead: Bool,
             Result<Bool, IPadSkillWorkshopError>)
+        struct RefreshRequest: Equatable, Sendable {
+            var sceneActive: Bool
+            var canRead: Bool
+            var force: Bool
+        }
+
+        struct RefreshResponse: Equatable, Sendable {
+            var force: Bool
+            var result: Result<IPadSkillProposalManifest, IPadSkillWorkshopError>
+        }
+
         case proposalSelected(proposalID: String, opensSheet: Bool, canRead: Bool, forceInspect: Bool)
         case proposalSheetDismissed
         case queryChanged(String)
-        case refreshRequested(sceneActive: Bool, canRead: Bool, force: Bool)
-        case refreshResponse(force: Bool, Result<IPadSkillProposalManifest, IPadSkillWorkshopError>)
+        case refreshRequested(RefreshRequest)
+        case refreshResponse(RefreshResponse)
         case statusFilterChanged(String)
     }
 
@@ -288,7 +299,10 @@ struct IPadSkillWorkshopFeature {
                 state.busyAction = nil
                 state.noticeText = kind == .apply ? "Proposal applied." : "Proposal rejected."
                 return .run { send in
-                    await send(.refreshRequested(sceneActive: sceneActive, canRead: canRead, force: true))
+                    await send(.refreshRequested(.init(
+                        sceneActive: sceneActive,
+                        canRead: canRead,
+                        force: true)))
                 }
 
             case let .proposalMutationResponse(_, _, _, .failure(error)):
@@ -317,12 +331,12 @@ struct IPadSkillWorkshopFeature {
                 state.syncSelectedProposalIDForVisibleProposals()
                 return .none
 
-            case let .refreshRequested(sceneActive, canRead, force):
-                guard sceneActive else {
+            case let .refreshRequested(request):
+                guard request.sceneActive else {
                     state.isLoading = false
                     return .none
                 }
-                guard canRead else {
+                guard request.canRead else {
                     state.proposals = []
                     state.errorText = nil
                     state.isLoading = false
@@ -337,33 +351,39 @@ struct IPadSkillWorkshopFeature {
                 return .run { send in
                     do {
                         let manifest = try await client.list(agentID)
-                        await send(.refreshResponse(force: force, .success(manifest)))
+                        await send(.refreshResponse(.init(
+                            force: request.force,
+                            result: .success(manifest))))
                     } catch {
-                        await send(.refreshResponse(force: force, .failure(.failed(Self.message(for: error)))))
+                        await send(.refreshResponse(.init(
+                            force: request.force,
+                            result: .failure(.failed(Self.message(for: error))))))
                     }
                 }
 
-            case let .refreshResponse(force, .success(manifest)):
+            case let .refreshResponse(response):
                 state.isLoading = false
-                let previousByID = Dictionary(uniqueKeysWithValues: state.proposals.map { ($0.id, $0) })
-                state.proposals = manifest.proposals
-                    .map { IPadSkillProposal(entry: $0, previous: previousByID[$0.id]) }
-                    .sorted { $0.updatedAtMs > $1.updatedAtMs }
-                state.syncSelectedProposalIDForVisibleProposals()
-                guard let proposalID = state.selectedProposalID else { return .none }
-                return self.inspectEffect(
-                    state: &state,
-                    client: client,
-                    proposalID: proposalID,
-                    canRead: true,
-                    force: force)
+                switch response.result {
+                case let .success(manifest):
+                    let previousByID = Dictionary(uniqueKeysWithValues: state.proposals.map { ($0.id, $0) })
+                    state.proposals = manifest.proposals
+                        .map { IPadSkillProposal(entry: $0, previous: previousByID[$0.id]) }
+                        .sorted { $0.updatedAtMs > $1.updatedAtMs }
+                    state.syncSelectedProposalIDForVisibleProposals()
+                    guard let proposalID = state.selectedProposalID else { return .none }
+                    return self.inspectEffect(
+                        state: &state,
+                        client: client,
+                        proposalID: proposalID,
+                        canRead: true,
+                        force: response.force)
 
-            case let .refreshResponse(force, .failure(error)):
-                state.isLoading = false
-                if force || state.proposals.isEmpty {
-                    state.errorText = error.message
+                case let .failure(error):
+                    if response.force || state.proposals.isEmpty {
+                        state.errorText = error.message
+                    }
+                    return .none
                 }
-                return .none
 
             case let .statusFilterChanged(filter):
                 state.statusFilter = filter
@@ -1159,10 +1179,10 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private func loadProposals(force: Bool) async {
-        await self.store.send(.refreshRequested(
+        await self.store.send(.refreshRequested(.init(
             sceneActive: self.scenePhase == .active,
             canRead: self.canRead,
-            force: force)).finish()
+            force: force))).finish()
     }
 
     private func inspect(proposalID: String, force: Bool) async {
