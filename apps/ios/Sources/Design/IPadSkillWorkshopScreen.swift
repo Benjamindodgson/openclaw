@@ -220,11 +220,13 @@ struct IPadSkillWorkshopFeature {
             var hasOperatorAdminScope: Bool
         }
 
+        struct ProposalMutationSuccess: Equatable, Sendable {}
+
         struct ProposalMutationResponse: Equatable, Sendable {
             var kind: IPadSkillProposalAction.Kind
             var sceneActive: Bool
             var canRead: Bool
-            var result: Result<Bool, IPadSkillWorkshopError>
+            var result: Result<ProposalMutationSuccess, IPadSkillWorkshopError>
         }
 
         case proposalMutationRequested(ProposalMutationRequest)
@@ -322,7 +324,7 @@ struct IPadSkillWorkshopFeature {
                             kind: request.kind,
                             sceneActive: request.sceneActive,
                             canRead: request.canRead,
-                            result: .success(true))))
+                            result: .success(.init()))))
                     } catch {
                         await send(.proposalMutationResponse(.init(
                             kind: request.kind,
