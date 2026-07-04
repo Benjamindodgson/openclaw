@@ -153,13 +153,13 @@ extension AgentProTab {
         self.cronActionStore.send(.actionStarted(.init(id: job.id)))
         do {
             try await action()
-            self.cronActionStore.send(.actionSucceeded(message: success))
+            self.cronActionStore.send(.actionSucceeded(.init(message: success)))
             await self.refreshOverview(force: true)
             self.cronActionStore.send(.actionFinished(.init(id: job.id)))
         } catch {
-            self.cronActionStore.send(.actionFailed(
+            self.cronActionStore.send(.actionFailed(.init(
                 id: job.id,
-                message: Self.skillMutationMessage(error)))
+                message: Self.skillMutationMessage(error))))
         }
     }
 

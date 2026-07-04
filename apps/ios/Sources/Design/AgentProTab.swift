@@ -521,10 +521,19 @@ struct AgentCronActionFeature {
             var id: String
         }
 
+        struct ActionFailure: Equatable, Sendable {
+            var id: String
+            var message: String
+        }
+
+        struct ActionSuccess: Equatable, Sendable {
+            var message: String
+        }
+
         case actionFinished(ActionID)
-        case actionFailed(id: String, message: String)
+        case actionFailed(ActionFailure)
         case actionStarted(ActionID)
-        case actionSucceeded(message: String)
+        case actionSucceeded(ActionSuccess)
     }
 
     // swiftformat:enable redundantSendable
@@ -537,17 +546,17 @@ struct AgentCronActionFeature {
                 state.statusText = nil
                 return .none
 
-            case let .actionSucceeded(message):
-                state.statusText = message
+            case let .actionSucceeded(result):
+                state.statusText = result.message
                 return .none
 
             case let .actionFinished(action):
                 state.busyIDs.remove(action.id)
                 return .none
 
-            case let .actionFailed(id, message):
-                state.busyIDs.remove(id)
-                state.statusText = message
+            case let .actionFailed(failure):
+                state.busyIDs.remove(failure.id)
+                state.statusText = failure.message
                 return .none
             }
         }
