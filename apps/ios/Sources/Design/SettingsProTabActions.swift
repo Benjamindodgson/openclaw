@@ -185,7 +185,7 @@ extension SettingsProTab {
             enabled: self.storedManualGatewayEnabled,
             host: self.storedManualGatewayHost,
             tls: self.storedManualGatewayTLS))
-        self.manualGatewayPortStore.send(.manualGatewayPortSynced(self.storedManualGatewayPort))
+        self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: self.storedManualGatewayPort)))
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
         self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)
         self.gatewayCredentialsStore.send(.credentialsLoadRequested(instanceId: self.instanceId))
@@ -333,7 +333,7 @@ extension SettingsProTab {
 
     func applyGatewayLink(_ link: GatewayConnectDeepLink) async {
         self.applyManualGatewaySetupLink(host: link.host, tls: link.tls)
-        self.manualGatewayPortStore.send(.manualGatewayPortSynced(link.port))
+        self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: link.port)))
         self.gatewayCredentialsStore.send(.setupLinkApplied(link))
         guard let request = self.gatewayCredentialsStore.setupAuthPersistenceRequest else { return }
         defer { self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled) }
@@ -380,9 +380,9 @@ extension SettingsProTab {
     }
 
     func resolveManualPortForConnection(host: String) -> Bool {
-        self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested(
+        self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested(.init(
             host: host,
-            useTLS: self.manualGatewayTLS))
+            useTLS: self.manualGatewayTLS)))
         guard let result = self.manualGatewayPortStore.manualGatewayPortResolutionResult else { return false }
         self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)
 
@@ -555,7 +555,7 @@ extension SettingsProTab {
     var manualPortBinding: Binding<String> {
         Binding(
             get: { self.manualGatewayPortStore.manualGatewayPortText },
-            set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged($0)) })
+            set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged(.init(text: $0))) })
     }
 
     var gatewayAutoConnectBinding: Binding<Bool> {

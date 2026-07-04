@@ -820,10 +820,18 @@ struct SettingsManualGatewayPortFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case manualGatewayPortResolutionRequested(host: String, useTLS: Bool)
+        struct ManualGatewayPortResolutionRequest: Equatable, Sendable {
+            var host: String
+            var useTLS: Bool
+        }
+
+        struct ManualGatewayPortSync: Equatable, Sendable { var port: Int }
+        struct ManualGatewayPortTextChange: Equatable, Sendable { var text: String }
+
+        case manualGatewayPortResolutionRequested(ManualGatewayPortResolutionRequest)
         case manualGatewayPortResolutionResultHandled
-        case manualGatewayPortSynced(Int)
-        case manualGatewayPortTextChanged(String)
+        case manualGatewayPortSynced(ManualGatewayPortSync)
+        case manualGatewayPortTextChanged(ManualGatewayPortTextChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -831,9 +839,9 @@ struct SettingsManualGatewayPortFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .manualGatewayPortResolutionRequested(host, useTLS):
+            case let .manualGatewayPortResolutionRequested(request):
                 state.manualGatewayPortResolutionResult = nil
-                guard state.resolvedManualPort(host: host, useTLS: useTLS) != nil else {
+                guard state.resolvedManualPort(host: request.host, useTLS: request.useTLS) != nil else {
                     state.manualGatewayPortResolutionResult = .failure("Failed: invalid port")
                     return .none
                 }
@@ -844,13 +852,13 @@ struct SettingsManualGatewayPortFeature {
                 state.manualGatewayPortResolutionResult = nil
                 return .none
 
-            case let .manualGatewayPortSynced(port):
-                state.manualGatewayPort = port
-                state.manualGatewayPortText = port > 0 ? String(port) : ""
+            case let .manualGatewayPortSynced(sync):
+                state.manualGatewayPort = sync.port
+                state.manualGatewayPortText = sync.port > 0 ? String(sync.port) : ""
                 return .none
 
-            case let .manualGatewayPortTextChanged(text):
-                let filtered = text.filter(\.isNumber)
+            case let .manualGatewayPortTextChanged(change):
+                let filtered = change.text.filter(\.isNumber)
                 state.manualGatewayPortText = filtered
                 state.manualGatewayPort = Int(filtered) ?? 0
                 return .none
