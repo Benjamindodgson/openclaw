@@ -10,7 +10,7 @@ struct AgentNodeDetailCopyFeatureTests {
             AgentNodeDetailCopyFeature(clipboard: probe.client)
         }
 
-        await store.send(.copyButtonTapped("node-instance-1"))
+        await store.send(.copyButtonTapped(.init(value: "node-instance-1")))
         await store.finish()
 
         #expect(probe.copiedText == "node-instance-1")
