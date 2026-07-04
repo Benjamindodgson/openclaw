@@ -449,7 +449,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayActivityFeature(reconnectClient: probe.client)
         }
 
-        await store.send(.reconnectRequested(isAppleReviewDemoModeEnabled: false)) {
+        await store.send(.reconnectRequested(.init(isAppleReviewDemoModeEnabled: false))) {
             $0.isReconnectingGateway = true
         }
         await store.receive(.reconnectFinished) {
@@ -467,8 +467,8 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayActivityFeature(reconnectClient: probe.client)
         }
 
-        await store.send(.reconnectRequested(isAppleReviewDemoModeEnabled: false))
-        await store.send(.reconnectRequested(isAppleReviewDemoModeEnabled: true))
+        await store.send(.reconnectRequested(.init(isAppleReviewDemoModeEnabled: false)))
+        await store.send(.reconnectRequested(.init(isAppleReviewDemoModeEnabled: true)))
         await store.finish()
 
         #expect(probe.reconnectCount == 0)
@@ -491,7 +491,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayActivityFeature(problemTrustClient: probe.client)
         }
 
-        await store.send(.rotatedCertificateTrustRequested(problem))
+        await store.send(.rotatedCertificateTrustRequested(.init(problem: problem)))
         await store.finish()
 
         #expect(probe.trustedProblems == [problem])
@@ -516,7 +516,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayActivityFeature(diagnosticsRefreshClient: probe.client)
         }
 
-        await store.send(.diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: false)) {
+        await store.send(.diagnosticsRefreshRequested(.init(isAppleReviewDemoModeEnabled: false))) {
             $0.isRefreshingGateway = true
         }
         await store.receive(.refreshFinished) {
@@ -532,7 +532,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayActivityFeature(diagnosticsRefreshClient: probe.client)
         }
 
-        await store.send(.diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: true)) {
+        await store.send(.diagnosticsRefreshRequested(.init(isAppleReviewDemoModeEnabled: true))) {
             $0.isRefreshingGateway = true
         }
         await store.receive(.refreshFinished) {

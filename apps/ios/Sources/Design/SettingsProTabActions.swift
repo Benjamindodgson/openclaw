@@ -133,7 +133,7 @@ extension SettingsProTab {
     func reconnectGateway() async {
         let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled
         await self.gatewayActivityStore
-            .send(.reconnectRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))
+            .send(.reconnectRequested(.init(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled)))
             .finish()
     }
 
@@ -142,7 +142,7 @@ extension SettingsProTab {
         guard !self.gatewayActivityStore.isRefreshingGateway else { return }
         let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled
         await self.gatewayActivityStore
-            .send(.diagnosticsRefreshRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))
+            .send(.diagnosticsRefreshRequested(.init(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled)))
             .finish()
         self.syncGatewayConnectionStatusState()
         self.syncDiagnosticsContextState()
@@ -462,8 +462,8 @@ extension SettingsProTab {
             await self.connectManual()
         } else {
             await self.gatewayActivityStore
-                .send(.reconnectRequested(
-                    isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled))
+                .send(.reconnectRequested(.init(
+                    isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled)))
                 .finish()
         }
     }
@@ -482,7 +482,7 @@ extension SettingsProTab {
         }
         if problem.canTrustRotatedCertificate {
             await self.gatewayActivityStore
-                .send(.rotatedCertificateTrustRequested(problem))
+                .send(.rotatedCertificateTrustRequested(.init(problem: problem)))
                 .finish()
             return
         }
