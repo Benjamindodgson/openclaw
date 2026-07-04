@@ -162,9 +162,9 @@ extension SettingsProTab {
         self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: self.storedAppearancePreferenceRaw)))
         self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: self.storedDisplayName)))
         self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: self.storedInstanceId)))
-        self.debugOptionsStore.send(.debugOptionsSynced(
+        self.debugOptionsStore.send(.debugOptionsSynced(.init(
             discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
-            canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled))
+            canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled)))
         self.syncGatewaySetupStatusContext()
         self.syncGatewayConnectionStatusState()
         self.syncDiagnosticsContextState()
@@ -667,12 +667,12 @@ extension SettingsProTab {
     }
 
     func updateDiscoveryDebugLogsEnabled(_ enabled: Bool) {
-        self.debugOptionsStore.send(.discoveryDebugLogsChanged(enabled))
+        self.debugOptionsStore.send(.discoveryDebugLogsChanged(.init(enabled: enabled)))
         self.storedDiscoveryDebugLogsEnabled = enabled
     }
 
     func updateCanvasDebugStatusEnabled(_ enabled: Bool) {
-        self.debugOptionsStore.send(.canvasDebugStatusChanged(enabled))
+        self.debugOptionsStore.send(.canvasDebugStatusChanged(.init(enabled: enabled)))
         self.storedCanvasDebugStatusEnabled = enabled
     }
 

@@ -1110,9 +1110,16 @@ struct SettingsDebugOptionsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case canvasDebugStatusChanged(Bool)
-        case debugOptionsSynced(discoveryDebugLogsEnabled: Bool, canvasDebugStatusEnabled: Bool)
-        case discoveryDebugLogsChanged(Bool)
+        struct DebugOptionsSync: Equatable, Sendable {
+            var discoveryDebugLogsEnabled: Bool
+            var canvasDebugStatusEnabled: Bool
+        }
+
+        struct DebugOptionToggleChange: Equatable, Sendable { var enabled: Bool }
+
+        case canvasDebugStatusChanged(DebugOptionToggleChange)
+        case debugOptionsSynced(DebugOptionsSync)
+        case discoveryDebugLogsChanged(DebugOptionToggleChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -1124,19 +1131,19 @@ struct SettingsDebugOptionsFeature {
                 ?? dependencyDiscoveryDebugLoggingClient
 
             switch action {
-            case let .canvasDebugStatusChanged(enabled):
-                state.canvasDebugStatusEnabled = enabled
+            case let .canvasDebugStatusChanged(change):
+                state.canvasDebugStatusEnabled = change.enabled
                 return .none
 
-            case let .debugOptionsSynced(discoveryDebugLogsEnabled, canvasDebugStatusEnabled):
-                state.discoveryDebugLogsEnabled = discoveryDebugLogsEnabled
-                state.canvasDebugStatusEnabled = canvasDebugStatusEnabled
+            case let .debugOptionsSynced(sync):
+                state.discoveryDebugLogsEnabled = sync.discoveryDebugLogsEnabled
+                state.canvasDebugStatusEnabled = sync.canvasDebugStatusEnabled
                 return .none
 
-            case let .discoveryDebugLogsChanged(enabled):
-                state.discoveryDebugLogsEnabled = enabled
+            case let .discoveryDebugLogsChanged(change):
+                state.discoveryDebugLogsEnabled = change.enabled
                 return .run { _ in
-                    await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(enabled)
+                    await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(change.enabled)
                 }
             }
         }
@@ -1613,10 +1620,10 @@ struct SettingsProTab: View {
                 self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: newValue)))
             }
             .onChange(of: self.storedDiscoveryDebugLogsEnabled) { _, newValue in
-                self.debugOptionsStore.send(.discoveryDebugLogsChanged(newValue))
+                self.debugOptionsStore.send(.discoveryDebugLogsChanged(.init(enabled: newValue)))
             }
             .onChange(of: self.storedCanvasDebugStatusEnabled) { _, newValue in
-                self.debugOptionsStore.send(.canvasDebugStatusChanged(newValue))
+                self.debugOptionsStore.send(.canvasDebugStatusChanged(.init(enabled: newValue)))
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChangeRequested(.init(rawValue: newValue)))
