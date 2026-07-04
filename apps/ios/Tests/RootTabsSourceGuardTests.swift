@@ -2057,10 +2057,13 @@ struct RootTabsSourceGuardTests {
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
 
         #expect(onboardingStateSource.contains("struct ConnectionStart: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct ConnectionActivityStart: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case connectionStarted(ConnectionStart)"))
+        #expect(onboardingStateSource.contains("case connectionActivityStarted(ConnectionActivityStart)"))
         #expect(onboardingStateSource.contains("state.connectingGatewayID = start.id"))
         #expect(onboardingStateSource.contains("if start.clearsIssue"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(.init("))
+        #expect(onboardingSource.contains("self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))"))
     }
 
     @Test func `onboarding connection status action is typed`() throws {
