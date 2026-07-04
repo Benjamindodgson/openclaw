@@ -416,6 +416,14 @@ struct RootSidebarFeature {
 @Reducer
 struct RootNavigationSelectionFeature {
     // swiftformat:disable redundantSendable
+    struct NotificationPermissionSettingsRequest: Equatable, Sendable {
+        var suppressedApprovalID: String
+    }
+
+    struct PendingExecApprovalPromptChange: Equatable, Sendable {
+        var promptID: String?
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var selectedTab: RootTabs.AppTab
@@ -450,8 +458,8 @@ struct RootNavigationSelectionFeature {
         case sidebarNavigationPathChanged([SettingsRoute])
         case sidebarSettingsRoutePushed(SettingsRoute)
         case settingsRouteChanged(SettingsRoute?)
-        case notificationPermissionSettingsOpened(suppressedApprovalID: String)
-        case pendingExecApprovalPromptChanged(String?)
+        case notificationPermissionSettingsOpened(NotificationPermissionSettingsRequest)
+        case pendingExecApprovalPromptChanged(PendingExecApprovalPromptChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -490,13 +498,13 @@ struct RootNavigationSelectionFeature {
                 self.handleSettingsRouteChange(route, state: &state)
                 return .none
 
-            case let .notificationPermissionSettingsOpened(suppressedApprovalID):
-                state.suppressedExecApprovalPromptIDForNotificationSettings = suppressedApprovalID
+            case let .notificationPermissionSettingsOpened(request):
+                state.suppressedExecApprovalPromptIDForNotificationSettings = request.suppressedApprovalID
                 self.selectSettingsRoute(.notifications, state: &state)
                 return .none
 
-            case let .pendingExecApprovalPromptChanged(promptID):
-                if promptID != state.suppressedExecApprovalPromptIDForNotificationSettings {
+            case let .pendingExecApprovalPromptChanged(change):
+                if change.promptID != state.suppressedExecApprovalPromptIDForNotificationSettings {
                     state.suppressedExecApprovalPromptIDForNotificationSettings = nil
                 }
                 return .none

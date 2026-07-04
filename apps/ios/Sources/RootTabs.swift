@@ -810,7 +810,8 @@ struct RootTabs: View {
                 self.maybeOpenSettingsForGatewaySetup()
             }
             .onChange(of: self.appModel.pendingExecApprovalPrompt?.id) { _, newValue in
-                self.navigationStore.send(.pendingExecApprovalPromptChanged(newValue))
+                self.navigationStore.send(.pendingExecApprovalPromptChanged(
+                    RootNavigationSelectionFeature.PendingExecApprovalPromptChange(promptID: newValue)))
             }
     }
 
@@ -976,7 +977,9 @@ extension RootTabs {
     }
 
     func openNotificationSettings(suppressedApprovalID: String) {
-        self.navigationStore.send(.notificationPermissionSettingsOpened(suppressedApprovalID: suppressedApprovalID))
+        self.navigationStore.send(.notificationPermissionSettingsOpened(
+            RootNavigationSelectionFeature.NotificationPermissionSettingsRequest(
+                suppressedApprovalID: suppressedApprovalID)))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
 
