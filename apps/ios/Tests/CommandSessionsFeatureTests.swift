@@ -168,7 +168,7 @@ struct CommandCenterRecentSessionsFeatureTests {
             sessionsAvailable: true,
             currentSessionKey: currentSession.key,
             defaultSessionKey: defaultSession.key)))
-        await store.receive(.refreshResponse(.success(expectedSnapshot))) {
+        await store.receive(.refreshResponse(.init(result: .success(expectedSnapshot)))) {
             $0.defaultChatSessionEntry = defaultSession
             $0.recentChatSessions = [
                 currentSession,
@@ -196,7 +196,7 @@ struct CommandCenterRecentSessionsFeatureTests {
             sessionsAvailable: true,
             currentSessionKey: "chat-existing",
             defaultSessionKey: "main")))
-        await store.receive(.refreshResponse(.failure(.failed))) {
+        await store.receive(.refreshResponse(.init(result: .failure(.failed)))) {
             $0.defaultChatSessionEntry = nil
             $0.recentChatSessions = []
         }
