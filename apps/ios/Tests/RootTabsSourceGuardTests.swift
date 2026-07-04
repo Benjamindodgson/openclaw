@@ -1936,10 +1936,13 @@ struct RootTabsSourceGuardTests {
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
 
         #expect(onboardingStateSource.contains("struct ManualCredentialChange: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct SetupCodeChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case gatewayTokenChanged(ManualCredentialChange)"))
         #expect(onboardingStateSource.contains("case gatewayPasswordChanged(ManualCredentialChange)"))
+        #expect(onboardingStateSource.contains("case setupCodeChanged(SetupCodeChange)"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.gatewayTokenChanged(.init(value: $0)))"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.gatewayPasswordChanged(.init(value: $0)))"))
+        #expect(onboardingSource.contains("self.setupCodeStore.send(.setupCodeChanged(.init(code: $0)))"))
         #expect(onboardingStateSource.contains("enum ApplyResult: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case applyRequested"))
         #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(link)"))

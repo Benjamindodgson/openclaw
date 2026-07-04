@@ -530,7 +530,7 @@ import Testing
             OnboardingSetupCodeFeature()
         }
 
-        await store.send(.setupCodeChanged("  oc_setup_123  ")) {
+        await store.send(.setupCodeChanged(.init(code: "  oc_setup_123  "))) {
             $0.setupCode = "  oc_setup_123  "
         }
 
@@ -552,7 +552,7 @@ import Testing
             $0.status = "Setup code applied. Connecting..."
         }
 
-        await store.send(.setupCodeChanged("  ")) {
+        await store.send(.setupCodeChanged(.init(code: "  "))) {
             $0.setupCode = "  "
         }
 
@@ -602,7 +602,7 @@ import Testing
             $0.status = "Paste a setup code to continue."
         }
 
-        await store.send(.setupCodeChanged("not a setup code")) {
+        await store.send(.setupCodeChanged(.init(code: "not a setup code"))) {
             $0.setupCode = "not a setup code"
         }
 
