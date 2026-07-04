@@ -765,11 +765,11 @@ extension OnboardingWizardView {
             self.handleScannedSetupCode(code)
 
         case let .gatewayLink(link):
-            self.statusStore.send(.connectionStarted(
+            self.statusStore.send(.connectionStarted(.init(
                 id: "setup-code",
                 message: "Connecting via setup code...",
                 statusLine: "Setup code loaded. Connecting to \(link.host):\(link.port)...",
-                clearsIssue: false))
+                clearsIssue: false)))
             self.applyGatewayLink(link)
             self.stepStore.send(.stepChanged(.connect))
             await self.connectManual()
@@ -987,11 +987,11 @@ extension OnboardingWizardView {
     }
 
     private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
-        self.statusStore.send(.connectionStarted(
+        self.statusStore.send(.connectionStarted(.init(
             id: gateway.id,
             message: "Connecting to \(gateway.name)…",
             statusLine: "Connecting to \(gateway.name)…",
-            clearsIssue: true))
+            clearsIssue: true)))
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connect(gateway)
     }
@@ -1012,11 +1012,11 @@ extension OnboardingWizardView {
         guard let request = self.connectionFormStore.manualConnectionRequest else { return }
         self.connectionFormStore.send(.manualConnectionRequestHandled)
 
-        self.statusStore.send(.connectionStarted(
+        self.statusStore.send(.connectionStarted(.init(
             id: "manual",
             message: "Connecting to \(request.host)…",
             statusLine: "Connecting to \(request.host):\(request.port)…",
-            clearsIssue: true))
+            clearsIssue: true)))
         defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
             token: self.gatewayToken,
@@ -1034,11 +1034,11 @@ extension OnboardingWizardView {
         let connectionID = silent ? "retry-auto" : "retry"
         // Keep current auth/pairing issue sticky while retrying to avoid Step 3 UI flip-flop.
         if !silent {
-            self.statusStore.send(.connectionStarted(
+            self.statusStore.send(.connectionStarted(.init(
                 id: connectionID,
                 message: "Retrying…",
                 statusLine: "Retrying last connection…",
-                clearsIssue: false))
+                clearsIssue: false)))
         } else {
             self.statusStore.send(.connectionActivityStarted(id: connectionID))
         }
@@ -1063,11 +1063,11 @@ extension OnboardingWizardView {
             return
         }
         if problem.canTrustRotatedCertificate {
-            self.statusStore.send(.connectionStarted(
+            self.statusStore.send(.connectionStarted(.init(
                 id: "trust-certificate",
                 message: "Updating gateway certificate…",
                 statusLine: "Updating gateway certificate…",
-                clearsIssue: false))
+                clearsIssue: false)))
             defer { self.statusStore.send(.connectionFinished) }
             _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)
             return

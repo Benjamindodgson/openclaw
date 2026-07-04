@@ -317,11 +317,11 @@ import Testing
             $0.statusLine = "Scanner error: Camera unavailable"
         }
 
-        await store.send(.connectionStarted(
+        await store.send(.connectionStarted(.init(
             id: "manual",
             message: "Connecting to gateway…",
             statusLine: "Connecting to gateway:18789…",
-            clearsIssue: true))
+            clearsIssue: true)))
         {
             $0.connectingGatewayID = "manual"
             $0.connectMessage = "Connecting to gateway…"

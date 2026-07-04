@@ -210,6 +210,13 @@ struct OnboardingStatusFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ConnectionStart: Equatable, Sendable {
+            var id: String
+            var message: String
+            var statusLine: String
+            var clearsIssue: Bool
+        }
+
         struct ScannerError: Equatable, Sendable { var message: String }
 
         case automaticPairingResumeRequested(now: Date)
@@ -221,7 +228,7 @@ struct OnboardingStatusFeature {
             pauseReconnect: Bool,
             message: String?,
             statusText: String)
-        case connectionStarted(id: String, message: String, statusLine: String, clearsIssue: Bool)
+        case connectionStarted(ConnectionStart)
         case connectionActivityStarted(id: String)
         case connectionStatusUpdated(message: String?, statusLine: String)
         case freshQRScanStarted
@@ -282,14 +289,14 @@ struct OnboardingStatusFeature {
                 }
                 return .none
 
-            case let .connectionStarted(id, message, statusLine, clearsIssue):
-                state.connectingGatewayID = id
-                if clearsIssue {
+            case let .connectionStarted(start):
+                state.connectingGatewayID = start.id
+                if start.clearsIssue {
                     state.issue = .none
                     state.shouldShowAuthStep = false
                 }
-                state.connectMessage = message
-                state.statusLine = statusLine
+                state.connectMessage = start.message
+                state.statusLine = start.statusLine
                 return .none
 
             case let .connectionActivityStarted(id):
