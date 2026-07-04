@@ -16,7 +16,7 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(sceneActive: false, sessionsAvailable: true)) {
+        await store.send(.refreshRequested(.init(sceneActive: false, sessionsAvailable: true))) {
             $0.isLoading = false
         }
         await store.finish()
@@ -34,7 +34,7 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(sceneActive: true, sessionsAvailable: false)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, sessionsAvailable: false))) {
             $0.isLoading = false
             $0.sessions = []
             $0.loadErrorText = nil
@@ -54,7 +54,7 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(sceneActive: true, sessionsAvailable: true)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, sessionsAvailable: true))) {
             $0.isLoading = true
             $0.loadErrorText = nil
         }
@@ -76,7 +76,7 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(sceneActive: true, sessionsAvailable: true)) {
+        await store.send(.refreshRequested(.init(sceneActive: true, sessionsAvailable: true))) {
             $0.isLoading = true
             $0.loadErrorText = nil
         }
