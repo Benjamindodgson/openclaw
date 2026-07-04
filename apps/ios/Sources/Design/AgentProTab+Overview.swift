@@ -97,7 +97,7 @@ extension AgentProTab {
     private var agentSearchTextBinding: Binding<String> {
         Binding(
             get: { self.filterStore.searchText },
-            set: { self.filterStore.send(.searchTextChanged($0)) })
+            set: { self.filterStore.send(.searchTextChanged(.init(text: $0))) })
     }
 
     var agentFiltersActive: Bool {

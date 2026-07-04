@@ -765,10 +765,14 @@ struct AgentOverviewFilterFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SearchTextChange: Equatable, Sendable {
+            var text: String
+        }
+
         case clearFiltersTapped
         case rosterFilterChanged(AgentProTab.AgentRosterFilter)
         case searchButtonTapped
-        case searchTextChanged(String)
+        case searchTextChanged(SearchTextChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -789,8 +793,8 @@ struct AgentOverviewFilterFeature {
                 state.searchPresented.toggle()
                 return .none
 
-            case let .searchTextChanged(text):
-                state.searchText = text
+            case let .searchTextChanged(change):
+                state.searchText = change.text
                 return .none
             }
         }
