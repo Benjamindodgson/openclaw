@@ -22,10 +22,14 @@ struct RootTabsPhoneControlHubFeature {
             var opensRootTab: Bool
         }
 
+        struct NavigationPathChange: Equatable, Sendable {
+            var path: [RootTabs.SidebarDestination]
+        }
+
         case detailBackTapped
         case detailDestinationTapped(RootTabs.SidebarDestination)
         case initialDestinationAppeared(InitialDestinationAppearance)
-        case navigationPathChanged([RootTabs.SidebarDestination])
+        case navigationPathChanged(NavigationPathChange)
         case presentationChanged(PresentationChange)
         case rootDestinationTapped(RootTabs.SidebarDestination)
     }
@@ -56,8 +60,8 @@ struct RootTabsPhoneControlHubFeature {
                 state.navigationPath = [initialDestination]
                 return .none
 
-            case let .navigationPathChanged(navigationPath):
-                state.navigationPath = navigationPath
+            case let .navigationPathChanged(change):
+                state.navigationPath = change.path
                 return .none
 
             case let .presentationChanged(change):
@@ -133,7 +137,7 @@ struct RootTabsPhoneControlHub: View {
     private var navigationPathBinding: Binding<[RootTabs.SidebarDestination]> {
         Binding(
             get: { self.store.navigationPath },
-            set: { self.store.send(.navigationPathChanged($0)) })
+            set: { self.store.send(.navigationPathChanged(.init(path: $0))) })
     }
 
     private var headerCard: some View {

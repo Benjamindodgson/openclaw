@@ -71,7 +71,7 @@ struct RootTabsPhoneControlHubFeatureTests {
             RootTabsPhoneControlHubFeature()
         }
 
-        await store.send(.navigationPathChanged([.overview, .sessions])) {
+        await store.send(.navigationPathChanged(.init(path: [.overview, .sessions]))) {
             $0.navigationPath = [.overview, .sessions]
         }
     }

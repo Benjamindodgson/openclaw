@@ -9,7 +9,7 @@ struct AgentNavigationFeatureTests {
             AgentNavigationFeature()
         }
 
-        await store.send(.navigationPathChanged([.instances])) {
+        await store.send(.navigationPathChanged(.init(path: [.instances]))) {
             $0.navigationPath = [.instances]
         }
     }
@@ -21,7 +21,7 @@ struct AgentNavigationFeatureTests {
             AgentNavigationFeature()
         }
 
-        await store.send(.navigationPathChanged([.skills, .cron])) {
+        await store.send(.navigationPathChanged(.init(path: [.skills, .cron]))) {
             $0.navigationPath = [.skills, .cron]
         }
     }
