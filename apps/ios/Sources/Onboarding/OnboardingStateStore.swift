@@ -849,10 +849,16 @@ struct OnboardingConnectionFormFeature {
         struct ManualHostChange: Equatable, Sendable { var host: String }
         struct ManualPortTextChange: Equatable, Sendable { var text: String }
         struct ManualTLSChange: Equatable, Sendable { var useTLS: Bool }
+        struct Initialization: Equatable, Sendable {
+            var host: String
+            var port: Int
+            var tls: Bool
+            var lastMode: OnboardingConnectionMode?
+        }
 
         case developerModeDisabled
         case gatewayLinkApplied(host: String, port: Int, tls: Bool)
-        case initialized(host: String, port: Int, tls: Bool, lastMode: OnboardingConnectionMode?)
+        case initialized(Initialization)
         case manualConnectionRequested
         case manualConnectionRequestHandled
         case manualHostChanged(ManualHostChange)
@@ -883,15 +889,15 @@ struct OnboardingConnectionFormFeature {
                 }
                 return .none
 
-            case let .initialized(host, port, tls, lastMode):
+            case let .initialized(initialization):
                 if state.normalizedManualHost.isEmpty {
-                    state.manualHost = host
-                    state.manualPort = port
-                    state.manualTLS = tls
+                    state.manualHost = initialization.host
+                    state.manualPort = initialization.port
+                    state.manualTLS = initialization.tls
                 }
                 state.syncManualPortText()
                 if state.selectedMode == nil {
-                    state.selectedMode = lastMode
+                    state.selectedMode = initialization.lastMode
                 }
                 if state.selectedMode == .developerLocal, state.manualHost == "openclaw.local" {
                     state.manualHost = "localhost"
