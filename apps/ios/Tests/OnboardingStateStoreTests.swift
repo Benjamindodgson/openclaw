@@ -436,7 +436,7 @@ import Testing
         }
         let firstAttempt = Date(timeIntervalSince1970: 100)
 
-        await store.send(.automaticPairingResumeRequested(now: firstAttempt))
+        await store.send(.automaticPairingResumeRequested(.init(now: firstAttempt)))
         #expect(!store.state.shouldResumePairingAutomatically)
 
         await store.send(.connectionIssueDetected(.init(
@@ -453,17 +453,18 @@ import Testing
             $0.statusLine = "Pairing required"
         }
 
-        await store.send(.automaticPairingResumeRequested(now: firstAttempt)) {
+        await store.send(.automaticPairingResumeRequested(.init(now: firstAttempt))) {
             $0.lastPairingAutoResumeAttemptAt = firstAttempt
             $0.shouldResumePairingAutomatically = true
         }
 
-        await store.send(.automaticPairingResumeRequested(now: firstAttempt.addingTimeInterval(3))) {
+        let throttledAttempt = firstAttempt.addingTimeInterval(3)
+        await store.send(.automaticPairingResumeRequested(.init(now: throttledAttempt))) {
             $0.shouldResumePairingAutomatically = false
         }
 
         let laterAttempt = firstAttempt.addingTimeInterval(7)
-        await store.send(.automaticPairingResumeRequested(now: laterAttempt)) {
+        await store.send(.automaticPairingResumeRequested(.init(now: laterAttempt))) {
             $0.lastPairingAutoResumeAttemptAt = laterAttempt
             $0.shouldResumePairingAutomatically = true
         }
@@ -472,7 +473,8 @@ import Testing
             $0.connectingGatewayID = "retry-auto"
         }
 
-        await store.send(.automaticPairingResumeRequested(now: laterAttempt.addingTimeInterval(7))) {
+        let blockedAttempt = laterAttempt.addingTimeInterval(7)
+        await store.send(.automaticPairingResumeRequested(.init(now: blockedAttempt))) {
             $0.shouldResumePairingAutomatically = false
         }
     }

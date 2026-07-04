@@ -1665,6 +1665,18 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("markedCompleted: shouldMarkCompleted && selectedMode != nil"))
     }
 
+    @Test func `onboarding automatic pairing resume action is typed`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+
+        #expect(onboardingStateSource.contains("struct AutomaticPairingResumeRequest: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case automaticPairingResumeRequested(AutomaticPairingResumeRequest)"))
+        #expect(onboardingStateSource.contains("request.now.timeIntervalSince(last)"))
+        #expect(onboardingStateSource.contains("state.lastPairingAutoResumeAttemptAt = request.now"))
+        #expect(onboardingSource.contains(
+            "self.statusStore.send(.automaticPairingResumeRequested(.init(now: Date())))"))
+    }
+
     @Test func `onboarding step changes are typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
