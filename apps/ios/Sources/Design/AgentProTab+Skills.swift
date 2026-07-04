@@ -707,7 +707,7 @@ extension AgentProTab {
             let params = ClawHubSearchParams(query: query.isEmpty ? nil : query, limit: 20)
             let data = try await self.requestGateway(method: "skills.search", params: params, timeoutSeconds: 20)
             let results = try JSONDecoder().decode(ClawHubSearchResponseLite.self, from: data).results
-            self.clawHubStore.send(.searchFinished(results))
+            self.clawHubStore.send(.searchFinished(.init(results: results)))
         } catch {
             self.clawHubStore.send(.searchFailed(.init(message: Self.skillMutationMessage(error))))
         }
