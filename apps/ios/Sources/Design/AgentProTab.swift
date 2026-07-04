@@ -394,9 +394,13 @@ struct AgentSkillPolicyMutationFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct MutationKey: Equatable, Sendable {
+            var key: String
+        }
+
         case mutationFailed(message: String)
-        case mutationFinished(key: String)
-        case mutationStarted(key: String)
+        case mutationFinished(MutationKey)
+        case mutationStarted(MutationKey)
         case mutationSucceeded(message: String)
     }
 
@@ -405,8 +409,8 @@ struct AgentSkillPolicyMutationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .mutationStarted(key):
-                state.busyKeys.insert(key)
+            case let .mutationStarted(mutation):
+                state.busyKeys.insert(mutation.key)
                 state.errorText = nil
                 state.statusText = nil
                 return .none
@@ -419,8 +423,8 @@ struct AgentSkillPolicyMutationFeature {
                 state.errorText = message
                 return .none
 
-            case let .mutationFinished(key):
-                state.busyKeys.remove(key)
+            case let .mutationFinished(mutation):
+                state.busyKeys.remove(mutation.key)
                 return .none
             }
         }

@@ -38,7 +38,7 @@ struct AgentSkillPolicyMutationFeatureTests {
             AgentSkillPolicyMutationFeature()
         }
 
-        await store.send(.mutationStarted(key: "skill-a")) {
+        await store.send(.mutationStarted(.init(key: "skill-a"))) {
             $0.busyKeys = ["skill-a"]
             $0.errorText = nil
             $0.statusText = nil
@@ -76,7 +76,7 @@ struct AgentSkillPolicyMutationFeatureTests {
             AgentSkillPolicyMutationFeature()
         }
 
-        await store.send(.mutationFinished(key: "skill-a")) {
+        await store.send(.mutationFinished(.init(key: "skill-a"))) {
             $0.busyKeys = ["skill-b"]
         }
     }
