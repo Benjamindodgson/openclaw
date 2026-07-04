@@ -397,9 +397,9 @@ extension SettingsProTab {
     }
 
     func connectManual() async {
-        self.manualGatewayEndpointStore.send(.manualConnectionRequested(
+        self.manualGatewayEndpointStore.send(.manualConnectionRequested(.init(
             port: self.manualGatewayPortStore.manualGatewayPort,
-            isPortValid: self.manualPortIsValid))
+            isPortValid: self.manualPortIsValid)))
         guard let result = self.manualGatewayEndpointStore.manualConnectionResult else { return }
         self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)
 
@@ -425,9 +425,9 @@ extension SettingsProTab {
     }
 
     func preflightGateway(host: String) async -> Bool {
-        self.manualGatewayEndpointStore.send(.preflightRequested(
+        self.manualGatewayEndpointStore.send(.preflightRequested(.init(
             host: host,
-            hasTailnetIPv4: Self.hasTailnetIPv4()))
+            hasTailnetIPv4: Self.hasTailnetIPv4())))
         guard let result = self.manualGatewayEndpointStore.preflightResult else { return false }
         self.manualGatewayEndpointStore.send(.preflightResultHandled)
 
@@ -439,7 +439,7 @@ extension SettingsProTab {
             return false
 
         case let .requestLocalNetworkAccess(reason):
-            self.manualGatewayEndpointStore.send(.localNetworkAccessRequested(reason: reason))
+            self.manualGatewayEndpointStore.send(.localNetworkAccessRequested(.init(reason: reason)))
             return true
         }
     }
