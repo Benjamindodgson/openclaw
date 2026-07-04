@@ -849,6 +849,12 @@ struct OnboardingConnectionFormFeature {
         struct ManualHostChange: Equatable, Sendable { var host: String }
         struct ManualPortTextChange: Equatable, Sendable { var text: String }
         struct ManualTLSChange: Equatable, Sendable { var useTLS: Bool }
+        struct GatewayLinkApplication: Equatable, Sendable {
+            var host: String
+            var port: Int
+            var tls: Bool
+        }
+
         struct Initialization: Equatable, Sendable {
             var host: String
             var port: Int
@@ -857,7 +863,7 @@ struct OnboardingConnectionFormFeature {
         }
 
         case developerModeDisabled
-        case gatewayLinkApplied(host: String, port: Int, tls: Bool)
+        case gatewayLinkApplied(GatewayLinkApplication)
         case initialized(Initialization)
         case manualConnectionRequested
         case manualConnectionRequestHandled
@@ -879,13 +885,13 @@ struct OnboardingConnectionFormFeature {
                 }
                 return .none
 
-            case let .gatewayLinkApplied(host, port, tls):
-                state.manualHost = host
-                state.manualPort = port
+            case let .gatewayLinkApplied(application):
+                state.manualHost = application.host
+                state.manualPort = application.port
                 state.syncManualPortText()
-                state.manualTLS = tls
+                state.manualTLS = application.tls
                 if state.selectedMode == nil {
-                    state.selectedMode = tls ? .remoteDomain : .homeNetwork
+                    state.selectedMode = application.tls ? .remoteDomain : .homeNetwork
                 }
                 return .none
 

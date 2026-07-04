@@ -1982,9 +1982,13 @@ struct RootTabsSourceGuardTests {
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
 
         #expect(onboardingStateSource.contains("struct Initialization: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct GatewayLinkApplication: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case initialized(Initialization)"))
+        #expect(onboardingStateSource.contains("case gatewayLinkApplied(GatewayLinkApplication)"))
         #expect(onboardingStateSource.contains("state.manualHost = initialization.host"))
+        #expect(onboardingStateSource.contains("state.manualHost = application.host"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.initialized(.init("))
+        #expect(onboardingSource.contains("self.connectionFormStore.send(.gatewayLinkApplied(.init("))
         #expect(onboardingStateSource.contains("struct ManualConnectionRequest: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ManualHostChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ManualPortTextChange: Equatable, Sendable"))
