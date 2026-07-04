@@ -408,6 +408,31 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.matches(of: /talkControlStore: self\.makeChatTalkControlStore\(\)/).count == 2)
     }
 
+    @Test func `root gateway problem primary action is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let featureSource = try String(contentsOf: Self.rootGatewayProblemPrimaryActionSourceURL(), encoding: .utf8)
+        let actionFunction = try Self.extract(
+            rootSource,
+            from: "private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async",
+            to: "private func evaluateOnboardingPresentation")
+
+        #expect(featureSource.contains("struct RootGatewayProblemPrimaryActionClient"))
+        #expect(featureSource.contains("var rootGatewayProblemPrimaryAction: RootGatewayProblemPrimaryActionClient"))
+        #expect(featureSource.contains("@Reducer\nstruct RootGatewayProblemPrimaryActionFeature"))
+        #expect(featureSource.contains("case primaryActionTapped(GatewayConnectionProblem)"))
+        #expect(featureSource.contains("@Dependency(\\.rootGatewayProblemPrimaryAction)"))
+        #expect(featureSource.contains("await client.trustRotatedCertificate(problem)"))
+        #expect(featureSource.contains("await client.openProtocolMismatchHelpIfNeeded(problem)"))
+        #expect(featureSource.contains("await client.connectLastKnown()"))
+        #expect(featureSource.contains("await client.openGatewaySettings()"))
+        #expect(rootSource.contains("private func makeGatewayProblemPrimaryActionStore()"))
+        #expect(rootSource.contains("Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }"))
+        #expect(actionFunction.contains(".send(.primaryActionTapped(problem))"))
+        #expect(!actionFunction.contains("self.gatewayController.trustRotatedGatewayCertificate"))
+        #expect(!actionFunction.contains("self.gatewayController.connectLastKnown"))
+        #expect(!actionFunction.contains("self.selectSidebarDestination(.gateway)"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -1841,6 +1866,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootTabs.swift")
+    }
+
+    private static func rootGatewayProblemPrimaryActionSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootGatewayProblemPrimaryActionFeature.swift")
     }
 
     private static func nodeAppModelSourceURL() -> URL {
