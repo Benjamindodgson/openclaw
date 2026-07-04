@@ -13,11 +13,15 @@ struct RootTabsPhoneControlHubFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct PresentationChange: Equatable, Sendable {
+            var presentation: RootTabsPhoneControlHubPresentationState
+        }
+
         case detailBackTapped
         case detailDestinationTapped(RootTabs.SidebarDestination)
         case initialDestinationAppeared(destination: RootTabs.SidebarDestination?, opensRootTab: Bool)
         case navigationPathChanged([RootTabs.SidebarDestination])
-        case presentationChanged(RootTabsPhoneControlHubPresentationState)
+        case presentationChanged(PresentationChange)
         case rootDestinationTapped(RootTabs.SidebarDestination)
     }
 
@@ -50,8 +54,8 @@ struct RootTabsPhoneControlHubFeature {
                 state.navigationPath = navigationPath
                 return .none
 
-            case let .presentationChanged(presentation):
-                state.presentation = presentation
+            case let .presentationChanged(change):
+                state.presentation = change.presentation
                 return .none
 
             case .rootDestinationTapped:
@@ -353,7 +357,7 @@ struct RootTabsPhoneControlHub: View {
     private func syncPresentationSnapshot() {
         let presentation = self.currentPresentation
         guard self.store.presentation != presentation else { return }
-        self.store.send(.presentationChanged(presentation))
+        self.store.send(.presentationChanged(.init(presentation: presentation)))
     }
 
     private var isCompactHeight: Bool {
