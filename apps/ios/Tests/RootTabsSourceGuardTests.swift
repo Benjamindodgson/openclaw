@@ -1411,7 +1411,8 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("await self.gatewaySetupLinkStore.send(.applyRequested).finish()"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
         #expect(actionsSource.contains("case let .appleReviewDemo(statusText):"))
-        #expect(actionsSource.contains("self.gatewaySetupStatusStore.send(.statusChanged(statusText))"))
+        #expect(actionsSource.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: statusText))"))
         #expect(rootSource.contains("gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore()"))
         #expect(storesSource.contains(
             "SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
@@ -1500,9 +1501,14 @@ struct RootTabsSourceGuardTests {
             from: ".sheet(isPresented: self.qrScannerBinding)",
             to: ".sheet(isPresented: self.notificationRelayDisclosureBinding)")
 
-        #expect(gatewaySetupFeaturesSource.contains("case qrScannerErrorReceived(String)"))
+        #expect(gatewaySetupFeaturesSource.contains("struct GatewayStatusSync: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct QRScannerError: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct SetupStatusChange: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("case gatewayStatusSynced(GatewayStatusSync)"))
+        #expect(gatewaySetupFeaturesSource.contains("case qrScannerErrorReceived(QRScannerError)"))
+        #expect(gatewaySetupFeaturesSource.contains("case statusChanged(SetupStatusChange)"))
         #expect(gatewaySetupFeaturesSource.contains("private static func qrScannerErrorStatusText(_ error: String)"))
-        #expect(qrScannerSheet.contains("self.gatewaySetupStatusStore.send(.qrScannerErrorReceived(error))"))
+        #expect(qrScannerSheet.contains("self.gatewaySetupStatusStore.send(.qrScannerErrorReceived(.init("))
         #expect(!qrScannerSheet.contains("Scanner error: \\(error)"))
     }
 

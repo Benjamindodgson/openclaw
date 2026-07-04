@@ -719,7 +719,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupStatusFeature()
         }
 
-        await store.send(.statusChanged("Failed: host required")) {
+        await store.send(.statusChanged(.init(statusText: "Failed: host required"))) {
             $0.statusText = "Failed: host required"
         }
     }
@@ -749,7 +749,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupStatusFeature()
         }
 
-        await store.send(.qrScannerErrorReceived("Camera unavailable")) {
+        await store.send(.qrScannerErrorReceived(.init(message: "Camera unavailable"))) {
             $0.statusText = "Scanner error: Camera unavailable"
         }
     }
@@ -761,7 +761,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupStatusFeature()
         }
 
-        await store.send(.statusChanged(nil)) {
+        await store.send(.statusChanged(.init(statusText: nil))) {
             $0.statusText = nil
         }
     }
@@ -771,9 +771,9 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupStatusFeature()
         }
 
-        await store.send(.gatewayStatusSynced(
+        await store.send(.gatewayStatusSynced(.init(
             problemMessage: "Pairing required",
-            gatewayStatusText: "Offline"))
+            gatewayStatusText: "Offline")))
         {
             $0.gatewayProblemMessage = "Pairing required"
             $0.gatewayStatusText = "Offline"
