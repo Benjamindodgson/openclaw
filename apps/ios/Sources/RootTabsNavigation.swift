@@ -30,6 +30,11 @@ struct RootPresentationFeature {
         var discoveredGatewayCount: Int
     }
 
+    struct LocalNetworkAccessRequest: Equatable, Sendable {
+        var reason: String
+        var sceneActive: Bool
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected: Bool
@@ -200,7 +205,7 @@ struct RootPresentationFeature {
         case forceOnboardingRequested
         case autoOpenSettingsRequested(StartupSnapshot)
         case gatewaySetupRequestChanged(Int)
-        case localNetworkAccessRequested(reason: String, sceneActive: Bool)
+        case localNetworkAccessRequested(LocalNetworkAccessRequest)
         case onboardingVisibilityChanged(isPresented: Bool, sceneActive: Bool)
         case presentationCommandHandled
         case gatewayProblemDetailsButtonTapped
@@ -288,11 +293,11 @@ struct RootPresentationFeature {
                     reason: "gateway_setup_deeplink")
                 return .none
 
-            case let .localNetworkAccessRequested(reason, sceneActive):
+            case let .localNetworkAccessRequested(request):
                 guard state.didEvaluateOnboarding else { return .none }
-                guard sceneActive else { return .none }
+                guard request.sceneActive else { return .none }
                 guard !state.showOnboarding else { return .none }
-                state.presentationCommand = .requestLocalNetworkAccess(reason: reason)
+                state.presentationCommand = .requestLocalNetworkAccess(reason: request.reason)
                 return .none
 
             case let .onboardingVisibilityChanged(isPresented, sceneActive):

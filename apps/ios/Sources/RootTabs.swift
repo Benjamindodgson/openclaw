@@ -1067,9 +1067,9 @@ extension RootTabs {
     }
 
     private func maybeRequestLocalNetworkAccess(reason: String) {
-        self.presentationStore.send(.localNetworkAccessRequested(
+        self.presentationStore.send(.localNetworkAccessRequested(RootPresentationFeature.LocalNetworkAccessRequest(
             reason: reason,
-            sceneActive: self.scenePhase == .active))
+            sceneActive: self.scenePhase == .active)))
         self.handlePresentationCommand()
     }
 
