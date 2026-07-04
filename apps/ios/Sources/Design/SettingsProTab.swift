@@ -746,9 +746,12 @@ struct SettingsShareInstructionFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case defaultShareInstructionChanged(String)
+        struct DefaultShareInstructionChange: Equatable, Sendable { var value: String }
+        struct DefaultShareInstructionPersistenceRequest: Equatable, Sendable { var value: String }
+
+        case defaultShareInstructionChanged(DefaultShareInstructionChange)
         case defaultShareInstructionLoadRequested
-        case defaultShareInstructionPersistenceRequested(String)
+        case defaultShareInstructionPersistenceRequested(DefaultShareInstructionPersistenceRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -759,17 +762,17 @@ struct SettingsShareInstructionFeature {
             let persistenceClient = self.persistenceClientOverride ?? dependencyPersistenceClient
 
             switch action {
-            case let .defaultShareInstructionChanged(instruction):
-                state.defaultShareInstruction = instruction
+            case let .defaultShareInstructionChanged(change):
+                state.defaultShareInstruction = change.value
                 return .none
 
             case .defaultShareInstructionLoadRequested:
                 state.defaultShareInstruction = persistenceClient.loadDefaultInstruction()
                 return .none
 
-            case let .defaultShareInstructionPersistenceRequested(instruction):
+            case let .defaultShareInstructionPersistenceRequested(request):
                 return .run { _ in
-                    await persistenceClient.saveDefaultInstruction(instruction)
+                    await persistenceClient.saveDefaultInstruction(request.value)
                 }
             }
         }
@@ -1641,7 +1644,7 @@ struct SettingsProTab: View {
                 self.syncOnboardingState()
             }
             .onChange(of: self.shareInstructionStore.defaultShareInstruction) { _, newValue in
-                self.shareInstructionStore.send(.defaultShareInstructionPersistenceRequested(newValue))
+                self.shareInstructionStore.send(.defaultShareInstructionPersistenceRequested(.init(value: newValue)))
             }
             .onChange(of: self.appModel.gatewaySetupRequestID) { _, _ in
                 self.applyPendingGatewaySetupLinkIfNeeded()
@@ -1857,7 +1860,7 @@ extension SettingsProTab {
     var defaultShareInstructionBinding: Binding<String> {
         Binding(
             get: { self.shareInstructionStore.defaultShareInstruction },
-            set: { self.shareInstructionStore.send(.defaultShareInstructionChanged($0)) })
+            set: { self.shareInstructionStore.send(.defaultShareInstructionChanged(.init(value: $0))) })
     }
 
     var agentSelectionBinding: Binding<String> {
