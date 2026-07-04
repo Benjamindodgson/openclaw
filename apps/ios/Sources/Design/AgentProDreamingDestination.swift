@@ -116,9 +116,13 @@ struct AgentDreamingDestinationFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct DreamDiaryDaySelection: Equatable, Sendable {
+            var dayID: String
+        }
+
         case dreamActionTapped(AgentDreamAction, gatewayConnected: Bool)
         case dreamActionResponse(Result<String, AgentDreamingMaintenanceError>)
-        case dreamDiaryDaySelected(String)
+        case dreamDiaryDaySelected(DreamDiaryDaySelection)
     }
 
     // swiftformat:enable redundantSendable
@@ -152,8 +156,8 @@ struct AgentDreamingDestinationFeature {
                 state.statusText = error.message
                 return .none
 
-            case let .dreamDiaryDaySelected(dayID):
-                state.selectedDreamDiaryDayID = dayID
+            case let .dreamDiaryDaySelected(selection):
+                state.selectedDreamDiaryDayID = selection.dayID
                 return .none
             }
         }
@@ -444,7 +448,7 @@ struct AgentProDreamingDestination: View {
         Menu {
             ForEach(Array(days.reversed())) { day in
                 Button {
-                    self.store.send(.dreamDiaryDaySelected(day.id))
+                    self.store.send(.dreamDiaryDaySelected(.init(dayID: day.id)))
                 } label: {
                     Label(
                         day.title,

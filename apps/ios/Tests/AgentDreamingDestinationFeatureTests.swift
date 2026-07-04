@@ -10,7 +10,7 @@ struct AgentDreamingDestinationFeatureTests {
             AgentDreamingDestinationFeature(client: Self.client())
         }
 
-        await store.send(.dreamDiaryDaySelected("2026-07-03")) {
+        await store.send(.dreamDiaryDaySelected(.init(dayID: "2026-07-03"))) {
             $0.selectedDreamDiaryDayID = "2026-07-03"
         }
     }
