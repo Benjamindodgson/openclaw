@@ -847,6 +847,10 @@ struct RootTabsSourceGuardTests {
             actionsSource,
             from: "func retryGatewayConnectionFromProblem() async",
             to: "func gatewayProblemPrimaryActionTitle")
+        let gatewayProblemPrimaryActionFunction = try Self.extract(
+            actionsSource,
+            from: "func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async",
+            to: "func handleLocationModeRequest")
 
         #expect(sectionsSource.contains("var gatewayDestination: some View"))
         #expect(sectionsSource.contains("self.gatewayActions"))
@@ -869,14 +873,24 @@ struct RootTabsSourceGuardTests {
 
         #expect(supportSource.contains("struct SettingsGatewayReconnectClient"))
         #expect(supportSource.contains("var settingsGatewayReconnect: SettingsGatewayReconnectClient"))
+        #expect(supportSource.contains("struct SettingsGatewayProblemTrustClient"))
+        #expect(supportSource.contains("var settingsGatewayProblemTrust: SettingsGatewayProblemTrustClient"))
         #expect(settingsSource.contains("case reconnectRequested(isAppleReviewDemoModeEnabled: Bool)"))
+        #expect(settingsSource.contains("case rotatedCertificateTrustRequested(GatewayConnectionProblem)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsGatewayReconnect)"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsGatewayProblemTrust)"))
         #expect(settingsSource.contains("await reconnectClient.reconnect()"))
         #expect(settingsSource.contains("await send(.reconnectFinished)"))
+        #expect(settingsSource.contains("await problemTrustClient.trustRotatedCertificate(problem)"))
         #expect(reconnectFunction.contains("self.gatewayActivityStore"))
         #expect(reconnectFunction.contains("let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled"))
         #expect(reconnectFunction.contains(".send(.reconnectRequested(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled))"))
+        #expect(gatewayProblemPrimaryActionFunction.contains("self.gatewayActivityStore"))
+        #expect(gatewayProblemPrimaryActionFunction.contains(".send(.rotatedCertificateTrustRequested(problem))"))
+        #expect(!gatewayProblemPrimaryActionFunction
+            .contains("self.gatewayController.trustRotatedGatewayCertificate(from: problem)"))
         #expect(rootSource.contains("reconnectClient: .live(gatewayController: self.gatewayController)"))
+        #expect(rootSource.contains("problemTrustClient: .live(gatewayController: self.gatewayController)"))
         #expect(!reconnectFunction.contains("await self.gatewayController.connectLastKnown()"))
         #expect(problemReconnectFunction.contains("await self.connectManual()"))
         #expect(problemReconnectFunction.contains("self.gatewayActivityStore"))
@@ -893,7 +907,6 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("Tailscale is off on this device. Turn it on, then try again."))
         #expect(gatewaySetupFeaturesSource.contains("Run /pair approve in your OpenClaw chat"))
         #expect(actionsSource.contains("await self.resetOnboarding()"))
-        #expect(actionsSource.contains("self.gatewayController.trustRotatedGatewayCertificate(from: problem)"))
         #expect(actionsSource.contains("GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem)"))
         #expect(actionsSource.contains("await self.retryGatewayConnectionFromProblem()"))
 

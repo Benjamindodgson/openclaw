@@ -841,6 +841,7 @@ struct RootTabs: View {
                 diagnosticsRefreshClient: .live(
                     appModel: self.appModel,
                     gatewayController: self.gatewayController),
+                problemTrustClient: .live(gatewayController: self.gatewayController),
                 reconnectClient: .live(gatewayController: self.gatewayController))
         }
     }

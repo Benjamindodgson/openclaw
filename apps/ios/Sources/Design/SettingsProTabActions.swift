@@ -478,7 +478,9 @@ extension SettingsProTab {
             return
         }
         if problem.canTrustRotatedCertificate {
-            _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)
+            await self.gatewayActivityStore
+                .send(.rotatedCertificateTrustRequested(problem))
+                .finish()
             return
         }
         if GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem) {
