@@ -274,7 +274,7 @@ struct ChatProTab: View {
     private func syncPresentationState() {
         let presentation = self.currentPresentationState
         guard self.presentationStore.presentation != presentation else { return }
-        self.presentationStore.send(.presentationChanged(presentation))
+        self.presentationStore.send(.presentationChanged(.init(presentation: presentation)))
     }
 
     private var gatewayConnected: Bool {
@@ -428,7 +428,11 @@ struct ChatProPresentationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case presentationChanged(ChatProPresentationState)
+        struct PresentationChange: Equatable, Sendable {
+            var presentation: ChatProPresentationState
+        }
+
+        case presentationChanged(PresentationChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -436,8 +440,8 @@ struct ChatProPresentationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .presentationChanged(presentation):
-                state.presentation = presentation
+            case let .presentationChanged(change):
+                state.presentation = change.presentation
                 return .none
             }
         }
