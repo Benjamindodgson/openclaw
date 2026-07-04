@@ -866,34 +866,34 @@ extension SettingsProTab {
     }
 
     func updateTalkProviderSelection(_ rawValue: String) {
-        self.talkPreferencesStore.send(.providerSelectionChanged(rawValue))
+        self.talkPreferencesStore.send(.providerSelectionChanged(.init(rawValue: rawValue)))
         let selection = TalkModeProviderSelection.resolved(rawValue)
         self.storedTalkProviderSelectionRaw = selection.rawValue
     }
 
     func updateTalkRealtimeVoiceSelection(_ rawValue: String) {
-        self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(rawValue))
+        self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(.init(rawValue: rawValue)))
         let voice = TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
         self.storedTalkRealtimeVoiceSelectionRaw = voice
     }
 
     func updateTalkSpeechLocale(_ speechLocale: String) {
-        self.talkPreferencesStore.send(.speechLocaleChanged(speechLocale))
+        self.talkPreferencesStore.send(.speechLocaleChanged(.init(locale: speechLocale)))
         self.storedTalkSpeechLocale = speechLocale
     }
 
     func updateTalkBackgroundEnabled(_ enabled: Bool) {
-        self.talkPreferencesStore.send(.talkBackgroundEnabledChanged(enabled))
+        self.talkPreferencesStore.send(.talkBackgroundEnabledChanged(.init(isEnabled: enabled)))
         self.storedTalkBackgroundEnabled = enabled
     }
 
     func updateTalkButtonEnabled(_ enabled: Bool) {
-        self.talkPreferencesStore.send(.talkButtonEnabledChanged(enabled))
+        self.talkPreferencesStore.send(.talkButtonEnabledChanged(.init(isEnabled: enabled)))
         self.storedTalkButtonEnabled = enabled
     }
 
     func updateTalkSpeakerphoneEnabled(_ enabled: Bool) {
-        self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(enabled))
+        self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(.init(isEnabled: enabled)))
         self.storedTalkSpeakerphoneEnabled = enabled
     }
 
