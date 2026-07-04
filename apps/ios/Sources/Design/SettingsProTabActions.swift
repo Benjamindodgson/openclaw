@@ -181,10 +181,10 @@ extension SettingsProTab {
         self.locationStore.send(.locationModeSynced(.init(rawValue: self.storedLocationModeRaw)))
         self.syncNotificationRelayState()
         self.gatewayAutoConnectStore.send(.enabledSynced(.init(isEnabled: self.storedGatewayAutoConnect)))
-        self.manualGatewayEndpointStore.send(.endpointSynced(
+        self.manualGatewayEndpointStore.send(.endpointSynced(.init(
             enabled: self.storedManualGatewayEnabled,
             host: self.storedManualGatewayHost,
-            tls: self.storedManualGatewayTLS))
+            useTLS: self.storedManualGatewayTLS)))
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: self.storedManualGatewayPort)))
         self.agentSelectionStore.send(.selectedAgentSynced(self.appModel.selectedAgentId))
         self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)
@@ -740,22 +740,22 @@ extension SettingsProTab {
     }
 
     func updateManualGatewayEnabled(_ enabled: Bool) {
-        self.manualGatewayEndpointStore.send(.manualGatewayEnabledChanged(enabled))
+        self.manualGatewayEndpointStore.send(.manualGatewayEnabledChanged(.init(isEnabled: enabled)))
         self.storedManualGatewayEnabled = enabled
     }
 
     func updateManualGatewayHost(_ host: String) {
-        self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(host))
+        self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(.init(host: host)))
         self.storedManualGatewayHost = host
     }
 
     func updateManualGatewayTLS(_ tls: Bool) {
-        self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(tls))
+        self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(.init(useTLS: tls)))
         self.storedManualGatewayTLS = tls
     }
 
     func applyManualGatewaySetupLink(host: String, tls: Bool) {
-        self.manualGatewayEndpointStore.send(.setupLinkApplied(host: host, tls: tls))
+        self.manualGatewayEndpointStore.send(.setupLinkApplied(.init(host: host, useTLS: tls)))
         self.storedManualGatewayHost = host
         self.storedManualGatewayTLS = tls
     }

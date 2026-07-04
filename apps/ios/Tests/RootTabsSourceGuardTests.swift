@@ -1563,8 +1563,27 @@ struct RootTabsSourceGuardTests {
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
 
         #expect(gatewaySetupFeaturesSource.contains("enum ManualConnectionResult: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct EndpointSync: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayEnabledChange: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayHostChange: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayTLSChange: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct SetupLinkApplication: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("case endpointSynced(EndpointSync)"))
+        #expect(gatewaySetupFeaturesSource.contains(
+            "case manualGatewayEnabledChanged(ManualGatewayEnabledChange)"))
+        #expect(gatewaySetupFeaturesSource.contains("case manualGatewayHostChanged(ManualGatewayHostChange)"))
+        #expect(gatewaySetupFeaturesSource.contains("case manualGatewayTLSChanged(ManualGatewayTLSChange)"))
+        #expect(gatewaySetupFeaturesSource.contains("case setupLinkApplied(SetupLinkApplication)"))
         #expect(gatewaySetupFeaturesSource.contains("case manualConnectionRequested(port: Int, isPortValid: Bool)"))
         #expect(gatewaySetupFeaturesSource.contains("state.manualConnectionResult = .request(ManualConnectionRequest("))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.endpointSynced(.init("))
+        #expect(actionsSource.contains(
+            "self.manualGatewayEndpointStore.send(.manualGatewayEnabledChanged(.init(isEnabled:"))
+        #expect(actionsSource.contains(
+            "self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(.init(host:"))
+        #expect(actionsSource.contains(
+            "self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(.init(useTLS:"))
+        #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.setupLinkApplied(.init("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionRequested("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)"))
         #expect(!actionsSource.contains("guard !host.isEmpty else"))

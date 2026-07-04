@@ -204,17 +204,31 @@ struct SettingsManualGatewayEndpointFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct EndpointSync: Equatable, Sendable {
+            var enabled: Bool
+            var host: String
+            var useTLS: Bool
+        }
+
+        struct ManualGatewayEnabledChange: Equatable, Sendable { var isEnabled: Bool }
+        struct ManualGatewayHostChange: Equatable, Sendable { var host: String }
+        struct ManualGatewayTLSChange: Equatable, Sendable { var useTLS: Bool }
+        struct SetupLinkApplication: Equatable, Sendable {
+            var host: String
+            var useTLS: Bool
+        }
+
         case endpointClearedForOnboardingReset
-        case endpointSynced(enabled: Bool, host: String, tls: Bool)
+        case endpointSynced(EndpointSync)
         case manualConnectionRequested(port: Int, isPortValid: Bool)
         case manualConnectionResultHandled
-        case manualGatewayEnabledChanged(Bool)
-        case manualGatewayHostChanged(String)
-        case manualGatewayTLSChanged(Bool)
+        case manualGatewayEnabledChanged(ManualGatewayEnabledChange)
+        case manualGatewayHostChanged(ManualGatewayHostChange)
+        case manualGatewayTLSChanged(ManualGatewayTLSChange)
         case preflightRequested(host: String, hasTailnetIPv4: Bool)
         case preflightResultHandled
         case localNetworkAccessRequested(reason: String)
-        case setupLinkApplied(host: String, tls: Bool)
+        case setupLinkApplied(SetupLinkApplication)
     }
 
     // swiftformat:enable redundantSendable
@@ -230,10 +244,10 @@ struct SettingsManualGatewayEndpointFeature {
                 state.manualGatewayHost = ""
                 return .none
 
-            case let .endpointSynced(enabled, host, tls):
-                state.manualGatewayEnabled = enabled
-                state.manualGatewayHost = host
-                state.manualGatewayTLS = tls
+            case let .endpointSynced(sync):
+                state.manualGatewayEnabled = sync.enabled
+                state.manualGatewayHost = sync.host
+                state.manualGatewayTLS = sync.useTLS
                 return .none
 
             case let .manualConnectionRequested(port, isPortValid):
@@ -281,21 +295,21 @@ struct SettingsManualGatewayEndpointFeature {
                     await localNetworkAccessClient.requestLocalNetworkAccess(reason)
                 }
 
-            case let .manualGatewayEnabledChanged(enabled):
-                state.manualGatewayEnabled = enabled
+            case let .manualGatewayEnabledChanged(change):
+                state.manualGatewayEnabled = change.isEnabled
                 return .none
 
-            case let .manualGatewayHostChanged(host):
-                state.manualGatewayHost = host
+            case let .manualGatewayHostChanged(change):
+                state.manualGatewayHost = change.host
                 return .none
 
-            case let .manualGatewayTLSChanged(tls):
-                state.manualGatewayTLS = tls
+            case let .manualGatewayTLSChanged(change):
+                state.manualGatewayTLS = change.useTLS
                 return .none
 
-            case let .setupLinkApplied(host, tls):
-                state.manualGatewayHost = host
-                state.manualGatewayTLS = tls
+            case let .setupLinkApplied(application):
+                state.manualGatewayHost = application.host
+                state.manualGatewayTLS = application.useTLS
                 return .none
             }
         }
