@@ -16,12 +16,12 @@ extension IPadWorkboardClient: DependencyKey {
     static let testValue = IPadWorkboardClient.unavailable
 
     private static let unavailable = IPadWorkboardClient(
-        listCards: { _ in throw IPadWorkboardError.failed("Workboard gateway unavailable.") },
-        listBoards: { throw IPadWorkboardError.failed("Workboard gateway unavailable.") },
-        create: { _ in throw IPadWorkboardError.failed("Workboard gateway unavailable.") },
-        move: { _ in throw IPadWorkboardError.failed("Workboard gateway unavailable.") },
-        archive: { _ in throw IPadWorkboardError.failed("Workboard gateway unavailable.") },
-        dispatch: { _ in throw IPadWorkboardError.failed("Workboard gateway unavailable.") })
+        listCards: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
+        listBoards: { throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
+        create: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
+        move: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
+        archive: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
+        dispatch: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
@@ -108,12 +108,14 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 enum IPadWorkboardError: Error, Equatable, Sendable {
-    case failed(String)
+    struct Failure: Equatable, Sendable { var message: String }
+
+    case failed(Failure)
 
     var message: String {
         switch self {
-        case let .failed(message):
-            message
+        case let .failed(failure):
+            failure.message
         }
     }
 }
@@ -469,7 +471,7 @@ struct IPadWorkboardFeature {
                         let card = try await client.archive(params)
                         await send(.archiveResponse(.init(result: .success(card))))
                     } catch {
-                        await send(.archiveResponse(.init(result: .failure(.failed(Self.message(for: error))))))
+                        await send(.archiveResponse(.init(result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -542,7 +544,7 @@ struct IPadWorkboardFeature {
                         let card = try await client.create(params)
                         await send(.createResponse(.init(result: .success(card))))
                     } catch {
-                        await send(.createResponse(.init(result: .failure(.failed(Self.message(for: error))))))
+                        await send(.createResponse(.init(result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -580,7 +582,7 @@ struct IPadWorkboardFeature {
                     } catch {
                         await send(.dispatchResponse(.init(
                             boardID: boardID,
-                            result: .failure(.failed(Self.message(for: error))))))
+                            result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -619,7 +621,7 @@ struct IPadWorkboardFeature {
                         let card = try await client.move(params)
                         await send(.moveResponse(.init(result: .success(card))))
                     } catch {
-                        await send(.moveResponse(.init(result: .failure(.failed(Self.message(for: error))))))
+                        await send(.moveResponse(.init(result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -672,7 +674,7 @@ struct IPadWorkboardFeature {
                         await send(.refreshResponse(.init(
                             boardID: boardID,
                             force: request.force,
-                            result: .failure(.failed(Self.message(for: error))))))
+                            result: .failure(Self.failure(for: error)))))
                     }
                 }
                 .cancellable(id: CancelID.refresh, cancelInFlight: true)
@@ -692,7 +694,7 @@ struct IPadWorkboardFeature {
                         } catch {
                             await send(.boardScopesResponse(.init(
                                 force: response.force,
-                                result: .failure(.failed(Self.message(for: error))))))
+                                result: .failure(Self.failure(for: error)))))
                         }
                     }
 
@@ -723,6 +725,10 @@ struct IPadWorkboardFeature {
             return gatewayError.message
         }
         return error.localizedDescription
+    }
+
+    private static func failure(for error: Error) -> IPadWorkboardError {
+        .failed(.init(message: self.message(for: error)))
     }
 }
 
