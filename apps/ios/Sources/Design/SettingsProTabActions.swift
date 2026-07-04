@@ -149,12 +149,12 @@ extension SettingsProTab {
         await self.notificationStore.send(.statusRefreshRequested).finish()
         self.handleNotificationStatusRefreshResult(self.notificationStore.statusRefreshResult)
 
-        self.diagnosticsStore.send(.diagnosticsCompletionRequested(
+        self.diagnosticsStore.send(.diagnosticsCompletionRequested(.init(
             gatewayConnected: self.gatewayDiagnosticConnected,
             discoveredGatewayCount: self.gatewayController.gateways.count,
             talkConfigLoaded: self.gatewayDiagnosticTalkConfigLoaded,
             notificationsAllowed: self.notificationStore.status == .allowed,
-            lastRunText: SettingsDiagnostics.timestamp(Date())))
+            lastRunText: SettingsDiagnostics.timestamp(Date()))))
     }
 
     func syncSettingsState() {
@@ -223,12 +223,12 @@ extension SettingsProTab {
     }
 
     func syncDiagnosticsContextState() {
-        self.diagnosticsStore.send(.diagnosticsContextSynced(
+        self.diagnosticsStore.send(.diagnosticsContextSynced(.init(
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
             gatewayConnected: self.gatewayConnected,
             discoveredGatewayCount: self.gatewayController.gateways.count,
             discoveryStatusText: self.gatewayController.discoveryStatusText,
-            screenRecordActive: self.appModel.screenRecordActive))
+            screenRecordActive: self.appModel.screenRecordActive)))
     }
 
     func syncApprovalState() {

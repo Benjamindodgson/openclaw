@@ -62,18 +62,24 @@ struct SettingsDiagnosticsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case diagnosticsContextSynced(
-            isAppleReviewDemoModeEnabled: Bool,
-            gatewayConnected: Bool,
-            discoveredGatewayCount: Int,
-            discoveryStatusText: String,
-            screenRecordActive: Bool)
-        case diagnosticsCompletionRequested(
-            gatewayConnected: Bool,
-            discoveredGatewayCount: Int,
-            talkConfigLoaded: Bool,
-            notificationsAllowed: Bool,
-            lastRunText: String)
+        struct DiagnosticsContextSync: Equatable, Sendable {
+            var isAppleReviewDemoModeEnabled: Bool
+            var gatewayConnected: Bool
+            var discoveredGatewayCount: Int
+            var discoveryStatusText: String
+            var screenRecordActive: Bool
+        }
+
+        struct DiagnosticsCompletionRequest: Equatable, Sendable {
+            var gatewayConnected: Bool
+            var discoveredGatewayCount: Int
+            var talkConfigLoaded: Bool
+            var notificationsAllowed: Bool
+            var lastRunText: String
+        }
+
+        case diagnosticsContextSynced(DiagnosticsContextSync)
+        case diagnosticsCompletionRequested(DiagnosticsCompletionRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -81,31 +87,21 @@ struct SettingsDiagnosticsFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .diagnosticsContextSynced(
-                isAppleReviewDemoModeEnabled,
-                gatewayConnected,
-                discoveredGatewayCount,
-                discoveryStatusText,
-                screenRecordActive):
-                state.isAppleReviewDemoModeEnabled = isAppleReviewDemoModeEnabled
-                state.gatewayConnected = gatewayConnected
-                state.discoveredGatewayCount = discoveredGatewayCount
-                state.discoveryStatusText = discoveryStatusText
-                state.screenRecordActive = screenRecordActive
+            case let .diagnosticsContextSynced(sync):
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
+                state.gatewayConnected = sync.gatewayConnected
+                state.discoveredGatewayCount = sync.discoveredGatewayCount
+                state.discoveryStatusText = sync.discoveryStatusText
+                state.screenRecordActive = sync.screenRecordActive
                 return .none
 
-            case let .diagnosticsCompletionRequested(
-                gatewayConnected,
-                discoveredGatewayCount,
-                talkConfigLoaded,
-                notificationsAllowed,
-                lastRunText):
+            case let .diagnosticsCompletionRequested(request):
                 state.issueCount = SettingsDiagnostics.issueCount(
-                    gatewayConnected: gatewayConnected,
-                    discoveredGatewayCount: discoveredGatewayCount,
-                    talkConfigLoaded: talkConfigLoaded,
-                    notificationsAllowed: notificationsAllowed)
-                state.lastRunText = lastRunText
+                    gatewayConnected: request.gatewayConnected,
+                    discoveredGatewayCount: request.discoveredGatewayCount,
+                    talkConfigLoaded: request.talkConfigLoaded,
+                    notificationsAllowed: request.notificationsAllowed)
+                state.lastRunText = request.lastRunText
                 return .none
             }
         }

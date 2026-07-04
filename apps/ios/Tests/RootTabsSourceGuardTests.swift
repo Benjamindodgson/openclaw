@@ -2478,7 +2478,10 @@ struct RootTabsSourceGuardTests {
             from: "func runDiagnostics()",
             to: "func syncSettingsState()")
 
-        #expect(diagnosticsSource.contains("case diagnosticsCompletionRequested("))
+        #expect(diagnosticsSource.contains("struct DiagnosticsContextSync: Equatable, Sendable"))
+        #expect(diagnosticsSource.contains("struct DiagnosticsCompletionRequest: Equatable, Sendable"))
+        #expect(diagnosticsSource.contains("case diagnosticsContextSynced(DiagnosticsContextSync)"))
+        #expect(diagnosticsSource.contains("case diagnosticsCompletionRequested(DiagnosticsCompletionRequest)"))
         #expect(supportSource.contains("struct SettingsGatewayDiagnosticsRefreshClient"))
         #expect(supportSource.contains("var settingsGatewayDiagnosticsRefresh: SettingsGatewayDiagnosticsRefreshClient"))
         #expect(settingsSource.contains("struct DiagnosticsRefreshRequest: Equatable, Sendable"))
@@ -2493,7 +2496,11 @@ struct RootTabsSourceGuardTests {
         #expect(runDiagnosticsFunction
             .contains(".send(.diagnosticsRefreshRequested(.init(" +
                 "isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled)))"))
-        #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsCompletionRequested("))
+        #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsCompletionRequested(.init("))
+        #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsContextSynced(.init("))
+        #expect(!diagnosticsSource.contains("case diagnosticsCompletionRequested(\n            gatewayConnected: Bool"))
+        #expect(!diagnosticsSource.contains("case diagnosticsContextSynced(\n" +
+            "            isAppleReviewDemoModeEnabled: Bool"))
         #expect(runDiagnosticsFunction.contains("await self.notificationStore.send(.statusRefreshRequested).finish()"))
         #expect(runDiagnosticsFunction.contains("self.handleNotificationStatusRefreshResult"))
         #expect(rootSource.contains("gatewayActivityStore: self.makeSettingsGatewayActivityStore()"))
