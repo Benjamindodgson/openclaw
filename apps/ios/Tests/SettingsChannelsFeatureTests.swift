@@ -46,7 +46,7 @@ struct SettingsChannelsFeatureTests {
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(.init(force: false, result: .failure(.failed("boom"))))) {
+        await store.receive(.refreshResponse(.init(force: false, result: .failure(.failed(.init(message: "boom")))))) {
             $0.isLoading = false
         }
     }
@@ -61,7 +61,7 @@ struct SettingsChannelsFeatureTests {
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(.init(force: true, result: .failure(.failed("boom"))))) {
+        await store.receive(.refreshResponse(.init(force: true, result: .failure(.failed(.init(message: "boom")))))) {
             $0.isLoading = false
             $0.errorText = "boom"
         }
