@@ -1657,6 +1657,31 @@ struct RootTabsSourceGuardTests {
         #expect(!storedDebugChange.contains("self.gatewayController.setDiscoveryDebugLoggingEnabled(newValue)"))
     }
 
+    @Test func `settings agent selection persistence is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let agentSelectionBinding = try Self.extract(
+            settingsSource,
+            from: "var agentSelectionBinding: Binding<String>",
+            to: "private var gatewayProblemDetailsBinding")
+        let externalAgentSync = try Self.extract(
+            settingsSource,
+            from: ".onChange(of: self.appModel.selectedAgentId ?? \"\")",
+            to: ".onChange(of: self.storedSetupCode)")
+
+        #expect(settingsSource.contains("struct SettingsSelectedAgentClient: Sendable"))
+        #expect(settingsSource.contains("var settingsSelectedAgent: SettingsSelectedAgentClient"))
+        #expect(settingsSource.contains("@Dependency(\\.settingsSelectedAgent)"))
+        #expect(settingsSource.contains("await selectedAgentClient.setSelectedAgentId(selectedAgentId)"))
+        #expect(rootSource.contains("agentSelectionStore: self.makeSettingsAgentSelectionStore()"))
+        #expect(rootSource.contains("private func makeSettingsAgentSelectionStore()"))
+        #expect(rootSource.contains("selectedAgentClient: .live(appModel: self.appModel)"))
+        #expect(agentSelectionBinding.contains(".pickerSelectionChanged($0)"))
+        #expect(!settingsSource.contains("self.appModel.setSelectedAgentId(trimmed.isEmpty ? nil : trimmed)"))
+        #expect(externalAgentSync.contains(".selectedAgentSynced(newValue)"))
+        #expect(!externalAgentSync.contains(".pickerSelectionChanged"))
+    }
+
     @Test func `home canvas payload state is reducer owned`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
 

@@ -661,8 +661,40 @@ struct SettingsGatewayCredentialsFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct SettingsSelectedAgentClient: Sendable {
+    var setSelectedAgentId: @MainActor @Sendable (String?) -> Void
+}
+
+// swiftformat:enable redundantSendable
+
+extension SettingsSelectedAgentClient: DependencyKey {
+    static let liveValue = SettingsSelectedAgentClient(setSelectedAgentId: { _ in })
+    static let testValue = SettingsSelectedAgentClient(setSelectedAgentId: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        SettingsSelectedAgentClient(setSelectedAgentId: { selectedAgentId in
+            appModel.setSelectedAgentId(selectedAgentId)
+        })
+    }
+}
+
+extension DependencyValues {
+    var settingsSelectedAgent: SettingsSelectedAgentClient {
+        get { self[SettingsSelectedAgentClient.self] }
+        set { self[SettingsSelectedAgentClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct SettingsAgentSelectionFeature {
+    private let selectedAgentClientOverride: SettingsSelectedAgentClient?
+
+    init(selectedAgentClient: SettingsSelectedAgentClient? = nil) {
+        self.selectedAgentClientOverride = selectedAgentClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -678,10 +710,17 @@ struct SettingsAgentSelectionFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.settingsSelectedAgent) var dependencySelectedAgentClient
+            let selectedAgentClient = self.selectedAgentClientOverride ?? dependencySelectedAgentClient
+
             switch action {
             case let .pickerSelectionChanged(selectedAgentPickerId):
                 state.selectedAgentPickerId = selectedAgentPickerId
-                return .none
+                let trimmed = selectedAgentPickerId.trimmingCharacters(in: .whitespacesAndNewlines)
+                let selectedAgentId = trimmed.isEmpty ? nil : trimmed
+                return .run { _ in
+                    await selectedAgentClient.setSelectedAgentId(selectedAgentId)
+                }
 
             case let .selectedAgentSynced(selectedAgentId):
                 state.selectedAgentPickerId = selectedAgentId ?? ""
@@ -1177,11 +1216,7 @@ struct SettingsProTab: View {
         SettingsApprovalsFeature()
     }
 
-    @State var agentSelectionStore: StoreOf<SettingsAgentSelectionFeature> = Store(
-        initialState: SettingsAgentSelectionFeature.State())
-    {
-        SettingsAgentSelectionFeature()
-    }
+    @State var agentSelectionStore: StoreOf<SettingsAgentSelectionFeature>
 
     @State var shareInstructionStore: StoreOf<SettingsShareInstructionFeature> = Store(
         initialState: SettingsShareInstructionFeature.State())
@@ -1327,6 +1362,11 @@ struct SettingsProTab: View {
         {
             SettingsDebugOptionsFeature()
         },
+        agentSelectionStore: StoreOf<SettingsAgentSelectionFeature> = Store(
+            initialState: SettingsAgentSelectionFeature.State())
+        {
+            SettingsAgentSelectionFeature()
+        },
         manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature> = Store(
             initialState: SettingsManualGatewayEndpointFeature.State())
         {
@@ -1376,6 +1416,7 @@ struct SettingsProTab: View {
         self.navigateToRoute = navigateToRoute
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
+        self._agentSelectionStore = State(wrappedValue: agentSelectionStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)
         self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
@@ -1489,10 +1530,6 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.manualGatewayPortStore.manualGatewayPort) { _, newValue in
                 self.storedManualGatewayPort = newValue
-            }
-            .onChange(of: self.agentSelectionStore.selectedAgentPickerId) { _, newValue in
-                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                self.appModel.setSelectedAgentId(trimmed.isEmpty ? nil : trimmed)
             }
             .onChange(of: self.appModel.selectedAgentId ?? "") { _, newValue in
                 if newValue != self.agentSelectionStore.selectedAgentPickerId {
