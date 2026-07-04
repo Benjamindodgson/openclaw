@@ -947,11 +947,11 @@ extension OnboardingWizardView {
         } else {
             ("openclaw.local", 18789, true)
         }
-        self.connectionFormStore.send(.initialized(
+        self.connectionFormStore.send(.initialized(.init(
             host: initialConnection.host,
             port: initialConnection.port,
             tls: initialConnection.tls,
-            lastMode: OnboardingStateStore.lastMode()))
+            lastMode: OnboardingStateStore.lastMode())))
 
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedInstanceId.isEmpty {

@@ -690,11 +690,11 @@ import Testing
             OnboardingConnectionFormFeature()
         }
 
-        await store.send(.initialized(
+        await store.send(.initialized(.init(
             host: "openclaw.local",
             port: 18789,
             tls: true,
-            lastMode: .developerLocal))
+            lastMode: .developerLocal)))
         {
             $0.selectedMode = .developerLocal
             $0.manualHost = "localhost"
