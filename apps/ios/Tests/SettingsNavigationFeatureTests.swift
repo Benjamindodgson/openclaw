@@ -1755,10 +1755,10 @@ struct SettingsNavigationFeatureTests {
             SettingsAgentSelectionFeature(selectedAgentClient: selectedAgentProbe.client)
         }
 
-        await store.send(.pickerSelectionChanged(" agent-1 ")) {
+        await store.send(.pickerSelectionChanged(.init(selectedAgentPickerId: " agent-1 "))) {
             $0.selectedAgentPickerId = " agent-1 "
         }
-        await store.send(.pickerSelectionChanged("   ")) {
+        await store.send(.pickerSelectionChanged(.init(selectedAgentPickerId: "   "))) {
             $0.selectedAgentPickerId = "   "
         }
         await store.finish()
@@ -1775,10 +1775,10 @@ struct SettingsNavigationFeatureTests {
             SettingsAgentSelectionFeature()
         }
 
-        await store.send(.selectedAgentSynced("agent-2")) {
+        await store.send(.selectedAgentSynced(.init(selectedAgentId: "agent-2"))) {
             $0.selectedAgentPickerId = "agent-2"
         }
-        await store.send(.selectedAgentSynced(nil)) {
+        await store.send(.selectedAgentSynced(.init(selectedAgentId: nil))) {
             $0.selectedAgentPickerId = ""
         }
     }

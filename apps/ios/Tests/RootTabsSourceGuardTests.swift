@@ -2173,14 +2173,18 @@ struct RootTabsSourceGuardTests {
 
         #expect(settingsSource.contains("struct SettingsSelectedAgentClient: Sendable"))
         #expect(settingsSource.contains("var settingsSelectedAgent: SettingsSelectedAgentClient"))
+        #expect(settingsSource.contains("struct PickerSelectionChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct SelectedAgentSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("case pickerSelectionChanged(PickerSelectionChange)"))
+        #expect(settingsSource.contains("case selectedAgentSynced(SelectedAgentSync)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsSelectedAgent)"))
         #expect(settingsSource.contains("await selectedAgentClient.setSelectedAgentId(selectedAgentId)"))
         #expect(rootSource.contains("agentSelectionStore: self.makeSettingsAgentSelectionStore()"))
         #expect(storesSource.contains("func makeSettingsAgentSelectionStore()"))
         #expect(storesSource.contains("selectedAgentClient: .live(appModel: self.appModel)"))
-        #expect(agentSelectionBinding.contains(".pickerSelectionChanged($0)"))
+        #expect(agentSelectionBinding.contains(".pickerSelectionChanged(.init(selectedAgentPickerId: $0))"))
         #expect(!settingsSource.contains("self.appModel.setSelectedAgentId(trimmed.isEmpty ? nil : trimmed)"))
-        #expect(externalAgentSync.contains(".selectedAgentSynced(newValue)"))
+        #expect(externalAgentSync.contains(".selectedAgentSynced(.init(selectedAgentId: newValue))"))
         #expect(!externalAgentSync.contains(".pickerSelectionChanged"))
     }
 
