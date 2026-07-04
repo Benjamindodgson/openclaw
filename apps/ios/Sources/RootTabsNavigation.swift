@@ -42,6 +42,10 @@ struct RootPresentationFeature {
         var discoveredGatewayCount: Int
     }
 
+    struct QuickSetupSnapshotChange: Equatable, Sendable {
+        var snapshot: QuickSetupSnapshot
+    }
+
     struct SidebarGatewayStatusChange: Equatable, Sendable {
         var status: GatewayDisplayState
     }
@@ -228,7 +232,7 @@ struct RootPresentationFeature {
         case refreshPresentation
         case sidebarGatewayStatusChanged(SidebarGatewayStatusChange)
         case startupSnapshotChanged(StartupSnapshotChange)
-        case quickSetupSnapshotChanged(QuickSetupSnapshot)
+        case quickSetupSnapshotChanged(QuickSetupSnapshotChange)
         case presentedSheetChanged(PresentedSheetChange)
         case startupPresentationEvaluationRequested(StartupPresentationEvaluationRequest)
         case forceOnboardingRequested
@@ -258,7 +262,8 @@ struct RootPresentationFeature {
                 state.apply(startupSnapshot: change.snapshot)
                 return .none
 
-            case let .quickSetupSnapshotChanged(snapshot):
+            case let .quickSetupSnapshotChanged(change):
+                let snapshot = change.snapshot
                 state.quickSetupDismissed = snapshot.quickSetupDismissed
                 state.showOnboarding = snapshot.showOnboarding
                 state.gatewayConnected = snapshot.gatewayConnected
