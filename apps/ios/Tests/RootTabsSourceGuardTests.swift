@@ -1086,6 +1086,19 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("switch response.result"))
     }
 
+    @Test func `command sessions refresh response action is typed`() throws {
+        let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
+        let feature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct CommandSessionsFeature",
+            to: "enum CommandSessionsStoreFactory")
+
+        #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
+        #expect(feature.contains("case refreshResponse(RefreshResponse)"))
+        #expect(feature.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
+        #expect(feature.contains("switch response.result"))
+    }
+
     @Test func `routed feature screens reuse shared pro components`() throws {
         let source = try Self.iPadTaskFeatureScreensSource()
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
@@ -2708,6 +2721,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/CommandCenterTab.swift")
+    }
+
+    private static func commandSessionsFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/CommandSessionsFeature.swift")
     }
 
     private static func commandCenterSupportSourceURL() -> URL {

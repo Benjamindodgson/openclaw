@@ -54,8 +54,12 @@ struct CommandSessionsFeature {
             var sessionsAvailable: Bool
         }
 
+        struct RefreshResponse: Equatable, Sendable {
+            var result: Result<[OpenClawChatSessionEntry], CommandSessionsError>
+        }
+
         case refreshRequested(RefreshRequest)
-        case refreshResponse(Result<[OpenClawChatSessionEntry], CommandSessionsError>)
+        case refreshResponse(RefreshResponse)
     }
 
     // swiftformat:enable redundantSendable
@@ -79,23 +83,26 @@ struct CommandSessionsFeature {
                 return .run { send in
                     do {
                         let sessions = try await client.listSessions(CommandCenterTab.recentSessionsFetchLimit)
-                        await send(.refreshResponse(.success(sessions)))
+                        await send(.refreshResponse(.init(result: .success(sessions))))
                     } catch {
-                        await send(.refreshResponse(.failure(.failed)))
+                        await send(.refreshResponse(.init(result: .failure(.failed))))
                     }
                 }
 
-            case let .refreshResponse(.success(sessions)):
-                state.isLoading = false
-                state.sessions = sessions
-                state.loadErrorText = nil
-                return .none
+            case let .refreshResponse(response):
+                switch response.result {
+                case let .success(sessions):
+                    state.isLoading = false
+                    state.sessions = sessions
+                    state.loadErrorText = nil
+                    return .none
 
-            case .refreshResponse(.failure):
-                state.isLoading = false
-                state.sessions = []
-                state.loadErrorText = "Try again after the gateway reconnects."
-                return .none
+                case .failure:
+                    state.isLoading = false
+                    state.sessions = []
+                    state.loadErrorText = "Try again after the gateway reconnects."
+                    return .none
+                }
             }
         }
         .autoLogActions()
