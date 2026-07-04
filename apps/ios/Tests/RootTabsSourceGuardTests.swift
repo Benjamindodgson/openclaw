@@ -454,6 +454,27 @@ struct RootTabsSourceGuardTests {
         #expect(!refreshFunction.contains("await self.appModel.refreshGatewayOverviewIfConnected()"))
     }
 
+    @Test func `root canvas close action is reducer effect owned`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let featureSource = try String(contentsOf: Self.rootCanvasPresentationSourceURL(), encoding: .utf8)
+        let closeFunction = try Self.extract(
+            rootSource,
+            from: "private func closeCanvasPresentation() async",
+            to: "private var voiceWakeToastAnimation")
+
+        #expect(featureSource.contains("struct RootCanvasPresentationClient"))
+        #expect(featureSource.contains("var rootCanvasPresentation: RootCanvasPresentationClient"))
+        #expect(featureSource.contains("@Reducer\nstruct RootCanvasPresentationFeature"))
+        #expect(featureSource.contains("case closeButtonTapped"))
+        #expect(featureSource.contains("@Dependency(\\.rootCanvasPresentation)"))
+        #expect(featureSource.contains("await client.hideCanvas()"))
+        #expect(rootSource.contains("private func makeCanvasPresentationStore()"))
+        #expect(rootSource.contains("Task { await self.closeCanvasPresentation() }"))
+        #expect(closeFunction.contains(".send(.closeButtonTapped)"))
+        #expect(!closeFunction.contains("self.appModel.screen.hideCanvas()"))
+        #expect(!rootSource.contains("Button {\n                self.appModel.screen.hideCanvas()"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)
@@ -1901,6 +1922,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/RootGatewayOverviewRefreshFeature.swift")
+    }
+
+    private static func rootCanvasPresentationSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/RootCanvasPresentationFeature.swift")
     }
 
     private static func nodeAppModelSourceURL() -> URL {

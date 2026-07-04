@@ -231,6 +231,18 @@ struct RootTabsPresentationTests {
         #expect(probe.refreshCount == 1)
     }
 
+    @Test func `canvas presentation reducer hides canvas through client`() async {
+        let probe = RootCanvasPresentationProbe()
+        let store = TestStore(initialState: RootCanvasPresentationFeature.State()) {
+            RootCanvasPresentationFeature(client: probe.client)
+        }
+
+        await store.send(.closeButtonTapped)
+        await store.finish()
+
+        #expect(probe.hideCount == 1)
+    }
+
     @Test func `gateway problem reducer trusts rotated certificate instead of retrying`() async {
         let probe = RootGatewayProblemPrimaryActionProbe()
         let problem = Self.rotatedCertificateProblem()
@@ -1348,6 +1360,16 @@ struct RootTabsPresentationTests {
             message: "Open settings to review gateway configuration.",
             retryable: false,
             pauseReconnect: true)
+    }
+}
+
+private final class RootCanvasPresentationProbe: @unchecked Sendable {
+    var hideCount = 0
+
+    var client: RootCanvasPresentationClient {
+        RootCanvasPresentationClient(hideCanvas: {
+            self.hideCount += 1
+        })
     }
 }
 
