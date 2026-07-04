@@ -1908,6 +1908,8 @@ struct RootTabsSourceGuardTests {
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
 
         #expect(gatewaySetupFeaturesSource.contains("enum ManualConnectionResult: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct Failure: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("case failure(Failure)"))
         #expect(gatewaySetupFeaturesSource.contains("struct EndpointSync: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayEnabledChange: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayHostChange: Equatable, Sendable"))
@@ -1923,6 +1925,7 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("case manualGatewayTLSChanged(ManualGatewayTLSChange)"))
         #expect(gatewaySetupFeaturesSource.contains("case setupLinkApplied(SetupLinkApplication)"))
         #expect(gatewaySetupFeaturesSource.contains("case manualConnectionRequested(ManualConnectionAttempt)"))
+        #expect(gatewaySetupFeaturesSource.contains("state.manualConnectionResult = .failure(.init(message:"))
         #expect(gatewaySetupFeaturesSource.contains("state.manualConnectionResult = .request(ManualConnectionRequest("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.endpointSynced(.init("))
         #expect(actionsSource.contains(
@@ -1934,6 +1937,8 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.setupLinkApplied(.init("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionRequested(.init("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)"))
+        #expect(actionsSource.contains("self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))
+        #expect(!gatewaySetupFeaturesSource.contains("case failure(String)"))
         #expect(!actionsSource.contains("guard !host.isEmpty else"))
         #expect(!actionsSource.contains("guard self.manualPortIsValid else"))
     }

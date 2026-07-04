@@ -202,7 +202,9 @@ struct SettingsManualGatewayEndpointFeature {
     }
 
     enum ManualConnectionResult: Equatable, Sendable {
-        case failure(String)
+        struct Failure: Equatable, Sendable { var message: String }
+
+        case failure(Failure)
         case request(ManualConnectionRequest)
     }
 
@@ -282,11 +284,11 @@ struct SettingsManualGatewayEndpointFeature {
                 state.manualConnectionResult = nil
                 let host = state.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !host.isEmpty else {
-                    state.manualConnectionResult = .failure("Failed: host required")
+                    state.manualConnectionResult = .failure(.init(message: "Failed: host required"))
                     return .none
                 }
                 guard request.isPortValid else {
-                    state.manualConnectionResult = .failure("Failed: invalid port")
+                    state.manualConnectionResult = .failure(.init(message: "Failed: invalid port"))
                     return .none
                 }
                 state.manualConnectionResult = .request(ManualConnectionRequest(

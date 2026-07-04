@@ -404,8 +404,8 @@ extension SettingsProTab {
         self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)
 
         switch result {
-        case let .failure(message):
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: message)))
+        case let .failure(failure):
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))
 
         case let .request(request):
             self.gatewayConnectionStore.send(.connectionStarted(.init(gatewayID: "manual")))
