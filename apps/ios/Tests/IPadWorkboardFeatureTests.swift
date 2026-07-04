@@ -26,10 +26,10 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature()
         }
 
-        await store.send(.draftTitleChanged("  Ship TCA  ")) {
+        await store.send(.draftTitleChanged(.init(title: "  Ship TCA  "))) {
             $0.draftTitle = "  Ship TCA  "
         }
-        await store.send(.draftNotesChanged("notes")) {
+        await store.send(.draftNotesChanged(.init(notes: "notes"))) {
             $0.draftNotes = "notes"
         }
         await store.send(.queryChanged("gateway")) {
