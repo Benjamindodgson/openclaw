@@ -192,6 +192,20 @@ struct RootHomeCanvasFeature {
     }
 }
 
+extension RootHomeCanvasFeature.Snapshot {
+    @MainActor
+    init(appModel: NodeAppModel, gatewayStatus: GatewayDisplayState) {
+        self.init(
+            gatewayStatus: gatewayStatus,
+            gatewayServerName: appModel.gatewayServerName,
+            gatewayRemoteAddress: appModel.gatewayRemoteAddress,
+            selectedAgentID: appModel.selectedAgentId,
+            gatewayDefaultAgentID: appModel.gatewayDefaultAgentId,
+            activeAgentName: appModel.activeAgentName,
+            agents: appModel.gatewayAgents.map(RootHomeCanvasFeature.AgentSnapshot.init(agent:)))
+    }
+}
+
 extension RootHomeCanvasFeature.AgentSnapshot {
     init(agent: AgentSummary) {
         self.init(
