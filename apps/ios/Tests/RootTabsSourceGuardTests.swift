@@ -673,6 +673,15 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("await send(.permissionRequestFinished(.init("))
     }
 
+    @Test func `privacy snapshot load action is typed`() throws {
+        let source = try String(contentsOf: Self.privacyAccessSectionSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct SnapshotLoad: Equatable, Sendable"))
+        #expect(source.contains("case snapshotLoaded(SnapshotLoad)"))
+        #expect(source.contains("state.apply(load.snapshot)"))
+        #expect(source.contains("await send(.snapshotLoaded(.init(snapshot: client.snapshot())))"))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)

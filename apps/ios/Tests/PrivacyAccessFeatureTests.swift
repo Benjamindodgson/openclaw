@@ -24,7 +24,7 @@ struct PrivacyAccessFeatureTests {
         }
 
         await store.send(.appeared)
-        await store.receive(.snapshotLoaded(probe.snapshot)) {
+        await store.receive(.snapshotLoaded(.init(snapshot: probe.snapshot))) {
             $0.contactsStatus = .allowed
             $0.calendarWriteStatus = .allowed
             $0.calendarReadStatus = .addOnly
