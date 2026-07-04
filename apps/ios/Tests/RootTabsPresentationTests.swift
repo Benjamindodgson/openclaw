@@ -420,19 +420,19 @@ struct RootTabsPresentationTests {
             RootPresentationFeature()
         }
 
-        await store.send(.sidebarGatewayStatusChanged(.connected)) {
+        await store.send(.sidebarGatewayStatusChanged(Self.sidebarGatewayStatusChange(.connected))) {
             $0.sidebarGatewayStatus = .connected
         }
         #expect(store.state.sidebarGatewayStatusTitle == "Online")
         #expect(store.state.sidebarGatewayStatusColor == OpenClawBrand.ok)
 
-        await store.send(.sidebarGatewayStatusChanged(.error)) {
+        await store.send(.sidebarGatewayStatusChanged(Self.sidebarGatewayStatusChange(.error))) {
             $0.sidebarGatewayStatus = .error
         }
         #expect(store.state.sidebarGatewayStatusTitle == "Needs attention")
         #expect(store.state.sidebarGatewayStatusColor == OpenClawBrand.warn)
 
-        await store.send(.sidebarGatewayStatusChanged(.disconnected)) {
+        await store.send(.sidebarGatewayStatusChanged(Self.sidebarGatewayStatusChange(.disconnected))) {
             $0.sidebarGatewayStatus = .disconnected
         }
         #expect(store.state.sidebarGatewayStatusTitle == "Offline")
@@ -712,7 +712,7 @@ struct RootTabsPresentationTests {
             $0.presentedSheet = .quickSetup
         }
 
-        await store.send(.presentedSheetChanged(nil)) {
+        await store.send(.presentedSheetChanged(Self.presentedSheetChange(nil))) {
             $0.presentedSheet = nil
             $0.shouldPresentQuickSetup = true
         }
@@ -1474,6 +1474,20 @@ struct RootTabsPresentationTests {
 
     private static func gatewaySetupRequest(requestID: Int) -> RootPresentationFeature.GatewaySetupRequest {
         RootPresentationFeature.GatewaySetupRequest(requestID: requestID)
+    }
+
+    private static func sidebarGatewayStatusChange(
+        _ status: GatewayDisplayState)
+        -> RootPresentationFeature.SidebarGatewayStatusChange
+    {
+        RootPresentationFeature.SidebarGatewayStatusChange(status: status)
+    }
+
+    private static func presentedSheetChange(
+        _ sheet: RootPresentationFeature.PresentedSheet?)
+        -> RootPresentationFeature.PresentedSheetChange
+    {
+        RootPresentationFeature.PresentedSheetChange(sheet: sheet)
     }
 
     private static func sidebarLayoutModeResolution(
