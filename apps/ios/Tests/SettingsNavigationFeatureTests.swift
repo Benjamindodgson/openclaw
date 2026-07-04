@@ -354,7 +354,7 @@ struct SettingsNavigationFeatureTests {
             SettingsAppearanceFeature()
         }
 
-        await store.send(.appearancePreferenceSynced(AppAppearancePreference.dark.rawValue)) {
+        await store.send(.appearancePreferenceSynced(.init(rawValue: AppAppearancePreference.dark.rawValue))) {
             $0.appearancePreferenceRaw = AppAppearancePreference.dark.rawValue
         }
     }
@@ -364,7 +364,7 @@ struct SettingsNavigationFeatureTests {
             SettingsAppearanceFeature()
         }
 
-        await store.send(.appearancePreferenceChanged(AppAppearancePreference.light.rawValue)) {
+        await store.send(.appearancePreferenceChanged(.init(rawValue: AppAppearancePreference.light.rawValue))) {
             $0.appearancePreferenceRaw = AppAppearancePreference.light.rawValue
         }
     }

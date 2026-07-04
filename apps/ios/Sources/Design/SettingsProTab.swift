@@ -997,8 +997,12 @@ struct SettingsAppearanceFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case appearancePreferenceChanged(String)
-        case appearancePreferenceSynced(String)
+        struct AppearancePreferenceChange: Equatable, Sendable { var rawValue: String }
+
+        struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: String }
+
+        case appearancePreferenceChanged(AppearancePreferenceChange)
+        case appearancePreferenceSynced(AppearancePreferenceSync)
     }
 
     // swiftformat:enable redundantSendable
@@ -1006,12 +1010,12 @@ struct SettingsAppearanceFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .appearancePreferenceChanged(rawValue):
-                state.appearancePreferenceRaw = rawValue
+            case let .appearancePreferenceChanged(change):
+                state.appearancePreferenceRaw = change.rawValue
                 return .none
 
-            case let .appearancePreferenceSynced(rawValue):
-                state.appearancePreferenceRaw = rawValue
+            case let .appearancePreferenceSynced(sync):
+                state.appearancePreferenceRaw = sync.rawValue
                 return .none
             }
         }
@@ -1594,7 +1598,7 @@ struct SettingsProTab: View {
                 }
             }
             .onChange(of: self.storedAppearancePreferenceRaw) { _, newValue in
-                self.appearanceStore.send(.appearancePreferenceSynced(newValue))
+                self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: newValue)))
             }
             .onChange(of: self.storedDisplayName) { _, newValue in
                 self.deviceIdentityStore.send(.displayNameSynced(newValue))
