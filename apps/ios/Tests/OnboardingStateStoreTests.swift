@@ -715,7 +715,7 @@ import Testing
 
         await store.send(.manualConnectionRequested)
 
-        await store.send(.modeSelected(.remoteDomain)) {
+        await store.send(.modeSelected(.init(mode: .remoteDomain))) {
             $0.selectedMode = .remoteDomain
             $0.manualHost = ""
             $0.manualPort = 18789
