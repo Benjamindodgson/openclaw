@@ -67,7 +67,11 @@ struct RootGatewayProblemPrimaryActionFeature {
     struct State: Equatable, Sendable {}
 
     enum Action: Equatable, Sendable {
-        case primaryActionTapped(GatewayConnectionProblem)
+        struct PrimaryActionRequest: Equatable, Sendable {
+            var problem: GatewayConnectionProblem
+        }
+
+        case primaryActionTapped(PrimaryActionRequest)
     }
 
     // swiftformat:enable redundantSendable
@@ -78,7 +82,8 @@ struct RootGatewayProblemPrimaryActionFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
-            case let .primaryActionTapped(problem):
+            case let .primaryActionTapped(request):
+                let problem = request.problem
                 if problem.canTrustRotatedCertificate {
                     return .run { _ in
                         _ = await client.trustRotatedCertificate(problem)

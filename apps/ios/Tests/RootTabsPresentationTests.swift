@@ -308,7 +308,7 @@ struct RootTabsPresentationTests {
             RootGatewayProblemPrimaryActionFeature(client: probe.client)
         }
 
-        await store.send(.primaryActionTapped(problem))
+        await store.send(.primaryActionTapped(.init(problem: problem)))
         await store.finish()
 
         #expect(probe.trustedProblems == [problem])
@@ -323,7 +323,7 @@ struct RootTabsPresentationTests {
             RootGatewayProblemPrimaryActionFeature(client: probe.client)
         }
 
-        await store.send(.primaryActionTapped(problem))
+        await store.send(.primaryActionTapped(.init(problem: problem)))
         await store.finish()
 
         #expect(probe.openedProblems == [problem])
@@ -337,7 +337,7 @@ struct RootTabsPresentationTests {
             RootGatewayProblemPrimaryActionFeature(client: probe.client)
         }
 
-        await store.send(.primaryActionTapped(Self.retryableGatewayProblem()))
+        await store.send(.primaryActionTapped(.init(problem: Self.retryableGatewayProblem())))
         await store.finish()
 
         #expect(probe.reconnectCount == 1)
@@ -350,7 +350,7 @@ struct RootTabsPresentationTests {
             RootGatewayProblemPrimaryActionFeature(client: probe.client)
         }
 
-        await store.send(.primaryActionTapped(Self.nonRetryableGatewayProblem()))
+        await store.send(.primaryActionTapped(.init(problem: Self.nonRetryableGatewayProblem())))
         await store.finish()
 
         #expect(probe.openSettingsCount == 1)

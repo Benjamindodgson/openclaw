@@ -1040,7 +1040,7 @@ extension RootTabs {
 
     private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
         await self.makeGatewayProblemPrimaryActionStore()
-            .send(.primaryActionTapped(problem))
+            .send(.primaryActionTapped(.init(problem: problem)))
             .finish()
     }
 
