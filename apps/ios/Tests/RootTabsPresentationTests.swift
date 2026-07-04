@@ -551,7 +551,9 @@ struct RootTabsPresentationTests {
             RootLaunchFeature()
         }
 
-        await store.send(.initialAppearanceRequested(AppAppearancePreference.dark.rawValue)) {
+        await store.send(.initialAppearanceRequested(Self.initialAppearanceRequest(
+            AppAppearancePreference.dark.rawValue)))
+        {
             $0.didApplyInitialAppearance = true
             $0.command = .applyAppearance(rawValue: AppAppearancePreference.dark.rawValue)
         }
@@ -560,7 +562,8 @@ struct RootTabsPresentationTests {
             $0.command = nil
         }
 
-        await store.send(.initialAppearanceRequested(AppAppearancePreference.light.rawValue))
+        await store.send(.initialAppearanceRequested(Self.initialAppearanceRequest(
+            AppAppearancePreference.light.rawValue)))
     }
 
     @Test func `launch reducer marks appearance applied without launch argument`() async {
@@ -568,7 +571,7 @@ struct RootTabsPresentationTests {
             RootLaunchFeature()
         }
 
-        await store.send(.initialAppearanceRequested(nil)) {
+        await store.send(.initialAppearanceRequested(Self.initialAppearanceRequest(nil))) {
             $0.didApplyInitialAppearance = true
         }
     }
@@ -578,7 +581,7 @@ struct RootTabsPresentationTests {
             RootLaunchFeature()
         }
 
-        await store.send(.initialChatSessionRequested("session-1")) {
+        await store.send(.initialChatSessionRequested(Self.initialChatSessionRequest("session-1"))) {
             $0.didApplyInitialChatSession = true
             $0.command = .focusChatSession("session-1")
         }
@@ -587,7 +590,7 @@ struct RootTabsPresentationTests {
             $0.command = nil
         }
 
-        await store.send(.initialChatSessionRequested("session-2"))
+        await store.send(.initialChatSessionRequested(Self.initialChatSessionRequest("session-2")))
     }
 
     @Test func `voice wake toast reducer shows trimmed command and dismisses after delay`() async {
@@ -1552,6 +1555,20 @@ struct RootTabsPresentationTests {
         -> RootPresentationFeature.PresentedSheetChange
     {
         RootPresentationFeature.PresentedSheetChange(sheet: sheet)
+    }
+
+    private static func initialAppearanceRequest(
+        _ rawValue: String?)
+        -> RootLaunchFeature.InitialAppearanceRequest
+    {
+        RootLaunchFeature.InitialAppearanceRequest(rawValue: rawValue)
+    }
+
+    private static func initialChatSessionRequest(
+        _ sessionKey: String?)
+        -> RootLaunchFeature.InitialChatSessionRequest
+    {
+        RootLaunchFeature.InitialChatSessionRequest(sessionKey: sessionKey)
     }
 
     private static func sidebarLayoutModeResolution(
