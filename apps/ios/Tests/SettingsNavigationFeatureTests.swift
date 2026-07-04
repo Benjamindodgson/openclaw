@@ -1056,7 +1056,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature()
         }
 
-        await store.send(.credentialsLoaded(token: "token-1", password: "password-1")) {
+        await store.send(.credentialsLoaded(.init(token: "token-1", password: "password-1"))) {
             $0.gatewayToken = "token-1"
             $0.gatewayPassword = "password-1"
         }
@@ -1070,7 +1070,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.credentialsLoadRequested(instanceId: " instance-1 ")) {
+        await store.send(.credentialsLoadRequested(.init(instanceId: " instance-1 "))) {
             $0.gatewayToken = "token-1"
             $0.gatewayPassword = "password-1"
         }
@@ -1085,7 +1085,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.credentialsLoadRequested(instanceId: " "))
+        await store.send(.credentialsLoadRequested(.init(instanceId: " ")))
 
         #expect(probe.loadedInstanceIds.isEmpty)
     }

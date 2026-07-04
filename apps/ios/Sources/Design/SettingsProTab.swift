@@ -533,9 +533,15 @@ struct SettingsGatewayCredentialsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct CredentialsLoadRequest: Equatable, Sendable { var instanceId: String }
+        struct LoadedCredentials: Equatable, Sendable {
+            var token: String
+            var password: String
+        }
+
         case credentialsClearedForOnboardingReset
-        case credentialsLoadRequested(instanceId: String)
-        case credentialsLoaded(token: String, password: String)
+        case credentialsLoadRequested(CredentialsLoadRequest)
+        case credentialsLoaded(LoadedCredentials)
         case gatewayPasswordChanged(String)
         case gatewayPasswordPersistenceRequested(value: String, instanceId: String)
         case gatewayTokenChanged(String)
@@ -564,15 +570,15 @@ struct SettingsGatewayCredentialsFeature {
                 state.pendingManualAuthOverride = nil
                 return .none
 
-            case let .credentialsLoadRequested(instanceId):
-                guard let trimmedInstanceId = Self.trimmedInstanceId(instanceId) else { return .none }
+            case let .credentialsLoadRequested(request):
+                guard let trimmedInstanceId = Self.trimmedInstanceId(request.instanceId) else { return .none }
                 state.gatewayToken = persistenceClient.loadGatewayToken(trimmedInstanceId) ?? ""
                 state.gatewayPassword = persistenceClient.loadGatewayPassword(trimmedInstanceId) ?? ""
                 return .none
 
-            case let .credentialsLoaded(token, password):
-                state.gatewayToken = token
-                state.gatewayPassword = password
+            case let .credentialsLoaded(credentials):
+                state.gatewayToken = credentials.token
+                state.gatewayPassword = credentials.password
                 return .none
 
             case let .gatewayPasswordChanged(password):
