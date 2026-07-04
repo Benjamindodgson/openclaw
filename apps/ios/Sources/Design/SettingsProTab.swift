@@ -945,12 +945,19 @@ struct SettingsOnboardingStateFeature {
     }
 
     enum Action: Equatable, Sendable {
-        case onboardingRequestIDChanged(Int)
-        case onboardingResetRequested(instanceId: String)
-        case onboardingStateSynced(
-            hasConnectedOnce: Bool,
-            onboardingComplete: Bool,
-            onboardingRequestID: Int)
+        struct OnboardingRequestIDChange: Equatable, Sendable { var requestID: Int }
+
+        struct OnboardingResetRequest: Equatable, Sendable { var instanceId: String }
+
+        struct OnboardingStateSync: Equatable, Sendable {
+            var hasConnectedOnce: Bool
+            var onboardingComplete: Bool
+            var onboardingRequestID: Int
+        }
+
+        case onboardingRequestIDChanged(OnboardingRequestIDChange)
+        case onboardingResetRequested(OnboardingResetRequest)
+        case onboardingStateSynced(OnboardingStateSync)
     }
 
     // swiftformat:enable redundantSendable
@@ -961,22 +968,22 @@ struct SettingsOnboardingStateFeature {
             let resetClient = self.resetClientOverride ?? dependencyResetClient
 
             switch action {
-            case let .onboardingRequestIDChanged(requestID):
-                state.onboardingRequestID = requestID
+            case let .onboardingRequestIDChanged(change):
+                state.onboardingRequestID = change.requestID
                 return .none
 
-            case let .onboardingResetRequested(instanceId):
+            case let .onboardingResetRequested(request):
                 state.hasConnectedOnce = false
                 state.onboardingComplete = false
                 state.onboardingRequestID += 1
                 return .run { _ in
-                    await resetClient.reset(instanceId)
+                    await resetClient.reset(request.instanceId)
                 }
 
-            case let .onboardingStateSynced(hasConnectedOnce, onboardingComplete, onboardingRequestID):
-                state.hasConnectedOnce = hasConnectedOnce
-                state.onboardingComplete = onboardingComplete
-                state.onboardingRequestID = onboardingRequestID
+            case let .onboardingStateSynced(sync):
+                state.hasConnectedOnce = sync.hasConnectedOnce
+                state.onboardingComplete = sync.onboardingComplete
+                state.onboardingRequestID = sync.onboardingRequestID
                 return .none
             }
         }
