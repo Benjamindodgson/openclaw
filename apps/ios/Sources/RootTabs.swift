@@ -914,14 +914,7 @@ struct RootTabs: View {
     }
 
     private func makeHomeCanvasSnapshot() -> RootHomeCanvasFeature.Snapshot {
-        RootHomeCanvasFeature.Snapshot(
-            gatewayStatus: self.gatewayStatus,
-            gatewayServerName: self.appModel.gatewayServerName,
-            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress,
-            selectedAgentID: self.appModel.selectedAgentId,
-            gatewayDefaultAgentID: self.appModel.gatewayDefaultAgentId,
-            activeAgentName: self.appModel.activeAgentName,
-            agents: self.appModel.gatewayAgents.map(RootHomeCanvasFeature.AgentSnapshot.init(agent:)))
+        RootHomeCanvasFeature.Snapshot(appModel: self.appModel, gatewayStatus: self.gatewayStatus)
     }
 }
 
