@@ -2809,14 +2809,33 @@ struct RootTabsSourceGuardTests {
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
 
+        #expect(supportSource.contains("struct SettingsGatewayCurrentInstanceID: Equatable, Sendable"))
         #expect(supportSource.contains("struct SettingsDeviceDisplayName: Equatable, Sendable { var value: String }"))
         #expect(settingsSource.contains("struct DisplayNameChange: Equatable, Sendable"))
         #expect(settingsSource.contains("var displayName: SettingsDeviceDisplayName"))
         #expect(settingsSource.contains("state.displayName = change.displayName.value"))
+        #expect(settingsSource.contains("struct DisplayNameSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("var displayName: SettingsDeviceDisplayName"))
+        #expect(settingsSource.contains("struct InstanceIDSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("var instanceId: SettingsGatewayCurrentInstanceID"))
+        #expect(settingsSource.contains("state.displayName = sync.displayName.value"))
+        #expect(settingsSource.contains("state.instanceId = sync.instanceId.value"))
         #expect(actionsSource.contains(
             "self.deviceIdentityStore.send(.displayNameChanged(.init(displayName: .init(value: displayName))))"))
+        #expect(actionsSource.contains(
+            "self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: .init(value: self.storedDisplayName))))"))
+        #expect(actionsSource.contains(
+            "self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: .init(value: self.storedInstanceId))))"))
+        #expect(settingsSource.contains(
+            "self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: .init(value: newValue))))"))
+        #expect(settingsSource.contains(
+            "self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: .init(value: newValue))))"))
         #expect(!settingsSource.contains("struct DisplayNameChange: Equatable, Sendable { var displayName: String }"))
+        #expect(!settingsSource.contains("struct DisplayNameSync: Equatable, Sendable { var displayName: String }"))
+        #expect(!settingsSource.contains("struct InstanceIDSync: Equatable, Sendable { var instanceId: String }"))
         #expect(!actionsSource.contains(".displayNameChanged(.init(displayName: displayName))"))
+        #expect(!settingsSource.contains(".displayNameSynced(.init(displayName: newValue))"))
+        #expect(!settingsSource.contains(".instanceIdSynced(.init(instanceId: newValue))"))
     }
 
     @Test func `settings voice control persistence is reducer effect owned`() throws {
