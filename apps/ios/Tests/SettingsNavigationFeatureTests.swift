@@ -394,7 +394,7 @@ struct SettingsNavigationFeatureTests {
             SettingsDeviceIdentityFeature()
         }
 
-        await store.send(.displayNameChanged(.init(displayName: "Field Node"))) {
+        await store.send(.displayNameChanged(.init(displayName: .init(value: "Field Node")))) {
             $0.displayName = "Field Node"
         }
     }

@@ -654,7 +654,7 @@ extension SettingsProTab {
     }
 
     func updateDisplayName(_ displayName: String) {
-        self.deviceIdentityStore.send(.displayNameChanged(.init(displayName: displayName)))
+        self.deviceIdentityStore.send(.displayNameChanged(.init(displayName: .init(value: displayName))))
         self.storedDisplayName = displayName
     }
 
