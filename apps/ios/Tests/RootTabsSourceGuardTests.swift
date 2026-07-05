@@ -2491,7 +2491,9 @@ struct RootTabsSourceGuardTests {
             from: "func resetOnboarding() async",
             to: "func retryGatewayConnectionFromProblem()")
 
+        #expect(supportSource.contains("struct SettingsOnboardingRequestID: Equatable, Sendable { var value: Int }"))
         #expect(settingsSource.contains("struct OnboardingRequestIDChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("var requestID: SettingsOnboardingRequestID"))
         #expect(settingsSource.contains(
             "struct OnboardingResetRequest: Equatable, Sendable { var instanceId: SettingsGatewayCurrentInstanceID }"))
         #expect(settingsSource.contains("struct OnboardingStateSync: Equatable, Sendable"))
@@ -2499,8 +2501,10 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("case onboardingResetRequested(OnboardingResetRequest)"))
         #expect(settingsSource.contains("case onboardingStateSynced(OnboardingStateSync)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsOnboardingReset)"))
+        #expect(settingsSource.contains("state.onboardingRequestID = change.requestID.value"))
         #expect(settingsSource.contains("state.onboardingRequestID += 1"))
         #expect(settingsSource.contains("await resetClient.reset(request.instanceId)"))
+        #expect(!settingsSource.contains("struct OnboardingRequestIDChange: Equatable, Sendable { var requestID: Int }"))
         #expect(supportSource.contains("struct SettingsOnboardingResetClient"))
         #expect(supportSource.contains(
             "var reset: @MainActor @Sendable (_ instanceId: SettingsGatewayCurrentInstanceID) -> Void"))

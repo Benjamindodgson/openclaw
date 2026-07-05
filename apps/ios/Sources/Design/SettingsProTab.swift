@@ -976,7 +976,7 @@ struct SettingsOnboardingStateFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct OnboardingRequestIDChange: Equatable, Sendable { var requestID: Int }
+        struct OnboardingRequestIDChange: Equatable, Sendable { var requestID: SettingsOnboardingRequestID }
 
         struct OnboardingResetRequest: Equatable, Sendable { var instanceId: SettingsGatewayCurrentInstanceID }
 
@@ -1000,7 +1000,7 @@ struct SettingsOnboardingStateFeature {
 
             switch action {
             case let .onboardingRequestIDChanged(change):
-                state.onboardingRequestID = change.requestID
+                state.onboardingRequestID = change.requestID.value
                 return .none
 
             case let .onboardingResetRequested(request):
