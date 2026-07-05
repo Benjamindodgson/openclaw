@@ -53,9 +53,17 @@ struct IPadActivitySessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SceneActivity: Equatable, Sendable {
+            var isActive: Bool
+        }
+
+        struct SessionsAvailability: Equatable, Sendable {
+            var isAvailable: Bool
+        }
+
         struct RefreshRequest: Equatable, Sendable {
-            var sceneActive: Bool
-            var sessionsAvailable: Bool
+            var sceneActivity: SceneActivity
+            var sessionsAvailability: SessionsAvailability
         }
 
         struct RefreshResponse: Equatable, Sendable {
@@ -80,11 +88,11 @@ struct IPadActivitySessionsFeature {
                 return .none
 
             case let .refreshRequested(request):
-                guard request.sceneActive else {
+                guard request.sceneActivity.isActive else {
                     state.isLoading = false
                     return .none
                 }
-                guard request.sessionsAvailable else {
+                guard request.sessionsAvailability.isAvailable else {
                     state.isLoading = false
                     state.sessions = []
                     state.loadErrorText = nil
@@ -339,8 +347,8 @@ struct IPadActivityScreen: View {
 
     private func refreshSessions() async {
         await self.store.send(.refreshRequested(.init(
-            sceneActive: self.scenePhase == .active,
-            sessionsAvailable: self.sessionsAvailable))).finish()
+            sceneActivity: .init(isActive: self.scenePhase == .active),
+            sessionsAvailability: .init(isAvailable: self.sessionsAvailable)))).finish()
     }
 
     private func open(_ item: CommandCenterTab.WorkItem) {

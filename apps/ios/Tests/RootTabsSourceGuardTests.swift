@@ -1176,11 +1176,23 @@ struct RootTabsSourceGuardTests {
 
     @Test func `activity sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
+        let feature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct IPadActivitySessionsFeature",
+            to: "enum IPadActivitySessionsStoreFactory")
 
-        #expect(source.contains("struct RefreshResponse: Equatable, Sendable"))
-        #expect(source.contains("case refreshResponse(RefreshResponse)"))
-        #expect(source.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
-        #expect(source.contains("switch response.result"))
+        #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
+        #expect(feature.contains("struct SceneActivity: Equatable, Sendable"))
+        #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
+        #expect(feature.contains("var sceneActivity: SceneActivity"))
+        #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
+        #expect(feature.contains("guard request.sceneActivity.isActive"))
+        #expect(feature.contains("guard request.sessionsAvailability.isAvailable"))
+        #expect(feature.contains("case refreshResponse(RefreshResponse)"))
+        #expect(feature.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
+        #expect(feature.contains("switch response.result"))
+        #expect(!feature.contains("var sceneActive: Bool"))
+        #expect(!feature.contains("var sessionsAvailable: Bool"))
     }
 
     @Test func `command sessions refresh response action is typed`() throws {
