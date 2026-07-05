@@ -61,6 +61,8 @@ struct SettingsDeviceDisplayName: Equatable, Sendable { var value: String }
 
 struct SettingsManualGatewayPortText: Equatable, Sendable { var value: String }
 
+struct SettingsOnboardingRequestID: Equatable, Sendable { var value: Int }
+
 struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String }
 
 // swiftformat:enable redundantSendable

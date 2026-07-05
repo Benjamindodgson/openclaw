@@ -2150,7 +2150,7 @@ struct SettingsNavigationFeatureTests {
             SettingsOnboardingStateFeature()
         }
 
-        await store.send(.onboardingRequestIDChanged(.init(requestID: 5))) {
+        await store.send(.onboardingRequestIDChanged(.init(requestID: .init(value: 5)))) {
             $0.onboardingRequestID = 5
         }
     }
