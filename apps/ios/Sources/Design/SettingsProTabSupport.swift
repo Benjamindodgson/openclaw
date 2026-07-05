@@ -212,7 +212,7 @@ extension DependencyValues {
 
 struct SettingsShareInstructionPersistenceClient {
     var loadDefaultInstruction: @Sendable () -> SettingsDefaultShareInstruction
-    var saveDefaultInstruction: @MainActor @Sendable (_ value: String) -> Void
+    var saveDefaultInstruction: @MainActor @Sendable (_ instruction: SettingsDefaultShareInstruction) -> Void
 }
 
 extension SettingsShareInstructionPersistenceClient: DependencyKey {
@@ -220,8 +220,8 @@ extension SettingsShareInstructionPersistenceClient: DependencyKey {
         loadDefaultInstruction: {
             .init(value: ShareToAgentSettings.loadDefaultInstruction())
         },
-        saveDefaultInstruction: { value in
-            ShareToAgentSettings.saveDefaultInstruction(value)
+        saveDefaultInstruction: { instruction in
+            ShareToAgentSettings.saveDefaultInstruction(instruction.value)
         })
 
     static let testValue = SettingsShareInstructionPersistenceClient(

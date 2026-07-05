@@ -2233,16 +2233,18 @@ struct RootTabsSourceGuardTests {
         #expect(supportSource.contains("struct SettingsDefaultShareInstruction: Equatable, Sendable"))
         #expect(supportSource.contains(
             "var loadDefaultInstruction: @Sendable () -> SettingsDefaultShareInstruction"))
+        #expect(supportSource.contains(
+            "var saveDefaultInstruction: @MainActor @Sendable (_ instruction: SettingsDefaultShareInstruction) -> Void"))
         #expect(supportSource.contains("ShareToAgentSettings.loadDefaultInstruction()"))
-        #expect(supportSource.contains("ShareToAgentSettings.saveDefaultInstruction(value)"))
+        #expect(supportSource.contains("ShareToAgentSettings.saveDefaultInstruction(instruction.value)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsShareInstructionPersistence)"))
         #expect(settingsSource.contains("struct DefaultShareInstructionChange: Equatable, Sendable"))
-        #expect(settingsSource.contains("struct DefaultShareInstructionPersistenceRequest: Equatable, Sendable"))
+        #expect(!settingsSource.contains("struct DefaultShareInstructionPersistenceRequest: Equatable, Sendable"))
         #expect(settingsSource.contains("case defaultShareInstructionLoadRequested"))
         #expect(settingsSource.contains(
-            "case defaultShareInstructionPersistenceRequested(DefaultShareInstructionPersistenceRequest)"))
+            "case defaultShareInstructionPersistenceRequested(SettingsDefaultShareInstruction)"))
         #expect(settingsSource.contains("persistenceClient.loadDefaultInstruction().value"))
-        #expect(settingsSource.contains("await persistenceClient.saveDefaultInstruction(request.value)"))
+        #expect(settingsSource.contains("await persistenceClient.saveDefaultInstruction(instruction)"))
         #expect(actionsSource.contains("self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)"))
         #expect(syncSettingsFunction.contains("ShareToAgentSettings.loadDefaultInstruction") == false)
         #expect(settingsSource.contains("ShareToAgentSettings.saveDefaultInstruction") == false)
