@@ -567,7 +567,7 @@ struct SettingsGatewayCredentialsFeature {
         struct ManualCredentialChange: Equatable, Sendable { var value: String }
 
         struct ManualCredentialPersistenceRequest: Equatable, Sendable {
-            var value: String
+            var value: SettingsGatewayCredentialValue
             var instanceId: SettingsGatewayCurrentInstanceID
         }
 
@@ -693,13 +693,13 @@ struct SettingsGatewayCredentialsFeature {
     }
 
     private static func manualCredentialPersistenceRequest(
-        value: String,
+        value: SettingsGatewayCredentialValue,
         instanceId: SettingsGatewayCurrentInstanceID)
-        -> (value: String, instanceId: SettingsGatewayCurrentInstanceID)?
+        -> (value: SettingsGatewayCredentialValue, instanceId: SettingsGatewayCurrentInstanceID)?
     {
         guard instanceId.trimmedValue != nil else { return nil }
         return (
-            value.trimmingCharacters(in: .whitespacesAndNewlines),
+            value,
             instanceId)
     }
 }

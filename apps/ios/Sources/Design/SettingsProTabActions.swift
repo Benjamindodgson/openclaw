@@ -787,14 +787,14 @@ extension SettingsProTab {
     func updateGatewayToken(_ value: String) {
         self.gatewayCredentialsStore.send(.gatewayTokenChanged(.init(value: value)))
         self.gatewayCredentialsStore.send(.gatewayTokenPersistenceRequested(.init(
-            value: value,
+            value: .init(rawValue: value),
             instanceId: .init(value: self.instanceId))))
     }
 
     func updateGatewayPassword(_ value: String) {
         self.gatewayCredentialsStore.send(.gatewayPasswordChanged(.init(value: value)))
         self.gatewayCredentialsStore.send(.gatewayPasswordPersistenceRequested(.init(
-            value: value,
+            value: .init(rawValue: value),
             instanceId: .init(value: self.instanceId))))
     }
 
