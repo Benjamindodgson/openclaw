@@ -216,8 +216,8 @@ struct ChatProTab: View {
             providerLabel: self.appModel.talkMode.gatewayTalkProviderLabel,
             toggle: { sessionKey in
                 self.talkControlStore.send(.toggleRequested(.init(
-                    sessionKey: sessionKey,
-                    isTalkEnabled: self.appModel.talkMode.isEnabled)))
+                    sessionKey: ChatSessionKey(rawValue: sessionKey),
+                    talkEnabled: .init(isEnabled: self.appModel.talkMode.isEnabled))))
             })
     }
 
@@ -364,9 +364,13 @@ struct ChatTalkControlFeature {
     struct State: Equatable, Sendable {}
 
     enum Action: Equatable, Sendable {
+        struct TalkEnabled: Equatable, Sendable {
+            var isEnabled: Bool
+        }
+
         struct ToggleRequest: Equatable, Sendable {
-            var sessionKey: String
-            var isTalkEnabled: Bool
+            var sessionKey: ChatSessionKey?
+            var talkEnabled: TalkEnabled
         }
 
         case toggleRequested(ToggleRequest)
@@ -381,10 +385,9 @@ struct ChatTalkControlFeature {
 
             switch action {
             case let .toggleRequested(request):
-                let sessionKey = ChatSessionKey(rawValue: request.sessionKey)
                 return .run { [client] _ in
-                    await client.focusChatSession(sessionKey)
-                    await client.setTalkEnabled(!request.isTalkEnabled)
+                    await client.focusChatSession(request.sessionKey)
+                    await client.setTalkEnabled(!request.talkEnabled.isEnabled)
                 }
             }
         }
