@@ -2115,13 +2115,19 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource
             .contains("let setupAuth = GatewayConnectionController.ManualAuthOverride." +
                 "setupAuth(from: application.link)"))
-        #expect(settingsSource.contains("setupAuthPersistenceClient.currentInstanceID().value"))
+        #expect(settingsSource.contains("guard request.trimmedInstanceId != nil else { return .none }"))
+        #expect(settingsSource.contains("setupAuthPersistenceClient.currentInstanceID()"))
+        #expect(!settingsSource.contains("setupAuthPersistenceClient.currentInstanceID().value"))
         #expect(settingsSource.contains("await setupAuthPersistenceClient.prepareForBootstrapPairing(request.instanceId)"))
         #expect(settingsSource.contains("await setupAuthPersistenceClient.saveSetupAuth(request)"))
+        #expect(supportSource.contains("let instanceId: SettingsGatewayCurrentInstanceID"))
+        #expect(supportSource.contains("var trimmedInstanceId: String?"))
         #expect(supportSource.contains("struct SettingsGatewaySetupAuthPersistenceClient"))
         #expect(supportSource.contains("struct SettingsGatewayCurrentInstanceID: Equatable, Sendable"))
         #expect(supportSource.contains(
             "var currentInstanceID: @Sendable () -> SettingsGatewayCurrentInstanceID"))
+        #expect(supportSource.contains(
+            "var prepareForBootstrapPairing: @MainActor @Sendable (_ instanceId: SettingsGatewayCurrentInstanceID) -> Void"))
         #expect(supportSource.contains("prepareForBootstrapPairing"))
         #expect(supportSource
             .contains("GatewayOnboardingReset.prepareForBootstrapPairing(appModel: appModel, instanceId: instanceId)"))

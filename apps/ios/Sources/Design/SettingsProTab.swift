@@ -653,7 +653,7 @@ struct SettingsGatewayCredentialsFeature {
                 return .none
 
             case let .setupAuthPersistenceRequested(request):
-                guard Self.trimmedInstanceId(request.instanceId) != nil else { return .none }
+                guard request.trimmedInstanceId != nil else { return .none }
                 return .run { _ in
                     if request.hasBootstrapToken {
                         await setupAuthPersistenceClient.prepareForBootstrapPairing(request.instanceId)
@@ -670,7 +670,7 @@ struct SettingsGatewayCredentialsFeature {
                 Self.applySetupAuth(setupAuth, to: &state)
                 state.setupAuthPersistenceRequest = SettingsGatewaySetupAuthPersistenceRequest(
                     setupAuth: setupAuth,
-                    instanceId: setupAuthPersistenceClient.currentInstanceID().value)
+                    instanceId: setupAuthPersistenceClient.currentInstanceID())
                 return .none
             }
         }

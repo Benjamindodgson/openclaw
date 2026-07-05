@@ -1202,7 +1202,7 @@ struct SettingsNavigationFeatureTests {
                 password: "password-6")
             $0.setupAuthPersistenceRequest = SettingsGatewaySetupAuthPersistenceRequest(
                 setupAuth: setupAuth,
-                instanceId: "instance-6")
+                instanceId: .init(value: "instance-6"))
         }
 
         await store.send(.setupAuthPersistenceRequestHandled) {
@@ -1218,7 +1218,7 @@ struct SettingsNavigationFeatureTests {
             password: "password-7")
         let request = SettingsGatewaySetupAuthPersistenceRequest(
             setupAuth: setupAuth,
-            instanceId: " instance-7 ")
+            instanceId: .init(value: " instance-7 "))
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
         }
@@ -1238,7 +1238,7 @@ struct SettingsNavigationFeatureTests {
             password: "password-9")
         let request = SettingsGatewaySetupAuthPersistenceRequest(
             setupAuth: setupAuth,
-            instanceId: "instance-9")
+            instanceId: .init(value: "instance-9"))
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
         }
@@ -1259,7 +1259,7 @@ struct SettingsNavigationFeatureTests {
             password: "password-8")
         let request = SettingsGatewaySetupAuthPersistenceRequest(
             setupAuth: setupAuth,
-            instanceId: " ")
+            instanceId: .init(value: " "))
         let store = TestStore(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature(setupAuthPersistenceClient: setupAuthProbe.client)
         }
@@ -2624,12 +2624,12 @@ private final class SettingsGatewaySetupAuthPersistenceProbe: @unchecked Sendabl
                 .init(value: self.instanceId)
             },
             prepareForBootstrapPairing: { instanceId in
-                self.preparedBootstrapPairingInstanceIds.append(instanceId)
-                self.events.append("prepare:\(instanceId)")
+                self.preparedBootstrapPairingInstanceIds.append(instanceId.value)
+                self.events.append("prepare:\(instanceId.value)")
             },
             saveSetupAuth: { request in
                 self.savedRequests.append(request)
-                self.events.append("save:\(request.instanceId)")
+                self.events.append("save:\(request.instanceId.value)")
             })
     }
 }
