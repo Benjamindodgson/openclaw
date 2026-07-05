@@ -770,7 +770,9 @@ extension SettingsProTab {
     }
 
     func applyManualGatewaySetupLink(host: String, tls: Bool) {
-        self.manualGatewayEndpointStore.send(.setupLinkApplied(.init(host: host, useTLS: tls)))
+        self.manualGatewayEndpointStore.send(.setupLinkApplied(.init(
+            host: .init(value: host),
+            useTLS: .init(value: tls))))
         self.storedManualGatewayHost = host
         self.storedManualGatewayTLS = tls
     }

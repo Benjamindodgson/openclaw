@@ -2029,6 +2029,10 @@ struct RootTabsSourceGuardTests {
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
             encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let setupLinkApplication = try Self.extract(
+            gatewaySetupFeaturesSource,
+            from: "struct SetupLinkApplication",
+            to: "struct ManualConnectionAttempt")
 
         #expect(gatewaySetupFeaturesSource.contains("enum ManualConnectionResult: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct Failure: Equatable, Sendable"))
@@ -2050,6 +2054,10 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("var tls: ManualGatewayTLS"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayTLSChange: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SetupLinkApplication: Equatable, Sendable"))
+        #expect(setupLinkApplication.contains("var host: ManualGatewayHost"))
+        #expect(setupLinkApplication.contains("var useTLS: ManualGatewayTLS"))
+        #expect(gatewaySetupFeaturesSource.contains("state.manualGatewayHost = application.host.value"))
+        #expect(gatewaySetupFeaturesSource.contains("state.manualGatewayTLS = application.useTLS.value"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualConnectionAttempt: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct GatewayPreflightRequest: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SettingsLocalNetworkAccessReason: Equatable, Sendable"))
@@ -2079,6 +2087,8 @@ struct RootTabsSourceGuardTests {
             "self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(.init("))
         #expect(actionsSource.contains("tls: .init(value: tls)"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.setupLinkApplied(.init("))
+        #expect(actionsSource.contains("host: .init(value: host)"))
+        #expect(actionsSource.contains("useTLS: .init(value: tls)"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionRequested(.init("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)"))
         #expect(actionsSource.contains(
@@ -2090,6 +2100,8 @@ struct RootTabsSourceGuardTests {
         #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayEnabled = sync.enabled\n"))
         #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayHost = sync.host\n"))
         #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayTLS = sync.useTLS\n"))
+        #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayHost = application.host\n"))
+        #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayTLS = application.useTLS\n"))
         #expect(!actionsSource.contains("manualGatewayEnabledChanged(.init(isEnabled:"))
         #expect(!actionsSource.contains("manualGatewayHostChanged(.init(host:"))
         #expect(!actionsSource.contains("manualGatewayTLSChanged(.init(useTLS:"))
