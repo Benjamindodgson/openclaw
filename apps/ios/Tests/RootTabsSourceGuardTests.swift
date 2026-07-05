@@ -2594,6 +2594,14 @@ struct RootTabsSourceGuardTests {
             actionsSource,
             from: "func updateTalkRealtimeVoiceSelection(_ rawValue: String)",
             to: "func updateTalkSpeechLocale(_ speechLocale: String)")
+        let updateBackgroundFunction = try Self.extract(
+            actionsSource,
+            from: "func updateTalkBackgroundEnabled(_ enabled: Bool)",
+            to: "func updateTalkButtonEnabled(_ enabled: Bool)")
+        let updateButtonFunction = try Self.extract(
+            actionsSource,
+            from: "func updateTalkButtonEnabled(_ enabled: Bool)",
+            to: "func updateTalkSpeakerphoneEnabled(_ enabled: Bool)")
         let updateSpeakerphoneFunction = try Self.extract(
             actionsSource,
             from: "func updateTalkSpeakerphoneEnabled(_ enabled: Bool)",
@@ -2612,9 +2620,15 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("var voice: SettingsTalkRealtimeVoiceSelection"))
         #expect(preferencesSource.contains("struct SettingsTalkSpeechLocale: Equatable, Sendable"))
         #expect(preferencesSource.contains("var locale: SettingsTalkSpeechLocale"))
+        #expect(preferencesSource.contains("struct SettingsTalkBackgroundEnabled: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct SettingsTalkButtonEnabled: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct SettingsTalkSpeakerphoneEnabled: Equatable, Sendable"))
         #expect(preferencesSource
             .contains("setSpeakerphoneEnabled: @MainActor @Sendable (SettingsTalkSpeakerphoneEnabled) -> Void"))
+        #expect(preferencesSource.contains("struct TalkBackgroundEnabledChange: Equatable, Sendable"))
+        #expect(preferencesSource.contains("var enabled: SettingsTalkBackgroundEnabled"))
+        #expect(preferencesSource.contains("struct TalkButtonEnabledChange: Equatable, Sendable"))
+        #expect(preferencesSource.contains("var enabled: SettingsTalkButtonEnabled"))
         #expect(preferencesSource.contains("struct TalkSpeakerphoneEnabledChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("var enabled: SettingsTalkSpeakerphoneEnabled"))
         #expect(preferencesSource.contains("struct GatewayTalkConfigSync: Equatable, Sendable"))
@@ -2643,6 +2657,10 @@ struct RootTabsSourceGuardTests {
         #expect(updateRealtimeVoiceFunction.contains("self.storedTalkRealtimeVoiceSelectionRaw = voice.value"))
         #expect(!updateRealtimeVoiceFunction.contains("self.appModel.setTalkRealtimeVoiceSelection"))
         #expect(actionsSource.contains("locale: SettingsTalkSpeechLocale(value: speechLocale)"))
+        #expect(updateBackgroundFunction.contains("enabled: .init(isEnabled: enabled)"))
+        #expect(updateBackgroundFunction.contains("self.storedTalkBackgroundEnabled = enabled"))
+        #expect(updateButtonFunction.contains("enabled: .init(isEnabled: enabled)"))
+        #expect(updateButtonFunction.contains("self.storedTalkButtonEnabled = enabled"))
         #expect(updateSpeakerphoneFunction.contains("let speakerphone = SettingsTalkSpeakerphoneEnabled(isEnabled: enabled)"))
         #expect(updateSpeakerphoneFunction
             .contains("self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(.init(enabled: speakerphone)))"))
@@ -2652,6 +2670,10 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.talkPreferencesStore.send(.gatewayTalkConfigSynced(.init("))
         #expect(actionsSource.contains("self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(.init("))
         #expect(actionsSource.contains("self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(.init("))
+        #expect(!preferencesSource.contains("state.talkBackgroundEnabled = change.isEnabled"))
+        #expect(!preferencesSource.contains("state.talkButtonEnabled = change.isEnabled"))
+        #expect(!actionsSource.contains("talkBackgroundEnabledChanged(.init(isEnabled:"))
+        #expect(!actionsSource.contains("talkButtonEnabledChanged(.init(isEnabled:"))
         #expect(!preferencesSource.contains("case preferencesSynced(\n            providerSelectionRaw: String"))
         #expect(!preferencesSource.contains("case gatewayTalkConfigSynced(\n            configLoaded: Bool"))
     }

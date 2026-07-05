@@ -898,12 +898,14 @@ extension SettingsProTab {
     }
 
     func updateTalkBackgroundEnabled(_ enabled: Bool) {
-        self.talkPreferencesStore.send(.talkBackgroundEnabledChanged(.init(isEnabled: enabled)))
+        self.talkPreferencesStore.send(.talkBackgroundEnabledChanged(.init(
+            enabled: .init(isEnabled: enabled))))
         self.storedTalkBackgroundEnabled = enabled
     }
 
     func updateTalkButtonEnabled(_ enabled: Bool) {
-        self.talkPreferencesStore.send(.talkButtonEnabledChanged(.init(isEnabled: enabled)))
+        self.talkPreferencesStore.send(.talkButtonEnabledChanged(.init(
+            enabled: .init(isEnabled: enabled))))
         self.storedTalkButtonEnabled = enabled
     }
 
