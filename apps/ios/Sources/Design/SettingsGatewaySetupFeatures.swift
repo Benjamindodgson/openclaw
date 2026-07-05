@@ -9,6 +9,10 @@ struct SettingsLocalNetworkAccessReason: Equatable, Sendable {
     static let settingsPreflight = Self(value: "settings_preflight")
 }
 
+struct SettingsGatewaySetupStatusText: Equatable, Sendable {
+    var value: String?
+}
+
 // swiftformat:enable redundantSendable
 
 struct SettingsLocalNetworkAccessClient {
@@ -58,7 +62,7 @@ struct SettingsGatewaySetupStatusFeature {
         }
 
         struct QRScannerError: Equatable, Sendable { var message: String }
-        struct SetupStatusChange: Equatable, Sendable { var statusText: String? }
+        struct SetupStatusChange: Equatable, Sendable { var statusText: SettingsGatewaySetupStatusText }
 
         case gatewayStatusSynced(GatewayStatusSync)
         case qrScannerErrorReceived(QRScannerError)
@@ -90,7 +94,7 @@ struct SettingsGatewaySetupStatusFeature {
                 return .none
 
             case let .statusChanged(change):
-                state.statusText = change.statusText
+                state.statusText = change.statusText.value
                 return .none
             }
         }

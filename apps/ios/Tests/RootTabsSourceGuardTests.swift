@@ -1758,9 +1758,9 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
         #expect(actionsSource.contains("case let .appleReviewDemo(demo):"))
         #expect(actionsSource.contains(
-            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: demo.statusText))"))
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText)))"))
         #expect(applyFunction.contains(
-            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message)))"))
         #expect(!setupLinkFeatureSource.contains("case failure(String)"))
         #expect(rootSource.contains("gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore()"))
         #expect(storesSource.contains(
@@ -1854,7 +1854,10 @@ struct RootTabsSourceGuardTests {
 
         #expect(gatewaySetupFeaturesSource.contains("struct GatewayStatusSync: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct QRScannerError: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct SettingsGatewaySetupStatusText: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SetupStatusChange: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("var statusText: SettingsGatewaySetupStatusText"))
+        #expect(gatewaySetupFeaturesSource.contains("state.statusText = change.statusText.value"))
         #expect(gatewaySetupFeaturesSource.contains("case gatewayStatusSynced(GatewayStatusSync)"))
         #expect(gatewaySetupFeaturesSource.contains("case qrScannerErrorReceived(QRScannerError)"))
         #expect(gatewaySetupFeaturesSource.contains("case statusChanged(SetupStatusChange)"))
@@ -2051,7 +2054,8 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.setupLinkApplied(.init("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionRequested(.init("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)"))
-        #expect(actionsSource.contains("self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))
+        #expect(actionsSource.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message)))"))
         #expect(!gatewaySetupFeaturesSource.contains("case failure(String)"))
         #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayEnabled = change.isEnabled"))
         #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayHost = change.host"))
@@ -2105,7 +2109,7 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains(".manualGatewayPortTextChanged(.init(text: $0))"))
         #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)"))
         #expect(resolveManualPortFunction.contains(
-            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message)))"))
         #expect(applyFunction.contains("self.resolveManualPortForConnection(host: host)"))
         #expect(scannedConnectFunction.contains("self.resolveManualPortForConnection(host: host)"))
         #expect(!manualPortFeature.contains("case failure(String)"))

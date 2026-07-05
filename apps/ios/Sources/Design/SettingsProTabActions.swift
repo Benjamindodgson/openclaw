@@ -287,12 +287,12 @@ extension SettingsProTab {
             stableID: .init(value: gateway.stableID))))
         let result = await self.gatewayController.connectWithDiagnostics(gateway)
         if let failure = result.failure {
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message))))
         }
     }
 
     func applySetupCodeAndConnect() async {
-        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: nil)))
+        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: nil))))
         guard await self.applySetupCode() else { return }
         let host = self.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
         guard self.resolveManualPortForConnection(host: host) else { return }
@@ -304,10 +304,10 @@ extension SettingsProTab {
     func applyPendingGatewaySetupLinkIfNeeded() {
         guard let link = self.appModel.consumePendingGatewaySetupLink() else { return }
         self.updateSetupCode("")
-        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: nil)))
+        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: nil))))
         self.gatewaySetupLinkStore.send(.setupLinkStaged(.init(link: link)))
         if let statusText = self.gatewaySetupLinkStore.setupLinkStatusText {
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: statusText)))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText))))
             self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)
         }
     }
@@ -321,11 +321,11 @@ extension SettingsProTab {
         switch result {
         case let .appleReviewDemo(demo):
             self.updateSetupCode("")
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: demo.statusText)))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText))))
             return false
 
         case let .failure(failure):
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message))))
             return false
 
         case let .gatewayLink(link):
@@ -357,7 +357,7 @@ extension SettingsProTab {
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
         if let statusText = self.gatewaySetupLinkStore.scannedGatewayLinkStatusText {
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: statusText)))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText))))
             self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)
         }
         Task {
@@ -372,7 +372,7 @@ extension SettingsProTab {
         self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
-        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: demo.statusText)))
+        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText))))
     }
 
     func connectAfterScannedGatewayLink() async {
@@ -391,7 +391,7 @@ extension SettingsProTab {
 
         switch result {
         case let .failure(failure):
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message))))
             return false
 
         case .resolved:
@@ -408,7 +408,7 @@ extension SettingsProTab {
 
         switch result {
         case let .failure(failure):
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message))))
 
         case let .request(request):
             self.gatewayConnectionStore.send(.connectionStarted(.init(gatewayID: "manual")))
@@ -437,7 +437,7 @@ extension SettingsProTab {
         switch result {
         case let .blocked(blocked):
             if let statusText = blocked.statusText {
-                self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: statusText)))
+                self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText))))
             }
             return false
 
@@ -449,7 +449,7 @@ extension SettingsProTab {
 
     func resetOnboarding() async {
         self.gatewayConnectionStore.send(.connectionFinished)
-        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: nil)))
+        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: nil))))
         self.updateSetupCode("")
         self.disableGatewayAutoConnectForOnboardingReset()
         self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
