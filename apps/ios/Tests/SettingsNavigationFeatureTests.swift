@@ -774,8 +774,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayStatusSynced(.init(
-            problemMessage: "Pairing required",
-            gatewayStatusText: "Offline")))
+            problemMessage: .init(value: "Pairing required"),
+            gatewayStatusText: .init(value: "Offline"))))
         {
             $0.gatewayProblemMessage = "Pairing required"
             $0.gatewayStatusText = "Offline"
