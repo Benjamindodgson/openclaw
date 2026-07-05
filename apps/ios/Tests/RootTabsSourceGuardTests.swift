@@ -1208,9 +1208,24 @@ struct RootTabsSourceGuardTests {
             to: "private static func snapshot")
 
         #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
+        #expect(feature.contains("struct SceneActivity: Equatable, Sendable"))
+        #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
+        #expect(feature.contains("struct SessionReference: Equatable, Sendable"))
+        #expect(feature.contains("var sceneActivity: SceneActivity"))
+        #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
+        #expect(feature.contains("var currentSession: SessionReference"))
+        #expect(feature.contains("var defaultSession: SessionReference"))
+        #expect(feature.contains("guard request.sceneActivity.isActive"))
+        #expect(feature.contains("guard request.sessionsAvailability.isAvailable"))
+        #expect(feature.contains("currentSessionKey: request.currentSession.key"))
+        #expect(feature.contains("defaultSessionKey: request.defaultSession.key"))
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(snapshot))))"))
         #expect(feature.contains("switch response.result"))
+        #expect(!feature.contains("var sceneActive: Bool"))
+        #expect(!feature.contains("var sessionsAvailable: Bool"))
+        #expect(!feature.contains("var currentSessionKey: String"))
+        #expect(!feature.contains("var defaultSessionKey: String"))
     }
 
     @Test func `command center chat routes use typed payload`() throws {
