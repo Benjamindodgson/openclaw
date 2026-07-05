@@ -1307,10 +1307,10 @@ struct SettingsNavigationFeatureTests {
         }
         let request = SettingsLocationFeature.LocationModeRequest(
             mode: .off,
-            previousRawValue: OpenClawLocationMode.whileUsing.rawValue,
-            rawValue: OpenClawLocationMode.off.rawValue)
+            previousValue: .init(rawValue: OpenClawLocationMode.whileUsing.rawValue),
+            value: .init(rawValue: OpenClawLocationMode.off.rawValue))
         let appliedResult = SettingsLocationFeature.LocationModeApplyResult.applied(
-            .init(rawValue: OpenClawLocationMode.off.rawValue))
+            .init(value: .init(rawValue: OpenClawLocationMode.off.rawValue)))
 
         await store.send(.locationModeApplyRequested(request)) {
             $0.locationModeApplyResult = appliedResult
@@ -1330,15 +1330,15 @@ struct SettingsNavigationFeatureTests {
         let probe = SettingsLocationPermissionProbe(granted: true)
         let gatewayRefreshProbe = SettingsLocationGatewayRefreshProbe()
         let deniedResult = SettingsLocationFeature.LocationModeApplyResult.denied(
-            .init(previousRawValue: OpenClawLocationMode.off.rawValue))
+            .init(previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue)))
         let appliedResult = SettingsLocationFeature.LocationModeApplyResult.applied(
-            .init(rawValue: OpenClawLocationMode.always.rawValue))
+            .init(value: .init(rawValue: OpenClawLocationMode.always.rawValue)))
         var initialState = SettingsLocationFeature.State()
         initialState.locationModeApplyResult = deniedResult
         initialState.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
             mode: .always,
-            previousRawValue: OpenClawLocationMode.off.rawValue,
-            rawValue: OpenClawLocationMode.always.rawValue)
+            previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue),
+            value: .init(rawValue: OpenClawLocationMode.always.rawValue))
         initialState.statusText = "Location permission was not granted."
         let store = TestStore(initialState: initialState) {
             SettingsLocationFeature(
@@ -1347,8 +1347,8 @@ struct SettingsNavigationFeatureTests {
         }
         let request = SettingsLocationFeature.LocationModeRequest(
             mode: .always,
-            previousRawValue: OpenClawLocationMode.off.rawValue,
-            rawValue: OpenClawLocationMode.always.rawValue)
+            previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue),
+            value: .init(rawValue: OpenClawLocationMode.always.rawValue))
 
         await store.send(.locationModeApplyRequested(request)) {
             $0.isChangingLocationMode = true
@@ -1414,8 +1414,8 @@ struct SettingsNavigationFeatureTests {
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
             $0.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
                 mode: .always,
-                previousRawValue: OpenClawLocationMode.off.rawValue,
-                rawValue: OpenClawLocationMode.always.rawValue)
+                previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue),
+                value: .init(rawValue: OpenClawLocationMode.always.rawValue))
         }
     }
 
@@ -1487,10 +1487,10 @@ struct SettingsNavigationFeatureTests {
         }
         let request = SettingsLocationFeature.LocationModeRequest(
             mode: .always,
-            previousRawValue: OpenClawLocationMode.off.rawValue,
-            rawValue: OpenClawLocationMode.always.rawValue)
+            previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue),
+            value: .init(rawValue: OpenClawLocationMode.always.rawValue))
         let deniedResult = SettingsLocationFeature.LocationModeApplyResult.denied(
-            .init(previousRawValue: OpenClawLocationMode.off.rawValue))
+            .init(previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue)))
 
         await store.send(.locationModeApplyRequested(request)) {
             $0.isChangingLocationMode = true

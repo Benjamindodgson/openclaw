@@ -105,8 +105,16 @@ struct SettingsLocationFeature {
 
     struct LocationModeRequest: Equatable, Sendable {
         let mode: OpenClawLocationMode
-        let previousRawValue: String
-        let rawValue: String
+        let previousValue: LocationModeRawValue
+        let value: LocationModeRawValue
+    }
+
+    struct LocationModeRawValue: Equatable, Sendable {
+        var rawValue: String
+
+        var mode: OpenClawLocationMode? {
+            OpenClawLocationMode(rawValue: self.rawValue)
+        }
     }
 
     struct LocationModeChange: Equatable, Sendable {
@@ -114,20 +122,28 @@ struct SettingsLocationFeature {
     }
 
     struct LocationModeChangeRequest: Equatable, Sendable {
-        var rawValue: String
+        var value: LocationModeRawValue
+
+        init(rawValue: String) {
+            self.value = .init(rawValue: rawValue)
+        }
     }
 
     struct LocationModeSync: Equatable, Sendable {
-        var rawValue: String
+        var value: LocationModeRawValue
+
+        init(rawValue: String) {
+            self.value = .init(rawValue: rawValue)
+        }
     }
 
     enum LocationModeApplyResult: Equatable, Sendable {
         struct Applied: Equatable, Sendable {
-            var rawValue: String
+            var value: LocationModeRawValue
         }
 
         struct Denied: Equatable, Sendable {
-            var previousRawValue: String
+            var previousValue: LocationModeRawValue
         }
 
         case applied(Applied)
@@ -159,15 +175,15 @@ struct SettingsLocationFeature {
                 state.locationModeApplyResult = result
                 switch result {
                 case let .applied(applied):
-                    state.locationModeRaw = applied.rawValue
-                    state.previousLocationModeRaw = applied.rawValue
+                    state.locationModeRaw = applied.value.rawValue
+                    state.previousLocationModeRaw = applied.value.rawValue
                     return .run { _ in
                         await gatewayRefreshClient.refreshGatewayRegistration()
                     }
 
                 case let .denied(denied):
-                    state.locationModeRaw = denied.previousRawValue
-                    state.previousLocationModeRaw = denied.previousRawValue
+                    state.locationModeRaw = denied.previousValue.rawValue
+                    state.previousLocationModeRaw = denied.previousValue.rawValue
                     state.statusText = "Location permission was not granted."
                     return .none
                 }
@@ -181,9 +197,9 @@ struct SettingsLocationFeature {
 
                 guard request.mode != .off else {
                     state.isChangingLocationMode = false
-                    state.locationModeApplyResult = .applied(.init(rawValue: request.rawValue))
-                    state.locationModeRaw = request.rawValue
-                    state.previousLocationModeRaw = request.rawValue
+                    state.locationModeApplyResult = .applied(.init(value: request.value))
+                    state.locationModeRaw = request.value.rawValue
+                    state.previousLocationModeRaw = request.value.rawValue
                     return .run { _ in
                         await gatewayRefreshClient.refreshGatewayRegistration()
                     }
@@ -192,8 +208,8 @@ struct SettingsLocationFeature {
                 return .run { send in
                     let granted = await permissionClient.requestPermission(request.mode)
                     let result: LocationModeApplyResult = granted
-                        ? .applied(.init(rawValue: request.rawValue))
-                        : .denied(.init(previousRawValue: request.previousRawValue))
+                        ? .applied(.init(value: request.value))
+                        : .denied(.init(previousValue: request.previousValue))
                     await send(.locationModeApplyFinished(result))
                 }
 
@@ -206,25 +222,25 @@ struct SettingsLocationFeature {
                 return .none
 
             case let .locationModeChangeRequested(request):
-                let rawValue = request.rawValue
+                let rawValue = request.value.rawValue
                 state.locationModeRaw = rawValue
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
                 guard !state.isChangingLocationMode else { return .none }
                 guard rawValue != state.previousLocationModeRaw else { return .none }
-                guard let mode = OpenClawLocationMode(rawValue: rawValue) else { return .none }
+                guard let mode = request.value.mode else { return .none }
                 state.locationModeRequest = LocationModeRequest(
                     mode: mode,
-                    previousRawValue: state.previousLocationModeRaw,
-                    rawValue: rawValue)
+                    previousValue: .init(rawValue: state.previousLocationModeRaw),
+                    value: request.value)
                 return .none
 
             case let .locationModeSynced(sync):
                 guard !state.isChangingLocationMode else { return .none }
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
-                state.locationModeRaw = sync.rawValue
-                state.previousLocationModeRaw = sync.rawValue
+                state.locationModeRaw = sync.value.rawValue
+                state.previousLocationModeRaw = sync.value.rawValue
                 return .none
             }
         }
