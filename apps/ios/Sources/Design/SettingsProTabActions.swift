@@ -828,7 +828,7 @@ extension SettingsProTab {
     }
 
     func updateSetupCode(_ setupCode: String) {
-        self.gatewaySetupLinkStore.send(.setupCodeChanged(.init(setupCode: setupCode)))
+        self.gatewaySetupLinkStore.send(.setupCodeChanged(.init(setupCode: .init(value: setupCode))))
         self.storedSetupCode = setupCode
     }
 
