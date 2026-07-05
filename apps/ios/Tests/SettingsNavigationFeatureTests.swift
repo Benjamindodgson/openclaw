@@ -2440,9 +2440,9 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayTalkRuntimeSynced(.init(
-            activeModeTitle: "Ready",
-            activeModeSubtitle: "Listening starts from this phone",
-            lastIssueText: "Fallback active")))
+            activeModeTitle: .init(value: "Ready"),
+            activeModeSubtitle: .init(value: "Listening starts from this phone"),
+            lastIssueText: .init(value: "Fallback active"))))
         {
             $0.gatewayTalkActiveModeTitle = "Ready"
             $0.gatewayTalkActiveModeSubtitle = "Listening starts from this phone"
