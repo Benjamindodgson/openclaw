@@ -14,13 +14,27 @@ struct RootVoiceWakeToastFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct CommandText: Equatable, Sendable {
+        var value: String
+
+        init?(rawValue: String) {
+            let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return nil }
+            self.value = trimmed
+        }
+    }
+
     struct CommandTrigger: Equatable, Sendable {
-        var command: String
+        var commandText: CommandText?
+
+        init(rawValue: String) {
+            self.commandText = CommandText(rawValue: rawValue)
+        }
     }
 
     @ObservableState
     struct State: Equatable, Sendable {
-        var commandText: String?
+        var commandText: CommandText?
     }
 
     enum Action: Equatable, Sendable {
@@ -38,9 +52,8 @@ struct RootVoiceWakeToastFeature {
 
             switch action {
             case let .commandTriggered(trigger):
-                let trimmed = trigger.command.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return .none }
-                state.commandText = trimmed
+                guard let commandText = trigger.commandText else { return .none }
+                state.commandText = commandText
                 return .run { send in
                     try await sleeper.sleep()
                     await send(.dismissDelayElapsed)

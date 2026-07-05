@@ -657,9 +657,7 @@ struct RootTabs: View {
                 }
             }
             .overlay(alignment: .topLeading) {
-                if let voiceWakeToastText = self.voiceWakeToastStore.commandText,
-                   !voiceWakeToastText.isEmpty
-                {
+                if let voiceWakeToastText = self.voiceWakeToastStore.commandText?.value {
                     VoiceWakeToast(command: voiceWakeToastText)
                         .padding(.leading, 10)
                         .safeAreaPadding(.top, self.appModel.lastGatewayProblem == nil ? 58 : 132)
@@ -731,7 +729,7 @@ struct RootTabs: View {
             .onChange(of: self.voiceWake.lastTriggeredCommand) { _, newValue in
                 guard let newValue else { return }
                 self.voiceWakeToastStore.send(.commandTriggered(
-                    RootVoiceWakeToastFeature.CommandTrigger(command: newValue)))
+                    RootVoiceWakeToastFeature.CommandTrigger(rawValue: newValue)))
             }
     }
 
