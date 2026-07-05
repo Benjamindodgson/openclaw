@@ -19,8 +19,18 @@ struct CommandCenterTab: View {
     var openSettings: () -> Void
     var openSessions: (() -> Void)?
 
-    enum WorkRoute {
-        case chat(String?)
+    struct ChatRoute: Equatable {
+        let sessionKey: String?
+
+        static let defaultSession = Self(sessionKey: nil)
+
+        static func recentSession(_ sessionKey: String) -> Self {
+            Self(sessionKey: sessionKey)
+        }
+    }
+
+    enum WorkRoute: Equatable {
+        case chat(ChatRoute)
         case settings
     }
 
@@ -238,7 +248,7 @@ struct CommandCenterTab: View {
                 self.cardHeader(title: "Agent session")
 
                 Button {
-                    self.open(.chat(nil))
+                    self.open(.chat(.defaultSession))
                 } label: {
                     CommandSessionRow(item: self.defaultChatWorkItem)
                 }
@@ -327,7 +337,7 @@ struct CommandCenterTab: View {
             trailing: "chat",
             color: isOpen ? OpenClawBrand.accent : OpenClawBrand.ok,
             progress: nil,
-            route: .chat(nil))
+            route: .chat(.defaultSession))
     }
 
     private var defaultChatActivityText: String {
@@ -380,8 +390,8 @@ struct CommandCenterTab: View {
 
     private func open(_ route: WorkRoute) {
         switch route {
-        case let .chat(sessionKey):
-            self.appModel.openChat(sessionKey: sessionKey)
+        case let .chat(route):
+            self.appModel.openChat(sessionKey: route.sessionKey)
             self.openChat()
         case .settings:
             self.openSettings()
@@ -410,7 +420,7 @@ struct CommandCenterTab: View {
             trailing: "chat",
             color: isCurrent ? OpenClawBrand.accent : OpenClawBrand.ok,
             progress: nil,
-            route: .chat(session.key))
+            route: .chat(.recentSession(session.key)))
     }
 
     fileprivate static func sessionTitle(_ session: OpenClawChatSessionEntry) -> String {
@@ -775,8 +785,8 @@ struct CommandSessionsScreen: View {
 
     private func open(_ item: CommandCenterTab.WorkItem) {
         switch item.route {
-        case let .chat(sessionKey):
-            self.appModel.openChat(sessionKey: sessionKey)
+        case let .chat(route):
+            self.appModel.openChat(sessionKey: route.sessionKey)
             self.dismiss()
             self.openChat()
         case .settings:

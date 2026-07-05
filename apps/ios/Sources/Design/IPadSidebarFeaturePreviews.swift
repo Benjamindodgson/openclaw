@@ -194,7 +194,7 @@ private struct IPadActivityStatesPreview: View {
             trailing: "open",
             color: OpenClawBrand.ok,
             progress: nil,
-            route: .chat("main")),
+            route: .chat(.recentSession("main"))),
         CommandCenterTab.WorkItem(
             id: "preview-ipad-audit",
             icon: "bubble.left.and.text.bubble.right",
@@ -204,7 +204,7 @@ private struct IPadActivityStatesPreview: View {
             trailing: "open",
             color: OpenClawBrand.accent,
             progress: nil,
-            route: .chat("ipad-audit")),
+            route: .chat(.recentSession("ipad-audit"))),
     ]
 
     var body: some View {
