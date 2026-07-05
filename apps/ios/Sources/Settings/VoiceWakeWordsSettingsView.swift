@@ -2,30 +2,37 @@ import Combine
 import ComposableArchitecture
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct VoiceWakeWords: Equatable, Sendable {
+    var values: [String]
+}
+
+// swiftformat:enable redundantSendable
+
 struct VoiceWakeWordsPreferencesClient {
-    var defaultTriggerWords: @Sendable () -> [String]
-    var load: @Sendable () -> [String]
-    var save: @Sendable ([String]) -> Void
-    var sanitize: @Sendable ([String]) -> [String]
+    var defaultTriggerWords: @Sendable () -> VoiceWakeWords
+    var load: @Sendable () -> VoiceWakeWords
+    var save: @Sendable (VoiceWakeWords) -> Void
+    var sanitize: @Sendable (VoiceWakeWords) -> VoiceWakeWords
 }
 
 struct VoiceWakeWordsGatewayClient {
     var waitBeforeSync: @Sendable () async throws -> Void
-    var setGlobalWakeWords: @Sendable @MainActor ([String]) async -> Void
+    var setGlobalWakeWords: @Sendable @MainActor (VoiceWakeWords) async -> Void
 }
 
 extension VoiceWakeWordsPreferencesClient: DependencyKey {
     static let liveValue = VoiceWakeWordsPreferencesClient(
-        defaultTriggerWords: { VoiceWakePreferences.defaultTriggerWords },
-        load: { VoiceWakePreferences.loadTriggerWords() },
-        save: { VoiceWakePreferences.saveTriggerWords($0) },
-        sanitize: { VoiceWakePreferences.sanitizeTriggerWords($0) })
+        defaultTriggerWords: { .init(values: VoiceWakePreferences.defaultTriggerWords) },
+        load: { .init(values: VoiceWakePreferences.loadTriggerWords()) },
+        save: { VoiceWakePreferences.saveTriggerWords($0.values) },
+        sanitize: { .init(values: VoiceWakePreferences.sanitizeTriggerWords($0.values)) })
 
     static let testValue = VoiceWakeWordsPreferencesClient(
-        defaultTriggerWords: { VoiceWakePreferences.defaultTriggerWords },
-        load: { VoiceWakePreferences.defaultTriggerWords },
+        defaultTriggerWords: { .init(values: VoiceWakePreferences.defaultTriggerWords) },
+        load: { .init(values: VoiceWakePreferences.defaultTriggerWords) },
         save: { _ in },
-        sanitize: { VoiceWakePreferences.sanitizeTriggerWords($0) })
+        sanitize: { .init(values: VoiceWakePreferences.sanitizeTriggerWords($0.values)) })
 }
 
 extension VoiceWakeWordsGatewayClient: DependencyKey {
@@ -45,7 +52,7 @@ extension VoiceWakeWordsGatewayClient: DependencyKey {
                 try await Task.sleep(nanoseconds: 650_000_000)
             },
             setGlobalWakeWords: { words in
-                await appModel.setGlobalWakeWords(words)
+                await appModel.setGlobalWakeWords(words.values)
             })
     }
 }
@@ -130,7 +137,7 @@ struct VoiceWakeWordsSettingsFeature {
             switch action {
             case .appeared:
                 guard state.triggerWords.isEmpty else { return .none }
-                state.triggerWords = preferences.defaultTriggerWords()
+                state.triggerWords = preferences.defaultTriggerWords().values
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case .addWordButtonTapped:
@@ -140,7 +147,7 @@ struct VoiceWakeWordsSettingsFeature {
             case let .removeWords(removal):
                 state.triggerWords.remove(atOffsets: removal.offsets)
                 if state.triggerWords.isEmpty {
-                    state.triggerWords = preferences.defaultTriggerWords()
+                    state.triggerWords = preferences.defaultTriggerWords().values
                 }
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
@@ -150,7 +157,7 @@ struct VoiceWakeWordsSettingsFeature {
                 return .none
 
             case .resetDefaultsButtonTapped:
-                state.triggerWords = preferences.defaultTriggerWords()
+                state.triggerWords = preferences.defaultTriggerWords().values
                 return .none
 
             case let .focusedTriggerIndexChanged(change):
@@ -162,7 +169,7 @@ struct VoiceWakeWordsSettingsFeature {
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case .externalPreferencesChanged:
-                let updated = preferences.load()
+                let updated = preferences.load().values
                 guard updated != state.triggerWords else { return .none }
                 state.triggerWords = updated
                 return .none
@@ -176,7 +183,7 @@ struct VoiceWakeWordsSettingsFeature {
         preferences: VoiceWakeWordsPreferencesClient,
         gateway: VoiceWakeWordsGatewayClient) -> Effect<Action>
     {
-        let words = state.triggerWords
+        let words = VoiceWakeWords(values: state.triggerWords)
         let snapshot = preferences.sanitize(words)
         return .merge(
             .run { _ in
