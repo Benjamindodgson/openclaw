@@ -188,7 +188,8 @@ extension SettingsProTab {
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: self.storedManualGatewayPort)))
         self.agentSelectionStore.send(.selectedAgentSynced(.init(selectedAgentId: self.appModel.selectedAgentId)))
         self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)
-        self.gatewayCredentialsStore.send(.credentialsLoadRequested(.init(instanceId: self.instanceId)))
+        self.gatewayCredentialsStore.send(.credentialsLoadRequested(.init(
+            instanceId: .init(value: self.instanceId))))
     }
 
     func syncVoiceControlState() {
@@ -785,14 +786,14 @@ extension SettingsProTab {
         self.gatewayCredentialsStore.send(.gatewayTokenChanged(.init(value: value)))
         self.gatewayCredentialsStore.send(.gatewayTokenPersistenceRequested(.init(
             value: value,
-            instanceId: self.instanceId)))
+            instanceId: .init(value: self.instanceId))))
     }
 
     func updateGatewayPassword(_ value: String) {
         self.gatewayCredentialsStore.send(.gatewayPasswordChanged(.init(value: value)))
         self.gatewayCredentialsStore.send(.gatewayPasswordPersistenceRequested(.init(
             value: value,
-            instanceId: self.instanceId)))
+            instanceId: .init(value: self.instanceId))))
     }
 
     var manualPortIsValid: Bool {
