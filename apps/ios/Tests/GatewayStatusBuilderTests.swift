@@ -119,8 +119,12 @@ struct GatewayStatusBuilderTests {
             ChatTalkControlFeature(client: probe.client)
         }
 
-        await store.send(.toggleRequested(.init(sessionKey: "session-1", isTalkEnabled: false)))
-        await store.send(.toggleRequested(.init(sessionKey: "session-2", isTalkEnabled: true)))
+        await store.send(.toggleRequested(.init(
+            sessionKey: ChatSessionKey(rawValue: "session-1"),
+            talkEnabled: .init(isEnabled: false))))
+        await store.send(.toggleRequested(.init(
+            sessionKey: ChatSessionKey(rawValue: "session-2"),
+            talkEnabled: .init(isEnabled: true))))
         await store.finish()
 
         #expect(probe.focusedSessionKeys == ["session-1", "session-2"])
