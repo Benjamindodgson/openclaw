@@ -10,7 +10,7 @@ struct GatewayQuickSetupFeatureTests {
     @Test func `connect button tracks progress and stores error`() async {
         let probe = GatewayQuickSetupProbe()
         let candidate = Self.discoveredGateway(stableID: "shown-gateway")
-        probe.nextConnectError = "Failed to resolve the discovered gateway endpoint."
+        probe.nextConnectFailure = .init(message: "Failed to resolve the discovered gateway endpoint.")
         var initialState = GatewayQuickSetupFeature.State()
         initialState.connectError = "Previous error"
         let store = TestStore(initialState: initialState) {
@@ -154,7 +154,7 @@ struct GatewayQuickSetupFeatureTests {
 }
 
 private final class GatewayQuickSetupProbe: @unchecked Sendable {
-    var nextConnectError: String?
+    var nextConnectFailure: GatewayQuickSetupConnectFailure?
     var connectedGateways: [GatewayDiscoveryModel.DiscoveredGateway] = []
     var openedProblems: [GatewayConnectionProblem] = []
     var trustedProblems: [GatewayConnectionProblem] = []
@@ -163,7 +163,7 @@ private final class GatewayQuickSetupProbe: @unchecked Sendable {
         GatewayQuickSetupClient(
             connect: { gateway in
                 self.connectedGateways.append(gateway)
-                return self.nextConnectError
+                return self.nextConnectFailure
             },
             trustRotatedGatewayCertificate: { problem in
                 self.trustedProblems.append(problem)
