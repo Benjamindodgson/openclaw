@@ -182,9 +182,9 @@ extension SettingsProTab {
         self.syncNotificationRelayState()
         self.gatewayAutoConnectStore.send(.enabledSynced(.init(isEnabled: self.storedGatewayAutoConnect)))
         self.manualGatewayEndpointStore.send(.endpointSynced(.init(
-            enabled: self.storedManualGatewayEnabled,
-            host: self.storedManualGatewayHost,
-            useTLS: self.storedManualGatewayTLS)))
+            enabled: .init(value: self.storedManualGatewayEnabled),
+            host: .init(value: self.storedManualGatewayHost),
+            useTLS: .init(value: self.storedManualGatewayTLS))))
         self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: self.storedManualGatewayPort)))
         self.agentSelectionStore.send(.selectedAgentSynced(.init(selectedAgentId: self.appModel.selectedAgentId)))
         self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)
