@@ -129,22 +129,38 @@ struct SettingsChannelsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct RefreshRequest: Equatable, Sendable {
-            var sceneActive: Bool
+        struct SceneActivity: Equatable, Sendable {
+            var isActive: Bool
+        }
+
+        struct GatewayReadAccess: Equatable, Sendable {
             var canRead: Bool
-            var force: Bool
+        }
+
+        struct OperatorAdminAccess: Equatable, Sendable {
+            var canAdmin: Bool
+        }
+
+        struct RefreshForce: Equatable, Sendable {
+            var isForced: Bool
+        }
+
+        struct RefreshRequest: Equatable, Sendable {
+            var sceneActivity: SceneActivity
+            var readAccess: GatewayReadAccess
+            var force: RefreshForce
         }
 
         struct RefreshResponse: Equatable, Sendable {
-            var force: Bool
+            var force: RefreshForce
             var result: Result<[SettingsChannelEntry], SettingsChannelsError>
         }
 
         struct OperationRequest: Equatable, Sendable {
             var kind: SettingsChannelOperation.Kind
             var target: SettingsChannelOperationTarget
-            var canRead: Bool
-            var canAdmin: Bool
+            var readAccess: GatewayReadAccess
+            var adminAccess: OperatorAdminAccess
         }
 
         struct OperationResponse: Equatable, Sendable {
@@ -166,11 +182,11 @@ struct SettingsChannelsFeature {
 
             switch action {
             case let .refreshRequested(request):
-                guard request.sceneActive else {
+                guard request.sceneActivity.isActive else {
                     state.isLoading = false
                     return .none
                 }
-                guard request.canRead else {
+                guard request.readAccess.canRead else {
                     state.entries = []
                     state.isLoading = false
                     state.errorText = nil
@@ -201,7 +217,7 @@ struct SettingsChannelsFeature {
                     state.errorText = nil
 
                 case let .failure(error):
-                    if response.force || state.entries.isEmpty {
+                    if response.force.isForced || state.entries.isEmpty {
                         state.errorText = error.message
                     }
                 }
@@ -209,8 +225,8 @@ struct SettingsChannelsFeature {
 
             case let .operationRequested(request):
                 guard SettingsChannelsDestination.shouldEnableChannelOperation(
-                    canRead: request.canRead,
-                    hasOperatorAdminScope: request.canAdmin),
+                    canRead: request.readAccess.canRead,
+                    hasOperatorAdminScope: request.adminAccess.canAdmin),
                     state.busyOperation == nil
                 else {
                     return .none
@@ -527,17 +543,17 @@ struct SettingsChannelsDestination: View {
 
     private func refreshChannels(force: Bool) async {
         await self.store.send(.refreshRequested(.init(
-            sceneActive: self.scenePhase == .active,
-            canRead: self.canRead,
-            force: force))).finish()
+            sceneActivity: .init(isActive: self.scenePhase == .active),
+            readAccess: .init(canRead: self.canRead),
+            force: .init(isForced: force)))).finish()
     }
 
     private func run(_ kind: SettingsChannelOperation.Kind, channelID: String, accountID: String?) async {
         await self.store.send(.operationRequested(.init(
             kind: kind,
             target: .init(channelID: channelID, accountID: accountID),
-            canRead: self.canRead,
-            canAdmin: self.canAdmin))).finish()
+            readAccess: .init(canRead: self.canRead),
+            adminAccess: .init(canAdmin: self.canAdmin)))).finish()
     }
 
     nonisolated static func fallbackLabel(_ id: String) -> String {
