@@ -2362,7 +2362,7 @@ struct SettingsNavigationFeatureTests {
         await store.send(.talkButtonEnabledChanged(.init(isEnabled: false))) {
             $0.talkButtonEnabled = false
         }
-        await store.send(.talkSpeakerphoneEnabledChanged(.init(isEnabled: false))) {
+        await store.send(.talkSpeakerphoneEnabledChanged(.init(enabled: .init(isEnabled: false)))) {
             $0.talkSpeakerphoneEnabled = false
         }
         await store.finish()
@@ -2708,7 +2708,7 @@ private final class SettingsTalkPreferencesProbe: @unchecked Sendable {
                 self.realtimeVoiceSelections.append(voice.value)
             },
             setSpeakerphoneEnabled: { enabled in
-                self.speakerphoneEnabledValues.append(enabled)
+                self.speakerphoneEnabledValues.append(enabled.isEnabled)
             })
     }
 }

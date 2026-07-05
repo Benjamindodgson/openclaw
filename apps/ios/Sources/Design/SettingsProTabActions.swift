@@ -902,8 +902,9 @@ extension SettingsProTab {
     }
 
     func updateTalkSpeakerphoneEnabled(_ enabled: Bool) {
-        self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(.init(isEnabled: enabled)))
-        self.storedTalkSpeakerphoneEnabled = enabled
+        let speakerphone = SettingsTalkSpeakerphoneEnabled(isEnabled: enabled)
+        self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(.init(enabled: speakerphone)))
+        self.storedTalkSpeakerphoneEnabled = speakerphone.isEnabled
     }
 
     var talkApiKeyStatus: String {
