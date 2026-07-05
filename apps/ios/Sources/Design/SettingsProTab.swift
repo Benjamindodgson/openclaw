@@ -1071,7 +1071,7 @@ struct SettingsDeviceIdentityFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct DisplayNameChange: Equatable, Sendable { var displayName: String }
+        struct DisplayNameChange: Equatable, Sendable { var displayName: SettingsDeviceDisplayName }
 
         struct DisplayNameSync: Equatable, Sendable { var displayName: String }
 
@@ -1088,7 +1088,7 @@ struct SettingsDeviceIdentityFeature {
         Reduce { state, action in
             switch action {
             case let .displayNameChanged(change):
-                state.displayName = change.displayName
+                state.displayName = change.displayName.value
                 return .none
 
             case let .displayNameSynced(sync):

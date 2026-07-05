@@ -2545,6 +2545,21 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.storedAppearancePreferenceRaw = preference.rawValue"))
     }
 
+    @Test func `settings device display name change is typed`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+
+        #expect(supportSource.contains("struct SettingsDeviceDisplayName: Equatable, Sendable { var value: String }"))
+        #expect(settingsSource.contains("struct DisplayNameChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("var displayName: SettingsDeviceDisplayName"))
+        #expect(settingsSource.contains("state.displayName = change.displayName.value"))
+        #expect(actionsSource.contains(
+            "self.deviceIdentityStore.send(.displayNameChanged(.init(displayName: .init(value: displayName))))"))
+        #expect(!settingsSource.contains("struct DisplayNameChange: Equatable, Sendable { var displayName: String }"))
+        #expect(!actionsSource.contains(".displayNameChanged(.init(displayName: displayName))"))
+    }
+
     @Test func `settings voice control persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
