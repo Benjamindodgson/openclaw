@@ -654,12 +654,18 @@ struct RootTabsSourceGuardTests {
     @Test func `gateway quick setup response action is typed`() throws {
         let quickSetupSource = try String(contentsOf: Self.gatewayQuickSetupSourceURL(), encoding: .utf8)
 
-        #expect(quickSetupSource.contains("struct ConnectFailure: Equatable, Sendable"))
+        #expect(quickSetupSource.contains("struct GatewayQuickSetupConnectFailure: Equatable"))
+        #expect(quickSetupSource.contains("var connect: @Sendable @MainActor"))
+        #expect(quickSetupSource.contains("-> GatewayQuickSetupConnectFailure?"))
         #expect(quickSetupSource.contains("struct ConnectResponse: Equatable, Sendable"))
+        #expect(quickSetupSource.contains("var failure: GatewayQuickSetupConnectFailure?"))
         #expect(quickSetupSource.contains("case connectResponse(ConnectResponse)"))
         #expect(quickSetupSource.contains("state.connectError = response.failure?.message"))
-        #expect(quickSetupSource.contains("let failure = error.map { Action.ConnectFailure(message: $0) }"))
+        #expect(quickSetupSource.contains("return error.map(GatewayQuickSetupConnectFailure.init(message:))"))
+        #expect(quickSetupSource.contains("let failure = await client.connect(candidate)"))
         #expect(quickSetupSource.contains("await send(.connectResponse(.init(failure: failure)))"))
+        #expect(!quickSetupSource.contains("async -> String?"))
+        #expect(!quickSetupSource.contains("struct ConnectFailure:"))
         #expect(!quickSetupSource.contains("struct ConnectResponse: Equatable, Sendable { var error: String? }"))
     }
 

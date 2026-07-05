@@ -2,8 +2,13 @@ import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 
+struct GatewayQuickSetupConnectFailure: Equatable {
+    var message: String
+}
+
 struct GatewayQuickSetupClient {
-    var connect: @Sendable @MainActor (GatewayDiscoveryModel.DiscoveredGateway) async -> String?
+    var connect: @Sendable @MainActor (GatewayDiscoveryModel.DiscoveredGateway) async
+        -> GatewayQuickSetupConnectFailure?
     var trustRotatedGatewayCertificate: @Sendable @MainActor (GatewayConnectionProblem) async -> Bool
     var openProtocolMismatchHelpIfNeeded: @Sendable @MainActor (GatewayConnectionProblem) -> Bool
 }
@@ -23,7 +28,8 @@ extension GatewayQuickSetupClient: DependencyKey {
     static func live(gatewayController: GatewayConnectionController) -> Self {
         GatewayQuickSetupClient(
             connect: { candidate in
-                await gatewayController.connectWithDiagnostics(candidate)
+                let error = await gatewayController.connectWithDiagnostics(candidate)
+                return error.map(GatewayQuickSetupConnectFailure.init(message:))
             },
             trustRotatedGatewayCertificate: { problem in
                 await gatewayController.trustRotatedGatewayCertificate(from: problem)
@@ -62,9 +68,7 @@ struct GatewayQuickSetupFeature {
             var candidate: GatewayDiscoveryModel.DiscoveredGateway
         }
 
-        struct ConnectFailure: Equatable, Sendable { var message: String }
-
-        struct ConnectResponse: Equatable, Sendable { var failure: ConnectFailure? }
+        struct ConnectResponse: Equatable, Sendable { var failure: GatewayQuickSetupConnectFailure? }
 
         struct GatewayProblemPrimaryAction: Equatable, Sendable {
             var problem: GatewayConnectionProblem
@@ -130,8 +134,7 @@ struct GatewayQuickSetupFeature {
         state.connectError = nil
         state.connecting = true
         return .run { send in
-            let error = await client.connect(candidate)
-            let failure = error.map { Action.ConnectFailure(message: $0) }
+            let failure = await client.connect(candidate)
             await send(.connectResponse(.init(failure: failure)))
         }
         .cancellable(id: CancelID.connect, cancelInFlight: true)
