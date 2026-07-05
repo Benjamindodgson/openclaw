@@ -168,7 +168,7 @@ extension SettingsProTab {
         self.syncGatewaySetupStatusContext()
         self.syncGatewayConnectionStatusState()
         self.syncDiagnosticsContextState()
-        self.gatewaySetupLinkStore.send(.setupCodeSynced(.init(setupCode: self.storedSetupCode)))
+        self.gatewaySetupLinkStore.send(.setupCodeSynced(.init(setupCode: .init(value: self.storedSetupCode))))
         self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             SettingsDeviceCapabilityFeature.CapabilitiesSync(
@@ -367,7 +367,7 @@ extension SettingsProTab {
     }
 
     func handleScannedSetupCode(_ code: String) {
-        self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(.init(code: code)))
+        self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(.init(code: .init(value: code))))
         guard case let .appleReviewDemo(demo)? = self.gatewaySetupLinkStore.applyResult else { return }
         self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)
