@@ -100,7 +100,7 @@ private final class TalkProTabProbe: @unchecked Sendable {
                 self.talkEnabledValues.append(enabled)
             },
             startTalk: { sessionKey in
-                self.startedSessionKeys.append(sessionKey)
+                self.startedSessionKeys.append(sessionKey?.value)
             })
     }
 }

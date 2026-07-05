@@ -318,7 +318,7 @@ struct ChatProTab: View {
 
 // swiftformat:disable redundantSendable
 struct ChatTalkControlClient: Sendable {
-    var focusChatSession: @MainActor @Sendable (String) -> Void
+    var focusChatSession: @MainActor @Sendable (ChatSessionKey?) -> Void
     var setTalkEnabled: @MainActor @Sendable (Bool) -> Void
 }
 
@@ -336,7 +336,7 @@ extension ChatTalkControlClient: DependencyKey {
     static func live(appModel: NodeAppModel) -> Self {
         ChatTalkControlClient(
             focusChatSession: { sessionKey in
-                appModel.focusChatSession(sessionKey)
+                appModel.focusChatSession(sessionKey?.value)
             },
             setTalkEnabled: { enabled in
                 appModel.setTalkEnabled(enabled)
@@ -381,8 +381,9 @@ struct ChatTalkControlFeature {
 
             switch action {
             case let .toggleRequested(request):
+                let sessionKey = ChatSessionKey(rawValue: request.sessionKey)
                 return .run { [client] _ in
-                    await client.focusChatSession(request.sessionKey)
+                    await client.focusChatSession(sessionKey)
                     await client.setTalkEnabled(!request.isTalkEnabled)
                 }
             }

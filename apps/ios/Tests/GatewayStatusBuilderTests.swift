@@ -170,13 +170,13 @@ struct GatewayStatusBuilderTests {
 }
 
 private final class ChatTalkControlProbe: @unchecked Sendable {
-    var focusedSessionKeys: [String] = []
+    var focusedSessionKeys: [String?] = []
     var talkEnabledValues: [Bool] = []
 
     var client: ChatTalkControlClient {
         ChatTalkControlClient(
             focusChatSession: { sessionKey in
-                self.focusedSessionKeys.append(sessionKey)
+                self.focusedSessionKeys.append(sessionKey?.value)
             },
             setTalkEnabled: { enabled in
                 self.talkEnabledValues.append(enabled)

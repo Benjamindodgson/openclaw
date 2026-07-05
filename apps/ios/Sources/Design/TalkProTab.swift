@@ -5,7 +5,7 @@ import SwiftUI
 struct TalkProTabClient: Sendable {
     var setSpeakerphoneEnabled: @MainActor @Sendable (Bool) -> Void
     var setTalkEnabled: @MainActor @Sendable (Bool) -> Void
-    var startTalk: @MainActor @Sendable (String?) -> Void
+    var startTalk: @MainActor @Sendable (ChatSessionKey?) -> Void
 }
 
 // swiftformat:enable redundantSendable
@@ -30,7 +30,7 @@ extension TalkProTabClient: DependencyKey {
                 appModel.setTalkEnabled(enabled)
             },
             startTalk: { sessionKey in
-                appModel.talkMode.updateMainSessionKey(sessionKey)
+                appModel.talkMode.updateMainSessionKey(sessionKey?.value)
                 appModel.setTalkEnabled(true)
             })
     }
@@ -117,8 +117,9 @@ struct TalkProTabFeature {
 
             case let .startTalkRequested(request):
                 state.talkEnabled = true
+                let sessionKey = ChatSessionKey(rawValue: request.sessionKey)
                 return .run { _ in
-                    await client.startTalk(request.sessionKey)
+                    await client.startTalk(sessionKey)
                 }
 
             case let .talkEnabledChanged(change):
