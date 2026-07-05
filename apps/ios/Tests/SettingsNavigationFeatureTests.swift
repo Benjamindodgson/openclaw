@@ -547,7 +547,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature()
         }
 
-        await store.send(.connectionStarted(.init(gatewayID: "gateway-1"))) {
+        await store.send(.connectionStarted(.init(gatewayID: .init(value: "gateway-1")))) {
             $0.connectingGatewayID = "gateway-1"
         }
         await store.send(.connectionFinished) {
@@ -602,7 +602,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature()
         }
 
-        await store.send(.connectionStarted(.init(gatewayID: "manual"))) {
+        await store.send(.connectionStarted(.init(gatewayID: .init(value: "manual")))) {
             $0.connectingGatewayID = "manual"
         }
         await store.send(.connectionFinished) {

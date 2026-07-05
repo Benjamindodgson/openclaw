@@ -86,8 +86,10 @@ struct SettingsGatewayConnectionFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct GatewayConnectionID: Equatable, Sendable { var value: String }
+
         struct ConnectionStart: Equatable, Sendable {
-            var gatewayID: String
+            var gatewayID: GatewayConnectionID
         }
 
         struct DiscoveredGatewayPersistenceRequest: Equatable, Sendable {
@@ -132,7 +134,7 @@ struct SettingsGatewayConnectionFeature {
                 return .none
 
             case let .connectionStarted(start):
-                state.connectingGatewayID = start.gatewayID
+                state.connectingGatewayID = start.gatewayID.value
                 return .none
 
             case .disconnectRequested:
