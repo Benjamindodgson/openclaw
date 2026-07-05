@@ -753,7 +753,8 @@ extension SettingsProTab {
     }
 
     func updateManualGatewayHost(_ host: String) {
-        self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(.init(host: host)))
+        self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(.init(
+            draft: .init(value: host))))
         self.storedManualGatewayHost = host
     }
 

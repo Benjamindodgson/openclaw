@@ -2010,6 +2010,8 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("case failure(Failure)"))
         #expect(gatewaySetupFeaturesSource.contains("struct EndpointSync: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayEnabledChange: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayHostDraft: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("var draft: ManualGatewayHostDraft"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayHostChange: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayTLSChange: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SetupLinkApplication: Equatable, Sendable"))
@@ -2032,7 +2034,8 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains(
             "self.manualGatewayEndpointStore.send(.manualGatewayEnabledChanged(.init(isEnabled:"))
         #expect(actionsSource.contains(
-            "self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(.init(host:"))
+            "self.manualGatewayEndpointStore.send(.manualGatewayHostChanged(.init("))
+        #expect(actionsSource.contains("draft: .init(value: host)"))
         #expect(actionsSource.contains(
             "self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(.init(useTLS:"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.setupLinkApplied(.init("))
@@ -2040,6 +2043,8 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)"))
         #expect(actionsSource.contains("self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))
         #expect(!gatewaySetupFeaturesSource.contains("case failure(String)"))
+        #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayHost = change.host"))
+        #expect(!actionsSource.contains("manualGatewayHostChanged(.init(host:"))
         #expect(!actionsSource.contains("guard !host.isEmpty else"))
         #expect(!actionsSource.contains("guard self.manualPortIsValid else"))
     }

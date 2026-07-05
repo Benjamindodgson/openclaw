@@ -238,7 +238,8 @@ struct SettingsManualGatewayEndpointFeature {
         }
 
         struct ManualGatewayEnabledChange: Equatable, Sendable { var isEnabled: Bool }
-        struct ManualGatewayHostChange: Equatable, Sendable { var host: String }
+        struct ManualGatewayHostDraft: Equatable, Sendable { var value: String }
+        struct ManualGatewayHostChange: Equatable, Sendable { var draft: ManualGatewayHostDraft }
         struct ManualGatewayTLSChange: Equatable, Sendable { var useTLS: Bool }
         struct SetupLinkApplication: Equatable, Sendable {
             var host: String
@@ -339,7 +340,7 @@ struct SettingsManualGatewayEndpointFeature {
                 return .none
 
             case let .manualGatewayHostChanged(change):
-                state.manualGatewayHost = change.host
+                state.manualGatewayHost = change.draft.value
                 return .none
 
             case let .manualGatewayTLSChanged(change):
