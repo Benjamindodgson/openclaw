@@ -506,7 +506,7 @@ extension SettingsProTab {
         guard let result else { return }
         self.locationStore.send(.locationModeApplyResultHandled)
         if case let .denied(denied) = result {
-            self.storedLocationModeRaw = denied.previousRawValue
+            self.storedLocationModeRaw = denied.previousValue.rawValue
         }
     }
 
