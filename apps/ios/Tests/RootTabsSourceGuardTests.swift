@@ -2561,6 +2561,7 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("var settingsTalkPreferences: SettingsTalkPreferencesClient"))
         #expect(preferencesSource.contains("@Dependency(\\.settingsTalkPreferences)"))
         #expect(preferencesSource.contains("struct ProviderSelectionChange: Equatable, Sendable"))
+        #expect(preferencesSource.contains("var selection: TalkModeProviderSelection"))
         #expect(preferencesSource.contains("struct RealtimeVoiceSelectionChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct TalkSpeakerphoneEnabledChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct GatewayTalkConfigSync: Equatable, Sendable"))
@@ -2578,8 +2579,9 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("talkPreferencesStore: self.makeSettingsTalkPreferencesStore()"))
         #expect(storesSource.contains("func makeSettingsTalkPreferencesStore()"))
         #expect(storesSource.contains("preferencesClient: .live(appModel: self.appModel)"))
+        #expect(updateProviderFunction.contains("let selection = TalkModeProviderSelection.resolved(rawValue)"))
         #expect(updateProviderFunction
-            .contains("self.talkPreferencesStore.send(.providerSelectionChanged(.init(rawValue: rawValue)))"))
+            .contains("self.talkPreferencesStore.send(.providerSelectionChanged(.init(selection: selection)))"))
         #expect(updateProviderFunction.contains("self.storedTalkProviderSelectionRaw = selection.rawValue"))
         #expect(!updateProviderFunction.contains("self.appModel.setTalkProviderSelection"))
         #expect(updateRealtimeVoiceFunction

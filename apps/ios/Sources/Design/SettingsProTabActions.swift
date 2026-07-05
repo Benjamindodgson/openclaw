@@ -874,8 +874,8 @@ extension SettingsProTab {
     }
 
     func updateTalkProviderSelection(_ rawValue: String) {
-        self.talkPreferencesStore.send(.providerSelectionChanged(.init(rawValue: rawValue)))
         let selection = TalkModeProviderSelection.resolved(rawValue)
+        self.talkPreferencesStore.send(.providerSelectionChanged(.init(selection: selection)))
         self.storedTalkProviderSelectionRaw = selection.rawValue
     }
 

@@ -2332,7 +2332,7 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
 
-        await store.send(.providerSelectionChanged(.init(rawValue: "unknown"))) {
+        await store.send(.providerSelectionChanged(.init(selection: .gatewayDefault))) {
             $0.providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
         }
         await store.send(.realtimeVoiceSelectionChanged(.init(rawValue: "unknown"))) {
