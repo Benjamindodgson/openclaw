@@ -328,7 +328,7 @@ struct AgentProTab: View {
 
 // swiftformat:disable redundantSendable
 struct AgentSelectionClient: Sendable {
-    var setSelectedAgentId: @MainActor @Sendable (String?) -> Void
+    var setSelectedAgentId: @MainActor @Sendable (SelectedAgentID) -> Void
 }
 
 // swiftformat:enable redundantSendable
@@ -340,7 +340,7 @@ extension AgentSelectionClient: DependencyKey {
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
         AgentSelectionClient(setSelectedAgentId: { agentId in
-            appModel.setSelectedAgentId(agentId)
+            appModel.setSelectedAgentId(agentId.value)
         })
     }
 }
@@ -381,8 +381,9 @@ struct AgentSelectionFeature {
 
             switch action {
             case let .agentSelected(selection):
+                let selectedAgentId = SelectedAgentID(value: selection.agentId)
                 return .run { [selectionClient] _ in
-                    await selectionClient.setSelectedAgentId(selection.agentId)
+                    await selectionClient.setSelectedAgentId(selectedAgentId)
                 }
             }
         }

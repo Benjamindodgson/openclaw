@@ -19,11 +19,11 @@ struct AgentSelectionFeatureTests {
 }
 
 private final class AgentSelectionProbe: @unchecked Sendable {
-    var selectedAgentIds: [String?] = []
+    var selectedAgentIds: [String] = []
 
     var client: AgentSelectionClient {
         AgentSelectionClient(setSelectedAgentId: { agentId in
-            self.selectedAgentIds.append(agentId)
+            self.selectedAgentIds.append(agentId.value)
         })
     }
 }

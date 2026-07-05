@@ -417,16 +417,21 @@ struct RootTabsSourceGuardTests {
     @Test func `agent row selection is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let agentModelsSource = try String(contentsOf: Self.agentProModelsSourceURL(), encoding: .utf8)
         let agentSource = try String(contentsOf: Self.agentProTabSourceURL(), encoding: .utf8)
         let agentOverviewSource = try String(contentsOf: Self.agentProTabOverviewSourceURL(), encoding: .utf8)
         let phoneControlHubSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
 
+        #expect(agentModelsSource.contains("struct SelectedAgentID: Equatable, Sendable"))
+        #expect(agentModelsSource.contains("var normalized: SelectedAgentID?"))
+        #expect(agentSource.contains("var setSelectedAgentId: @MainActor @Sendable (SelectedAgentID) -> Void"))
         #expect(agentSource.contains("struct AgentSelectionClient: Sendable"))
         #expect(agentSource.contains("var agentSelection: AgentSelectionClient"))
         #expect(agentSource.contains("struct AgentSelectionFeature"))
         #expect(agentSource.contains("struct AgentSelection: Equatable, Sendable"))
         #expect(agentSource.contains("case agentSelected(AgentSelection)"))
-        #expect(agentSource.contains("await selectionClient.setSelectedAgentId(selection.agentId)"))
+        #expect(agentSource.contains("let selectedAgentId = SelectedAgentID(value: selection.agentId)"))
+        #expect(agentSource.contains("await selectionClient.setSelectedAgentId(selectedAgentId)"))
         #expect(agentOverviewSource.contains("self.selectionStore.send(.agentSelected(.init(agentId: agent.id)))"))
         #expect(!agentOverviewSource.contains("self.appModel.setSelectedAgentId(agent.id)"))
         #expect(storesSource.contains("func makeAgentSelectionStore()"))
@@ -2777,6 +2782,7 @@ struct RootTabsSourceGuardTests {
     @Test func `settings agent selection persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let agentModelsSource = try String(contentsOf: Self.agentProModelsSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let agentSelectionBinding = try Self.extract(
             settingsSource,
@@ -2787,11 +2793,11 @@ struct RootTabsSourceGuardTests {
             from: ".onChange(of: self.appModel.selectedAgentId ?? \"\")",
             to: ".onChange(of: self.storedSetupCode)")
 
-        #expect(settingsSource.contains("struct SettingsSelectedAgentID: Equatable, Sendable"))
-        #expect(settingsSource.contains("var normalized: SettingsSelectedAgentID?"))
+        #expect(agentModelsSource.contains("struct SelectedAgentID: Equatable, Sendable"))
+        #expect(agentModelsSource.contains("var normalized: SelectedAgentID?"))
         #expect(settingsSource.contains("struct SettingsSelectedAgentClient: Sendable"))
         #expect(settingsSource.contains(
-            "var setSelectedAgentId: @MainActor @Sendable (SettingsSelectedAgentID?) -> Void"))
+            "var setSelectedAgentId: @MainActor @Sendable (SelectedAgentID?) -> Void"))
         #expect(settingsSource.contains("var settingsSelectedAgent: SettingsSelectedAgentClient"))
         #expect(settingsSource.contains("struct PickerSelectionChange: Equatable, Sendable"))
         #expect(settingsSource.contains("struct SelectedAgentSync: Equatable, Sendable"))
@@ -2799,7 +2805,7 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("case selectedAgentSynced(SelectedAgentSync)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsSelectedAgent)"))
         #expect(settingsSource.contains(
-            "let selectedAgentId = SettingsSelectedAgentID(value: change.selectedAgentPickerId).normalized"))
+            "let selectedAgentId = SelectedAgentID(value: change.selectedAgentPickerId).normalized"))
         #expect(settingsSource.contains("await selectedAgentClient.setSelectedAgentId(selectedAgentId)"))
         #expect(settingsSource.contains("appModel.setSelectedAgentId(selectedAgentId?.value)"))
         #expect(rootSource.contains("agentSelectionStore: self.makeSettingsAgentSelectionStore()"))
@@ -2964,6 +2970,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/AgentProTab.swift")
+    }
+
+    private static func agentProModelsSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/AgentProModels.swift")
     }
 
     private static func agentProTabOverviewSourceURL() -> URL {
