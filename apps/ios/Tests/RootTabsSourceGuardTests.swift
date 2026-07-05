@@ -2399,7 +2399,8 @@ struct RootTabsSourceGuardTests {
             to: "func retryGatewayConnectionFromProblem()")
 
         #expect(settingsSource.contains("struct OnboardingRequestIDChange: Equatable, Sendable"))
-        #expect(settingsSource.contains("struct OnboardingResetRequest: Equatable, Sendable"))
+        #expect(settingsSource.contains(
+            "struct OnboardingResetRequest: Equatable, Sendable { var instanceId: SettingsGatewayCurrentInstanceID }"))
         #expect(settingsSource.contains("struct OnboardingStateSync: Equatable, Sendable"))
         #expect(settingsSource.contains("case onboardingRequestIDChanged(OnboardingRequestIDChange)"))
         #expect(settingsSource.contains("case onboardingResetRequested(OnboardingResetRequest)"))
@@ -2408,10 +2409,13 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("state.onboardingRequestID += 1"))
         #expect(settingsSource.contains("await resetClient.reset(request.instanceId)"))
         #expect(supportSource.contains("struct SettingsOnboardingResetClient"))
-        #expect(supportSource.contains("GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId)"))
+        #expect(supportSource.contains(
+            "var reset: @MainActor @Sendable (_ instanceId: SettingsGatewayCurrentInstanceID) -> Void"))
+        #expect(supportSource.contains("GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId.value)"))
         #expect(rootSource.contains("self.makeSettingsOnboardingStateStore()"))
         #expect(storesSource.contains("SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))"))
-        #expect(actionsSource.contains(".send(.onboardingResetRequested(.init(instanceId: self.instanceId)))"))
+        #expect(resetFunction.contains(".send(.onboardingResetRequested(.init("))
+        #expect(resetFunction.contains("instanceId: .init(value: self.instanceId)"))
         #expect(actionsSource.contains(".finish()"))
         #expect(actionsSource.contains("self.syncStoredOnboardingResetState()"))
         #expect(settingsSource.contains("Task { await self.resetOnboarding() }"))

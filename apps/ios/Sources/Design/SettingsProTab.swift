@@ -975,7 +975,7 @@ struct SettingsOnboardingStateFeature {
     enum Action: Equatable, Sendable {
         struct OnboardingRequestIDChange: Equatable, Sendable { var requestID: Int }
 
-        struct OnboardingResetRequest: Equatable, Sendable { var instanceId: String }
+        struct OnboardingResetRequest: Equatable, Sendable { var instanceId: SettingsGatewayCurrentInstanceID }
 
         struct OnboardingStateSync: Equatable, Sendable {
             var hasConnectedOnce: Bool

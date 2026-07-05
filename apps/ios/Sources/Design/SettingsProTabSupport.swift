@@ -156,7 +156,7 @@ extension DependencyValues {
 }
 
 struct SettingsOnboardingResetClient {
-    var reset: @MainActor @Sendable (_ instanceId: String) -> Void
+    var reset: @MainActor @Sendable (_ instanceId: SettingsGatewayCurrentInstanceID) -> Void
 }
 
 extension SettingsOnboardingResetClient: DependencyKey {
@@ -166,7 +166,7 @@ extension SettingsOnboardingResetClient: DependencyKey {
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
         SettingsOnboardingResetClient(reset: { instanceId in
-            GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId)
+            GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId.value)
         })
     }
 }

@@ -453,7 +453,8 @@ extension SettingsProTab {
         self.disableGatewayAutoConnectForOnboardingReset()
         self.gatewayCredentialsStore.send(.credentialsClearedForOnboardingReset)
         await self.onboardingStateStore
-            .send(.onboardingResetRequested(.init(instanceId: self.instanceId)))
+            .send(.onboardingResetRequested(.init(
+                instanceId: .init(value: self.instanceId))))
             .finish()
         self.syncStoredOnboardingResetState()
         self.clearManualGatewayEndpointForOnboardingReset()
