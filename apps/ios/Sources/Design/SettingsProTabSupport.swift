@@ -27,6 +27,8 @@ struct SettingsGatewayStoredCredentials: Equatable, Sendable {
     var password: String
 }
 
+struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String }
+
 // swiftformat:enable redundantSendable
 
 struct SettingsGatewayCredentialsPersistenceClient {
@@ -178,21 +180,21 @@ extension DependencyValues {
 }
 
 struct SettingsShareInstructionPersistenceClient {
-    var loadDefaultInstruction: @Sendable () -> String
+    var loadDefaultInstruction: @Sendable () -> SettingsDefaultShareInstruction
     var saveDefaultInstruction: @MainActor @Sendable (_ value: String) -> Void
 }
 
 extension SettingsShareInstructionPersistenceClient: DependencyKey {
     static let liveValue = SettingsShareInstructionPersistenceClient(
         loadDefaultInstruction: {
-            ShareToAgentSettings.loadDefaultInstruction()
+            .init(value: ShareToAgentSettings.loadDefaultInstruction())
         },
         saveDefaultInstruction: { value in
             ShareToAgentSettings.saveDefaultInstruction(value)
         })
 
     static let testValue = SettingsShareInstructionPersistenceClient(
-        loadDefaultInstruction: { "" },
+        loadDefaultInstruction: { .init(value: "") },
         saveDefaultInstruction: { _ in })
 }
 

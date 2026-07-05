@@ -2529,7 +2529,7 @@ private final class SettingsShareInstructionPersistenceProbe: @unchecked Sendabl
     var client: SettingsShareInstructionPersistenceClient {
         SettingsShareInstructionPersistenceClient(
             loadDefaultInstruction: {
-                self.defaultInstruction
+                .init(value: self.defaultInstruction)
             },
             saveDefaultInstruction: { value in
                 self.savedInstructions.append(value)

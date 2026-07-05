@@ -2214,6 +2214,9 @@ struct RootTabsSourceGuardTests {
             to: "func syncVoiceControlState()")
 
         #expect(supportSource.contains("struct SettingsShareInstructionPersistenceClient"))
+        #expect(supportSource.contains("struct SettingsDefaultShareInstruction: Equatable, Sendable"))
+        #expect(supportSource.contains(
+            "var loadDefaultInstruction: @Sendable () -> SettingsDefaultShareInstruction"))
         #expect(supportSource.contains("ShareToAgentSettings.loadDefaultInstruction()"))
         #expect(supportSource.contains("ShareToAgentSettings.saveDefaultInstruction(value)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsShareInstructionPersistence)"))
@@ -2222,7 +2225,7 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("case defaultShareInstructionLoadRequested"))
         #expect(settingsSource.contains(
             "case defaultShareInstructionPersistenceRequested(DefaultShareInstructionPersistenceRequest)"))
-        #expect(settingsSource.contains("persistenceClient.loadDefaultInstruction()"))
+        #expect(settingsSource.contains("persistenceClient.loadDefaultInstruction().value"))
         #expect(settingsSource.contains("await persistenceClient.saveDefaultInstruction(request.value)"))
         #expect(actionsSource.contains("self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)"))
         #expect(syncSettingsFunction.contains("ShareToAgentSettings.loadDefaultInstruction") == false)
