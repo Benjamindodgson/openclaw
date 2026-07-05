@@ -283,8 +283,9 @@ extension SettingsProTab {
         defer { self.gatewayConnectionStore.send(.connectionFinished) }
         self.updateManualGatewayEnabled(false)
         self.gatewayConnectionStore.send(.discoveredGatewayPersistenceRequested(.init(stableID: gateway.stableID)))
-        if let err = await self.gatewayController.connectWithDiagnostics(gateway) {
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: err)))
+        let result = await self.gatewayController.connectWithDiagnostics(gateway)
+        if let failure = result.failure {
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))
         }
     }
 

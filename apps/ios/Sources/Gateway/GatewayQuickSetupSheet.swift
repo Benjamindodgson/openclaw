@@ -28,8 +28,8 @@ extension GatewayQuickSetupClient: DependencyKey {
     static func live(gatewayController: GatewayConnectionController) -> Self {
         GatewayQuickSetupClient(
             connect: { candidate in
-                let error = await gatewayController.connectWithDiagnostics(candidate)
-                return error.map(GatewayQuickSetupConnectFailure.init(message:))
+                let result = await gatewayController.connectWithDiagnostics(candidate)
+                return result.failure.map { .init(message: $0.message) }
             },
             trustRotatedGatewayCertificate: { problem in
                 await gatewayController.trustRotatedGatewayCertificate(from: problem)

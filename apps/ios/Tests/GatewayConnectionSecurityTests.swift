@@ -253,7 +253,8 @@ import os
             tailnetDns: discoveredHost,
             gatewayPort: discoveredPort,
             fingerprint: nil)
-        let message = await controller.connectWithDiagnostics(gateway)
+        let result = await controller.connectWithDiagnostics(gateway)
+        let message = result.failure?.message
 
         #expect(controller.pendingTrustPrompt == nil)
         #expect(message?.contains("TLS fingerprint verification timed out") == true)
