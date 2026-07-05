@@ -2826,6 +2826,9 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("struct SettingsGatewayTalkApiKeyConfigured: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct SettingsGatewayTalkUsesRealtime: Equatable, Sendable"))
         #expect(preferencesSource
+            .contains("struct SettingsGatewayTalkAppleReviewDemoModeEnabled: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct SettingsGatewayTalkTransportLabel: Equatable, Sendable"))
+        #expect(preferencesSource
             .contains("setSpeakerphoneEnabled: @MainActor @Sendable (SettingsTalkSpeakerphoneEnabled) -> Void"))
         #expect(preferencesSource.contains("struct TalkBackgroundEnabledChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("var enabled: SettingsTalkBackgroundEnabled"))
@@ -2841,6 +2844,12 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured.value"))
         #expect(preferencesSource.contains("state.gatewayTalkUsesRealtime = sync.usesRealtime.value"))
         #expect(preferencesSource.contains("struct GatewayTalkDisplayContextSync: Equatable, Sendable"))
+        #expect(preferencesSource
+            .contains("var isAppleReviewDemoModeEnabled: SettingsGatewayTalkAppleReviewDemoModeEnabled"))
+        #expect(preferencesSource.contains("var transportLabel: SettingsGatewayTalkTransportLabel"))
+        #expect(preferencesSource
+            .contains("state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
+        #expect(preferencesSource.contains("state.gatewayTalkTransportLabel = sync.transportLabel.value"))
         #expect(preferencesSource.contains("struct GatewayTalkRuntimeSync: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct PreferencesSync: Equatable, Sendable"))
         #expect(preferencesSource.contains("case gatewayTalkConfigSynced(GatewayTalkConfigSync)"))

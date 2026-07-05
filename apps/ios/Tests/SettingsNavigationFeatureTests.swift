@@ -2426,8 +2426,8 @@ struct SettingsNavigationFeatureTests {
             $0.gatewayTalkUsesRealtime = false
         }
         await store.send(.gatewayTalkDisplayContextSynced(.init(
-            isAppleReviewDemoModeEnabled: true,
-            transportLabel: "Gateway Relay")))
+            isAppleReviewDemoModeEnabled: .init(value: true),
+            transportLabel: .init(value: "Gateway Relay"))))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayTalkTransportLabel = "Gateway Relay"
