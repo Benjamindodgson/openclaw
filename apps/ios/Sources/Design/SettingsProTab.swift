@@ -1153,7 +1153,8 @@ struct SettingsDebugOptionsFeature {
             var canvasDebugStatusEnabled: Bool
         }
 
-        struct DebugOptionToggleChange: Equatable, Sendable { var enabled: Bool }
+        struct SettingsDebugOptionEnabled: Equatable, Sendable { var isEnabled: Bool }
+        struct DebugOptionToggleChange: Equatable, Sendable { var enabled: SettingsDebugOptionEnabled }
 
         case canvasDebugStatusChanged(DebugOptionToggleChange)
         case debugOptionsSynced(DebugOptionsSync)
@@ -1170,7 +1171,7 @@ struct SettingsDebugOptionsFeature {
 
             switch action {
             case let .canvasDebugStatusChanged(change):
-                state.canvasDebugStatusEnabled = change.enabled
+                state.canvasDebugStatusEnabled = change.enabled.isEnabled
                 return .none
 
             case let .debugOptionsSynced(sync):
@@ -1179,9 +1180,10 @@ struct SettingsDebugOptionsFeature {
                 return .none
 
             case let .discoveryDebugLogsChanged(change):
-                state.discoveryDebugLogsEnabled = change.enabled
+                let enabled = change.enabled
+                state.discoveryDebugLogsEnabled = enabled.isEnabled
                 return .run { _ in
-                    await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(change.enabled)
+                    await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(enabled.isEnabled)
                 }
             }
         }
@@ -1665,10 +1667,12 @@ struct SettingsProTab: View {
                 self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: newValue)))
             }
             .onChange(of: self.storedDiscoveryDebugLogsEnabled) { _, newValue in
-                self.debugOptionsStore.send(.discoveryDebugLogsChanged(.init(enabled: newValue)))
+                self.debugOptionsStore.send(.discoveryDebugLogsChanged(.init(
+                    enabled: .init(isEnabled: newValue))))
             }
             .onChange(of: self.storedCanvasDebugStatusEnabled) { _, newValue in
-                self.debugOptionsStore.send(.canvasDebugStatusChanged(.init(enabled: newValue)))
+                self.debugOptionsStore.send(.canvasDebugStatusChanged(.init(
+                    enabled: .init(isEnabled: newValue))))
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChangeRequested(.init(rawValue: newValue)))

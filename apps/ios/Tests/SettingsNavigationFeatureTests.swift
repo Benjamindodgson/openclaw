@@ -419,10 +419,10 @@ struct SettingsNavigationFeatureTests {
             SettingsDebugOptionsFeature(discoveryDebugLoggingClient: discoveryDebugProbe.client)
         }
 
-        await store.send(.discoveryDebugLogsChanged(.init(enabled: true))) {
+        await store.send(.discoveryDebugLogsChanged(.init(enabled: .init(isEnabled: true)))) {
             $0.discoveryDebugLogsEnabled = true
         }
-        await store.send(.canvasDebugStatusChanged(.init(enabled: true))) {
+        await store.send(.canvasDebugStatusChanged(.init(enabled: .init(isEnabled: true)))) {
             $0.canvasDebugStatusEnabled = true
         }
         await store.finish()

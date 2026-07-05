@@ -2937,21 +2937,27 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("struct SettingsDiscoveryDebugLoggingClient: Sendable"))
         #expect(settingsSource.contains("var settingsDiscoveryDebugLogging: SettingsDiscoveryDebugLoggingClient"))
         #expect(settingsSource.contains("struct DebugOptionsSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct SettingsDebugOptionEnabled: Equatable, Sendable"))
         #expect(settingsSource.contains("struct DebugOptionToggleChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("var enabled: SettingsDebugOptionEnabled"))
         #expect(settingsSource.contains("case discoveryDebugLogsChanged(DebugOptionToggleChange)"))
         #expect(settingsSource.contains("case canvasDebugStatusChanged(DebugOptionToggleChange)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsDiscoveryDebugLogging)"))
         #expect(settingsSource.contains(
-            "await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(change.enabled)"))
+            "await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(enabled.isEnabled)"))
         #expect(rootSource.contains("debugOptionsStore: self.makeSettingsDebugOptionsStore()"))
         #expect(storesSource.contains("func makeSettingsDebugOptionsStore()"))
         #expect(storesSource.contains("discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController)"))
-        #expect(updateFunction.contains(
-            "self.debugOptionsStore.send(.discoveryDebugLogsChanged(.init(enabled: enabled)))"))
+        #expect(updateFunction.contains("enabled: .init(isEnabled: enabled)"))
         #expect(!updateFunction.contains("self.gatewayController.setDiscoveryDebugLoggingEnabled(enabled)"))
-        #expect(storedDebugChange.contains(
-            "self.debugOptionsStore.send(.discoveryDebugLogsChanged(.init(enabled: newValue)))"))
+        #expect(storedDebugChange.contains("enabled: .init(isEnabled: newValue)"))
         #expect(!storedDebugChange.contains("self.gatewayController.setDiscoveryDebugLoggingEnabled(newValue)"))
+        #expect(!settingsSource.contains("state.canvasDebugStatusEnabled = change.enabled\n"))
+        #expect(!settingsSource.contains("state.discoveryDebugLogsEnabled = change.enabled\n"))
+        #expect(!actionsSource.contains("discoveryDebugLogsChanged(.init(enabled: enabled))"))
+        #expect(!actionsSource.contains("canvasDebugStatusChanged(.init(enabled: enabled))"))
+        #expect(!settingsSource.contains("discoveryDebugLogsChanged(.init(enabled: newValue))"))
+        #expect(!settingsSource.contains("canvasDebugStatusChanged(.init(enabled: newValue))"))
     }
 
     @Test func `settings agent selection persistence is reducer effect owned`() throws {
