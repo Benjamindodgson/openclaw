@@ -2,14 +2,21 @@ import ComposableArchitecture
 import SwiftUI
 import UIKit
 
+// swiftformat:disable redundantSendable
+struct GatewayDiscoveryDebugLogClipboardText: Equatable, Sendable {
+    var value: String
+}
+
+// swiftformat:enable redundantSendable
+
 struct GatewayDiscoveryDebugLogClipboardClient {
-    var copy: @Sendable (String) async -> Void
+    var copy: @Sendable (GatewayDiscoveryDebugLogClipboardText) async -> Void
 }
 
 extension GatewayDiscoveryDebugLogClipboardClient: DependencyKey {
     static let liveValue = GatewayDiscoveryDebugLogClipboardClient(copy: { text in
         await MainActor.run {
-            UIPasteboard.general.string = text
+            UIPasteboard.general.string = text.value
         }
     })
 
@@ -37,7 +44,7 @@ struct GatewayDiscoveryDebugLogFeature {
 
     enum Action: Equatable, Sendable {
         struct CopyRequest: Equatable, Sendable {
-            var log: String
+            var log: GatewayDiscoveryDebugLogClipboardText
         }
 
         case copyButtonTapped(CopyRequest)
@@ -102,7 +109,7 @@ struct GatewayDiscoveryDebugLogView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Copy") {
-                    self.store.send(.copyButtonTapped(.init(log: self.formattedLog())))
+                    self.store.send(.copyButtonTapped(.init(log: .init(value: self.formattedLog()))))
                 }
                 .disabled(self.gatewayController.discoveryDebugLog.isEmpty)
             }
