@@ -35,6 +35,10 @@ struct SettingsGatewayCredentialValue: Equatable, Sendable {
     }
 }
 
+struct SettingsGatewayCredentialDraft: Equatable, Sendable {
+    var value: String
+}
+
 struct SettingsGatewayCurrentInstanceID: Equatable, Sendable {
     var value: String
 
