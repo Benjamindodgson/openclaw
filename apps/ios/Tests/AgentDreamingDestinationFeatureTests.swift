@@ -25,7 +25,9 @@ struct AgentDreamingDestinationFeatureTests {
 
     @Test func `maintenance action stores success summary`() async {
         let store = TestStore(initialState: AgentDreamingDestinationFeature.State()) {
-            AgentDreamingDestinationFeature(client: Self.client(run: { action in "\(action.title) complete." }))
+            AgentDreamingDestinationFeature(client: Self.client(run: { action in
+                .init(summary: "\(action.title) complete.")
+            }))
         }
 
         await store.send(.dreamActionTapped(.init(action: .repair, gatewayConnected: true))) {
@@ -59,12 +61,12 @@ struct AgentDreamingDestinationFeatureTests {
 
         #expect(
             AgentDreamingMaintenanceClient.summary(action: .backfill, data: data) ==
-                "Backfill: 2 written, 1 replaced, 3 removed, artifacts repaired.")
+                .init(summary: "Backfill: 2 written, 1 replaced, 3 removed, artifacts repaired."))
     }
 
     private static func client(
-        run: @escaping @Sendable @MainActor (_ action: AgentDreamAction) async throws -> String = {
-            "\($0.title) complete."
+        run: @escaping @Sendable @MainActor (_ action: AgentDreamAction) async throws -> DreamActionSummary = {
+            .init(summary: "\($0.title) complete.")
         }) -> AgentDreamingMaintenanceClient
     {
         AgentDreamingMaintenanceClient(run: run)
