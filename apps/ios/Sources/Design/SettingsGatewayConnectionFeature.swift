@@ -91,7 +91,7 @@ struct SettingsGatewayConnectionFeature {
         }
 
         struct DiscoveredGatewayPersistenceRequest: Equatable, Sendable {
-            var stableID: String
+            var stableID: SettingsGatewayStableID
         }
 
         struct GatewayStatusSync: Equatable, Sendable {
@@ -135,10 +135,9 @@ struct SettingsGatewayConnectionFeature {
                 }
 
             case let .discoveredGatewayPersistenceRequested(request):
-                let trimmedStableID = request.stableID.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmedStableID.isEmpty else { return .none }
+                guard request.stableID.trimmedValue != nil else { return .none }
                 return .run { _ in
-                    await persistenceClient.saveSelectedGatewayStableID(trimmedStableID)
+                    await persistenceClient.saveSelectedGatewayStableID(request.stableID)
                 }
 
             case let .gatewayStatusSynced(sync):

@@ -2191,15 +2191,21 @@ struct RootTabsSourceGuardTests {
             to: "func applySetupCodeAndConnect() async")
 
         #expect(supportSource.contains("struct SettingsDiscoveredGatewayPersistenceClient"))
+        #expect(supportSource.contains("struct SettingsGatewayStableID: Equatable, Sendable"))
+        #expect(supportSource.contains(
+            "var saveSelectedGatewayStableID: @MainActor @Sendable (_ stableID: SettingsGatewayStableID) -> Void"))
         #expect(supportSource.contains("GatewaySettingsStore.savePreferredGatewayStableID(stableID)"))
         #expect(supportSource.contains("GatewaySettingsStore.saveLastDiscoveredGatewayStableID(stableID)"))
         #expect(connectionSource.contains("struct ConnectionStart: Equatable, Sendable"))
         #expect(connectionSource.contains("struct DiscoveredGatewayPersistenceRequest: Equatable, Sendable"))
+        #expect(connectionSource.contains("var stableID: SettingsGatewayStableID"))
         #expect(connectionSource.contains("case discoveredGatewayPersistenceRequested(DiscoveredGatewayPersistenceRequest)"))
         #expect(connectionSource.contains("@Dependency(\\.settingsDiscoveredGatewayPersistence)"))
-        #expect(connectionSource.contains("await persistenceClient.saveSelectedGatewayStableID(trimmedStableID)"))
+        #expect(connectionSource.contains("guard request.stableID.trimmedValue != nil else { return .none }"))
+        #expect(connectionSource.contains("await persistenceClient.saveSelectedGatewayStableID(request.stableID)"))
         #expect(actionsSource.contains("self.gatewayConnectionStore.send(.connectionStarted(.init(gatewayID:"))
         #expect(actionsSource.contains("self.gatewayConnectionStore.send(.discoveredGatewayPersistenceRequested(.init("))
+        #expect(connectFunction.contains("stableID: .init(value: gateway.stableID)"))
         #expect(connectFunction.contains("GatewaySettingsStore.savePreferredGatewayStableID") == false)
         #expect(connectFunction.contains("GatewaySettingsStore.saveLastDiscoveredGatewayStableID") == false)
     }
