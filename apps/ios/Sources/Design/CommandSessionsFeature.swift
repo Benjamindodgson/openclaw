@@ -143,11 +143,23 @@ struct CommandCenterRecentSessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SceneActivity: Equatable, Sendable {
+            var isActive: Bool
+        }
+
+        struct SessionsAvailability: Equatable, Sendable {
+            var isAvailable: Bool
+        }
+
+        struct SessionReference: Equatable, Sendable {
+            var key: String
+        }
+
         struct RefreshRequest: Equatable, Sendable {
-            var sceneActive: Bool
-            var sessionsAvailable: Bool
-            var currentSessionKey: String
-            var defaultSessionKey: String
+            var sceneActivity: SceneActivity
+            var sessionsAvailability: SessionsAvailability
+            var currentSession: SessionReference
+            var defaultSession: SessionReference
         }
 
         struct RefreshResponse: Equatable, Sendable {
@@ -167,8 +179,8 @@ struct CommandCenterRecentSessionsFeature {
 
             switch action {
             case let .refreshRequested(request):
-                guard request.sceneActive else { return .none }
-                guard request.sessionsAvailable else {
+                guard request.sceneActivity.isActive else { return .none }
+                guard request.sessionsAvailability.isAvailable else {
                     state.defaultChatSessionEntry = nil
                     state.recentChatSessions = []
                     return .none
@@ -179,8 +191,8 @@ struct CommandCenterRecentSessionsFeature {
                         let sessions = try await client.listSessions(CommandCenterTab.recentSessionsFetchLimit)
                         let snapshot = Self.snapshot(
                             from: sessions,
-                            currentSessionKey: request.currentSessionKey,
-                            defaultSessionKey: request.defaultSessionKey)
+                            currentSessionKey: request.currentSession.key,
+                            defaultSessionKey: request.defaultSession.key)
                         await send(.refreshResponse(.init(result: .success(snapshot))))
                     } catch {
                         await send(.refreshResponse(.init(result: .failure(.failed))))
