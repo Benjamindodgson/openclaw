@@ -1536,7 +1536,7 @@ struct RootTabsPresentationTests {
         -> RootPresentationFeature.LocalNetworkAccessRequest
     {
         RootPresentationFeature.LocalNetworkAccessRequest(
-            reason: reason,
+            reason: RootLocalNetworkAccessReason(rawValue: reason),
             sceneActive: sceneActive)
     }
 
@@ -1544,7 +1544,8 @@ struct RootTabsPresentationTests {
         reason: String)
         -> RootPresentationFeature.LocalNetworkAccessCommand
     {
-        RootPresentationFeature.LocalNetworkAccessCommand(reason: reason)
+        RootPresentationFeature.LocalNetworkAccessCommand(
+            reason: RootLocalNetworkAccessReason(rawValue: reason))
     }
 
     private static func gatewaySetupRequest(requestID: Int) -> RootPresentationFeature.GatewaySetupRequest {
