@@ -150,11 +150,11 @@ extension SettingsProTab {
         self.handleNotificationStatusRefreshResult(self.notificationStore.statusRefreshResult)
 
         self.diagnosticsStore.send(.diagnosticsCompletionRequested(.init(
-            gatewayConnected: self.gatewayDiagnosticConnected,
-            discoveredGatewayCount: self.gatewayController.gateways.count,
-            talkConfigLoaded: self.gatewayDiagnosticTalkConfigLoaded,
-            notificationsAllowed: self.notificationStore.status == .allowed,
-            lastRunText: SettingsDiagnostics.timestamp(Date()))))
+            gatewayConnected: .init(value: self.gatewayDiagnosticConnected),
+            discoveredGatewayCount: .init(value: self.gatewayController.gateways.count),
+            talkConfigLoaded: .init(value: self.gatewayDiagnosticTalkConfigLoaded),
+            notificationsAllowed: .init(value: self.notificationStore.status == .allowed),
+            lastRunText: .init(value: SettingsDiagnostics.timestamp(Date())))))
     }
 
     func syncSettingsState() {
@@ -225,11 +225,11 @@ extension SettingsProTab {
 
     func syncDiagnosticsContextState() {
         self.diagnosticsStore.send(.diagnosticsContextSynced(.init(
-            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
-            gatewayConnected: self.gatewayConnected,
-            discoveredGatewayCount: self.gatewayController.gateways.count,
-            discoveryStatusText: self.gatewayController.discoveryStatusText,
-            screenRecordActive: self.appModel.screenRecordActive)))
+            isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled),
+            gatewayConnected: .init(value: self.gatewayConnected),
+            discoveredGatewayCount: .init(value: self.gatewayController.gateways.count),
+            discoveryStatusText: .init(value: self.gatewayController.discoveryStatusText),
+            screenRecordActive: .init(value: self.appModel.screenRecordActive))))
     }
 
     func syncApprovalState() {

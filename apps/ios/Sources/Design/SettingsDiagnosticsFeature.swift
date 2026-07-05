@@ -62,20 +62,29 @@ struct SettingsDiagnosticsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct AppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
+        struct DiagnosticsGatewayConnected: Equatable, Sendable { var value: Bool }
+        struct DiscoveredGatewayCount: Equatable, Sendable { var value: Int }
+        struct DiscoveryStatusText: Equatable, Sendable { var value: String }
+        struct ScreenRecordActive: Equatable, Sendable { var value: Bool }
+        struct TalkConfigLoaded: Equatable, Sendable { var value: Bool }
+        struct NotificationsAllowed: Equatable, Sendable { var value: Bool }
+        struct LastRunText: Equatable, Sendable { var value: String }
+
         struct DiagnosticsContextSync: Equatable, Sendable {
-            var isAppleReviewDemoModeEnabled: Bool
-            var gatewayConnected: Bool
-            var discoveredGatewayCount: Int
-            var discoveryStatusText: String
-            var screenRecordActive: Bool
+            var isAppleReviewDemoModeEnabled: AppleReviewDemoModeEnabled
+            var gatewayConnected: DiagnosticsGatewayConnected
+            var discoveredGatewayCount: DiscoveredGatewayCount
+            var discoveryStatusText: DiscoveryStatusText
+            var screenRecordActive: ScreenRecordActive
         }
 
         struct DiagnosticsCompletionRequest: Equatable, Sendable {
-            var gatewayConnected: Bool
-            var discoveredGatewayCount: Int
-            var talkConfigLoaded: Bool
-            var notificationsAllowed: Bool
-            var lastRunText: String
+            var gatewayConnected: DiagnosticsGatewayConnected
+            var discoveredGatewayCount: DiscoveredGatewayCount
+            var talkConfigLoaded: TalkConfigLoaded
+            var notificationsAllowed: NotificationsAllowed
+            var lastRunText: LastRunText
         }
 
         case diagnosticsContextSynced(DiagnosticsContextSync)
@@ -88,20 +97,20 @@ struct SettingsDiagnosticsFeature {
         Reduce { state, action in
             switch action {
             case let .diagnosticsContextSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
-                state.gatewayConnected = sync.gatewayConnected
-                state.discoveredGatewayCount = sync.discoveredGatewayCount
-                state.discoveryStatusText = sync.discoveryStatusText
-                state.screenRecordActive = sync.screenRecordActive
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
+                state.gatewayConnected = sync.gatewayConnected.value
+                state.discoveredGatewayCount = sync.discoveredGatewayCount.value
+                state.discoveryStatusText = sync.discoveryStatusText.value
+                state.screenRecordActive = sync.screenRecordActive.value
                 return .none
 
             case let .diagnosticsCompletionRequested(request):
                 state.issueCount = SettingsDiagnostics.issueCount(
-                    gatewayConnected: request.gatewayConnected,
-                    discoveredGatewayCount: request.discoveredGatewayCount,
-                    talkConfigLoaded: request.talkConfigLoaded,
-                    notificationsAllowed: request.notificationsAllowed)
-                state.lastRunText = request.lastRunText
+                    gatewayConnected: request.gatewayConnected.value,
+                    discoveredGatewayCount: request.discoveredGatewayCount.value,
+                    talkConfigLoaded: request.talkConfigLoaded.value,
+                    notificationsAllowed: request.notificationsAllowed.value)
+                state.lastRunText = request.lastRunText.value
                 return .none
             }
         }
