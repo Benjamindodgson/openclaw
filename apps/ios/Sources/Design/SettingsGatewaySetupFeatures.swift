@@ -2,8 +2,17 @@ import ComposableArchitecture
 import Foundation
 import OpenClawKit
 
+// swiftformat:disable redundantSendable
+struct SettingsLocalNetworkAccessReason: Equatable, Sendable {
+    var value: String
+
+    static let settingsPreflight = Self(value: "settings_preflight")
+}
+
+// swiftformat:enable redundantSendable
+
 struct SettingsLocalNetworkAccessClient {
-    var requestLocalNetworkAccess: @MainActor @Sendable (_ reason: String) -> Void
+    var requestLocalNetworkAccess: @MainActor @Sendable (_ reason: SettingsLocalNetworkAccessReason) -> Void
 }
 
 extension SettingsLocalNetworkAccessClient: DependencyKey {
@@ -13,7 +22,7 @@ extension SettingsLocalNetworkAccessClient: DependencyKey {
     @MainActor
     static func live(gatewayController: GatewayConnectionController) -> Self {
         SettingsLocalNetworkAccessClient(requestLocalNetworkAccess: { reason in
-            gatewayController.requestLocalNetworkAccess(reason: reason)
+            gatewayController.requestLocalNetworkAccess(reason: reason.value)
         })
     }
 }
@@ -214,7 +223,7 @@ struct SettingsManualGatewayEndpointFeature {
         }
 
         struct LocalNetworkAccess: Equatable, Sendable {
-            var reason: String
+            var reason: SettingsLocalNetworkAccessReason
         }
 
         case blocked(Blocked)
@@ -246,7 +255,7 @@ struct SettingsManualGatewayEndpointFeature {
             var hasTailnetIPv4: Bool
         }
 
-        struct LocalNetworkAccessRequest: Equatable, Sendable { var reason: String }
+        struct LocalNetworkAccessRequest: Equatable, Sendable { var reason: SettingsLocalNetworkAccessReason }
 
         case endpointClearedForOnboardingReset
         case endpointSynced(EndpointSync)
@@ -313,7 +322,7 @@ struct SettingsManualGatewayEndpointFeature {
                         statusText: "Tailscale is off on this device. Turn it on, then try again."))
                     return .none
                 }
-                state.preflightResult = .requestLocalNetworkAccess(.init(reason: "settings_preflight"))
+                state.preflightResult = .requestLocalNetworkAccess(.init(reason: .settingsPreflight))
                 return .none
 
             case .preflightResultHandled:

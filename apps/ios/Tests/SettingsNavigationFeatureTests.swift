@@ -2010,7 +2010,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.preflightRequested(.init(host: " gateway.example.com ", hasTailnetIPv4: false))) {
-            $0.preflightResult = .requestLocalNetworkAccess(.init(reason: "settings_preflight"))
+            $0.preflightResult = .requestLocalNetworkAccess(.init(reason: .settingsPreflight))
         }
     }
 
@@ -2020,7 +2020,7 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature(localNetworkAccessClient: probe.client)
         }
 
-        await store.send(.localNetworkAccessRequested(.init(reason: "settings_preflight")))
+        await store.send(.localNetworkAccessRequested(.init(reason: .settingsPreflight)))
         await store.finish()
 
         #expect(probe.requestedReasons == ["settings_preflight"])
@@ -2718,7 +2718,7 @@ private final class SettingsLocalNetworkAccessProbe: @unchecked Sendable {
 
     var client: SettingsLocalNetworkAccessClient {
         SettingsLocalNetworkAccessClient(requestLocalNetworkAccess: { reason in
-            self.requestedReasons.append(reason)
+            self.requestedReasons.append(reason.value)
         })
     }
 }
