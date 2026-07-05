@@ -1030,7 +1030,7 @@ struct SettingsAppearanceFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct AppearancePreferenceChange: Equatable, Sendable { var rawValue: String }
+        struct AppearancePreferenceChange: Equatable, Sendable { var preference: AppAppearancePreference }
 
         struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: String }
 
@@ -1044,7 +1044,7 @@ struct SettingsAppearanceFeature {
         Reduce { state, action in
             switch action {
             case let .appearancePreferenceChanged(change):
-                state.appearancePreferenceRaw = change.rawValue
+                state.appearancePreferenceRaw = change.preference.rawValue
                 return .none
 
             case let .appearancePreferenceSynced(sync):

@@ -364,7 +364,7 @@ struct SettingsNavigationFeatureTests {
             SettingsAppearanceFeature()
         }
 
-        await store.send(.appearancePreferenceChanged(.init(rawValue: AppAppearancePreference.light.rawValue))) {
+        await store.send(.appearancePreferenceChanged(.init(preference: .light))) {
             $0.appearancePreferenceRaw = AppAppearancePreference.light.rawValue
         }
     }
