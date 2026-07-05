@@ -2508,6 +2508,10 @@ struct RootTabsSourceGuardTests {
             to: "var talkApiKeyStatus")
 
         #expect(preferencesSource.contains("struct SettingsTalkPreferencesClient: Sendable"))
+        #expect(preferencesSource.contains("setProviderSelection: @MainActor @Sendable (TalkModeProviderSelection) -> Void"))
+        #expect(preferencesSource.contains("struct SettingsTalkRealtimeVoiceSelection: Equatable"))
+        #expect(preferencesSource
+            .contains("setRealtimeVoiceSelection: @MainActor @Sendable (SettingsTalkRealtimeVoiceSelection) -> Void"))
         #expect(preferencesSource.contains("var settingsTalkPreferences: SettingsTalkPreferencesClient"))
         #expect(preferencesSource.contains("@Dependency(\\.settingsTalkPreferences)"))
         #expect(preferencesSource.contains("struct ProviderSelectionChange: Equatable, Sendable"))

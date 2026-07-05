@@ -5,12 +5,20 @@ import SwiftUI
 
 // swiftformat:disable redundantSendable
 struct SettingsTalkPreferencesClient: Sendable {
-    var setProviderSelection: @MainActor @Sendable (String) -> Void
-    var setRealtimeVoiceSelection: @MainActor @Sendable (String) -> Void
+    var setProviderSelection: @MainActor @Sendable (TalkModeProviderSelection) -> Void
+    var setRealtimeVoiceSelection: @MainActor @Sendable (SettingsTalkRealtimeVoiceSelection) -> Void
     var setSpeakerphoneEnabled: @MainActor @Sendable (Bool) -> Void
 }
 
 // swiftformat:enable redundantSendable
+
+struct SettingsTalkRealtimeVoiceSelection: Equatable {
+    var value: String
+
+    init(rawValue: String?) {
+        self.value = TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
+    }
+}
 
 extension SettingsTalkPreferencesClient: DependencyKey {
     static let liveValue = SettingsTalkPreferencesClient(
@@ -26,10 +34,10 @@ extension SettingsTalkPreferencesClient: DependencyKey {
     static func live(appModel: NodeAppModel) -> Self {
         SettingsTalkPreferencesClient(
             setProviderSelection: { selection in
-                appModel.setTalkProviderSelection(selection)
+                appModel.setTalkProviderSelection(selection.rawValue)
             },
             setRealtimeVoiceSelection: { voice in
-                appModel.setTalkRealtimeVoiceSelection(voice)
+                appModel.setTalkRealtimeVoiceSelection(voice.value)
             },
             setSpeakerphoneEnabled: { enabled in
                 appModel.setTalkSpeakerphoneEnabled(enabled)
@@ -232,7 +240,8 @@ struct SettingsTalkPreferencesFeature {
 
             case let .preferencesSynced(sync):
                 state.providerSelectionRaw = TalkModeProviderSelection.resolved(sync.providerSelectionRaw).rawValue
-                state.realtimeVoiceSelectionRaw = Self.normalizedRealtimeVoice(sync.realtimeVoiceSelectionRaw)
+                state.realtimeVoiceSelectionRaw =
+                    SettingsTalkRealtimeVoiceSelection(rawValue: sync.realtimeVoiceSelectionRaw).value
                 state.speechLocale = sync.speechLocale
                 state.talkButtonEnabled = sync.talkButtonEnabled
                 state.talkBackgroundEnabled = sync.talkBackgroundEnabled
@@ -240,15 +249,15 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .providerSelectionChanged(change):
-                let selection = TalkModeProviderSelection.resolved(change.rawValue).rawValue
-                state.providerSelectionRaw = selection
+                let selection = TalkModeProviderSelection.resolved(change.rawValue)
+                state.providerSelectionRaw = selection.rawValue
                 return .run { _ in
                     await preferencesClient.setProviderSelection(selection)
                 }
 
             case let .realtimeVoiceSelectionChanged(change):
-                let voice = Self.normalizedRealtimeVoice(change.rawValue)
-                state.realtimeVoiceSelectionRaw = voice
+                let voice = SettingsTalkRealtimeVoiceSelection(rawValue: change.rawValue)
+                state.realtimeVoiceSelectionRaw = voice.value
                 return .run { _ in
                     await preferencesClient.setRealtimeVoiceSelection(voice)
                 }
@@ -274,9 +283,5 @@ struct SettingsTalkPreferencesFeature {
             }
         }
         .autoLogActions()
-    }
-
-    private static func normalizedRealtimeVoice(_ rawValue: String) -> String {
-        TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
     }
 }
