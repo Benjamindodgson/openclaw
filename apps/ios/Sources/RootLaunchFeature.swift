@@ -4,7 +4,7 @@ import ComposableArchitecture
 struct RootLaunchFeature {
     // swiftformat:disable redundantSendable
     struct InitialAppearanceRequest: Equatable, Sendable {
-        var rawValue: String?
+        var preference: AppAppearancePreference?
     }
 
     struct InitialChatSessionRequest: Equatable, Sendable {
@@ -12,7 +12,7 @@ struct RootLaunchFeature {
     }
 
     struct ApplyAppearanceCommand: Equatable, Sendable {
-        var rawValue: String
+        var preference: AppAppearancePreference
     }
 
     struct FocusChatSessionCommand: Equatable, Sendable {
@@ -45,9 +45,8 @@ struct RootLaunchFeature {
             case let .initialAppearanceRequested(request):
                 guard !state.didApplyInitialAppearance else { return .none }
                 state.didApplyInitialAppearance = true
-                let rawValue = request.rawValue
-                guard let rawValue else { return .none }
-                state.command = .applyAppearance(ApplyAppearanceCommand(rawValue: rawValue))
+                guard let preference = request.preference else { return .none }
+                state.command = .applyAppearance(ApplyAppearanceCommand(preference: preference))
                 return .none
 
             case let .initialChatSessionRequested(request):

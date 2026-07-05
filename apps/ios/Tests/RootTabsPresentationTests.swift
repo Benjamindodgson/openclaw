@@ -552,11 +552,11 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.initialAppearanceRequested(Self.initialAppearanceRequest(
-            AppAppearancePreference.dark.rawValue)))
+            .dark)))
         {
             $0.didApplyInitialAppearance = true
             $0.command = .applyAppearance(Self.launchApplyAppearanceCommand(
-                AppAppearancePreference.dark.rawValue))
+                .dark))
         }
 
         await store.send(.commandHandled) {
@@ -564,7 +564,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.initialAppearanceRequested(Self.initialAppearanceRequest(
-            AppAppearancePreference.light.rawValue)))
+            .light)))
     }
 
     @Test func `launch reducer marks appearance applied without launch argument`() async {
@@ -1567,10 +1567,10 @@ struct RootTabsPresentationTests {
     }
 
     private static func initialAppearanceRequest(
-        _ rawValue: String?)
+        _ preference: AppAppearancePreference?)
         -> RootLaunchFeature.InitialAppearanceRequest
     {
-        RootLaunchFeature.InitialAppearanceRequest(rawValue: rawValue)
+        RootLaunchFeature.InitialAppearanceRequest(preference: preference)
     }
 
     private static func initialChatSessionRequest(
@@ -1581,10 +1581,10 @@ struct RootTabsPresentationTests {
     }
 
     private static func launchApplyAppearanceCommand(
-        _ rawValue: String)
+        _ preference: AppAppearancePreference)
         -> RootLaunchFeature.ApplyAppearanceCommand
     {
-        RootLaunchFeature.ApplyAppearanceCommand(rawValue: rawValue)
+        RootLaunchFeature.ApplyAppearanceCommand(preference: preference)
     }
 
     private static func launchFocusChatSessionCommand(
