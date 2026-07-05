@@ -8,7 +8,7 @@ struct RootLaunchFeature {
     }
 
     struct InitialChatSessionRequest: Equatable, Sendable {
-        var sessionKey: String?
+        var sessionKey: ChatSessionKey?
     }
 
     struct ApplyAppearanceCommand: Equatable, Sendable {
@@ -16,7 +16,7 @@ struct RootLaunchFeature {
     }
 
     struct FocusChatSessionCommand: Equatable, Sendable {
-        var sessionKey: String?
+        var sessionKey: ChatSessionKey?
     }
 
     @ObservableState

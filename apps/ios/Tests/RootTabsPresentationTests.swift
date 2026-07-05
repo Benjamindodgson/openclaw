@@ -1578,7 +1578,7 @@ struct RootTabsPresentationTests {
         _ sessionKey: String?)
         -> RootLaunchFeature.InitialChatSessionRequest
     {
-        RootLaunchFeature.InitialChatSessionRequest(sessionKey: sessionKey)
+        RootLaunchFeature.InitialChatSessionRequest(sessionKey: ChatSessionKey(rawValue: sessionKey))
     }
 
     private static func launchApplyAppearanceCommand(
@@ -1592,7 +1592,7 @@ struct RootTabsPresentationTests {
         _ sessionKey: String?)
         -> RootLaunchFeature.FocusChatSessionCommand
     {
-        RootLaunchFeature.FocusChatSessionCommand(sessionKey: sessionKey)
+        RootLaunchFeature.FocusChatSessionCommand(sessionKey: ChatSessionKey(rawValue: sessionKey))
     }
 
     private static func voiceWakeCommandTrigger(
