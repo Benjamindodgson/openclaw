@@ -96,14 +96,18 @@ struct SettingsGatewayConnectionFeature {
 
         struct GatewayAppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
         struct GatewayConnectionStatusConnected: Equatable, Sendable { var value: Bool }
+        struct GatewayDisplayStatusText: Equatable, Sendable { var value: String }
+        struct GatewayAgentCount: Equatable, Sendable { var value: Int }
+        struct GatewayRemoteAddress: Equatable, Sendable { var value: String? }
+        struct GatewayServerName: Equatable, Sendable { var value: String? }
 
         struct GatewayStatusSync: Equatable, Sendable {
             var isAppleReviewDemoModeEnabled: GatewayAppleReviewDemoModeEnabled
             var gatewayStatusConnected: GatewayConnectionStatusConnected
-            var gatewayDisplayStatusText: String
-            var gatewayAgentCount: Int
-            var gatewayRemoteAddress: String?
-            var gatewayServerName: String?
+            var gatewayDisplayStatusText: GatewayDisplayStatusText
+            var gatewayAgentCount: GatewayAgentCount
+            var gatewayRemoteAddress: GatewayRemoteAddress
+            var gatewayServerName: GatewayServerName
         }
 
         case connectionFinished
@@ -146,10 +150,10 @@ struct SettingsGatewayConnectionFeature {
             case let .gatewayStatusSynced(sync):
                 state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
                 state.gatewayStatusConnected = sync.gatewayStatusConnected.value
-                state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText
-                state.gatewayAgentCount = sync.gatewayAgentCount
-                state.gatewayRemoteAddress = sync.gatewayRemoteAddress
-                state.gatewayServerName = sync.gatewayServerName
+                state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText.value
+                state.gatewayAgentCount = sync.gatewayAgentCount.value
+                state.gatewayRemoteAddress = sync.gatewayRemoteAddress.value
+                state.gatewayServerName = sync.gatewayServerName.value
                 return .none
             }
         }
