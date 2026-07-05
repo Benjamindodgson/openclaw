@@ -40,11 +40,11 @@ struct SettingsGatewaySetupLinkFeature {
     enum Action: Equatable, Sendable {
         struct ScannedGatewayLink: Equatable, Sendable { var link: GatewayConnectDeepLink }
 
-        struct ScannedSetupCode: Equatable, Sendable { var code: String }
+        struct ScannedSetupCode: Equatable, Sendable { var code: SettingsGatewaySetupCode }
 
         struct SetupCodeChange: Equatable, Sendable { var setupCode: SettingsGatewaySetupCode }
 
-        struct SetupCodeSync: Equatable, Sendable { var setupCode: String }
+        struct SetupCodeSync: Equatable, Sendable { var setupCode: SettingsGatewaySetupCode }
 
         struct SetupLinkStage: Equatable, Sendable { var link: GatewayConnectDeepLink? }
 
@@ -112,7 +112,7 @@ struct SettingsGatewaySetupLinkFeature {
 
             case let .scannedSetupCodeReceived(scan):
                 state.applyResult = nil
-                guard AppleReviewDemoMode.isSetupCode(scan.code) else {
+                guard AppleReviewDemoMode.isSetupCode(scan.code.value) else {
                     return .none
                 }
                 state.setupCode = ""
@@ -131,8 +131,9 @@ struct SettingsGatewaySetupLinkFeature {
                 return .none
 
             case let .setupCodeSynced(sync):
-                state.setupCode = sync.setupCode
-                if !sync.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let setupCode = sync.setupCode.value
+                state.setupCode = setupCode
+                if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     state.stagedGatewaySetupLink = nil
                 }
                 return .none

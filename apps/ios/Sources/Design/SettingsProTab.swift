@@ -1531,7 +1531,7 @@ struct SettingsProTab: View {
                 }
             }
             .onChange(of: self.storedSetupCode) { _, newValue in
-                self.gatewaySetupLinkStore.send(.setupCodeSynced(.init(setupCode: newValue)))
+                self.gatewaySetupLinkStore.send(.setupCodeSynced(.init(setupCode: .init(value: newValue))))
             }
             .onChange(of: self.storedCameraEnabled) { _, newValue in
                 self.deviceCapabilityStore.send(.cameraEnabledChanged(.init(
