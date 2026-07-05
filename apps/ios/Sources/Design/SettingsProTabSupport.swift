@@ -59,6 +59,8 @@ struct SettingsGatewayStableID: Equatable, Sendable {
 
 struct SettingsDeviceDisplayName: Equatable, Sendable { var value: String }
 
+struct SettingsManualGatewayPortText: Equatable, Sendable { var value: String }
+
 struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String }
 
 // swiftformat:enable redundantSendable

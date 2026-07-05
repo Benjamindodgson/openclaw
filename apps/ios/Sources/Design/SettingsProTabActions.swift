@@ -561,7 +561,7 @@ extension SettingsProTab {
     var manualPortBinding: Binding<String> {
         Binding(
             get: { self.manualGatewayPortStore.manualGatewayPortText },
-            set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged(.init(text: $0))) })
+            set: { self.manualGatewayPortStore.send(.manualGatewayPortTextChanged(.init(text: .init(value: $0)))) })
     }
 
     var gatewayAutoConnectBinding: Binding<Bool> {

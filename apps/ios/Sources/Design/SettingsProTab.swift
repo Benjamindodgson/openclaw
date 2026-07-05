@@ -877,7 +877,7 @@ struct SettingsManualGatewayPortFeature {
         }
 
         struct ManualGatewayPortSync: Equatable, Sendable { var port: Int }
-        struct ManualGatewayPortTextChange: Equatable, Sendable { var text: String }
+        struct ManualGatewayPortTextChange: Equatable, Sendable { var text: SettingsManualGatewayPortText }
 
         case manualGatewayPortResolutionRequested(ManualGatewayPortResolutionRequest)
         case manualGatewayPortResolutionResultHandled
@@ -909,7 +909,7 @@ struct SettingsManualGatewayPortFeature {
                 return .none
 
             case let .manualGatewayPortTextChanged(change):
-                let filtered = change.text.filter(\.isNumber)
+                let filtered = change.text.value.filter(\.isNumber)
                 state.manualGatewayPortText = filtered
                 state.manualGatewayPort = Int(filtered) ?? 0
                 return .none
