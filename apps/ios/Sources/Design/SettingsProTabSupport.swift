@@ -41,22 +41,30 @@ struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String 
 // swiftformat:enable redundantSendable
 
 struct SettingsGatewayCredentialsPersistenceClient {
-    var loadCredentials: @Sendable (_ instanceId: String) -> SettingsGatewayStoredCredentials
-    var saveGatewayPassword: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
-    var saveGatewayToken: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
+    var loadCredentials: @Sendable (_ instanceId: SettingsGatewayCurrentInstanceID)
+        -> SettingsGatewayStoredCredentials
+    var saveGatewayPassword: @MainActor @Sendable (_ value: String, _ instanceId: SettingsGatewayCurrentInstanceID)
+        -> Void
+    var saveGatewayToken: @MainActor @Sendable (_ value: String, _ instanceId: SettingsGatewayCurrentInstanceID)
+        -> Void
 }
 
 extension SettingsGatewayCredentialsPersistenceClient: DependencyKey {
     static let liveValue = SettingsGatewayCredentialsPersistenceClient(
         loadCredentials: { instanceId in
-            SettingsGatewayStoredCredentials(
+            guard let instanceId = instanceId.trimmedValue else {
+                return .init(token: "", password: "")
+            }
+            return SettingsGatewayStoredCredentials(
                 token: GatewaySettingsStore.loadGatewayToken(instanceId: instanceId) ?? "",
                 password: GatewaySettingsStore.loadGatewayPassword(instanceId: instanceId) ?? "")
         },
         saveGatewayPassword: { value, instanceId in
+            guard let instanceId = instanceId.trimmedValue else { return }
             GatewaySettingsStore.saveGatewayPassword(value, instanceId: instanceId)
         },
         saveGatewayToken: { value, instanceId in
+            guard let instanceId = instanceId.trimmedValue else { return }
             GatewaySettingsStore.saveGatewayToken(value, instanceId: instanceId)
         })
 

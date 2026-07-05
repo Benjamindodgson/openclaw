@@ -560,13 +560,15 @@ struct SettingsGatewayCredentialsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct CredentialsLoadRequest: Equatable, Sendable { var instanceId: String }
+        struct CredentialsLoadRequest: Equatable, Sendable {
+            var instanceId: SettingsGatewayCurrentInstanceID
+        }
 
         struct ManualCredentialChange: Equatable, Sendable { var value: String }
 
         struct ManualCredentialPersistenceRequest: Equatable, Sendable {
             var value: String
-            var instanceId: String
+            var instanceId: SettingsGatewayCurrentInstanceID
         }
 
         struct SetupAuthApplication: Equatable, Sendable {
@@ -607,8 +609,8 @@ struct SettingsGatewayCredentialsFeature {
                 return .none
 
             case let .credentialsLoadRequested(request):
-                guard let trimmedInstanceId = Self.trimmedInstanceId(request.instanceId) else { return .none }
-                let credentials = persistenceClient.loadCredentials(trimmedInstanceId)
+                guard request.instanceId.trimmedValue != nil else { return .none }
+                let credentials = persistenceClient.loadCredentials(request.instanceId)
                 state.gatewayToken = credentials.token
                 state.gatewayPassword = credentials.password
                 return .none
@@ -692,19 +694,13 @@ struct SettingsGatewayCredentialsFeature {
 
     private static func manualCredentialPersistenceRequest(
         value: String,
-        instanceId: String)
-        -> (value: String, instanceId: String)?
+        instanceId: SettingsGatewayCurrentInstanceID)
+        -> (value: String, instanceId: SettingsGatewayCurrentInstanceID)?
     {
-        guard let trimmedInstanceId = Self.trimmedInstanceId(instanceId) else { return nil }
+        guard instanceId.trimmedValue != nil else { return nil }
         return (
             value.trimmingCharacters(in: .whitespacesAndNewlines),
-            trimmedInstanceId)
-    }
-
-    private static func trimmedInstanceId(_ instanceId: String) -> String? {
-        let trimmedInstanceId = instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedInstanceId.isEmpty else { return nil }
-        return trimmedInstanceId
+            instanceId)
     }
 }
 
