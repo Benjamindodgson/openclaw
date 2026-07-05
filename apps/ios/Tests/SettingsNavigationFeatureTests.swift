@@ -1957,7 +1957,10 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: true))) {
+        await store.send(.manualConnectionRequested(.init(
+            port: .init(value: 18789),
+            isPortValid: .init(value: true))))
+        {
             $0.manualConnectionResult = .failure(.init(message: "Failed: host required"))
         }
 
@@ -1969,7 +1972,10 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayHost = "  gateway.example.com  "
         }
 
-        await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: false))) {
+        await store.send(.manualConnectionRequested(.init(
+            port: .init(value: 18789),
+            isPortValid: .init(value: false))))
+        {
             $0.manualConnectionResult = .failure(.init(message: "Failed: invalid port"))
         }
 
@@ -1981,7 +1987,10 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayTLS = false
         }
 
-        await store.send(.manualConnectionRequested(.init(port: 18789, isPortValid: true))) {
+        await store.send(.manualConnectionRequested(.init(
+            port: .init(value: 18789),
+            isPortValid: .init(value: true))))
+        {
             $0.manualConnectionResult = .request(SettingsManualGatewayEndpointFeature.ManualConnectionRequest(
                 host: "gateway.example.com",
                 port: 18789,

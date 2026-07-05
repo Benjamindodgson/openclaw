@@ -401,8 +401,8 @@ extension SettingsProTab {
 
     func connectManual() async {
         self.manualGatewayEndpointStore.send(.manualConnectionRequested(.init(
-            port: self.manualGatewayPortStore.manualGatewayPort,
-            isPortValid: self.manualPortIsValid)))
+            port: .init(value: self.manualGatewayPortStore.manualGatewayPort),
+            isPortValid: .init(value: self.manualPortIsValid))))
         guard let result = self.manualGatewayEndpointStore.manualConnectionResult else { return }
         self.manualGatewayEndpointStore.send(.manualConnectionResultHandled)
 
