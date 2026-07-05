@@ -272,10 +272,10 @@ extension SettingsProTab {
         self.gatewayConnectionStore.send(.gatewayStatusSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled),
             gatewayStatusConnected: .init(value: GatewayStatusBuilder.build(appModel: self.appModel) == .connected),
-            gatewayDisplayStatusText: self.appModel.gatewayDisplayStatusText,
-            gatewayAgentCount: self.appModel.gatewayAgents.count,
-            gatewayRemoteAddress: self.appModel.gatewayRemoteAddress,
-            gatewayServerName: self.appModel.gatewayServerName)))
+            gatewayDisplayStatusText: .init(value: self.appModel.gatewayDisplayStatusText),
+            gatewayAgentCount: .init(value: self.appModel.gatewayAgents.count),
+            gatewayRemoteAddress: .init(value: self.appModel.gatewayRemoteAddress),
+            gatewayServerName: .init(value: self.appModel.gatewayServerName))))
         self.syncApprovalState()
     }
 

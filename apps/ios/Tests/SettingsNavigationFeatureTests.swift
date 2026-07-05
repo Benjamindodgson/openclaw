@@ -618,20 +618,20 @@ struct SettingsNavigationFeatureTests {
         await store.send(.gatewayStatusSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: false),
             gatewayStatusConnected: .init(value: false),
-            gatewayDisplayStatusText: "Pairing required",
-            gatewayAgentCount: 0,
-            gatewayRemoteAddress: nil,
-            gatewayServerName: nil)))
+            gatewayDisplayStatusText: .init(value: "Pairing required"),
+            gatewayAgentCount: .init(value: 0),
+            gatewayRemoteAddress: .init(value: nil),
+            gatewayServerName: .init(value: nil))))
         {
             $0.gatewayDisplayStatusText = "Pairing required"
         }
         await store.send(.gatewayStatusSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: false),
             gatewayStatusConnected: .init(value: true),
-            gatewayDisplayStatusText: "Connected",
-            gatewayAgentCount: 2,
-            gatewayRemoteAddress: "100.64.1.2:18789",
-            gatewayServerName: "openclaw-gateway")))
+            gatewayDisplayStatusText: .init(value: "Connected"),
+            gatewayAgentCount: .init(value: 2),
+            gatewayRemoteAddress: .init(value: "100.64.1.2:18789"),
+            gatewayServerName: .init(value: "openclaw-gateway"))))
         {
             $0.gatewayDisplayStatusText = "Connected"
             $0.gatewayStatusConnected = true
@@ -642,10 +642,10 @@ struct SettingsNavigationFeatureTests {
         await store.send(.gatewayStatusSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: true),
             gatewayStatusConnected: .init(value: false),
-            gatewayDisplayStatusText: "Offline",
-            gatewayAgentCount: 3,
-            gatewayRemoteAddress: nil,
-            gatewayServerName: nil)))
+            gatewayDisplayStatusText: .init(value: "Offline"),
+            gatewayAgentCount: .init(value: 3),
+            gatewayRemoteAddress: .init(value: nil),
+            gatewayServerName: .init(value: nil))))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayStatusConnected = false
