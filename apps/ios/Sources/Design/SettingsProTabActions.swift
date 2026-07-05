@@ -218,9 +218,9 @@ extension SettingsProTab {
             isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled),
             transportLabel: .init(value: self.appModel.talkMode.gatewayTalkTransportLabel))))
         self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(.init(
-            activeModeTitle: self.appModel.talkMode.gatewayTalkActiveModeTitle,
-            activeModeSubtitle: self.appModel.talkMode.gatewayTalkActiveModeSubtitle,
-            lastIssueText: self.appModel.talkMode.gatewayTalkLastIssueText)))
+            activeModeTitle: .init(value: self.appModel.talkMode.gatewayTalkActiveModeTitle),
+            activeModeSubtitle: .init(value: self.appModel.talkMode.gatewayTalkActiveModeSubtitle),
+            lastIssueText: .init(value: self.appModel.talkMode.gatewayTalkLastIssueText))))
     }
 
     func syncDiagnosticsContextState() {

@@ -54,6 +54,18 @@ struct SettingsGatewayTalkTransportLabel: Equatable, Sendable {
     var value: String
 }
 
+struct SettingsGatewayTalkActiveModeTitle: Equatable, Sendable {
+    var value: String
+}
+
+struct SettingsGatewayTalkActiveModeSubtitle: Equatable, Sendable {
+    var value: String?
+}
+
+struct SettingsGatewayTalkLastIssueText: Equatable, Sendable {
+    var value: String?
+}
+
 // swiftformat:enable redundantSendable
 
 extension SettingsTalkPreferencesClient: DependencyKey {
@@ -223,9 +235,9 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct GatewayTalkRuntimeSync: Equatable, Sendable {
-            var activeModeTitle: String
-            var activeModeSubtitle: String?
-            var lastIssueText: String?
+            var activeModeTitle: SettingsGatewayTalkActiveModeTitle
+            var activeModeSubtitle: SettingsGatewayTalkActiveModeSubtitle
+            var lastIssueText: SettingsGatewayTalkLastIssueText
         }
 
         struct PreferencesSync: Equatable, Sendable {
@@ -269,9 +281,9 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .gatewayTalkRuntimeSynced(sync):
-                state.gatewayTalkActiveModeTitle = sync.activeModeTitle
-                state.gatewayTalkActiveModeSubtitle = sync.activeModeSubtitle
-                state.gatewayTalkLastIssueText = sync.lastIssueText
+                state.gatewayTalkActiveModeTitle = sync.activeModeTitle.value
+                state.gatewayTalkActiveModeSubtitle = sync.activeModeSubtitle.value
+                state.gatewayTalkLastIssueText = sync.lastIssueText.value
                 return .none
 
             case let .preferencesSynced(sync):

@@ -2828,6 +2828,9 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource
             .contains("struct SettingsGatewayTalkAppleReviewDemoModeEnabled: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct SettingsGatewayTalkTransportLabel: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct SettingsGatewayTalkActiveModeTitle: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct SettingsGatewayTalkActiveModeSubtitle: Equatable, Sendable"))
+        #expect(preferencesSource.contains("struct SettingsGatewayTalkLastIssueText: Equatable, Sendable"))
         #expect(preferencesSource
             .contains("setSpeakerphoneEnabled: @MainActor @Sendable (SettingsTalkSpeakerphoneEnabled) -> Void"))
         #expect(preferencesSource.contains("struct TalkBackgroundEnabledChange: Equatable, Sendable"))
@@ -2851,6 +2854,12 @@ struct RootTabsSourceGuardTests {
             .contains("state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
         #expect(preferencesSource.contains("state.gatewayTalkTransportLabel = sync.transportLabel.value"))
         #expect(preferencesSource.contains("struct GatewayTalkRuntimeSync: Equatable, Sendable"))
+        #expect(preferencesSource.contains("var activeModeTitle: SettingsGatewayTalkActiveModeTitle"))
+        #expect(preferencesSource.contains("var activeModeSubtitle: SettingsGatewayTalkActiveModeSubtitle"))
+        #expect(preferencesSource.contains("var lastIssueText: SettingsGatewayTalkLastIssueText"))
+        #expect(preferencesSource.contains("state.gatewayTalkActiveModeTitle = sync.activeModeTitle.value"))
+        #expect(preferencesSource.contains("state.gatewayTalkActiveModeSubtitle = sync.activeModeSubtitle.value"))
+        #expect(preferencesSource.contains("state.gatewayTalkLastIssueText = sync.lastIssueText.value"))
         #expect(preferencesSource.contains("struct PreferencesSync: Equatable, Sendable"))
         #expect(preferencesSource.contains("case gatewayTalkConfigSynced(GatewayTalkConfigSync)"))
         #expect(preferencesSource.contains("case gatewayTalkDisplayContextSynced(GatewayTalkDisplayContextSync)"))
