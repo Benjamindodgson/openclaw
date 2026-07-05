@@ -7,7 +7,7 @@ import SwiftUI
 struct SettingsTalkPreferencesClient: Sendable {
     var setProviderSelection: @MainActor @Sendable (TalkModeProviderSelection) -> Void
     var setRealtimeVoiceSelection: @MainActor @Sendable (SettingsTalkRealtimeVoiceSelection) -> Void
-    var setSpeakerphoneEnabled: @MainActor @Sendable (Bool) -> Void
+    var setSpeakerphoneEnabled: @MainActor @Sendable (SettingsTalkSpeakerphoneEnabled) -> Void
 }
 
 struct SettingsTalkRealtimeVoiceSelection: Equatable, Sendable {
@@ -20,6 +20,10 @@ struct SettingsTalkRealtimeVoiceSelection: Equatable, Sendable {
 
 struct SettingsTalkSpeechLocale: Equatable, Sendable {
     var value: String
+}
+
+struct SettingsTalkSpeakerphoneEnabled: Equatable, Sendable {
+    var isEnabled: Bool
 }
 
 // swiftformat:enable redundantSendable
@@ -44,7 +48,7 @@ extension SettingsTalkPreferencesClient: DependencyKey {
                 appModel.setTalkRealtimeVoiceSelection(voice.value)
             },
             setSpeakerphoneEnabled: { enabled in
-                appModel.setTalkSpeakerphoneEnabled(enabled)
+                appModel.setTalkSpeakerphoneEnabled(enabled.isEnabled)
             })
     }
 }
@@ -176,7 +180,7 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct TalkSpeakerphoneEnabledChange: Equatable, Sendable {
-            var isEnabled: Bool
+            var enabled: SettingsTalkSpeakerphoneEnabled
         }
 
         struct GatewayTalkConfigSync: Equatable, Sendable {
@@ -279,8 +283,8 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .talkSpeakerphoneEnabledChanged(change):
-                let enabled = change.isEnabled
-                state.talkSpeakerphoneEnabled = enabled
+                let enabled = change.enabled
+                state.talkSpeakerphoneEnabled = enabled.isEnabled
                 return .run { _ in
                     await preferencesClient.setSpeakerphoneEnabled(enabled)
                 }
