@@ -384,8 +384,8 @@ extension SettingsProTab {
 
     func resolveManualPortForConnection(host: String) -> Bool {
         self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested(.init(
-            host: host,
-            useTLS: self.manualGatewayTLS)))
+            host: .init(value: host),
+            useTLS: .init(value: self.manualGatewayTLS))))
         guard let result = self.manualGatewayPortStore.manualGatewayPortResolutionResult else { return false }
         self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)
 

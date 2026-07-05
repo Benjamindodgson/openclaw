@@ -707,9 +707,11 @@ struct SettingsManualGatewayPortFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ManualGatewayPortResolutionHost: Equatable, Sendable { var value: String }
+        struct ManualGatewayPortResolutionTLS: Equatable, Sendable { var value: Bool }
         struct ManualGatewayPortResolutionRequest: Equatable, Sendable {
-            var host: String
-            var useTLS: Bool
+            var host: ManualGatewayPortResolutionHost
+            var useTLS: ManualGatewayPortResolutionTLS
         }
 
         struct ManualGatewayPortSync: Equatable, Sendable { var port: Int }
@@ -728,7 +730,7 @@ struct SettingsManualGatewayPortFeature {
             switch action {
             case let .manualGatewayPortResolutionRequested(request):
                 state.manualGatewayPortResolutionResult = nil
-                guard state.resolvedManualPort(host: request.host, useTLS: request.useTLS) != nil else {
+                guard state.resolvedManualPort(host: request.host.value, useTLS: request.useTLS.value) != nil else {
                     state.manualGatewayPortResolutionResult = .failure(.init(message: "Failed: invalid port"))
                     return .none
                 }

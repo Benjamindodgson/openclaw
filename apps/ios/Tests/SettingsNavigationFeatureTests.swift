@@ -1898,9 +1898,11 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayPortFeature()
         }
 
-        await store.send(.manualGatewayPortResolutionRequested(.init(
-            host: "gateway.example.com",
-            useTLS: true))) {
+        await store.send(
+            .manualGatewayPortResolutionRequested(.init(
+                host: .init(value: "gateway.example.com"),
+                useTLS: .init(value: true))))
+        {
             $0.manualGatewayPortResolutionResult = .failure(.init(message: "Failed: invalid port"))
         }
 
@@ -1913,9 +1915,11 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayPortText = ""
         }
 
-        await store.send(.manualGatewayPortResolutionRequested(.init(
-            host: "device.sample.ts.net",
-            useTLS: true))) {
+        await store.send(
+            .manualGatewayPortResolutionRequested(.init(
+                host: .init(value: "device.sample.ts.net"),
+                useTLS: .init(value: true))))
+        {
             $0.manualGatewayPortResolutionResult = .resolved
         }
     }
