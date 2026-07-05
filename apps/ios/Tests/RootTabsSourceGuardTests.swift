@@ -1855,8 +1855,11 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("struct GatewayStatusSync: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct QRScannerError: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SettingsGatewaySetupStatusText: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("struct SettingsGatewaySetupScannerErrorMessage: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SetupStatusChange: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains("var message: SettingsGatewaySetupScannerErrorMessage"))
         #expect(gatewaySetupFeaturesSource.contains("var statusText: SettingsGatewaySetupStatusText"))
+        #expect(gatewaySetupFeaturesSource.contains("Self.qrScannerErrorStatusText(error.message.value)"))
         #expect(gatewaySetupFeaturesSource.contains("state.statusText = change.statusText.value"))
         #expect(gatewaySetupFeaturesSource.contains("case gatewayStatusSynced(GatewayStatusSync)"))
         #expect(gatewaySetupFeaturesSource.contains("case qrScannerErrorReceived(QRScannerError)"))
@@ -1866,7 +1869,7 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("case qrScannerErrorReceived(QRScannerError)"))
         #expect(settingsSource.contains("state.scannerError = error.message"))
         #expect(qrScannerSheet.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: error)))"))
-        #expect(qrScannerSheet.contains("self.gatewaySetupStatusStore.send(.qrScannerErrorReceived(.init("))
+        #expect(qrScannerSheet.contains("message: .init(value: error)"))
         #expect(!qrScannerSheet.contains("Scanner error: \\(error)"))
     }
 
