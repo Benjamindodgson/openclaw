@@ -22,7 +22,7 @@ struct GatewayQuickSetupFeatureTests {
             $0.connecting = true
         }
         await store.receive(.connectResponse(.init(
-            error: "Failed to resolve the discovered gateway endpoint.")))
+            failure: .init(message: "Failed to resolve the discovered gateway endpoint."))))
         {
             $0.connecting = false
             $0.connectError = "Failed to resolve the discovered gateway endpoint."
@@ -56,7 +56,7 @@ struct GatewayQuickSetupFeatureTests {
         await store.send(.gatewayProblemPrimaryActionTapped(.init(problem: problem, candidate: candidate))) {
             $0.connecting = true
         }
-        await store.receive(.connectResponse(.init(error: nil))) {
+        await store.receive(.connectResponse(.init(failure: nil))) {
             $0.connecting = false
         }
         await store.finish()

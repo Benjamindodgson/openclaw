@@ -654,10 +654,13 @@ struct RootTabsSourceGuardTests {
     @Test func `gateway quick setup response action is typed`() throws {
         let quickSetupSource = try String(contentsOf: Self.gatewayQuickSetupSourceURL(), encoding: .utf8)
 
+        #expect(quickSetupSource.contains("struct ConnectFailure: Equatable, Sendable"))
         #expect(quickSetupSource.contains("struct ConnectResponse: Equatable, Sendable"))
         #expect(quickSetupSource.contains("case connectResponse(ConnectResponse)"))
-        #expect(quickSetupSource.contains("state.connectError = response.error"))
-        #expect(quickSetupSource.contains("await send(.connectResponse(.init(error: error)))"))
+        #expect(quickSetupSource.contains("state.connectError = response.failure?.message"))
+        #expect(quickSetupSource.contains("let failure = error.map { Action.ConnectFailure(message: $0) }"))
+        #expect(quickSetupSource.contains("await send(.connectResponse(.init(failure: failure)))"))
+        #expect(!quickSetupSource.contains("struct ConnectResponse: Equatable, Sendable { var error: String? }"))
     }
 
     @Test func `gateway quick setup connect action is typed`() throws {
