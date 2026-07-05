@@ -154,13 +154,17 @@ struct SettingsNotificationFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct HostedRelayEnabled: Equatable, Sendable { var value: Bool }
+        struct HostedRelayHost: Equatable, Sendable { var value: String? }
+        struct RemoteRegistrationDisclosureAccepted: Equatable, Sendable { var value: Bool }
+
         struct RelayConfigSync: Equatable, Sendable {
-            var usesOpenClawHostedRelay: Bool
-            var hostedRelayHost: String?
+            var usesOpenClawHostedRelay: HostedRelayEnabled
+            var hostedRelayHost: HostedRelayHost
         }
 
         struct RemoteRegistrationRequest: Equatable, Sendable {
-            var disclosureAccepted: Bool
+            var disclosureAccepted: RemoteRegistrationDisclosureAccepted
         }
 
         case actionButtonTapped
@@ -227,12 +231,12 @@ struct SettingsNotificationFeature {
                 }
 
             case let .relayConfigSynced(sync):
-                state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay
-                state.hostedRelayHost = sync.hostedRelayHost ?? "ios-push-relay.openclaw.ai"
+                state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay.value
+                state.hostedRelayHost = sync.hostedRelayHost.value ?? "ios-push-relay.openclaw.ai"
                 return .none
 
             case let .remoteRegistrationRequested(request):
-                guard request.disclosureAccepted, state.status.allowsNotifications else { return .none }
+                guard request.disclosureAccepted.value, state.status.allowsNotifications else { return .none }
                 return .run { _ in
                     await registrationClient.registerForRemoteNotifications()
                 }
