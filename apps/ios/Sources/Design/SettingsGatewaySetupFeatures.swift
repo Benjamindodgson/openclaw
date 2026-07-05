@@ -248,13 +248,14 @@ struct SettingsManualGatewayEndpointFeature {
 
     enum Action: Equatable, Sendable {
         struct EndpointSync: Equatable, Sendable {
-            var enabled: Bool
-            var host: String
-            var useTLS: Bool
+            var enabled: ManualGatewayEnabled
+            var host: ManualGatewayHost
+            var useTLS: ManualGatewayTLS
         }
 
         struct ManualGatewayEnabled: Equatable, Sendable { var value: Bool }
         struct ManualGatewayEnabledChange: Equatable, Sendable { var enabled: ManualGatewayEnabled }
+        struct ManualGatewayHost: Equatable, Sendable { var value: String }
         struct ManualGatewayHostDraft: Equatable, Sendable { var value: String }
         struct ManualGatewayHostChange: Equatable, Sendable { var draft: ManualGatewayHostDraft }
         struct ManualGatewayTLS: Equatable, Sendable { var value: Bool }
@@ -303,9 +304,9 @@ struct SettingsManualGatewayEndpointFeature {
                 return .none
 
             case let .endpointSynced(sync):
-                state.manualGatewayEnabled = sync.enabled
-                state.manualGatewayHost = sync.host
-                state.manualGatewayTLS = sync.useTLS
+                state.manualGatewayEnabled = sync.enabled.value
+                state.manualGatewayHost = sync.host.value
+                state.manualGatewayTLS = sync.useTLS.value
                 return .none
 
             case let .manualConnectionRequested(request):

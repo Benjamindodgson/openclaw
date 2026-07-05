@@ -1926,9 +1926,9 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.endpointSynced(.init(
-            enabled: true,
-            host: "gateway.example.com",
-            useTLS: false)))
+            enabled: .init(value: true),
+            host: .init(value: "gateway.example.com"),
+            useTLS: .init(value: false))))
         {
             $0.manualGatewayEnabled = true
             $0.manualGatewayHost = "gateway.example.com"
