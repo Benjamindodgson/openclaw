@@ -2621,7 +2621,7 @@ private final class SettingsGatewaySetupAuthPersistenceProbe: @unchecked Sendabl
     var client: SettingsGatewaySetupAuthPersistenceClient {
         SettingsGatewaySetupAuthPersistenceClient(
             currentInstanceID: {
-                self.instanceId
+                .init(value: self.instanceId)
             },
             prepareForBootstrapPairing: { instanceId in
                 self.preparedBootstrapPairingInstanceIds.append(instanceId)

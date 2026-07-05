@@ -670,7 +670,7 @@ struct SettingsGatewayCredentialsFeature {
                 Self.applySetupAuth(setupAuth, to: &state)
                 state.setupAuthPersistenceRequest = SettingsGatewaySetupAuthPersistenceRequest(
                     setupAuth: setupAuth,
-                    instanceId: setupAuthPersistenceClient.currentInstanceID())
+                    instanceId: setupAuthPersistenceClient.currentInstanceID().value)
                 return .none
             }
         }
