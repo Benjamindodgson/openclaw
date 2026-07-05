@@ -350,7 +350,11 @@ struct AgentOverviewLoadFeatureTests {
             AgentOverviewLoadFeature()
         }
 
-        await store.send(.refreshRequested(.init(gatewayConnected: true, force: false, activeAgentID: "mobile"))) {
+        await store.send(.refreshRequested(.init(
+            gatewayConnection: .init(isConnected: true),
+            force: .init(isForced: false),
+            activeAgent: .init(value: "mobile"))))
+        {
             $0.isLoading = true
             $0.nextRefreshRequestID = 1
             $0.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(id: 1, activeAgentID: "mobile")
@@ -370,7 +374,11 @@ struct AgentOverviewLoadFeatureTests {
             AgentOverviewLoadFeature()
         }
 
-        await store.send(.refreshRequested(.init(gatewayConnected: false, force: false, activeAgentID: "mobile"))) {
+        await store.send(.refreshRequested(.init(
+            gatewayConnection: .init(isConnected: false),
+            force: .init(isForced: false),
+            activeAgent: .init(value: "mobile"))))
+        {
             $0.overview = nil
             $0.errorText = nil
             $0.isLoading = false
@@ -385,7 +393,10 @@ struct AgentOverviewLoadFeatureTests {
             AgentOverviewLoadFeature()
         }
 
-        await store.send(.refreshRequested(.init(gatewayConnected: true, force: false, activeAgentID: "mobile")))
+        await store.send(.refreshRequested(.init(
+            gatewayConnection: .init(isConnected: true),
+            force: .init(isForced: false),
+            activeAgent: .init(value: "mobile"))))
     }
 
     @Test func `finished refresh stores snapshot and clears empty live data warning`() async {

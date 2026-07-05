@@ -181,6 +181,10 @@ struct RootTabsSourceGuardTests {
         let destinationsSource = try String(contentsOf: Self.agentProTabDestinationsSourceURL(), encoding: .utf8)
         let nodesSource = try String(contentsOf: Self.agentProNodesDestinationSourceURL(), encoding: .utf8)
         let dreamingSource = try String(contentsOf: Self.agentProDreamingDestinationSourceURL(), encoding: .utf8)
+        let overviewLoadFeature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentOverviewLoadFeature",
+            to: "@Reducer\nstruct AgentNavigationFeature")
 
         #expect(!source.contains("ToolbarItem"))
         #expect(source.contains("@Reducer\nstruct AgentSkillPolicyMutationFeature"))
@@ -207,6 +211,17 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("@State var overviewErrorText"))
         #expect(!source.contains("@State var overviewLoading"))
         #expect(source.contains("@State var overviewStore: StoreOf<AgentOverviewLoadFeature>"))
+        #expect(overviewLoadFeature.contains("struct GatewayConnectionStatus: Equatable, Sendable"))
+        #expect(overviewLoadFeature.contains("struct RefreshForce: Equatable, Sendable"))
+        #expect(overviewLoadFeature.contains("struct ActiveAgentID: Equatable, Sendable"))
+        #expect(overviewLoadFeature.contains("var gatewayConnection: GatewayConnectionStatus"))
+        #expect(overviewLoadFeature.contains("var force: RefreshForce"))
+        #expect(overviewLoadFeature.contains("var activeAgent: ActiveAgentID"))
+        #expect(overviewLoadFeature.contains("guard request.gatewayConnection.isConnected"))
+        #expect(overviewLoadFeature.contains("guard request.force.isForced || !state.isLoading"))
+        #expect(overviewLoadFeature.contains("activeAgentID: request.activeAgent.value"))
+        #expect(!overviewLoadFeature.contains("var gatewayConnected: Bool"))
+        #expect(!overviewLoadFeature.contains("var activeAgentID: String"))
         #expect(source.contains("@State var skillFilterStore: StoreOf<AgentSkillFilterFeature>"))
         #expect(source.contains("@State var skillPolicyMutationStore: StoreOf<AgentSkillPolicyMutationFeature>"))
         #expect(source.contains("@State var skillEditorStore: StoreOf<AgentSkillEditorFeature>"))
@@ -222,6 +237,9 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("@State var clawHubInstallSlug"))
         #expect(source.contains("@State var clawHubStore: StoreOf<AgentClawHubSearchFeature>"))
         #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshRequested(.init("))
+        #expect(gatewayDataSource.contains("gatewayConnection: .init(isConnected: self.liveGatewayConnected)"))
+        #expect(gatewayDataSource.contains("force: .init(isForced: force)"))
+        #expect(gatewayDataSource.contains("activeAgent: .init(value: requestedAgentID)"))
         #expect(gatewayDataSource.contains("self.overviewStore.send(.refreshLaunched(.init(requestID: requestID)))"))
         #expect(gatewayDataSource
             .contains("self.overviewStore.send(.refreshFinished(.init(snapshot: snapshot, requestID: requestID)))"))
