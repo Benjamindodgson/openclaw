@@ -34,6 +34,18 @@ struct SettingsTalkSpeakerphoneEnabled: Equatable, Sendable {
     var isEnabled: Bool
 }
 
+struct SettingsGatewayTalkConfigLoaded: Equatable, Sendable {
+    var value: Bool
+}
+
+struct SettingsGatewayTalkApiKeyConfigured: Equatable, Sendable {
+    var value: Bool
+}
+
+struct SettingsGatewayTalkUsesRealtime: Equatable, Sendable {
+    var value: Bool
+}
+
 // swiftformat:enable redundantSendable
 
 extension SettingsTalkPreferencesClient: DependencyKey {
@@ -192,9 +204,9 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct GatewayTalkConfigSync: Equatable, Sendable {
-            var configLoaded: Bool
-            var apiKeyConfigured: Bool
-            var usesRealtime: Bool
+            var configLoaded: SettingsGatewayTalkConfigLoaded
+            var apiKeyConfigured: SettingsGatewayTalkApiKeyConfigured
+            var usesRealtime: SettingsGatewayTalkUsesRealtime
         }
 
         struct GatewayTalkDisplayContextSync: Equatable, Sendable {
@@ -238,9 +250,9 @@ struct SettingsTalkPreferencesFeature {
 
             switch action {
             case let .gatewayTalkConfigSynced(sync):
-                state.gatewayTalkConfigLoaded = sync.configLoaded
-                state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured
-                state.gatewayTalkUsesRealtime = sync.usesRealtime
+                state.gatewayTalkConfigLoaded = sync.configLoaded.value
+                state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured.value
+                state.gatewayTalkUsesRealtime = sync.usesRealtime.value
                 return .none
 
             case let .gatewayTalkDisplayContextSynced(sync):

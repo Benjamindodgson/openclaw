@@ -2408,18 +2408,18 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayTalkConfigSynced(.init(
-            configLoaded: true,
-            apiKeyConfigured: false,
-            usesRealtime: true)))
+            configLoaded: .init(value: true),
+            apiKeyConfigured: .init(value: false),
+            usesRealtime: .init(value: true))))
         {
             $0.gatewayTalkConfigLoaded = true
             $0.gatewayTalkApiKeyConfigured = false
             $0.gatewayTalkUsesRealtime = true
         }
         await store.send(.gatewayTalkConfigSynced(.init(
-            configLoaded: true,
-            apiKeyConfigured: true,
-            usesRealtime: false)))
+            configLoaded: .init(value: true),
+            apiKeyConfigured: .init(value: true),
+            usesRealtime: .init(value: false))))
         {
             $0.gatewayTalkConfigLoaded = true
             $0.gatewayTalkApiKeyConfigured = true

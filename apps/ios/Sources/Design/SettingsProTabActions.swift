@@ -211,9 +211,9 @@ extension SettingsProTab {
 
     func syncTalkRuntimeState() {
         self.talkPreferencesStore.send(.gatewayTalkConfigSynced(.init(
-            configLoaded: self.appModel.talkMode.gatewayTalkConfigLoaded,
-            apiKeyConfigured: self.appModel.talkMode.gatewayTalkApiKeyConfigured,
-            usesRealtime: self.appModel.talkMode.gatewayTalkUsesRealtime)))
+            configLoaded: .init(value: self.appModel.talkMode.gatewayTalkConfigLoaded),
+            apiKeyConfigured: .init(value: self.appModel.talkMode.gatewayTalkApiKeyConfigured),
+            usesRealtime: .init(value: self.appModel.talkMode.gatewayTalkUsesRealtime))))
         self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(.init(
             isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
             transportLabel: self.appModel.talkMode.gatewayTalkTransportLabel)))
