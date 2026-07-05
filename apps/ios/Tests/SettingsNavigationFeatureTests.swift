@@ -1776,10 +1776,10 @@ struct SettingsNavigationFeatureTests {
             SettingsAgentSelectionFeature(selectedAgentClient: selectedAgentProbe.client)
         }
 
-        await store.send(.pickerSelectionChanged(.init(selectedAgentPickerId: " agent-1 "))) {
+        await store.send(.pickerSelectionChanged(.init(selection: .init(value: " agent-1 ")))) {
             $0.selectedAgentPickerId = " agent-1 "
         }
-        await store.send(.pickerSelectionChanged(.init(selectedAgentPickerId: "   "))) {
+        await store.send(.pickerSelectionChanged(.init(selection: .init(value: "   ")))) {
             $0.selectedAgentPickerId = "   "
         }
         await store.finish()
