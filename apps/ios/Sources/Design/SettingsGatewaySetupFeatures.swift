@@ -265,9 +265,11 @@ struct SettingsManualGatewayEndpointFeature {
             var useTLS: ManualGatewayTLS
         }
 
+        struct ManualConnectionPort: Equatable, Sendable { var value: Int }
+        struct ManualConnectionPortValidity: Equatable, Sendable { var value: Bool }
         struct ManualConnectionAttempt: Equatable, Sendable {
-            var port: Int
-            var isPortValid: Bool
+            var port: ManualConnectionPort
+            var isPortValid: ManualConnectionPortValidity
         }
 
         struct GatewayPreflightRequest: Equatable, Sendable {
@@ -316,13 +318,13 @@ struct SettingsManualGatewayEndpointFeature {
                     state.manualConnectionResult = .failure(.init(message: "Failed: host required"))
                     return .none
                 }
-                guard request.isPortValid else {
+                guard request.isPortValid.value else {
                     state.manualConnectionResult = .failure(.init(message: "Failed: invalid port"))
                     return .none
                 }
                 state.manualConnectionResult = .request(ManualConnectionRequest(
                     host: host,
-                    port: request.port,
+                    port: request.port.value,
                     useTLS: state.manualGatewayTLS))
                 return .none
 
