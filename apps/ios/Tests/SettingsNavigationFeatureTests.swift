@@ -1400,7 +1400,7 @@ struct SettingsNavigationFeatureTests {
             SettingsLocationFeature()
         }
 
-        await store.send(.locationModeChanged(.init(rawValue: OpenClawLocationMode.always.rawValue))) {
+        await store.send(.locationModeChanged(.init(mode: .always))) {
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
         }
     }

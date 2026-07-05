@@ -694,10 +694,11 @@ extension SettingsProTab {
     }
 
     func updateLocationModeRaw(_ rawValue: String) {
-        self.locationStore.send(.locationModeChanged(.init(rawValue: rawValue)))
+        guard let mode = OpenClawLocationMode(rawValue: rawValue) else { return }
+        self.locationStore.send(.locationModeChanged(.init(mode: mode)))
         self.deviceCapabilityStore.send(.locationModeChanged(
-            SettingsDeviceCapabilityFeature.LocationModeChange(rawValue: rawValue)))
-        self.storedLocationModeRaw = rawValue
+            SettingsDeviceCapabilityFeature.LocationModeChange(rawValue: mode.rawValue)))
+        self.storedLocationModeRaw = mode.rawValue
     }
 
     func updateGatewayAutoConnect(_ enabled: Bool) {

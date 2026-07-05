@@ -110,7 +110,7 @@ struct SettingsLocationFeature {
     }
 
     struct LocationModeChange: Equatable, Sendable {
-        var rawValue: String
+        var mode: OpenClawLocationMode
     }
 
     struct LocationModeChangeRequest: Equatable, Sendable {
@@ -202,7 +202,7 @@ struct SettingsLocationFeature {
                 return .none
 
             case let .locationModeChanged(change):
-                state.locationModeRaw = change.rawValue
+                state.locationModeRaw = change.mode.rawValue
                 return .none
 
             case let .locationModeChangeRequested(request):
