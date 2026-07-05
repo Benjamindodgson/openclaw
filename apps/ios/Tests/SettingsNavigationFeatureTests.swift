@@ -2702,10 +2702,10 @@ private final class SettingsTalkPreferencesProbe: @unchecked Sendable {
     var client: SettingsTalkPreferencesClient {
         SettingsTalkPreferencesClient(
             setProviderSelection: { selection in
-                self.providerSelections.append(selection)
+                self.providerSelections.append(selection.rawValue)
             },
             setRealtimeVoiceSelection: { voice in
-                self.realtimeVoiceSelections.append(voice)
+                self.realtimeVoiceSelections.append(voice.value)
             },
             setSpeakerphoneEnabled: { enabled in
                 self.speakerphoneEnabledValues.append(enabled)
