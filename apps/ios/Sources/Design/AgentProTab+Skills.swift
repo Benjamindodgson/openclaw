@@ -649,7 +649,7 @@ extension AgentProTab {
         await self.runSkillConfigMutation(skill) {
             let params = SkillUpdateParams(skillKey: skill.effectiveSkillKey, enabled: enabled)
             _ = try await self.requestGateway(method: "skills.update", params: params, timeoutSeconds: 20)
-            return enabled ? "Skill enabled." : "Skill disabled."
+            return .init(message: enabled ? "Skill enabled." : "Skill disabled.")
         }
     }
 
@@ -661,8 +661,8 @@ extension AgentProTab {
             _ = try await self.requestGateway(method: "skills.update", params: params, timeoutSeconds: 20)
             self.skillEditorStore.send(.apiKeyDraftCleared(.init(key: skill.effectiveSkillKey)))
             return apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ? "API key cleared."
-                : "API key saved."
+                ? .init(message: "API key cleared.")
+                : .init(message: "API key saved.")
         }
     }
 
@@ -677,7 +677,8 @@ extension AgentProTab {
                 method: "skills.install",
                 params: params,
                 timeoutSeconds: 125)
-            return (try? JSONDecoder().decode(SkillInstallResultLite.self, from: data).message) ?? "Installed."
+            let message = (try? JSONDecoder().decode(SkillInstallResultLite.self, from: data).message) ?? "Installed."
+            return .init(message: message)
         }
     }
 
@@ -716,15 +717,15 @@ extension AgentProTab {
     @MainActor
     func runSkillConfigMutation(
         _ skill: SkillStatusEntryLite,
-        action: () async throws -> String) async
+        action: () async throws -> AgentSkillEditorMutationSummary) async
     {
         guard self.liveGatewayConnected else { return }
         let key = skill.effectiveSkillKey
         self.skillEditorStore.send(.mutationStarted(.init(key: key)))
 
         do {
-            let message = try await action()
-            self.skillEditorStore.send(.mutationSucceeded(.init(key: key, message: message)))
+            let summary = try await action()
+            self.skillEditorStore.send(.mutationSucceeded(.init(key: key, summary: summary)))
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
             self.skillEditorStore.send(.mutationFinished(.init(key: key)))

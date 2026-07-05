@@ -2,6 +2,13 @@ import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct AgentSkillEditorMutationSummary: Equatable, Sendable {
+    var message: String
+}
+
+// swiftformat:enable redundantSendable
+
 struct AgentProTab: View {
     @Environment(NodeAppModel.self) var appModel
     @Environment(\.scenePhase) var scenePhase
@@ -463,7 +470,7 @@ struct AgentSkillEditorFeature {
 
         struct MutationSuccess: Equatable, Sendable {
             var key: String
-            var message: String
+            var summary: AgentSkillEditorMutationSummary
         }
 
         struct APIKeyDraftChange: Equatable, Sendable {
@@ -527,7 +534,7 @@ struct AgentSkillEditorFeature {
             case let .mutationSucceeded(result):
                 state.messages[result.key] = AgentProTab.SkillEditorMessage(
                     kind: .success,
-                    text: result.message)
+                    text: result.summary.message)
                 return .none
 
             case let .mutationFinished(mutation):
