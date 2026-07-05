@@ -234,21 +234,21 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.diagnosticsCompletionRequested(.init(
-            gatewayConnected: false,
-            discoveredGatewayCount: 0,
-            talkConfigLoaded: false,
-            notificationsAllowed: false,
-            lastRunText: "4:20 PM")))
+            gatewayConnected: .init(value: false),
+            discoveredGatewayCount: .init(value: 0),
+            talkConfigLoaded: .init(value: false),
+            notificationsAllowed: .init(value: false),
+            lastRunText: .init(value: "4:20 PM"))))
         {
             $0.issueCount = 3
             $0.lastRunText = "4:20 PM"
         }
         await store.send(.diagnosticsCompletionRequested(.init(
-            gatewayConnected: true,
-            discoveredGatewayCount: 1,
-            talkConfigLoaded: true,
-            notificationsAllowed: true,
-            lastRunText: "4:22 PM")))
+            gatewayConnected: .init(value: true),
+            discoveredGatewayCount: .init(value: 1),
+            talkConfigLoaded: .init(value: true),
+            notificationsAllowed: .init(value: true),
+            lastRunText: .init(value: "4:22 PM"))))
         {
             $0.issueCount = 0
             $0.lastRunText = "4:22 PM"
@@ -261,11 +261,11 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.diagnosticsContextSynced(.init(
-            isAppleReviewDemoModeEnabled: false,
-            gatewayConnected: true,
-            discoveredGatewayCount: 2,
-            discoveryStatusText: "2 gateways found",
-            screenRecordActive: true)))
+            isAppleReviewDemoModeEnabled: .init(value: false),
+            gatewayConnected: .init(value: true),
+            discoveredGatewayCount: .init(value: 2),
+            discoveryStatusText: .init(value: "2 gateways found"),
+            screenRecordActive: .init(value: true))))
         {
             $0.gatewayConnected = true
             $0.discoveredGatewayCount = 2
@@ -273,11 +273,11 @@ struct SettingsNavigationFeatureTests {
             $0.screenRecordActive = true
         }
         await store.send(.diagnosticsContextSynced(.init(
-            isAppleReviewDemoModeEnabled: true,
-            gatewayConnected: false,
-            discoveredGatewayCount: 0,
-            discoveryStatusText: "Discovery paused",
-            screenRecordActive: false)))
+            isAppleReviewDemoModeEnabled: .init(value: true),
+            gatewayConnected: .init(value: false),
+            discoveredGatewayCount: .init(value: 0),
+            discoveryStatusText: .init(value: "Discovery paused"),
+            screenRecordActive: .init(value: false))))
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayConnected = false
