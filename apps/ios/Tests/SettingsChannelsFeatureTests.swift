@@ -75,8 +75,7 @@ struct SettingsChannelsFeatureTests {
 
         await store.send(.operationRequested(.init(
             kind: .start,
-            channelID: "telegram",
-            accountID: "main",
+            target: .init(channelID: "telegram", accountID: "main"),
             canRead: true,
             canAdmin: true)))
         {
@@ -95,8 +94,7 @@ struct SettingsChannelsFeatureTests {
 
         await store.send(.operationRequested(.init(
             kind: .stop,
-            channelID: "telegram",
-            accountID: "main",
+            target: .init(channelID: "telegram", accountID: "main"),
             canRead: true,
             canAdmin: false)))
     }
@@ -134,14 +132,14 @@ struct SettingsChannelsFeatureTests {
 
     private static func client(
         status: @escaping @Sendable @MainActor () async throws -> ChannelsStatusResult = { Self.connectedStatus },
-        start: @escaping @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void = {
-            _, _ in
+        start: @escaping @Sendable @MainActor (SettingsChannelOperationTarget) async throws -> Void = {
+            _ in
         },
-        stop: @escaping @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void = {
-            _, _ in
+        stop: @escaping @Sendable @MainActor (SettingsChannelOperationTarget) async throws -> Void = {
+            _ in
         },
-        logout: @escaping @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void = {
-            _, _ in
+        logout: @escaping @Sendable @MainActor (SettingsChannelOperationTarget) async throws -> Void = {
+            _ in
         }) -> SettingsChannelsClient
     {
         SettingsChannelsClient(
