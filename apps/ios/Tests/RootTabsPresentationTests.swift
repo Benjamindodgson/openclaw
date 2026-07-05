@@ -600,7 +600,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.commandTriggered(Self.voiceWakeCommandTrigger("  openclaw do this  "))) {
-            $0.commandText = "openclaw do this"
+            $0.commandText = .init(rawValue: "openclaw do this")
         }
         await store.receive(.dismissDelayElapsed) {
             $0.commandText = nil
@@ -623,7 +623,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.commandTriggered(Self.voiceWakeCommandTrigger("openclaw do this"))) {
-            $0.commandText = "openclaw do this"
+            $0.commandText = .init(rawValue: "openclaw do this")
         }
         await store.send(.disappeared)
 
@@ -1598,7 +1598,7 @@ struct RootTabsPresentationTests {
         _ command: String)
         -> RootVoiceWakeToastFeature.CommandTrigger
     {
-        RootVoiceWakeToastFeature.CommandTrigger(command: command)
+        RootVoiceWakeToastFeature.CommandTrigger(rawValue: command)
     }
 
     private static func sidebarLayoutModeResolution(
