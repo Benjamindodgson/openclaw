@@ -705,17 +705,8 @@ struct SettingsGatewayCredentialsFeature {
 }
 
 // swiftformat:disable redundantSendable
-struct SettingsSelectedAgentID: Equatable, Sendable {
-    var value: String
-
-    var normalized: SettingsSelectedAgentID? {
-        let trimmed = self.value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : .init(value: trimmed)
-    }
-}
-
 struct SettingsSelectedAgentClient: Sendable {
-    var setSelectedAgentId: @MainActor @Sendable (SettingsSelectedAgentID?) -> Void
+    var setSelectedAgentId: @MainActor @Sendable (SelectedAgentID?) -> Void
 }
 
 // swiftformat:enable redundantSendable
@@ -772,7 +763,7 @@ struct SettingsAgentSelectionFeature {
             switch action {
             case let .pickerSelectionChanged(change):
                 state.selectedAgentPickerId = change.selectedAgentPickerId
-                let selectedAgentId = SettingsSelectedAgentID(value: change.selectedAgentPickerId).normalized
+                let selectedAgentId = SelectedAgentID(value: change.selectedAgentPickerId).normalized
                 return .run { _ in
                     await selectedAgentClient.setSelectedAgentId(selectedAgentId)
                 }

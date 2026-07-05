@@ -2,6 +2,18 @@ import Foundation
 import OpenClawKit
 import OpenClawProtocol
 
+// swiftformat:disable redundantSendable
+struct SelectedAgentID: Equatable, Sendable {
+    var value: String
+
+    var normalized: SelectedAgentID? {
+        let trimmed = self.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : .init(value: trimmed)
+    }
+}
+
+// swiftformat:enable redundantSendable
+
 enum AgentProValueReader {
     static func intValue(_ value: AnyCodable?) -> Int? {
         switch value?.value {
