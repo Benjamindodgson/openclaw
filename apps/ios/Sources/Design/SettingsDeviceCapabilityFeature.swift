@@ -50,9 +50,8 @@ struct SettingsDeviceCapabilityFeature {
         }
     }
 
-    struct CameraEnabledChange: Equatable, Sendable {
-        var isEnabled: Bool
-    }
+    struct CameraEnabled: Equatable, Sendable { var value: Bool }
+    struct CameraEnabledChange: Equatable, Sendable { var enabled: CameraEnabled }
 
     struct CapabilitiesSync: Equatable, Sendable {
         var cameraEnabled: Bool
@@ -64,9 +63,8 @@ struct SettingsDeviceCapabilityFeature {
         var mode: SettingsDeviceCapabilityLocationMode
     }
 
-    struct PreventSleepChange: Equatable, Sendable {
-        var isEnabled: Bool
-    }
+    struct PreventSleepEnabled: Equatable, Sendable { var value: Bool }
+    struct PreventSleepChange: Equatable, Sendable { var enabled: PreventSleepEnabled }
 
     enum Action: Equatable, Sendable {
         case cameraEnabledChanged(CameraEnabledChange)
@@ -81,7 +79,7 @@ struct SettingsDeviceCapabilityFeature {
         Reduce { state, action in
             switch action {
             case let .cameraEnabledChanged(change):
-                state.cameraEnabled = change.isEnabled
+                state.cameraEnabled = change.enabled.value
                 return .none
 
             case let .capabilitiesSynced(sync):
@@ -95,7 +93,7 @@ struct SettingsDeviceCapabilityFeature {
                 return .none
 
             case let .preventSleepChanged(change):
-                state.preventSleep = change.isEnabled
+                state.preventSleep = change.enabled.value
                 return .none
             }
         }

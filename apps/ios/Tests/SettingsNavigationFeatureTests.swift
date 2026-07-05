@@ -2177,12 +2177,12 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.cameraEnabledChanged(SettingsDeviceCapabilityFeature.CameraEnabledChange(
-            isEnabled: false)))
+            enabled: .init(value: false))))
         {
             $0.cameraEnabled = false
         }
         await store.send(.preventSleepChanged(SettingsDeviceCapabilityFeature.PreventSleepChange(
-            isEnabled: false)))
+            enabled: .init(value: false))))
         {
             $0.preventSleep = false
         }
