@@ -215,8 +215,8 @@ extension SettingsProTab {
             apiKeyConfigured: .init(value: self.appModel.talkMode.gatewayTalkApiKeyConfigured),
             usesRealtime: .init(value: self.appModel.talkMode.gatewayTalkUsesRealtime))))
         self.talkPreferencesStore.send(.gatewayTalkDisplayContextSynced(.init(
-            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
-            transportLabel: self.appModel.talkMode.gatewayTalkTransportLabel)))
+            isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled),
+            transportLabel: .init(value: self.appModel.talkMode.gatewayTalkTransportLabel))))
         self.talkPreferencesStore.send(.gatewayTalkRuntimeSynced(.init(
             activeModeTitle: self.appModel.talkMode.gatewayTalkActiveModeTitle,
             activeModeSubtitle: self.appModel.talkMode.gatewayTalkActiveModeSubtitle,

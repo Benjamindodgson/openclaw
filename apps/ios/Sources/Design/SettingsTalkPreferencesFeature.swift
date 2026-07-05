@@ -46,6 +46,14 @@ struct SettingsGatewayTalkUsesRealtime: Equatable, Sendable {
     var value: Bool
 }
 
+struct SettingsGatewayTalkAppleReviewDemoModeEnabled: Equatable, Sendable {
+    var value: Bool
+}
+
+struct SettingsGatewayTalkTransportLabel: Equatable, Sendable {
+    var value: String
+}
+
 // swiftformat:enable redundantSendable
 
 extension SettingsTalkPreferencesClient: DependencyKey {
@@ -210,8 +218,8 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct GatewayTalkDisplayContextSync: Equatable, Sendable {
-            var isAppleReviewDemoModeEnabled: Bool
-            var transportLabel: String
+            var isAppleReviewDemoModeEnabled: SettingsGatewayTalkAppleReviewDemoModeEnabled
+            var transportLabel: SettingsGatewayTalkTransportLabel
         }
 
         struct GatewayTalkRuntimeSync: Equatable, Sendable {
@@ -256,8 +264,8 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .gatewayTalkDisplayContextSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
-                state.gatewayTalkTransportLabel = sync.transportLabel
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
+                state.gatewayTalkTransportLabel = sync.transportLabel.value
                 return .none
 
             case let .gatewayTalkRuntimeSynced(sync):
