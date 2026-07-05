@@ -585,7 +585,7 @@ struct SettingsAgentSelectionFeature {
     enum Action: Equatable, Sendable {
         struct PickerSelectionChange: Equatable, Sendable { var selection: SelectedAgentID }
 
-        struct SelectedAgentSync: Equatable, Sendable { var selectedAgentId: String? }
+        struct SelectedAgentSync: Equatable, Sendable { var selectedAgent: SelectedAgentID? }
 
         case pickerSelectionChanged(PickerSelectionChange)
         case selectedAgentSynced(SelectedAgentSync)
@@ -607,7 +607,7 @@ struct SettingsAgentSelectionFeature {
                 }
 
             case let .selectedAgentSynced(sync):
-                state.selectedAgentPickerId = sync.selectedAgentId ?? ""
+                state.selectedAgentPickerId = sync.selectedAgent?.value ?? ""
                 return .none
             }
         }
@@ -1529,7 +1529,8 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.appModel.selectedAgentId ?? "") { _, newValue in
                 if newValue != self.agentSelectionStore.selectedAgentPickerId {
-                    self.agentSelectionStore.send(.selectedAgentSynced(.init(selectedAgentId: newValue)))
+                    let selectedAgent = newValue.isEmpty ? nil : SelectedAgentID(value: newValue)
+                    self.agentSelectionStore.send(.selectedAgentSynced(.init(selectedAgent: selectedAgent)))
                 }
             }
             .onChange(of: self.storedSetupCode) { _, newValue in
