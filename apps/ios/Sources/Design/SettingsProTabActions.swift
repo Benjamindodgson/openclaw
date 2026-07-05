@@ -600,13 +600,13 @@ extension SettingsProTab {
 
     func updateCameraEnabled(_ enabled: Bool) {
         self.deviceCapabilityStore.send(.cameraEnabledChanged(
-            SettingsDeviceCapabilityFeature.CameraEnabledChange(isEnabled: enabled)))
+            SettingsDeviceCapabilityFeature.CameraEnabledChange(enabled: .init(value: enabled))))
         self.storedCameraEnabled = enabled
     }
 
     func updatePreventSleep(_ enabled: Bool) {
         self.deviceCapabilityStore.send(.preventSleepChanged(
-            SettingsDeviceCapabilityFeature.PreventSleepChange(isEnabled: enabled)))
+            SettingsDeviceCapabilityFeature.PreventSleepChange(enabled: .init(value: enabled))))
         self.storedPreventSleep = enabled
     }
 

@@ -2807,6 +2807,37 @@ struct RootTabsSourceGuardTests {
         #expect(requestFunction.contains("previousLocationModeRaw") == false)
     }
 
+    @Test func `settings device capability toggle actions are typed`() throws {
+        let deviceCapabilitySource = try String(
+            contentsOf: Self.settingsDeviceCapabilityFeatureSourceURL(),
+            encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+
+        #expect(deviceCapabilitySource.contains("struct CameraEnabled: Equatable, Sendable"))
+        #expect(deviceCapabilitySource.contains("struct CameraEnabledChange: Equatable, Sendable"))
+        #expect(deviceCapabilitySource.contains("var enabled: CameraEnabled"))
+        #expect(deviceCapabilitySource.contains("struct PreventSleepEnabled: Equatable, Sendable"))
+        #expect(deviceCapabilitySource.contains("struct PreventSleepChange: Equatable, Sendable"))
+        #expect(deviceCapabilitySource.contains("var enabled: PreventSleepEnabled"))
+        #expect(deviceCapabilitySource.contains("state.cameraEnabled = change.enabled.value"))
+        #expect(deviceCapabilitySource.contains("state.preventSleep = change.enabled.value"))
+        #expect(actionsSource.contains(
+            "SettingsDeviceCapabilityFeature.CameraEnabledChange(enabled: .init(value: enabled))"))
+        #expect(actionsSource.contains(
+            "SettingsDeviceCapabilityFeature.PreventSleepChange(enabled: .init(value: enabled))"))
+        #expect(settingsSource.contains("self.deviceCapabilityStore.send(.cameraEnabledChanged(.init("))
+        #expect(settingsSource.contains("self.deviceCapabilityStore.send(.preventSleepChanged(.init("))
+        #expect(settingsSource.contains("enabled: .init(value: newValue)"))
+        #expect(!deviceCapabilitySource.contains("var isEnabled: Bool"))
+        #expect(!deviceCapabilitySource.contains("state.cameraEnabled = change.isEnabled"))
+        #expect(!deviceCapabilitySource.contains("state.preventSleep = change.isEnabled"))
+        #expect(!actionsSource.contains("SettingsDeviceCapabilityFeature.CameraEnabledChange(isEnabled:"))
+        #expect(!actionsSource.contains("SettingsDeviceCapabilityFeature.PreventSleepChange(isEnabled:"))
+        #expect(!settingsSource.contains("cameraEnabledChanged(.init(isEnabled:"))
+        #expect(!settingsSource.contains("preventSleepChanged(.init(isEnabled:"))
+    }
+
     @Test func `settings device capability location mode action is typed`() throws {
         let deviceCapabilitySource = try String(
             contentsOf: Self.settingsDeviceCapabilityFeatureSourceURL(),

@@ -1648,16 +1648,11 @@ struct SettingsProTab: View {
     private func settingsBaseLifecycle(_ content: some View) -> some View {
         content
             .task {
-                self.syncSettingsState()
-                self.refreshNotificationSettings()
-                self.applyPendingGatewaySetupLinkIfNeeded()
-                self.applyInitialRouteIfNeeded()
-                self.notifyRouteChange()
+                self.runInitialSettingsLifecycle()
             }
             .onChange(of: self.scenePhase) { _, phase in
                 if phase == .active {
-                    self.syncSettingsState()
-                    self.refreshNotificationSettings()
+                    self.refreshActiveSettingsLifecycle()
                 }
             }
             .onChange(of: self.storedAppearancePreferenceRaw) { _, newValue in
@@ -1695,10 +1690,12 @@ struct SettingsProTab: View {
                 self.gatewaySetupLinkStore.send(.setupCodeSynced(.init(setupCode: newValue)))
             }
             .onChange(of: self.storedCameraEnabled) { _, newValue in
-                self.deviceCapabilityStore.send(.cameraEnabledChanged(.init(isEnabled: newValue)))
+                self.deviceCapabilityStore.send(.cameraEnabledChanged(.init(
+                    enabled: .init(value: newValue))))
             }
             .onChange(of: self.storedPreventSleep) { _, newValue in
-                self.deviceCapabilityStore.send(.preventSleepChanged(.init(isEnabled: newValue)))
+                self.deviceCapabilityStore.send(.preventSleepChanged(.init(
+                    enabled: .init(value: newValue))))
             }
             .onChange(of: self.storedTalkEnabled) { _, _ in
                 self.syncVoiceControlState()
@@ -1748,6 +1745,19 @@ struct SettingsProTab: View {
             .onChange(of: self.navigationStore.navigationPath) { _, _ in
                 self.notifyRouteChange()
             }
+    }
+
+    private func runInitialSettingsLifecycle() {
+        self.syncSettingsState()
+        self.refreshNotificationSettings()
+        self.applyPendingGatewaySetupLinkIfNeeded()
+        self.applyInitialRouteIfNeeded()
+        self.notifyRouteChange()
+    }
+
+    private func refreshActiveSettingsLifecycle() {
+        self.syncSettingsState()
+        self.refreshNotificationSettings()
     }
 
     private func settingsApprovalLifecycle(_ content: some View) -> some View {
