@@ -3,6 +3,23 @@ import CoreGraphics
 import Foundation
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct RootLocalNetworkAccessReason: Equatable, Sendable {
+    var value: String
+
+    init(rawValue: String) {
+        self.value = rawValue
+    }
+
+    static let rootAppear = Self(rawValue: "root_appear")
+    static let autoOpenSettings = Self(rawValue: "auto_open_settings")
+    static let gatewaySetupDeeplink = Self(rawValue: "gateway_setup_deeplink")
+    static let sceneActive = Self(rawValue: "scene_active")
+    static let onboardingDismissed = Self(rawValue: "onboarding_dismissed")
+}
+
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct RootPresentationFeature {
     // swiftformat:disable redundantSendable
@@ -55,12 +72,12 @@ struct RootPresentationFeature {
     }
 
     struct LocalNetworkAccessRequest: Equatable, Sendable {
-        var reason: String
+        var reason: RootLocalNetworkAccessReason
         var sceneActive: Bool
     }
 
     struct LocalNetworkAccessCommand: Equatable, Sendable {
-        var reason: String
+        var reason: RootLocalNetworkAccessReason
     }
 
     struct OnboardingVisibilityChange: Equatable, Sendable {
@@ -293,7 +310,7 @@ struct RootPresentationFeature {
                 switch state.startupRoute {
                 case .none:
                     state.presentationCommand = .requestLocalNetworkAccess(
-                        LocalNetworkAccessCommand(reason: "root_appear"))
+                        LocalNetworkAccessCommand(reason: .rootAppear))
                 case .onboarding:
                     state.onboardingAllowSkip = true
                     state.showOnboarding = true
@@ -301,7 +318,7 @@ struct RootPresentationFeature {
                 case .settings:
                     state.didAutoOpenSettings = true
                     state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                        LocalNetworkAccessCommand(reason: "root_appear"))
+                        LocalNetworkAccessCommand(reason: .rootAppear))
                 }
                 return .none
 
@@ -318,7 +335,7 @@ struct RootPresentationFeature {
                 guard state.startupRoute == .settings else { return .none }
                 state.didAutoOpenSettings = true
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                    LocalNetworkAccessCommand(reason: "auto_open_settings"))
+                    LocalNetworkAccessCommand(reason: .autoOpenSettings))
                 return .none
 
             case let .gatewaySetupRequestChanged(request):
@@ -331,7 +348,7 @@ struct RootPresentationFeature {
                 state.presentedSheet = nil
                 state.refreshPresentation()
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
-                    LocalNetworkAccessCommand(reason: "gateway_setup_deeplink"))
+                    LocalNetworkAccessCommand(reason: .gatewaySetupDeeplink))
                 return .none
 
             case let .localNetworkAccessRequested(request):
@@ -349,7 +366,7 @@ struct RootPresentationFeature {
                 guard wasPresented, !change.isPresented else { return .none }
                 guard state.didEvaluateOnboarding, change.sceneActive else { return .none }
                 state.presentationCommand = .requestLocalNetworkAccess(
-                    LocalNetworkAccessCommand(reason: "onboarding_dismissed"))
+                    LocalNetworkAccessCommand(reason: .onboardingDismissed))
                 return .none
 
             case .presentationCommandHandled:

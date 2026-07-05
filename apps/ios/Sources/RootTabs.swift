@@ -760,7 +760,7 @@ struct RootTabs: View {
                 self.updateIdleTimer()
                 self.updateHomeCanvasState()
                 guard newValue == .active else { return }
-                self.maybeRequestLocalNetworkAccess(reason: "scene_active")
+                self.maybeRequestLocalNetworkAccess(reason: .sceneActive)
                 Task { await self.refreshGatewayOverviewAfterSceneActivation() }
             }
             .onDisappear {
@@ -842,7 +842,7 @@ struct RootTabs: View {
                 OnboardingWizardView(
                     allowSkip: self.presentationStore.onboardingAllowSkip,
                     onRequestLocalNetworkAccess: { reason in
-                        self.requestLocalNetworkAccess(reason: reason)
+                        self.requestLocalNetworkAccess(reason: .init(rawValue: reason))
                     },
                     onClose: {
                         self.setOnboardingPresented(false)
@@ -1088,16 +1088,16 @@ extension RootTabs {
         self.handlePresentationCommand()
     }
 
-    private func maybeRequestLocalNetworkAccess(reason: String) {
+    private func maybeRequestLocalNetworkAccess(reason: RootLocalNetworkAccessReason) {
         self.presentationStore.send(.localNetworkAccessRequested(RootPresentationFeature.LocalNetworkAccessRequest(
             reason: reason,
             sceneActive: self.scenePhase == .active)))
         self.handlePresentationCommand()
     }
 
-    private func requestLocalNetworkAccess(reason: String) {
+    private func requestLocalNetworkAccess(reason: RootLocalNetworkAccessReason) {
         guard !self.appModel.isAppleReviewDemoModeEnabled else { return }
-        self.gatewayController.requestLocalNetworkAccess(reason: reason)
+        self.gatewayController.requestLocalNetworkAccess(reason: reason.value)
     }
 
     private func applyInitialChatSessionIfNeeded() {
