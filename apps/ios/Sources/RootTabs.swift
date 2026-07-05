@@ -1102,7 +1102,8 @@ extension RootTabs {
 
     private func applyInitialChatSessionIfNeeded() {
         self.launchStore.send(.initialChatSessionRequested(
-            RootLaunchFeature.InitialChatSessionRequest(sessionKey: Self.initialChatSessionKey)))
+            RootLaunchFeature.InitialChatSessionRequest(
+                sessionKey: ChatSessionKey(rawValue: Self.initialChatSessionKey))))
         self.handleLaunchCommand()
     }
 
@@ -1134,7 +1135,7 @@ extension RootTabs {
             self.appearancePreferenceRaw = command.rawValue
 
         case let .focusChatSession(command):
-            self.appModel.focusChatSession(command.sessionKey)
+            self.appModel.focusChatSession(command.sessionKey?.value)
         }
     }
 
