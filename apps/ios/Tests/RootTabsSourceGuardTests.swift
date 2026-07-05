@@ -377,6 +377,7 @@ struct RootTabsSourceGuardTests {
     @Test func `talk speakerphone persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let sessionKeySource = try String(contentsOf: Self.sessionKeySourceURL(), encoding: .utf8)
         let talkSource = try String(contentsOf: Self.talkProTabSourceURL(), encoding: .utf8)
         let speakerphoneBinding = try Self.extract(
             talkSource,
@@ -387,6 +388,8 @@ struct RootTabsSourceGuardTests {
             from: "private func alignPersistedTalkState()",
             to: "private var permissionPromptBinding: Binding<Bool>")
 
+        #expect(sessionKeySource.contains("struct ChatSessionKey: Equatable, Sendable"))
+        #expect(talkSource.contains("var startTalk: @MainActor @Sendable (ChatSessionKey?) -> Void"))
         #expect(talkSource.contains("struct TalkProTabClient: Sendable"))
         #expect(talkSource.contains("var talkProTab: TalkProTabClient"))
         #expect(talkSource.contains("@Dependency(\\.talkProTab)"))
@@ -399,7 +402,8 @@ struct RootTabsSourceGuardTests {
         #expect(talkSource.contains("case startTalkRequested(StartTalkRequest)"))
         #expect(talkSource.contains("case talkEnabledChanged(TalkEnabledChange)"))
         #expect(talkSource.contains("await client.setSpeakerphoneEnabled(change.enabled)"))
-        #expect(talkSource.contains("await client.startTalk(request.sessionKey)"))
+        #expect(talkSource.contains("let sessionKey = ChatSessionKey(rawValue: request.sessionKey)"))
+        #expect(talkSource.contains("await client.startTalk(sessionKey)"))
         #expect(talkSource.contains("await client.setTalkEnabled(change.enabled)"))
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
         #expect(storesSource.contains("func makeTalkProTabStore()"))
@@ -444,14 +448,18 @@ struct RootTabsSourceGuardTests {
     @Test func `chat talk toggle is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let sessionKeySource = try String(contentsOf: Self.sessionKeySourceURL(), encoding: .utf8)
         let chatSource = try String(contentsOf: Self.chatProTabSourceURL(), encoding: .utf8)
 
+        #expect(sessionKeySource.contains("struct ChatSessionKey: Equatable, Sendable"))
+        #expect(chatSource.contains("var focusChatSession: @MainActor @Sendable (ChatSessionKey?) -> Void"))
         #expect(chatSource.contains("struct ChatTalkControlClient: Sendable"))
         #expect(chatSource.contains("var chatTalkControl: ChatTalkControlClient"))
         #expect(chatSource.contains("struct ChatTalkControlFeature"))
         #expect(chatSource.contains("struct ToggleRequest: Equatable, Sendable"))
         #expect(chatSource.contains("case toggleRequested(ToggleRequest)"))
-        #expect(chatSource.contains("await client.focusChatSession(request.sessionKey)"))
+        #expect(chatSource.contains("let sessionKey = ChatSessionKey(rawValue: request.sessionKey)"))
+        #expect(chatSource.contains("await client.focusChatSession(sessionKey)"))
         #expect(chatSource.contains("await client.setTalkEnabled(!request.isTalkEnabled)"))
         #expect(chatSource.contains("self.talkControlStore.send(.toggleRequested(.init("))
         #expect(!chatSource.contains("self.appModel.setTalkEnabled(!self.appModel.talkMode.isEnabled)"))
@@ -2928,6 +2936,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Model/NodeAppModel.swift")
+    }
+
+    private static func sessionKeySourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/SessionKey.swift")
     }
 
     private static func phoneHubSourceURL() -> URL {

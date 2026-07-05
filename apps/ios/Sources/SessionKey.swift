@@ -1,5 +1,18 @@
 import Foundation
 
+// swiftformat:disable redundantSendable
+struct ChatSessionKey: Equatable, Sendable {
+    var value: String
+
+    init?(rawValue: String?) {
+        let trimmed = (rawValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        self.value = trimmed
+    }
+}
+
+// swiftformat:enable redundantSendable
+
 enum SessionKey {
     static func normalizeMainKey(_ raw: String?) -> String {
         let trimmed = (raw ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
