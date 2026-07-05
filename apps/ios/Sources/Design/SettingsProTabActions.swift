@@ -264,8 +264,8 @@ extension SettingsProTab {
 
     func syncGatewaySetupStatusContext() {
         self.gatewaySetupStatusStore.send(.gatewayStatusSynced(.init(
-            problemMessage: self.appModel.lastGatewayProblem?.message,
-            gatewayStatusText: self.appModel.gatewayStatusText)))
+            problemMessage: .init(value: self.appModel.lastGatewayProblem?.message),
+            gatewayStatusText: .init(value: self.appModel.gatewayStatusText))))
     }
 
     func syncGatewayConnectionStatusState() {
