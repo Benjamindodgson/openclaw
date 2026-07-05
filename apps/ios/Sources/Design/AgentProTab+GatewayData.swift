@@ -98,9 +98,9 @@ extension AgentProTab {
         guard self.scenePhase == .active else { return }
         let requestedAgentID = self.activeAgentID
         self.overviewStore.send(.refreshRequested(.init(
-            gatewayConnected: self.liveGatewayConnected,
-            force: force,
-            activeAgentID: requestedAgentID)))
+            gatewayConnection: .init(isConnected: self.liveGatewayConnected),
+            force: .init(isForced: force),
+            activeAgent: .init(value: requestedAgentID))))
         guard let refreshRequest = self.overviewStore.refreshRequest else { return }
 
         let requestID = refreshRequest.id

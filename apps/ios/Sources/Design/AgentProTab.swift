@@ -760,10 +760,22 @@ struct AgentOverviewLoadFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct GatewayConnectionStatus: Equatable, Sendable {
+            var isConnected: Bool
+        }
+
+        struct RefreshForce: Equatable, Sendable {
+            var isForced: Bool
+        }
+
+        struct ActiveAgentID: Equatable, Sendable {
+            var value: String
+        }
+
         struct RefreshRequestPayload: Equatable, Sendable {
-            var gatewayConnected: Bool
-            var force: Bool
-            var activeAgentID: String
+            var gatewayConnection: GatewayConnectionStatus
+            var force: RefreshForce
+            var activeAgent: ActiveAgentID
         }
 
         struct RefreshLaunch: Equatable, Sendable {
@@ -786,7 +798,7 @@ struct AgentOverviewLoadFeature {
         Reduce { state, action in
             switch action {
             case let .refreshRequested(request):
-                guard request.gatewayConnected else {
+                guard request.gatewayConnection.isConnected else {
                     state.overview = nil
                     state.errorText = nil
                     state.isLoading = false
@@ -794,7 +806,7 @@ struct AgentOverviewLoadFeature {
                     return .none
                 }
 
-                guard request.force || !state.isLoading else {
+                guard request.force.isForced || !state.isLoading else {
                     state.refreshRequest = nil
                     return .none
                 }
@@ -802,7 +814,7 @@ struct AgentOverviewLoadFeature {
                 state.nextRefreshRequestID += 1
                 state.refreshRequest = RefreshRequest(
                     id: state.nextRefreshRequestID,
-                    activeAgentID: request.activeAgentID)
+                    activeAgentID: request.activeAgent.value)
                 state.isLoading = true
                 state.errorText = nil
                 return .none
