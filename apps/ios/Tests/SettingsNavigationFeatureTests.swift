@@ -1117,10 +1117,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayTokenPersistenceRequested(.init(
-            value: " token-2 ",
+            value: .init(rawValue: " token-2 "),
             instanceId: .init(value: " instance-1 "))))
         await store.send(.gatewayPasswordPersistenceRequested(.init(
-            value: " password-2 ",
+            value: .init(rawValue: " password-2 "),
             instanceId: .init(value: " instance-1 "))))
         await store.finish()
 
@@ -1135,10 +1135,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayTokenPersistenceRequested(.init(
-            value: "token-2",
+            value: .init(rawValue: "token-2"),
             instanceId: .init(value: " "))))
         await store.send(.gatewayPasswordPersistenceRequested(.init(
-            value: "password-2",
+            value: .init(rawValue: "password-2"),
             instanceId: .init(value: " "))))
         await store.finish()
 
@@ -2618,11 +2618,11 @@ private final class SettingsGatewayCredentialsPersistenceProbe: @unchecked Senda
             },
             saveGatewayPassword: { value, instanceId in
                 guard let instanceId = instanceId.trimmedValue else { return }
-                self.savedPasswords.append("\(instanceId):\(value)")
+                self.savedPasswords.append("\(instanceId):\(value.value)")
             },
             saveGatewayToken: { value, instanceId in
                 guard let instanceId = instanceId.trimmedValue else { return }
-                self.savedTokens.append("\(instanceId):\(value)")
+                self.savedTokens.append("\(instanceId):\(value.value)")
             })
     }
 }

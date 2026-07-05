@@ -27,6 +27,14 @@ struct SettingsGatewayStoredCredentials: Equatable, Sendable {
     var password: String
 }
 
+struct SettingsGatewayCredentialValue: Equatable, Sendable {
+    var value: String
+
+    init(rawValue: String) {
+        self.value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 struct SettingsGatewayCurrentInstanceID: Equatable, Sendable {
     var value: String
 
@@ -52,9 +60,13 @@ struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String 
 struct SettingsGatewayCredentialsPersistenceClient {
     var loadCredentials: @Sendable (_ instanceId: SettingsGatewayCurrentInstanceID)
         -> SettingsGatewayStoredCredentials
-    var saveGatewayPassword: @MainActor @Sendable (_ value: String, _ instanceId: SettingsGatewayCurrentInstanceID)
+    var saveGatewayPassword: @MainActor @Sendable (
+        _ value: SettingsGatewayCredentialValue,
+        _ instanceId: SettingsGatewayCurrentInstanceID)
         -> Void
-    var saveGatewayToken: @MainActor @Sendable (_ value: String, _ instanceId: SettingsGatewayCurrentInstanceID)
+    var saveGatewayToken: @MainActor @Sendable (
+        _ value: SettingsGatewayCredentialValue,
+        _ instanceId: SettingsGatewayCurrentInstanceID)
         -> Void
 }
 
@@ -70,11 +82,11 @@ extension SettingsGatewayCredentialsPersistenceClient: DependencyKey {
         },
         saveGatewayPassword: { value, instanceId in
             guard let instanceId = instanceId.trimmedValue else { return }
-            GatewaySettingsStore.saveGatewayPassword(value, instanceId: instanceId)
+            GatewaySettingsStore.saveGatewayPassword(value.value, instanceId: instanceId)
         },
         saveGatewayToken: { value, instanceId in
             guard let instanceId = instanceId.trimmedValue else { return }
-            GatewaySettingsStore.saveGatewayToken(value, instanceId: instanceId)
+            GatewaySettingsStore.saveGatewayToken(value.value, instanceId: instanceId)
         })
 
     static let testValue = SettingsGatewayCredentialsPersistenceClient(
