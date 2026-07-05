@@ -794,11 +794,10 @@ struct SettingsShareInstructionFeature {
 
     enum Action: Equatable, Sendable {
         struct DefaultShareInstructionChange: Equatable, Sendable { var value: String }
-        struct DefaultShareInstructionPersistenceRequest: Equatable, Sendable { var value: String }
 
         case defaultShareInstructionChanged(DefaultShareInstructionChange)
         case defaultShareInstructionLoadRequested
-        case defaultShareInstructionPersistenceRequested(DefaultShareInstructionPersistenceRequest)
+        case defaultShareInstructionPersistenceRequested(SettingsDefaultShareInstruction)
     }
 
     // swiftformat:enable redundantSendable
@@ -817,9 +816,9 @@ struct SettingsShareInstructionFeature {
                 state.defaultShareInstruction = persistenceClient.loadDefaultInstruction().value
                 return .none
 
-            case let .defaultShareInstructionPersistenceRequested(request):
+            case let .defaultShareInstructionPersistenceRequested(instruction):
                 return .run { _ in
-                    await persistenceClient.saveDefaultInstruction(request.value)
+                    await persistenceClient.saveDefaultInstruction(instruction)
                 }
             }
         }

@@ -2542,8 +2542,8 @@ private final class SettingsShareInstructionPersistenceProbe: @unchecked Sendabl
             loadDefaultInstruction: {
                 .init(value: self.defaultInstruction)
             },
-            saveDefaultInstruction: { value in
-                self.savedInstructions.append(value)
+            saveDefaultInstruction: { instruction in
+                self.savedInstructions.append(instruction.value)
             })
     }
 }
