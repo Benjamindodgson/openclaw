@@ -1728,7 +1728,7 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `settings setup code apply result is reducer owned`() throws {
-        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let setupLinkFeatureSource = try String(contentsOf: Self.settingsGatewaySetupLinkFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
@@ -1737,27 +1737,23 @@ struct RootTabsSourceGuardTests {
             actionsSource,
             from: "func applySetupCode() async -> Bool",
             to: "func applyGatewayLink")
-        let setupLinkFeature = try Self.extract(
-            settingsSource,
-            from: "struct SettingsGatewaySetupLinkFeature",
-            to: "struct SettingsGatewayCredentialsFeature")
 
         #expect(supportSource.contains("struct SettingsAppleReviewDemoClient"))
         #expect(supportSource.contains("var enter: @MainActor @Sendable () -> Void"))
         #expect(supportSource.contains("var settingsAppleReviewDemo: SettingsAppleReviewDemoClient"))
-        #expect(settingsSource.contains("private let appleReviewDemoClientOverride: SettingsAppleReviewDemoClient?"))
-        #expect(settingsSource.contains("@Dependency(\\.settingsAppleReviewDemo)"))
-        #expect(settingsSource.contains("await appleReviewDemoClient.enter()"))
-        #expect(settingsSource.contains("enum ApplyResult: Equatable, Sendable"))
-        #expect(settingsSource.contains("struct AppleReviewDemo: Equatable, Sendable"))
-        #expect(setupLinkFeature.contains("struct Failure: Equatable, Sendable"))
-        #expect(settingsSource.contains("case appleReviewDemo(AppleReviewDemo)"))
-        #expect(setupLinkFeature.contains("case failure(Failure)"))
-        #expect(settingsSource.contains("case applyRequested"))
-        #expect(settingsSource
+        #expect(setupLinkFeatureSource.contains("private let appleReviewDemoClientOverride: SettingsAppleReviewDemoClient?"))
+        #expect(setupLinkFeatureSource.contains("@Dependency(\\.settingsAppleReviewDemo)"))
+        #expect(setupLinkFeatureSource.contains("await appleReviewDemoClient.enter()"))
+        #expect(setupLinkFeatureSource.contains("enum ApplyResult: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("struct AppleReviewDemo: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("struct Failure: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("case appleReviewDemo(AppleReviewDemo)"))
+        #expect(setupLinkFeatureSource.contains("case failure(Failure)"))
+        #expect(setupLinkFeatureSource.contains("case applyRequested"))
+        #expect(setupLinkFeatureSource
             .contains("state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))"))
-        #expect(setupLinkFeature.contains("state.applyResult = .failure(.init(message:"))
-        #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
+        #expect(setupLinkFeatureSource.contains("state.applyResult = .failure(.init(message:"))
+        #expect(setupLinkFeatureSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(actionsSource.contains("await self.gatewaySetupLinkStore.send(.applyRequested).finish()"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
         #expect(actionsSource.contains("case let .appleReviewDemo(demo):"))
@@ -1765,7 +1761,7 @@ struct RootTabsSourceGuardTests {
             "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: demo.statusText))"))
         #expect(applyFunction.contains(
             "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))
-        #expect(!setupLinkFeature.contains("case failure(String)"))
+        #expect(!setupLinkFeatureSource.contains("case failure(String)"))
         #expect(rootSource.contains("gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore()"))
         #expect(storesSource.contains(
             "SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
@@ -1777,19 +1773,19 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `settings setup link staging status is reducer owned`() throws {
-        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let setupLinkFeatureSource = try String(contentsOf: Self.settingsGatewaySetupLinkFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let stagingFunction = try Self.extract(
             actionsSource,
             from: "func applyPendingGatewaySetupLinkIfNeeded()",
             to: "@discardableResult")
 
-        #expect(settingsSource.contains("var setupLinkStatusText: String?"))
-        #expect(settingsSource.contains("struct SetupLinkStage: Equatable, Sendable"))
-        #expect(settingsSource.contains("case setupLinkStaged(SetupLinkStage)"))
-        #expect(settingsSource.contains("case setupLinkStatusHandled"))
-        #expect(settingsSource.contains("Self.setupLinkLoadedStatusText(link)"))
-        #expect(settingsSource.contains("Setup link loaded for \\(link.host):\\(link.port)"))
+        #expect(setupLinkFeatureSource.contains("var setupLinkStatusText: String?"))
+        #expect(setupLinkFeatureSource.contains("struct SetupLinkStage: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("case setupLinkStaged(SetupLinkStage)"))
+        #expect(setupLinkFeatureSource.contains("case setupLinkStatusHandled"))
+        #expect(setupLinkFeatureSource.contains("Self.setupLinkLoadedStatusText(link)"))
+        #expect(setupLinkFeatureSource.contains("Setup link loaded for \\(link.host):\\(link.port)"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStaged(.init(link: link)))"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.setupLinkStatusText"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)"))
@@ -1938,21 +1934,29 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `scanner setup code results are reducer owned`() throws {
-        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let setupLinkFeatureSource = try String(contentsOf: Self.settingsGatewaySetupLinkFeatureSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
 
-        #expect(settingsSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
-        #expect(settingsSource.contains("struct SetupCodeChange: Equatable, Sendable"))
-        #expect(settingsSource.contains("struct SetupCodeSync: Equatable, Sendable"))
-        #expect(settingsSource.contains("case scannedSetupCodeReceived(ScannedSetupCode)"))
-        #expect(settingsSource.contains("case setupCodeChanged(SetupCodeChange)"))
-        #expect(settingsSource.contains("case setupCodeSynced(SetupCodeSync)"))
-        #expect(settingsSource
+        #expect(setupLinkFeatureSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
+        #expect(supportSource.contains("struct SettingsGatewaySetupCode: Equatable, Sendable { var value: String }"))
+        #expect(setupLinkFeatureSource.contains("struct SetupCodeChange: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("var setupCode: SettingsGatewaySetupCode"))
+        #expect(setupLinkFeatureSource.contains("struct SetupCodeSync: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("case scannedSetupCodeReceived(ScannedSetupCode)"))
+        #expect(setupLinkFeatureSource.contains("case setupCodeChanged(SetupCodeChange)"))
+        #expect(setupLinkFeatureSource.contains("case setupCodeSynced(SetupCodeSync)"))
+        #expect(setupLinkFeatureSource.contains("let setupCode = change.setupCode.value"))
+        #expect(setupLinkFeatureSource
             .contains("state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))"))
         #expect(settingsActionsSource.contains(
             "self.gatewaySetupLinkStore.send(.scannedSetupCodeReceived(.init(code: code)))"))
+        #expect(settingsActionsSource.contains(
+            "self.gatewaySetupLinkStore.send(.setupCodeChanged(.init(setupCode: .init(value: setupCode))))"))
+        #expect(!setupLinkFeatureSource.contains("struct SetupCodeChange: Equatable, Sendable { var setupCode: String }"))
+        #expect(!settingsActionsSource.contains(".setupCodeChanged(.init(setupCode: setupCode))"))
         #expect(settingsActionsSource.contains("guard case let .appleReviewDemo(demo)?"))
         #expect(onboardingStateSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case scannedSetupCodeReceived(ScannedSetupCode)"))
@@ -1965,7 +1969,7 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `scanner gateway link results are reducer owned`() throws {
-        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let setupLinkFeatureSource = try String(contentsOf: Self.settingsGatewaySetupLinkFeatureSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
@@ -1974,12 +1978,12 @@ struct RootTabsSourceGuardTests {
             from: "func handleScannedGatewayLink(_ link: GatewayConnectDeepLink)",
             to: "func handleScannedSetupCode")
 
-        #expect(settingsSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
-        #expect(settingsSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
-        #expect(settingsSource.contains("var scannedGatewayLinkStatusText: String?"))
-        #expect(settingsSource.contains("case scannedGatewayLinkStatusHandled"))
-        #expect(settingsSource.contains("Self.scannedGatewayLinkStatusText(link)"))
-        #expect(settingsSource.contains("state.applyResult = .gatewayLink(link)"))
+        #expect(setupLinkFeatureSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
+        #expect(setupLinkFeatureSource.contains("var scannedGatewayLinkStatusText: String?"))
+        #expect(setupLinkFeatureSource.contains("case scannedGatewayLinkStatusHandled"))
+        #expect(setupLinkFeatureSource.contains("Self.scannedGatewayLinkStatusText(link)"))
+        #expect(setupLinkFeatureSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(settingsActionsSource.contains(
             "self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(.init(link: link)))"))
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.scannedGatewayLinkStatusText"))
@@ -3375,6 +3379,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsGatewayConnectionFeature.swift")
+    }
+
+    private static func settingsGatewaySetupLinkFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsGatewaySetupLinkFeature.swift")
     }
 
     private static func settingsDiagnosticsFeatureSourceURL() -> URL {

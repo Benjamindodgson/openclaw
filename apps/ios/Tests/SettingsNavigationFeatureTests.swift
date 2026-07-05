@@ -866,7 +866,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupLinkFeature()
         }
 
-        await store.send(.setupCodeChanged(.init(setupCode: "setup-code"))) {
+        await store.send(.setupCodeChanged(.init(setupCode: .init(value: "setup-code")))) {
             $0.setupCode = "setup-code"
             $0.stagedGatewaySetupLink = nil
         }
@@ -957,7 +957,7 @@ struct SettingsNavigationFeatureTests {
             $0.applyResult = nil
         }
 
-        await store.send(.setupCodeChanged(.init(setupCode: "not a setup code"))) {
+        await store.send(.setupCodeChanged(.init(setupCode: .init(value: "not a setup code")))) {
             $0.setupCode = "not a setup code"
         }
 

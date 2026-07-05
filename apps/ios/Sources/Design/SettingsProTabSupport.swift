@@ -63,6 +63,8 @@ struct SettingsManualGatewayPortText: Equatable, Sendable { var value: String }
 
 struct SettingsOnboardingRequestID: Equatable, Sendable { var value: Int }
 
+struct SettingsGatewaySetupCode: Equatable, Sendable { var value: String }
+
 struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String }
 
 // swiftformat:enable redundantSendable
