@@ -792,7 +792,9 @@ struct SettingsShareInstructionFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct DefaultShareInstructionChange: Equatable, Sendable { var value: String }
+        struct DefaultShareInstructionChange: Equatable, Sendable {
+            var instruction: SettingsDefaultShareInstruction
+        }
 
         case defaultShareInstructionChanged(DefaultShareInstructionChange)
         case defaultShareInstructionLoadRequested
@@ -808,7 +810,7 @@ struct SettingsShareInstructionFeature {
 
             switch action {
             case let .defaultShareInstructionChanged(change):
-                state.defaultShareInstruction = change.value
+                state.defaultShareInstruction = change.instruction.value
                 return .none
 
             case .defaultShareInstructionLoadRequested:
@@ -1951,7 +1953,10 @@ extension SettingsProTab {
     var defaultShareInstructionBinding: Binding<String> {
         Binding(
             get: { self.shareInstructionStore.defaultShareInstruction },
-            set: { self.shareInstructionStore.send(.defaultShareInstructionChanged(.init(value: $0))) })
+            set: {
+                self.shareInstructionStore.send(.defaultShareInstructionChanged(.init(
+                    instruction: .init(value: $0))))
+            })
     }
 
     var agentSelectionBinding: Binding<String> {
