@@ -2522,11 +2522,13 @@ struct RootTabsSourceGuardTests {
 
         #expect(settingsSource.contains("struct TalkEnabledChangeRequest: Equatable, Sendable"))
         #expect(settingsSource.contains("case talkEnabledChangeRequested(TalkEnabledChangeRequest)"))
-        #expect(settingsSource
-            .contains("let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : request.enabled"))
+        #expect(settingsSource.contains("let requested = request.enabled"))
+        #expect(settingsSource.contains("let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : requested.isEnabled"))
         #expect(settingsSource.contains("state.talkEnabled = talkEnabled"))
         #expect(actionsSource.contains("self.voiceControlStore.send(.talkEnabledChangeRequested(.init("))
+        #expect(actionsSource.contains("enabled: .init(isEnabled: enabled)"))
         #expect(actionsSource.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
+        #expect(!settingsSource.contains("request.isAppleReviewDemoModeEnabled ? false : request.enabled"))
         #expect(actionsSource.contains(oldTalkToggleGuard) == false)
     }
 
@@ -2559,25 +2561,33 @@ struct RootTabsSourceGuardTests {
 
         #expect(settingsSource.contains("struct SettingsVoiceControlClient: Sendable"))
         #expect(settingsSource.contains("var settingsVoiceControl: SettingsVoiceControlClient"))
+        #expect(settingsSource.contains("struct SettingsTalkEnabled: Equatable, Sendable"))
         #expect(settingsSource.contains("struct TalkEnabledChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("var enabled: SettingsTalkEnabled"))
         #expect(settingsSource.contains("struct VoiceControlSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("struct SettingsVoiceWakeEnabled: Equatable, Sendable"))
         #expect(settingsSource.contains("struct VoiceWakeEnabledChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("var enabled: SettingsVoiceWakeEnabled"))
         #expect(settingsSource.contains("case controlsSynced(VoiceControlSync)"))
         #expect(settingsSource.contains("case talkEnabledChanged(TalkEnabledChange)"))
         #expect(settingsSource.contains("case voiceWakeEnabledChanged(VoiceWakeEnabledChange)"))
         #expect(settingsSource.contains("@Dependency(\\.settingsVoiceControl)"))
         #expect(settingsSource.contains("await voiceControlClient.setTalkEnabled(talkEnabled)"))
-        #expect(settingsSource.contains("await voiceControlClient.setVoiceWakeEnabled(change.enabled)"))
+        #expect(settingsSource.contains("await voiceControlClient.setVoiceWakeEnabled(enabled.isEnabled)"))
         #expect(rootSource.contains("voiceControlStore: self.makeSettingsVoiceControlStore()"))
         #expect(storesSource.contains("func makeSettingsVoiceControlStore()"))
         #expect(storesSource.contains("voiceControlClient: .live(appModel: self.appModel)"))
         #expect(updateTalkFunction.contains("self.voiceControlStore.send(.talkEnabledChangeRequested(.init("))
+        #expect(updateTalkFunction.contains("enabled: .init(isEnabled: enabled)"))
         #expect(updateTalkFunction.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
         #expect(!updateTalkFunction.contains("self.appModel.setTalkEnabled"))
-        #expect(updateVoiceWakeFunction.contains(
-            "self.voiceControlStore.send(.voiceWakeEnabledChanged(.init(enabled: enabled)))"))
+        #expect(updateVoiceWakeFunction.contains("enabled: .init(isEnabled: enabled)"))
         #expect(updateVoiceWakeFunction.contains("self.storedVoiceWakeEnabled = enabled"))
         #expect(!updateVoiceWakeFunction.contains("self.appModel.setVoiceWakeEnabled"))
+        #expect(!settingsSource.contains("state.talkEnabled = change.enabled\n"))
+        #expect(!settingsSource.contains("state.voiceWakeEnabled = change.enabled\n"))
+        #expect(!settingsSource.contains("setVoiceWakeEnabled(change.enabled)"))
+        #expect(!actionsSource.contains("voiceWakeEnabledChanged(.init(enabled: enabled))"))
     }
 
     @Test func `settings talk preference persistence is reducer effect owned`() throws {

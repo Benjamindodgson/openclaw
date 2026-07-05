@@ -1262,10 +1262,11 @@ struct SettingsVoiceControlFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct TalkEnabledChange: Equatable, Sendable { var enabled: Bool }
+        struct SettingsTalkEnabled: Equatable, Sendable { var isEnabled: Bool }
+        struct TalkEnabledChange: Equatable, Sendable { var enabled: SettingsTalkEnabled }
 
         struct TalkEnabledChangeRequest: Equatable, Sendable {
-            var enabled: Bool
+            var enabled: SettingsTalkEnabled
             var isAppleReviewDemoModeEnabled: Bool
         }
 
@@ -1275,7 +1276,8 @@ struct SettingsVoiceControlFeature {
             var voiceWakeStatusText: String
         }
 
-        struct VoiceWakeEnabledChange: Equatable, Sendable { var enabled: Bool }
+        struct SettingsVoiceWakeEnabled: Equatable, Sendable { var isEnabled: Bool }
+        struct VoiceWakeEnabledChange: Equatable, Sendable { var enabled: SettingsVoiceWakeEnabled }
 
         case controlsSynced(VoiceControlSync)
         case talkDisabledForAppleReview
@@ -1303,20 +1305,22 @@ struct SettingsVoiceControlFeature {
                 return .none
 
             case let .talkEnabledChanged(change):
-                state.talkEnabled = change.enabled
+                state.talkEnabled = change.enabled.isEnabled
                 return .none
 
             case let .talkEnabledChangeRequested(request):
-                let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : request.enabled
+                let requested = request.enabled
+                let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : requested.isEnabled
                 state.talkEnabled = talkEnabled
                 return .run { _ in
                     await voiceControlClient.setTalkEnabled(talkEnabled)
                 }
 
             case let .voiceWakeEnabledChanged(change):
-                state.voiceWakeEnabled = change.enabled
+                let enabled = change.enabled
+                state.voiceWakeEnabled = enabled.isEnabled
                 return .run { _ in
-                    await voiceControlClient.setVoiceWakeEnabled(change.enabled)
+                    await voiceControlClient.setVoiceWakeEnabled(enabled.isEnabled)
                 }
             }
         }
