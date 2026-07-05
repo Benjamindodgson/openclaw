@@ -38,15 +38,23 @@ enum AgentDreamAction: String, CaseIterable, Equatable, Identifiable, Sendable {
     }
 }
 
+struct DreamActionSummary: Equatable, Sendable {
+    var summary: String
+}
+
 // swiftformat:enable redundantSendable
 
 struct AgentDreamingMaintenanceClient {
-    var run: @Sendable @MainActor (_ action: AgentDreamAction) async throws -> String
+    var run: @Sendable @MainActor (_ action: AgentDreamAction) async throws -> DreamActionSummary
 }
 
 extension AgentDreamingMaintenanceClient: DependencyKey {
-    static let liveValue = AgentDreamingMaintenanceClient(run: { action in "\(action.title) complete." })
-    static let testValue = AgentDreamingMaintenanceClient(run: { action in "\(action.title) complete." })
+    static let liveValue = AgentDreamingMaintenanceClient(run: { action in
+        .init(summary: "\(action.title) complete.")
+    })
+    static let testValue = AgentDreamingMaintenanceClient(run: { action in
+        .init(summary: "\(action.title) complete.")
+    })
 
     @MainActor
     static func live(
@@ -64,9 +72,9 @@ extension AgentDreamingMaintenanceClient: DependencyKey {
         })
     }
 
-    static func summary(action: AgentDreamAction, data: Data) -> String {
+    static func summary(action: AgentDreamAction, data: Data) -> DreamActionSummary {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return "\(action.title) complete."
+            return .init(summary: "\(action.title) complete.")
         }
         let written = json["written"] as? Int
         let replaced = json["replaced"] as? Int
@@ -79,9 +87,9 @@ extension AgentDreamingMaintenanceClient: DependencyKey {
             changed.map { $0 ? "artifacts repaired" : "no repair needed" },
         ].compactMap(\.self)
         if parts.isEmpty {
-            return "\(action.title) complete."
+            return .init(summary: "\(action.title) complete.")
         }
-        return "\(action.title): \(parts.joined(separator: ", "))."
+        return .init(summary: "\(action.title): \(parts.joined(separator: ", ")).")
     }
 }
 
@@ -127,10 +135,6 @@ struct AgentDreamingDestinationFeature {
             var gatewayConnected: Bool
         }
 
-        struct DreamActionSummary: Equatable, Sendable {
-            var summary: String
-        }
-
         struct DreamActionResponse: Equatable, Sendable {
             var result: Result<DreamActionSummary, AgentDreamingMaintenanceError>
         }
@@ -155,7 +159,7 @@ struct AgentDreamingDestinationFeature {
                 return .run { send in
                     do {
                         let summary = try await client.run(tap.action)
-                        await send(.dreamActionResponse(.init(result: .success(.init(summary: summary)))))
+                        await send(.dreamActionResponse(.init(result: .success(summary))))
                     } catch {
                         await send(.dreamActionResponse(.init(
                             result: .failure(.failed(.init(message: error.localizedDescription))))))
