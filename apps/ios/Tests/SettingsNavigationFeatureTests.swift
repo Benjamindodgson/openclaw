@@ -1809,7 +1809,9 @@ struct SettingsNavigationFeatureTests {
             SettingsShareInstructionFeature()
         }
 
-        await store.send(.defaultShareInstructionChanged(.init(value: "Summarize this for my agent."))) {
+        await store.send(.defaultShareInstructionChanged(.init(
+            instruction: .init(value: "Summarize this for my agent."))))
+        {
             $0.defaultShareInstruction = "Summarize this for my agent."
         }
     }
