@@ -1102,11 +1102,11 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayCredentialsFeature()
         }
 
-        await store.send(.gatewayTokenChanged(.init(value: "token-2"))) {
-            $0.gatewayToken = "token-2"
+        await store.send(.gatewayTokenChanged(.init(draft: .init(value: " token-2 ")))) {
+            $0.gatewayToken = " token-2 "
         }
-        await store.send(.gatewayPasswordChanged(.init(value: "password-2"))) {
-            $0.gatewayPassword = "password-2"
+        await store.send(.gatewayPasswordChanged(.init(draft: .init(value: " password-2 ")))) {
+            $0.gatewayPassword = " password-2 "
         }
     }
 

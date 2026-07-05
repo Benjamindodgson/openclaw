@@ -564,7 +564,9 @@ struct SettingsGatewayCredentialsFeature {
             var instanceId: SettingsGatewayCurrentInstanceID
         }
 
-        struct ManualCredentialChange: Equatable, Sendable { var value: String }
+        struct ManualCredentialChange: Equatable, Sendable {
+            var draft: SettingsGatewayCredentialDraft
+        }
 
         struct ManualCredentialPersistenceRequest: Equatable, Sendable {
             var value: SettingsGatewayCredentialValue
@@ -621,7 +623,7 @@ struct SettingsGatewayCredentialsFeature {
                 return .none
 
             case let .gatewayPasswordChanged(change):
-                state.gatewayPassword = change.value
+                state.gatewayPassword = change.draft.value
                 return .none
 
             case let .gatewayPasswordPersistenceRequested(persistence):
@@ -634,7 +636,7 @@ struct SettingsGatewayCredentialsFeature {
                 }
 
             case let .gatewayTokenChanged(change):
-                state.gatewayToken = change.value
+                state.gatewayToken = change.draft.value
                 return .none
 
             case let .gatewayTokenPersistenceRequested(persistence):
