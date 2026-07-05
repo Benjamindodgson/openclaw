@@ -1,6 +1,33 @@
 import ComposableArchitecture
 import OpenClawKit
 
+enum SettingsDeviceCapabilityLocationMode: Equatable {
+    case known(OpenClawLocationMode)
+    case unknown(String)
+
+    init(mode: OpenClawLocationMode) {
+        self = .known(mode)
+    }
+
+    init(rawValue: String) {
+        if let mode = OpenClawLocationMode(rawValue: rawValue) {
+            self = .known(mode)
+        } else {
+            self = .unknown(rawValue)
+        }
+    }
+
+    var rawValue: String {
+        switch self {
+        case let .known(mode):
+            mode.rawValue
+
+        case let .unknown(rawValue):
+            rawValue
+        }
+    }
+}
+
 @Reducer
 struct SettingsDeviceCapabilityFeature {
     // swiftformat:disable redundantSendable
@@ -34,7 +61,7 @@ struct SettingsDeviceCapabilityFeature {
     }
 
     struct LocationModeChange: Equatable, Sendable {
-        var rawValue: String
+        var mode: SettingsDeviceCapabilityLocationMode
     }
 
     struct PreventSleepChange: Equatable, Sendable {
@@ -64,7 +91,7 @@ struct SettingsDeviceCapabilityFeature {
                 return .none
 
             case let .locationModeChanged(change):
-                state.locationModeRaw = change.rawValue
+                state.locationModeRaw = change.mode.rawValue
                 return .none
 
             case let .preventSleepChanged(change):

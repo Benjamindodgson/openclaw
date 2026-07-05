@@ -2761,6 +2761,24 @@ struct RootTabsSourceGuardTests {
         #expect(requestFunction.contains("previousLocationModeRaw") == false)
     }
 
+    @Test func `settings device capability location mode action is typed`() throws {
+        let deviceCapabilitySource = try String(
+            contentsOf: Self.settingsDeviceCapabilityFeatureSourceURL(),
+            encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let persistedSyncSend =
+            "self.deviceCapabilityStore.send(.locationModeChanged(.init(mode: .init(rawValue: newValue))))"
+
+        #expect(deviceCapabilitySource.contains("enum SettingsDeviceCapabilityLocationMode: Equatable"))
+        #expect(deviceCapabilitySource.contains("case known(OpenClawLocationMode)"))
+        #expect(deviceCapabilitySource.contains("case unknown(String)"))
+        #expect(deviceCapabilitySource.contains("var mode: SettingsDeviceCapabilityLocationMode"))
+        #expect(deviceCapabilitySource.contains("state.locationModeRaw = change.mode.rawValue"))
+        #expect(actionsSource.contains("SettingsDeviceCapabilityFeature.LocationModeChange(mode: .init(mode: mode))"))
+        #expect(settingsSource.contains(persistedSyncSend))
+    }
+
     @Test func `settings location apply request is reducer effect owned`() throws {
         let locationSource = try String(contentsOf: Self.settingsLocationFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
@@ -3230,6 +3248,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/SettingsLocationFeature.swift")
+    }
+
+    private static func settingsDeviceCapabilityFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/SettingsDeviceCapabilityFeature.swift")
     }
 
     private static func settingsTalkPreferencesFeatureSourceURL() -> URL {

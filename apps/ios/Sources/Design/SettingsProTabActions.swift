@@ -697,7 +697,7 @@ extension SettingsProTab {
         guard let mode = OpenClawLocationMode(rawValue: rawValue) else { return }
         self.locationStore.send(.locationModeChanged(.init(mode: mode)))
         self.deviceCapabilityStore.send(.locationModeChanged(
-            SettingsDeviceCapabilityFeature.LocationModeChange(rawValue: mode.rawValue)))
+            SettingsDeviceCapabilityFeature.LocationModeChange(mode: .init(mode: mode))))
         self.storedLocationModeRaw = mode.rawValue
     }
 
