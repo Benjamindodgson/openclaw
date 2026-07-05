@@ -2062,6 +2062,7 @@ struct RootTabsSourceGuardTests {
     @Test func `settings manual port resolution status is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let applyFunction = try Self.extract(
             actionsSource,
             from: "func applySetupCodeAndConnect() async",
@@ -2083,16 +2084,21 @@ struct RootTabsSourceGuardTests {
         #expect(manualPortFeature.contains("case failure(Failure)"))
         #expect(settingsSource.contains("struct ManualGatewayPortResolutionRequest: Equatable, Sendable"))
         #expect(settingsSource.contains("struct ManualGatewayPortSync: Equatable, Sendable"))
+        #expect(supportSource.contains("struct SettingsManualGatewayPortText: Equatable, Sendable { var value: String }"))
         #expect(settingsSource.contains("struct ManualGatewayPortTextChange: Equatable, Sendable"))
+        #expect(settingsSource.contains("var text: SettingsManualGatewayPortText"))
         #expect(settingsSource.contains(
             "case manualGatewayPortResolutionRequested(ManualGatewayPortResolutionRequest)"))
         #expect(settingsSource.contains("case manualGatewayPortSynced(ManualGatewayPortSync)"))
         #expect(settingsSource.contains("case manualGatewayPortTextChanged(ManualGatewayPortTextChange)"))
+        #expect(settingsSource.contains("let filtered = change.text.value.filter(\\.isNumber)"))
         #expect(settingsSource.contains("state.manualGatewayPortResolutionResult = .failure(.init(message:"))
         #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested(.init("))
         #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port:"))
         #expect(actionsSource.contains(
-            "self.manualGatewayPortStore.send(.manualGatewayPortTextChanged(.init(text: $0))"))
+            "self.manualGatewayPortStore.send(.manualGatewayPortTextChanged(.init(text: .init(value: $0))))"))
+        #expect(!settingsSource.contains("struct ManualGatewayPortTextChange: Equatable, Sendable { var text: String }"))
+        #expect(!actionsSource.contains(".manualGatewayPortTextChanged(.init(text: $0))"))
         #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)"))
         #expect(resolveManualPortFunction.contains(
             "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: failure.message)))"))

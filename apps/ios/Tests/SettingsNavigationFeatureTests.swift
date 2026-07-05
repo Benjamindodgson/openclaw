@@ -1847,11 +1847,11 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayPortFeature()
         }
 
-        await store.send(.manualGatewayPortTextChanged(.init(text: "44a3"))) {
+        await store.send(.manualGatewayPortTextChanged(.init(text: .init(value: "44a3")))) {
             $0.manualGatewayPortText = "443"
             $0.manualGatewayPort = 443
         }
-        await store.send(.manualGatewayPortTextChanged(.init(text: ""))) {
+        await store.send(.manualGatewayPortTextChanged(.init(text: .init(value: "")))) {
             $0.manualGatewayPortText = ""
             $0.manualGatewayPort = 0
         }
