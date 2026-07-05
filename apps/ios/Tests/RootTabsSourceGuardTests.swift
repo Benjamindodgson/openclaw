@@ -2392,11 +2392,34 @@ struct RootTabsSourceGuardTests {
     @Test func `settings gateway connection status sync action is typed`() throws {
         let connectionSource = try String(contentsOf: Self.settingsGatewayConnectionFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let syncGatewayConnectionFunction = try Self.extract(
+            actionsSource,
+            from: "func syncGatewayConnectionStatusState()",
+            to: "func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async")
 
+        #expect(connectionSource.contains("struct GatewayAppleReviewDemoModeEnabled: Equatable, Sendable"))
+        #expect(connectionSource.contains("struct GatewayConnectionStatusConnected: Equatable, Sendable"))
         #expect(connectionSource.contains("struct GatewayStatusSync: Equatable, Sendable"))
+        #expect(connectionSource.contains("var isAppleReviewDemoModeEnabled: GatewayAppleReviewDemoModeEnabled"))
+        #expect(connectionSource.contains("var gatewayStatusConnected: GatewayConnectionStatusConnected"))
+        #expect(connectionSource.contains(
+            "state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
+        #expect(connectionSource.contains("state.gatewayStatusConnected = sync.gatewayStatusConnected.value"))
         #expect(connectionSource.contains("case gatewayStatusSynced(GatewayStatusSync)"))
-        #expect(actionsSource.contains("self.gatewayConnectionStore.send(.gatewayStatusSynced(.init("))
+        #expect(syncGatewayConnectionFunction.contains("self.gatewayConnectionStore.send(.gatewayStatusSynced(.init("))
+        #expect(syncGatewayConnectionFunction.contains(
+            "isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled)"))
+        #expect(syncGatewayConnectionFunction.contains(
+            "gatewayStatusConnected: .init(value: GatewayStatusBuilder.build(appModel: self.appModel) == .connected)"))
         #expect(!connectionSource.contains("case gatewayStatusSynced(\n            isAppleReviewDemoModeEnabled: Bool"))
+        #expect(!connectionSource.contains(
+            "var isAppleReviewDemoModeEnabled: Bool\n            var gatewayStatusConnected: Bool"))
+        #expect(!connectionSource.contains("state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled\n"))
+        #expect(!connectionSource.contains("state.gatewayStatusConnected = sync.gatewayStatusConnected\n"))
+        #expect(!syncGatewayConnectionFunction.contains(
+            "isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled"))
+        #expect(!syncGatewayConnectionFunction.contains(
+            "gatewayStatusConnected: GatewayStatusBuilder.build(appModel: self.appModel) == .connected"))
     }
 
     @Test func `settings share instruction persistence is reducer owned`() throws {

@@ -616,8 +616,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayStatusSynced(.init(
-            isAppleReviewDemoModeEnabled: false,
-            gatewayStatusConnected: false,
+            isAppleReviewDemoModeEnabled: .init(value: false),
+            gatewayStatusConnected: .init(value: false),
             gatewayDisplayStatusText: "Pairing required",
             gatewayAgentCount: 0,
             gatewayRemoteAddress: nil,
@@ -626,8 +626,8 @@ struct SettingsNavigationFeatureTests {
             $0.gatewayDisplayStatusText = "Pairing required"
         }
         await store.send(.gatewayStatusSynced(.init(
-            isAppleReviewDemoModeEnabled: false,
-            gatewayStatusConnected: true,
+            isAppleReviewDemoModeEnabled: .init(value: false),
+            gatewayStatusConnected: .init(value: true),
             gatewayDisplayStatusText: "Connected",
             gatewayAgentCount: 2,
             gatewayRemoteAddress: "100.64.1.2:18789",
@@ -640,8 +640,8 @@ struct SettingsNavigationFeatureTests {
             $0.gatewayServerName = "openclaw-gateway"
         }
         await store.send(.gatewayStatusSynced(.init(
-            isAppleReviewDemoModeEnabled: true,
-            gatewayStatusConnected: false,
+            isAppleReviewDemoModeEnabled: .init(value: true),
+            gatewayStatusConnected: .init(value: false),
             gatewayDisplayStatusText: "Offline",
             gatewayAgentCount: 3,
             gatewayRemoteAddress: nil,

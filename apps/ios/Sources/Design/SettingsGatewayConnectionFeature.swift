@@ -94,9 +94,12 @@ struct SettingsGatewayConnectionFeature {
             var stableID: SettingsGatewayStableID
         }
 
+        struct GatewayAppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
+        struct GatewayConnectionStatusConnected: Equatable, Sendable { var value: Bool }
+
         struct GatewayStatusSync: Equatable, Sendable {
-            var isAppleReviewDemoModeEnabled: Bool
-            var gatewayStatusConnected: Bool
+            var isAppleReviewDemoModeEnabled: GatewayAppleReviewDemoModeEnabled
+            var gatewayStatusConnected: GatewayConnectionStatusConnected
             var gatewayDisplayStatusText: String
             var gatewayAgentCount: Int
             var gatewayRemoteAddress: String?
@@ -141,8 +144,8 @@ struct SettingsGatewayConnectionFeature {
                 }
 
             case let .gatewayStatusSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
-                state.gatewayStatusConnected = sync.gatewayStatusConnected
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
+                state.gatewayStatusConnected = sync.gatewayStatusConnected.value
                 state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText
                 state.gatewayAgentCount = sync.gatewayAgentCount
                 state.gatewayRemoteAddress = sync.gatewayRemoteAddress
