@@ -2,17 +2,25 @@ import ComposableArchitecture
 import Foundation
 
 struct RootCanvasDebugStatusClient {
+    // swiftformat:disable redundantSendable
+    struct Update: Equatable, Sendable {
+        var title: String?
+        var subtitle: String?
+    }
+
+    // swiftformat:enable redundantSendable
+
     var setDebugStatusEnabled: @MainActor @Sendable (Bool) async -> Void
-    var updateDebugStatus: @MainActor @Sendable (_ title: String?, _ subtitle: String?) async -> Void
+    var updateDebugStatus: @MainActor @Sendable (Update) async -> Void
 }
 
 extension RootCanvasDebugStatusClient: DependencyKey {
     static let liveValue = RootCanvasDebugStatusClient(
         setDebugStatusEnabled: { _ in },
-        updateDebugStatus: { _, _ in })
+        updateDebugStatus: { _ in })
     static let testValue = RootCanvasDebugStatusClient(
         setDebugStatusEnabled: { _ in },
-        updateDebugStatus: { _, _ in })
+        updateDebugStatus: { _ in })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
@@ -20,8 +28,8 @@ extension RootCanvasDebugStatusClient: DependencyKey {
             setDebugStatusEnabled: { enabled in
                 appModel.screen.setDebugStatusEnabled(enabled)
             },
-            updateDebugStatus: { title, subtitle in
-                appModel.screen.updateDebugStatus(title: title, subtitle: subtitle)
+            updateDebugStatus: { update in
+                appModel.screen.updateDebugStatus(title: update.title, subtitle: update.subtitle)
             })
     }
 }
@@ -71,7 +79,7 @@ struct RootCanvasDebugStatusFeature {
 
                     let title = snapshot.gatewayDisplayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
                     let subtitle = snapshot.gatewayServerName ?? snapshot.gatewayRemoteAddress
-                    await client.updateDebugStatus(title, subtitle)
+                    await client.updateDebugStatus(.init(title: title, subtitle: subtitle))
                 }
             }
         }

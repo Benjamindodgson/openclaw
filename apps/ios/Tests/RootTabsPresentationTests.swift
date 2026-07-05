@@ -256,8 +256,7 @@ struct RootTabsPresentationTests {
         await store.finish()
 
         #expect(probe.enabledValues == [false])
-        #expect(probe.titles.isEmpty)
-        #expect(probe.subtitles.isEmpty)
+        #expect(probe.updates.isEmpty)
 
         await store.send(.snapshotChanged(RootCanvasDebugStatusFeature.Snapshot(
             isEnabled: true,
@@ -267,8 +266,7 @@ struct RootTabsPresentationTests {
         await store.finish()
 
         #expect(probe.enabledValues == [false, true])
-        #expect(probe.titles == ["Online"])
-        #expect(probe.subtitles == ["Gateway"])
+        #expect(probe.updates == [.init(title: "Online", subtitle: "Gateway")])
     }
 
     @Test func `idle timer reducer syncs lifecycle state through client`() async {
@@ -1693,17 +1691,15 @@ private final class RootCanvasPresentationProbe: @unchecked Sendable {
 
 private final class RootCanvasDebugStatusProbe: @unchecked Sendable {
     var enabledValues: [Bool] = []
-    var titles: [String?] = []
-    var subtitles: [String?] = []
+    var updates: [RootCanvasDebugStatusClient.Update] = []
 
     var client: RootCanvasDebugStatusClient {
         RootCanvasDebugStatusClient(
             setDebugStatusEnabled: { enabled in
                 self.enabledValues.append(enabled)
             },
-            updateDebugStatus: { title, subtitle in
-                self.titles.append(title)
-                self.subtitles.append(subtitle)
+            updateDebugStatus: { update in
+                self.updates.append(update)
             })
     }
 }
