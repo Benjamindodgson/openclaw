@@ -1152,6 +1152,27 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("switch response.result"))
     }
 
+    @Test func `command center chat routes use typed payload`() throws {
+        let source = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
+        let activitySource = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
+        let previewsSource = try String(contentsOf: Self.iPadSidebarFeaturePreviewsSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct ChatRoute: Equatable"))
+        #expect(source.contains("case chat(ChatRoute)"))
+        #expect(source.contains("static let defaultSession = Self(sessionKey: nil)"))
+        #expect(source.contains("static func recentSession(_ sessionKey: String) -> Self"))
+        #expect(source.contains("self.open(.chat(.defaultSession))"))
+        #expect(source.contains("route: .chat(.recentSession(session.key))"))
+        #expect(source.contains("self.appModel.openChat(sessionKey: route.sessionKey)"))
+        #expect(!source.contains("case chat(String?)"))
+        #expect(!source.contains(".chat(nil)"))
+        #expect(!source.contains(".chat(session.key)"))
+        #expect(activitySource.contains("self.appModel.openChat(sessionKey: route.sessionKey)"))
+        #expect(!activitySource.contains("case let .chat(sessionKey)"))
+        #expect(previewsSource.contains("route: .chat(.recentSession(\"main\"))"))
+        #expect(!previewsSource.contains("route: .chat(\""))
+    }
+
     @Test func `routed feature screens reuse shared pro components`() throws {
         let source = try Self.iPadTaskFeatureScreensSource()
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
