@@ -149,14 +149,14 @@ struct VoiceWakePreferencesTests {
     private static func preferencesClient(
         defaultTriggerWords: [String] = ["openclaw"],
         loadedWords: [String] = ["openclaw"],
-        save: @escaping @Sendable ([String]) -> Void = { _ in })
+        save: @escaping @Sendable (VoiceWakeWords) -> Void = { _ in })
         -> VoiceWakeWordsPreferencesClient
     {
         VoiceWakeWordsPreferencesClient(
-            defaultTriggerWords: { defaultTriggerWords },
-            load: { loadedWords },
+            defaultTriggerWords: { .init(values: defaultTriggerWords) },
+            load: { .init(values: loadedWords) },
             save: save,
-            sanitize: { VoiceWakePreferences.sanitizeTriggerWords($0) })
+            sanitize: { .init(values: VoiceWakePreferences.sanitizeTriggerWords($0.values)) })
     }
 }
 
@@ -170,7 +170,7 @@ private actor VoiceWakeWordsGatewayProbe {
                     try await Task.sleep(nanoseconds: delayNanoseconds)
                 }
             },
-            setGlobalWakeWords: { words in await self.record(words) })
+            setGlobalWakeWords: { words in await self.record(words.values) })
     }
 
     func values() -> [[String]] {
