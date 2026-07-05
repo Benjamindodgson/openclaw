@@ -2,14 +2,21 @@ import ComposableArchitecture
 import SwiftUI
 import UIKit
 
+// swiftformat:disable redundantSendable
+struct TalkRuntimeIssueDiagnosticsText: Equatable, Sendable {
+    var value: String
+}
+
+// swiftformat:enable redundantSendable
+
 struct TalkRuntimeIssueClipboardClient {
-    var copy: @Sendable (String) async -> Void
+    var copy: @Sendable (TalkRuntimeIssueDiagnosticsText) async -> Void
 }
 
 extension TalkRuntimeIssueClipboardClient: DependencyKey {
     static let liveValue = TalkRuntimeIssueClipboardClient(copy: { text in
         await MainActor.run {
-            UIPasteboard.general.string = text
+            UIPasteboard.general.string = text.value
         }
     })
 
@@ -53,7 +60,7 @@ struct TalkRuntimeIssueDetailsFeature {
             switch action {
             case .copyDiagnosticsButtonTapped:
                 state.copyFeedback = "Copied diagnostics"
-                let details = state.issue.technicalDetails
+                let details = TalkRuntimeIssueDiagnosticsText(value: state.issue.technicalDetails)
                 return .run { _ in
                     await clipboard.copy(details)
                 }

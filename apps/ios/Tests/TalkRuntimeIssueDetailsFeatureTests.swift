@@ -63,7 +63,7 @@ private final class ClipboardProbe: @unchecked Sendable {
 
     var client: TalkRuntimeIssueClipboardClient {
         TalkRuntimeIssueClipboardClient(copy: { text in
-            self.copiedText = text
+            self.copiedText = text.value
         })
     }
 }
