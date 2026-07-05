@@ -201,12 +201,12 @@ extension SettingsProTab {
 
     func syncTalkPreferencesState() {
         self.talkPreferencesStore.send(.preferencesSynced(.init(
-            providerSelectionRaw: self.storedTalkProviderSelectionRaw,
-            realtimeVoiceSelectionRaw: self.storedTalkRealtimeVoiceSelectionRaw,
-            speechLocale: self.storedTalkSpeechLocale,
-            talkButtonEnabled: self.storedTalkButtonEnabled,
-            talkBackgroundEnabled: self.storedTalkBackgroundEnabled,
-            talkSpeakerphoneEnabled: self.storedTalkSpeakerphoneEnabled)))
+            providerSelection: TalkModeProviderSelection.resolved(self.storedTalkProviderSelectionRaw),
+            realtimeVoiceSelection: .init(rawValue: self.storedTalkRealtimeVoiceSelectionRaw),
+            speechLocale: .init(value: self.storedTalkSpeechLocale),
+            talkButtonEnabled: .init(isEnabled: self.storedTalkButtonEnabled),
+            talkBackgroundEnabled: .init(isEnabled: self.storedTalkBackgroundEnabled),
+            talkSpeakerphoneEnabled: .init(isEnabled: self.storedTalkSpeakerphoneEnabled))))
     }
 
     func syncTalkRuntimeState() {
