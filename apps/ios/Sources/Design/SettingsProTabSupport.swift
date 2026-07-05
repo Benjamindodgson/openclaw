@@ -21,20 +21,26 @@ enum SettingsLayout {
     static let rowHeight: CGFloat = 58
 }
 
+// swiftformat:disable redundantSendable
+struct SettingsGatewayStoredCredentials: Equatable, Sendable {
+    var token: String
+    var password: String
+}
+
+// swiftformat:enable redundantSendable
+
 struct SettingsGatewayCredentialsPersistenceClient {
-    var loadGatewayPassword: @Sendable (_ instanceId: String) -> String?
-    var loadGatewayToken: @Sendable (_ instanceId: String) -> String?
+    var loadCredentials: @Sendable (_ instanceId: String) -> SettingsGatewayStoredCredentials
     var saveGatewayPassword: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
     var saveGatewayToken: @MainActor @Sendable (_ value: String, _ instanceId: String) -> Void
 }
 
 extension SettingsGatewayCredentialsPersistenceClient: DependencyKey {
     static let liveValue = SettingsGatewayCredentialsPersistenceClient(
-        loadGatewayPassword: { instanceId in
-            GatewaySettingsStore.loadGatewayPassword(instanceId: instanceId)
-        },
-        loadGatewayToken: { instanceId in
-            GatewaySettingsStore.loadGatewayToken(instanceId: instanceId)
+        loadCredentials: { instanceId in
+            SettingsGatewayStoredCredentials(
+                token: GatewaySettingsStore.loadGatewayToken(instanceId: instanceId) ?? "",
+                password: GatewaySettingsStore.loadGatewayPassword(instanceId: instanceId) ?? "")
         },
         saveGatewayPassword: { value, instanceId in
             GatewaySettingsStore.saveGatewayPassword(value, instanceId: instanceId)
@@ -44,8 +50,7 @@ extension SettingsGatewayCredentialsPersistenceClient: DependencyKey {
         })
 
     static let testValue = SettingsGatewayCredentialsPersistenceClient(
-        loadGatewayPassword: { _ in nil },
-        loadGatewayToken: { _ in nil },
+        loadCredentials: { _ in .init(token: "", password: "") },
         saveGatewayPassword: { _, _ in },
         saveGatewayToken: { _, _ in })
 }
