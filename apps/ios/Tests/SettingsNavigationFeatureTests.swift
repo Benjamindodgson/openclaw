@@ -2033,7 +2033,10 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.setupLinkApplied(.init(host: "link.example.com", useTLS: true))) {
+        await store.send(.setupLinkApplied(.init(
+            host: .init(value: "link.example.com"),
+            useTLS: .init(value: true))))
+        {
             $0.manualGatewayHost = "link.example.com"
             $0.manualGatewayTLS = true
         }
