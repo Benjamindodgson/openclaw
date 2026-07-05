@@ -928,7 +928,8 @@ struct SettingsGatewayAutoConnectFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct EnabledChange: Equatable, Sendable { var isEnabled: Bool }
+        struct GatewayAutoConnectEnabled: Equatable, Sendable { var value: Bool }
+        struct EnabledChange: Equatable, Sendable { var enabled: GatewayAutoConnectEnabled }
         struct EnabledSync: Equatable, Sendable { var isEnabled: Bool }
 
         case disabledForOnboardingReset
@@ -946,7 +947,7 @@ struct SettingsGatewayAutoConnectFeature {
                 return .none
 
             case let .enabledChanged(change):
-                state.isEnabled = change.isEnabled
+                state.isEnabled = change.enabled.value
                 return .none
 
             case let .enabledSynced(sync):
