@@ -2238,10 +2238,10 @@ struct SettingsNavigationFeatureTests {
             SettingsVoiceControlFeature(voiceControlClient: voiceControlProbe.client)
         }
 
-        await store.send(.talkEnabledChanged(.init(enabled: true))) {
+        await store.send(.talkEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
             $0.talkEnabled = true
         }
-        await store.send(.voiceWakeEnabledChanged(.init(enabled: true))) {
+        await store.send(.voiceWakeEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
             $0.voiceWakeEnabled = true
         }
         await store.finish()
@@ -2269,14 +2269,14 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.talkEnabledChangeRequested(.init(
-            enabled: true,
+            enabled: .init(isEnabled: true),
             isAppleReviewDemoModeEnabled: false)))
         {
             $0.talkEnabled = true
         }
 
         await store.send(.talkEnabledChangeRequested(.init(
-            enabled: true,
+            enabled: .init(isEnabled: true),
             isAppleReviewDemoModeEnabled: true)))
         {
             $0.talkEnabled = false
