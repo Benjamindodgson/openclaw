@@ -10,7 +10,7 @@ struct GatewayDiscoveryDebugLogFeatureTests {
             GatewayDiscoveryDebugLogFeature(clipboard: probe.client)
         }
 
-        await store.send(.copyButtonTapped(.init(log: "2026-07-02T20:00:00.000Z found gateway")))
+        await store.send(.copyButtonTapped(.init(log: .init(value: "2026-07-02T20:00:00.000Z found gateway"))))
         await store.finish()
 
         #expect(probe.copiedText == "2026-07-02T20:00:00.000Z found gateway")
@@ -22,7 +22,7 @@ private final class GatewayDiscoveryDebugLogClipboardProbe: @unchecked Sendable 
 
     var client: GatewayDiscoveryDebugLogClipboardClient {
         GatewayDiscoveryDebugLogClipboardClient(copy: { text in
-            self.copiedText = text
+            self.copiedText = text.value
         })
     }
 }
