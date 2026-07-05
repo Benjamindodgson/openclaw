@@ -880,9 +880,9 @@ extension SettingsProTab {
     }
 
     func updateTalkRealtimeVoiceSelection(_ rawValue: String) {
-        self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(.init(rawValue: rawValue)))
-        let voice = TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
-        self.storedTalkRealtimeVoiceSelectionRaw = voice
+        let voice = SettingsTalkRealtimeVoiceSelection(rawValue: rawValue)
+        self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(.init(voice: voice)))
+        self.storedTalkRealtimeVoiceSelectionRaw = voice.value
     }
 
     func updateTalkSpeechLocale(_ speechLocale: String) {

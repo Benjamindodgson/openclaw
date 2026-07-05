@@ -2335,10 +2335,10 @@ struct SettingsNavigationFeatureTests {
         await store.send(.providerSelectionChanged(.init(selection: .gatewayDefault))) {
             $0.providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
         }
-        await store.send(.realtimeVoiceSelectionChanged(.init(rawValue: "unknown"))) {
+        await store.send(.realtimeVoiceSelectionChanged(.init(voice: .init(rawValue: "unknown")))) {
             $0.realtimeVoiceSelectionRaw = ""
         }
-        await store.send(.realtimeVoiceSelectionChanged(.init(rawValue: " Cedar "))) {
+        await store.send(.realtimeVoiceSelectionChanged(.init(voice: .init(rawValue: " Cedar ")))) {
             $0.realtimeVoiceSelectionRaw = "cedar"
         }
         await store.finish()

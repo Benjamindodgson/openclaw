@@ -10,15 +10,15 @@ struct SettingsTalkPreferencesClient: Sendable {
     var setSpeakerphoneEnabled: @MainActor @Sendable (Bool) -> Void
 }
 
-// swiftformat:enable redundantSendable
-
-struct SettingsTalkRealtimeVoiceSelection: Equatable {
+struct SettingsTalkRealtimeVoiceSelection: Equatable, Sendable {
     var value: String
 
     init(rawValue: String?) {
         self.value = TalkModeRealtimeVoiceSelection.resolvedOverride(rawValue) ?? ""
     }
 }
+
+// swiftformat:enable redundantSendable
 
 extension SettingsTalkPreferencesClient: DependencyKey {
     static let liveValue = SettingsTalkPreferencesClient(
@@ -156,7 +156,7 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct RealtimeVoiceSelectionChange: Equatable, Sendable {
-            var rawValue: String
+            var voice: SettingsTalkRealtimeVoiceSelection
         }
 
         struct SpeechLocaleChange: Equatable, Sendable {
@@ -256,7 +256,7 @@ struct SettingsTalkPreferencesFeature {
                 }
 
             case let .realtimeVoiceSelectionChanged(change):
-                let voice = SettingsTalkRealtimeVoiceSelection(rawValue: change.rawValue)
+                let voice = change.voice
                 state.realtimeVoiceSelectionRaw = voice.value
                 return .run { _ in
                     await preferencesClient.setRealtimeVoiceSelection(voice)
