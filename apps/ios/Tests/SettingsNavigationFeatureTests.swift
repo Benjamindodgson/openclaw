@@ -1796,10 +1796,10 @@ struct SettingsNavigationFeatureTests {
             SettingsAgentSelectionFeature()
         }
 
-        await store.send(.selectedAgentSynced(.init(selectedAgentId: "agent-2"))) {
+        await store.send(.selectedAgentSynced(.init(selectedAgent: .init(value: "agent-2")))) {
             $0.selectedAgentPickerId = "agent-2"
         }
-        await store.send(.selectedAgentSynced(.init(selectedAgentId: nil))) {
+        await store.send(.selectedAgentSynced(.init(selectedAgent: nil))) {
             $0.selectedAgentPickerId = ""
         }
     }
