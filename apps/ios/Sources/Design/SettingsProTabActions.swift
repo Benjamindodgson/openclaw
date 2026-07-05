@@ -251,8 +251,8 @@ extension SettingsProTab {
             URLComponents(url: $0, resolvingAgainstBaseURL: false)?.host
         }
         self.notificationStore.send(.relayConfigSynced(.init(
-            usesOpenClawHostedRelay: config.usesOpenClawHostedRelay,
-            hostedRelayHost: host)))
+            usesOpenClawHostedRelay: .init(value: config.usesOpenClawHostedRelay),
+            hostedRelayHost: .init(value: host))))
     }
 
     func syncOnboardingState() {
@@ -555,7 +555,7 @@ extension SettingsProTab {
     @MainActor
     func registerForRemoteNotificationsIfEnrollmentReady() {
         self.notificationStore.send(.remoteRegistrationRequested(.init(
-            disclosureAccepted: self.pushEnrollmentConsentStore.disclosureAccepted)))
+            disclosureAccepted: .init(value: self.pushEnrollmentConsentStore.disclosureAccepted))))
     }
 
     var manualPortBinding: Binding<String> {

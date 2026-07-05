@@ -1647,7 +1647,7 @@ struct SettingsNavigationFeatureTests {
             SettingsNotificationFeature(registrationClient: probe.client)
         }
 
-        await store.send(.remoteRegistrationRequested(.init(disclosureAccepted: true)))
+        await store.send(.remoteRegistrationRequested(.init(disclosureAccepted: .init(value: true))))
         await store.finish()
 
         #expect(probe.registerCount == 1)
@@ -1661,7 +1661,7 @@ struct SettingsNavigationFeatureTests {
         let missingDisclosureStore = TestStore(initialState: allowedState) {
             SettingsNotificationFeature(registrationClient: probe.client)
         }
-        await missingDisclosureStore.send(.remoteRegistrationRequested(.init(disclosureAccepted: false)))
+        await missingDisclosureStore.send(.remoteRegistrationRequested(.init(disclosureAccepted: .init(value: false))))
         await missingDisclosureStore.finish()
 
         var notAllowedState = SettingsNotificationFeature.State()
@@ -1669,7 +1669,7 @@ struct SettingsNavigationFeatureTests {
         let missingAuthorizationStore = TestStore(initialState: notAllowedState) {
             SettingsNotificationFeature(registrationClient: probe.client)
         }
-        await missingAuthorizationStore.send(.remoteRegistrationRequested(.init(disclosureAccepted: true)))
+        await missingAuthorizationStore.send(.remoteRegistrationRequested(.init(disclosureAccepted: .init(value: true))))
         await missingAuthorizationStore.finish()
 
         #expect(probe.registerCount == 0)
@@ -1738,15 +1738,15 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.relayConfigSynced(.init(
-            usesOpenClawHostedRelay: true,
-            hostedRelayHost: "relay.example.com")))
+            usesOpenClawHostedRelay: .init(value: true),
+            hostedRelayHost: .init(value: "relay.example.com"))))
         {
             $0.usesOpenClawHostedRelay = true
             $0.hostedRelayHost = "relay.example.com"
         }
         await store.send(.relayConfigSynced(.init(
-            usesOpenClawHostedRelay: false,
-            hostedRelayHost: nil)))
+            usesOpenClawHostedRelay: .init(value: false),
+            hostedRelayHost: .init(value: nil))))
         {
             $0.usesOpenClawHostedRelay = false
             $0.hostedRelayHost = "ios-push-relay.openclaw.ai"
