@@ -172,9 +172,9 @@ extension SettingsProTab {
         self.syncOnboardingState()
         self.deviceCapabilityStore.send(.capabilitiesSynced(
             SettingsDeviceCapabilityFeature.CapabilitiesSync(
-                cameraEnabled: self.storedCameraEnabled,
-                preventSleep: self.storedPreventSleep,
-                locationModeRaw: self.storedLocationModeRaw)))
+                cameraEnabled: .init(value: self.storedCameraEnabled),
+                preventSleep: .init(value: self.storedPreventSleep),
+                locationMode: .init(rawValue: self.storedLocationModeRaw))))
         self.syncVoiceControlState()
         self.syncTalkPreferencesState()
         self.syncTalkRuntimeState()
