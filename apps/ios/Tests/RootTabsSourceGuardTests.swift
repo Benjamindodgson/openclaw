@@ -2555,7 +2555,7 @@ struct RootTabsSourceGuardTests {
 
         #expect(preferencesSource.contains("struct SettingsTalkPreferencesClient: Sendable"))
         #expect(preferencesSource.contains("setProviderSelection: @MainActor @Sendable (TalkModeProviderSelection) -> Void"))
-        #expect(preferencesSource.contains("struct SettingsTalkRealtimeVoiceSelection: Equatable"))
+        #expect(preferencesSource.contains("struct SettingsTalkRealtimeVoiceSelection: Equatable, Sendable"))
         #expect(preferencesSource
             .contains("setRealtimeVoiceSelection: @MainActor @Sendable (SettingsTalkRealtimeVoiceSelection) -> Void"))
         #expect(preferencesSource.contains("var settingsTalkPreferences: SettingsTalkPreferencesClient"))
@@ -2563,6 +2563,7 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("struct ProviderSelectionChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("var selection: TalkModeProviderSelection"))
         #expect(preferencesSource.contains("struct RealtimeVoiceSelectionChange: Equatable, Sendable"))
+        #expect(preferencesSource.contains("var voice: SettingsTalkRealtimeVoiceSelection"))
         #expect(preferencesSource.contains("struct TalkSpeakerphoneEnabledChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct GatewayTalkConfigSync: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct GatewayTalkDisplayContextSync: Equatable, Sendable"))
@@ -2584,9 +2585,10 @@ struct RootTabsSourceGuardTests {
             .contains("self.talkPreferencesStore.send(.providerSelectionChanged(.init(selection: selection)))"))
         #expect(updateProviderFunction.contains("self.storedTalkProviderSelectionRaw = selection.rawValue"))
         #expect(!updateProviderFunction.contains("self.appModel.setTalkProviderSelection"))
+        #expect(updateRealtimeVoiceFunction.contains("let voice = SettingsTalkRealtimeVoiceSelection(rawValue: rawValue)"))
         #expect(updateRealtimeVoiceFunction
-            .contains("self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(.init(rawValue: rawValue)))"))
-        #expect(updateRealtimeVoiceFunction.contains("self.storedTalkRealtimeVoiceSelectionRaw = voice"))
+            .contains("self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(.init(voice: voice)))"))
+        #expect(updateRealtimeVoiceFunction.contains("self.storedTalkRealtimeVoiceSelectionRaw = voice.value"))
         #expect(!updateRealtimeVoiceFunction.contains("self.appModel.setTalkRealtimeVoiceSelection"))
         #expect(updateSpeakerphoneFunction
             .contains("self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(.init(isEnabled: enabled)))"))
