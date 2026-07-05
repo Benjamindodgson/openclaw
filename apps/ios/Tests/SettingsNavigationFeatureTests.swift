@@ -2185,9 +2185,14 @@ struct SettingsNavigationFeatureTests {
             $0.preventSleep = false
         }
         await store.send(.locationModeChanged(SettingsDeviceCapabilityFeature.LocationModeChange(
-            rawValue: OpenClawLocationMode.always.rawValue)))
+            mode: .init(mode: .always))))
         {
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
+        }
+        await store.send(.locationModeChanged(SettingsDeviceCapabilityFeature.LocationModeChange(
+            mode: .init(rawValue: "unexpected-location-mode"))))
+        {
+            $0.locationModeRaw = "unexpected-location-mode"
         }
     }
 

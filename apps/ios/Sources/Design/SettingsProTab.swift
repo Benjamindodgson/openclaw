@@ -1672,7 +1672,7 @@ struct SettingsProTab: View {
             }
             .onChange(of: self.storedLocationModeRaw) { _, newValue in
                 self.locationStore.send(.locationModeChangeRequested(.init(rawValue: newValue)))
-                self.deviceCapabilityStore.send(.locationModeChanged(.init(rawValue: newValue)))
+                self.deviceCapabilityStore.send(.locationModeChanged(.init(mode: .init(rawValue: newValue))))
                 self.handleLocationModeRequest(self.locationStore.locationModeRequest)
             }
             .onChange(of: self.locationStore.locationModeApplyResult) { _, result in
