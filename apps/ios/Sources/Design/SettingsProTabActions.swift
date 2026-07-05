@@ -748,7 +748,8 @@ extension SettingsProTab {
     }
 
     func updateManualGatewayEnabled(_ enabled: Bool) {
-        self.manualGatewayEndpointStore.send(.manualGatewayEnabledChanged(.init(isEnabled: enabled)))
+        self.manualGatewayEndpointStore.send(.manualGatewayEnabledChanged(.init(
+            enabled: .init(value: enabled))))
         self.storedManualGatewayEnabled = enabled
     }
 
@@ -759,7 +760,8 @@ extension SettingsProTab {
     }
 
     func updateManualGatewayTLS(_ tls: Bool) {
-        self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(.init(useTLS: tls)))
+        self.manualGatewayEndpointStore.send(.manualGatewayTLSChanged(.init(
+            tls: .init(value: tls))))
         self.storedManualGatewayTLS = tls
     }
 

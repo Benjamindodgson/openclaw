@@ -1941,13 +1941,13 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayEndpointFeature()
         }
 
-        await store.send(.manualGatewayEnabledChanged(.init(isEnabled: true))) {
+        await store.send(.manualGatewayEnabledChanged(.init(enabled: .init(value: true)))) {
             $0.manualGatewayEnabled = true
         }
         await store.send(.manualGatewayHostChanged(.init(draft: .init(value: "manual.example.com")))) {
             $0.manualGatewayHost = "manual.example.com"
         }
-        await store.send(.manualGatewayTLSChanged(.init(useTLS: false))) {
+        await store.send(.manualGatewayTLSChanged(.init(tls: .init(value: false)))) {
             $0.manualGatewayTLS = false
         }
     }
@@ -1977,7 +1977,7 @@ struct SettingsNavigationFeatureTests {
             $0.manualConnectionResult = nil
         }
 
-        await store.send(.manualGatewayTLSChanged(.init(useTLS: false))) {
+        await store.send(.manualGatewayTLSChanged(.init(tls: .init(value: false)))) {
             $0.manualGatewayTLS = false
         }
 
