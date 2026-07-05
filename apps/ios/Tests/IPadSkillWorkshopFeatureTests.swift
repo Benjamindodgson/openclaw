@@ -43,7 +43,7 @@ struct IPadSkillWorkshopFeatureTests {
             $0.inspectingProposalID = "pending-1"
         }
         await store.receive(.inspectResponse(.init(
-            proposalID: "pending-1",
+            proposalID: .init(value: "pending-1"),
             result: .success(inspect))))
         {
             $0.inspectingProposalID = nil
@@ -96,7 +96,7 @@ struct IPadSkillWorkshopFeatureTests {
 
         await store.send(.proposalMutationRequested(.init(
             kind: .apply,
-            proposalID: "pending-1",
+            proposalID: .init(value: "pending-1"),
             sceneActive: true,
             canRead: true,
             canWrite: true,
@@ -128,14 +128,14 @@ struct IPadSkillWorkshopFeatureTests {
             -> IPadSkillProposalManifest = { _ in
             IPadSkillProposalManifest(proposals: [])
         },
-        inspect: @escaping @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam, _ proposalID: String)
+        inspect: @escaping @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam, IPadSkillWorkshopProposalID)
         async throws -> IPadSkillProposalInspectResponse = { _, proposalID in
-            Self.inspectResponse(id: proposalID, status: "pending", content: "")
+            Self.inspectResponse(id: proposalID.value, status: "pending", content: "")
         },
         run: @escaping @Sendable @MainActor (
             _ action: IPadSkillProposalAction.Kind,
             IPadSkillWorkshopAgentScopeParam,
-            _ proposalID: String)
+            IPadSkillWorkshopProposalID)
         async throws -> Void = { _, _, _ in })
         -> IPadSkillWorkshopClient
     {

@@ -4,12 +4,12 @@ import SwiftUI
 
 struct IPadSkillWorkshopClient {
     var list: @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam) async throws -> IPadSkillProposalManifest
-    var inspect: @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam, _ proposalID: String) async throws
+    var inspect: @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam, IPadSkillWorkshopProposalID) async throws
         -> IPadSkillProposalInspectResponse
     var run: @Sendable @MainActor (
         _ action: IPadSkillProposalAction.Kind,
         IPadSkillWorkshopAgentScopeParam,
-        _ proposalID: String)
+        IPadSkillWorkshopProposalID)
     async throws -> Void
 }
 
@@ -41,7 +41,7 @@ extension IPadSkillWorkshopClient: DependencyKey {
                     method: "skills.proposals.inspect",
                     params: IPadSkillProposalInspectParams(
                         agentId: agentScope.agentID,
-                        proposalId: proposalID),
+                        proposalId: proposalID.value),
                     timeoutSeconds: 20)
                 return try JSONDecoder().decode(IPadSkillProposalInspectResponse.self, from: data)
             },
@@ -52,7 +52,7 @@ extension IPadSkillWorkshopClient: DependencyKey {
                     method: method,
                     params: IPadSkillProposalInspectParams(
                         agentId: agentScope.agentID,
-                        proposalId: proposalID),
+                        proposalId: proposalID.value),
                     timeoutSeconds: 30)
             })
     }
@@ -98,6 +98,10 @@ enum IPadSkillWorkshopError: Error, Equatable, Sendable {
 
 struct IPadSkillWorkshopAgentScopeParam: Equatable, Sendable {
     var agentID: String?
+}
+
+struct IPadSkillWorkshopProposalID: Equatable, Sendable {
+    var value: String
 }
 
 // swiftformat:enable redundantSendable
@@ -205,13 +209,13 @@ struct IPadSkillWorkshopFeature {
         case clearQueryTapped
 
         struct InspectRequest: Equatable, Sendable {
-            var proposalID: String
+            var proposalID: IPadSkillWorkshopProposalID
             var canRead: Bool
             var force: Bool
         }
 
         struct InspectResponse: Equatable, Sendable {
-            var proposalID: String
+            var proposalID: IPadSkillWorkshopProposalID
             var result: Result<IPadSkillProposalInspectResponse, IPadSkillWorkshopError>
         }
 
@@ -220,7 +224,7 @@ struct IPadSkillWorkshopFeature {
 
         struct ProposalMutationRequest: Equatable, Sendable {
             var kind: IPadSkillProposalAction.Kind
-            var proposalID: String
+            var proposalID: IPadSkillWorkshopProposalID
             var sceneActive: Bool
             var canRead: Bool
             var canWrite: Bool
@@ -240,7 +244,7 @@ struct IPadSkillWorkshopFeature {
         case proposalMutationResponse(ProposalMutationResponse)
 
         struct ProposalSelectionRequest: Equatable, Sendable {
-            var proposalID: String
+            var proposalID: IPadSkillWorkshopProposalID
             var opensSheet: Bool
             var canRead: Bool
             var forceInspect: Bool
@@ -301,7 +305,7 @@ struct IPadSkillWorkshopFeature {
                 switch response.result {
                 case let .success(inspectResponse):
                     state.inspectingProposalID = nil
-                    let previous = state.proposals.first { $0.id == response.proposalID }
+                    let previous = state.proposals.first { $0.id == response.proposalID.value }
                     state.merge(IPadSkillProposal(inspect: inspectResponse, previous: previous))
                     return .none
 
@@ -320,7 +324,7 @@ struct IPadSkillWorkshopFeature {
                     return .none
                 }
 
-                state.busyAction = IPadSkillProposalAction(kind: request.kind, proposalID: request.proposalID)
+                state.busyAction = IPadSkillProposalAction(kind: request.kind, proposalID: request.proposalID.value)
                 state.errorText = nil
                 state.noticeText = nil
                 let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
@@ -360,9 +364,9 @@ struct IPadSkillWorkshopFeature {
                 }
 
             case let .proposalSelected(request):
-                state.selectedProposalID = request.proposalID
+                state.selectedProposalID = request.proposalID.value
                 if request.opensSheet {
-                    state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: request.proposalID)
+                    state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: request.proposalID.value)
                 }
                 return self.inspectEffect(
                     state: &state,
@@ -425,7 +429,7 @@ struct IPadSkillWorkshopFeature {
                         state: &state,
                         client: client,
                         request: .init(
-                            proposalID: proposalID,
+                            proposalID: .init(value: proposalID),
                             canRead: true,
                             force: response.force))
 
@@ -451,11 +455,11 @@ struct IPadSkillWorkshopFeature {
         request: Action.InspectRequest) -> Effect<Action>
     {
         guard request.canRead else { return .none }
-        guard request.force || state.proposals.first(where: { $0.id == request.proposalID })?.content == nil
+        guard request.force || state.proposals.first(where: { $0.id == request.proposalID.value })?.content == nil
         else { return .none }
         guard state.inspectingProposalID == nil else { return .none }
 
-        state.inspectingProposalID = request.proposalID
+        state.inspectingProposalID = request.proposalID.value
         state.errorText = nil
         let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
         return .run { send in
@@ -1229,7 +1233,7 @@ struct IPadSkillWorkshopScreen: View {
     {
         Task {
             await self.store.send(.proposalSelected(.init(
-                proposalID: proposal.id,
+                proposalID: .init(value: proposal.id),
                 opensSheet: opensSheet,
                 canRead: self.canRead,
                 forceInspect: forceInspect))).finish()
@@ -1245,7 +1249,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private func inspect(proposalID: String, force: Bool) async {
         await self.store.send(.inspectRequested(.init(
-            proposalID: proposalID,
+            proposalID: .init(value: proposalID),
             canRead: self.canRead,
             force: force))).finish()
     }
@@ -1253,7 +1257,7 @@ struct IPadSkillWorkshopScreen: View {
     private func run(_ action: IPadSkillProposalAction.Kind, proposal: IPadSkillProposal) async {
         await self.store.send(.proposalMutationRequested(.init(
             kind: action,
-            proposalID: proposal.id,
+            proposalID: .init(value: proposal.id),
             sceneActive: self.scenePhase == .active,
             canRead: self.canRead,
             canWrite: self.canWrite,
