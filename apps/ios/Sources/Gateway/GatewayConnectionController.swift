@@ -28,6 +28,18 @@ enum GatewayTLSFingerprintProbeResult: Equatable {
     case failure(GatewayTLSFingerprintProbeFailure)
 }
 
+enum GatewayConnectionDiagnosticsResult: Equatable {
+    struct Failure: Equatable { var message: String }
+
+    case started
+    case failed(Failure)
+
+    var failure: Failure? {
+        guard case let .failed(failure) = self else { return nil }
+        return failure
+    }
+}
+
 typealias GatewayTCPReachabilityProbe = @Sendable (String, Int, Double, String) async -> Bool
 typealias GatewayTLSFingerprintProbeFunction = @Sendable (URL) async -> GatewayTLSFingerprintProbeResult
 typealias GatewayServiceEndpointResolver = @Sendable (NWEndpoint) async -> (host: String, port: Int)?
@@ -268,20 +280,21 @@ final class GatewayConnectionController {
         self.updateFromDiscovery()
     }
 
-    /// Returns `nil` when a connect attempt was started, otherwise returns a user-facing error.
-    func connectWithDiagnostics(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async -> String? {
+    func connectWithDiagnostics(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async
+        -> GatewayConnectionDiagnosticsResult
+    {
         await self.connectDiscoveredGateway(gateway)
     }
 
     private func connectDiscoveredGateway(
         _ gateway: GatewayDiscoveryModel.DiscoveredGateway,
-        forceReconnect: Bool = false) async -> String?
+        forceReconnect: Bool = false) async -> GatewayConnectionDiagnosticsResult
     {
         self.requestLocalNetworkAccess(reason: "connect_discovered_gateway")
         let instanceId = UserDefaults.standard.string(forKey: "node.instanceId")?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if instanceId.isEmpty {
-            return "Missing instanceId (node.instanceId). Try restarting the app."
+            return .failed(.init(message: "Missing instanceId (node.instanceId). Try restarting the app."))
         }
         let token = GatewaySettingsStore.loadGatewayToken(instanceId: instanceId)
         let bootstrapToken = GatewaySettingsStore.loadGatewayBootstrapToken(instanceId: instanceId)
@@ -294,7 +307,7 @@ final class GatewayConnectionController {
             await self.resolveServiceEndpoint(gateway.endpoint)
         }
         guard let target else {
-            return "Failed to resolve the discovered gateway endpoint."
+            return .failed(.init(message: "Failed to resolve the discovered gateway endpoint."))
         }
 
         let stableID = gateway.stableID
@@ -303,12 +316,12 @@ final class GatewayConnectionController {
         let stored = GatewayTLSStore.loadFingerprint(stableID: stableID)
 
         guard gateway.tlsEnabled || stored != nil else {
-            return "Discovered gateway is missing TLS and no trusted fingerprint is stored."
+            return .failed(.init(message: "Discovered gateway is missing TLS and no trusted fingerprint is stored."))
         }
 
         if tlsRequired, stored == nil {
             guard let url = self.buildGatewayURL(host: target.host, port: target.port, useTLS: true)
-            else { return "Failed to build TLS URL for trust verification." }
+            else { return .failed(.init(message: "Failed to build TLS URL for trust verification.")) }
             self.appModel?.beginGatewayPreconnectVerification(statusText: "Verifying gateway TLS fingerprint…")
             switch await self.probeTLSFingerprint(
                 host: target.host,
@@ -330,14 +343,14 @@ final class GatewayConnectionController {
                     fingerprintSha256: fp,
                     isManual: false)
                 self.appModel?.gatewayStatusText = "Verify gateway TLS fingerprint"
-                return nil
+                return .started
             case let .failure(failure):
                 let message = self.tlsProbeFailureMessage(
                     failure,
                     host: target.host,
                     port: target.port)
                 self.appModel?.gatewayStatusText = message
-                return message
+                return .failed(.init(message: message))
             }
         }
 
@@ -349,7 +362,7 @@ final class GatewayConnectionController {
             host: target.host,
             port: target.port,
             useTLS: tlsParams?.required == true)
-        else { return "Failed to build discovered gateway URL." }
+        else { return .failed(.init(message: "Failed to build discovered gateway URL.")) }
         GatewaySettingsStore.saveLastGatewayConnectionDiscovered(stableID: stableID, useTLS: true)
         self.didAutoConnect = true
         self.startAutoConnect(
@@ -360,7 +373,7 @@ final class GatewayConnectionController {
             bootstrapToken: bootstrapToken,
             password: password,
             forceReconnect: forceReconnect)
-        return nil
+        return .started
     }
 
     func connect(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
