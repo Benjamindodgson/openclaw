@@ -3,14 +3,21 @@ import OpenClawProtocol
 import SwiftUI
 import UIKit
 
+// swiftformat:disable redundantSendable
+struct AgentNodeClipboardText: Equatable, Sendable {
+    var value: String
+}
+
+// swiftformat:enable redundantSendable
+
 struct AgentNodeClipboardClient {
-    var copy: @Sendable (String) async -> Void
+    var copy: @Sendable (AgentNodeClipboardText) async -> Void
 }
 
 extension AgentNodeClipboardClient: DependencyKey {
     static let liveValue = AgentNodeClipboardClient(copy: { text in
         await MainActor.run {
-            UIPasteboard.general.string = text
+            UIPasteboard.general.string = text.value
         }
     })
 
@@ -38,7 +45,7 @@ struct AgentNodeDetailCopyFeature {
 
     enum Action: Equatable, Sendable {
         struct CopyRequest: Equatable, Sendable {
-            var value: String
+            var value: AgentNodeClipboardText
         }
 
         case copyButtonTapped(CopyRequest)
@@ -430,7 +437,7 @@ private struct AgentNodeDetailCopyButton: View {
 
     var body: some View {
         Button {
-            self.store.send(.copyButtonTapped(.init(value: self.value)))
+            self.store.send(.copyButtonTapped(.init(value: .init(value: self.value))))
         } label: {
             Image(systemName: "doc.on.doc")
         }
