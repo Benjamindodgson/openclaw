@@ -721,7 +721,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupStatusFeature()
         }
 
-        await store.send(.statusChanged(.init(statusText: "Failed: host required"))) {
+        await store.send(.statusChanged(.init(statusText: .init(value: "Failed: host required")))) {
             $0.statusText = "Failed: host required"
         }
     }
@@ -763,7 +763,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewaySetupStatusFeature()
         }
 
-        await store.send(.statusChanged(.init(statusText: nil))) {
+        await store.send(.statusChanged(.init(statusText: .init(value: nil)))) {
             $0.statusText = nil
         }
     }
