@@ -818,7 +818,7 @@ struct SettingsShareInstructionFeature {
                 return .none
 
             case .defaultShareInstructionLoadRequested:
-                state.defaultShareInstruction = persistenceClient.loadDefaultInstruction()
+                state.defaultShareInstruction = persistenceClient.loadDefaultInstruction().value
                 return .none
 
             case let .defaultShareInstructionPersistenceRequested(request):
