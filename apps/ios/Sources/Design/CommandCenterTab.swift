@@ -796,7 +796,7 @@ struct CommandSessionsScreen: View {
 
     private func refreshSessions() async {
         await self.store.send(.refreshRequested(.init(
-            sessionsAvailable: self.appModel.isCommandSessionListAvailable))).finish()
+            sessionsAvailability: .init(isAvailable: self.appModel.isCommandSessionListAvailable)))).finish()
     }
 }
 

@@ -1191,9 +1191,13 @@ struct RootTabsSourceGuardTests {
             to: "enum CommandSessionsStoreFactory")
 
         #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
+        #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
+        #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
+        #expect(feature.contains("guard request.sessionsAvailability.isAvailable"))
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
         #expect(feature.contains("switch response.result"))
+        #expect(!feature.contains("var sessionsAvailable: Bool"))
     }
 
     @Test func `command center recent sessions refresh response action is typed`() throws {

@@ -50,8 +50,12 @@ struct CommandSessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SessionsAvailability: Equatable, Sendable {
+            var isAvailable: Bool
+        }
+
         struct RefreshRequest: Equatable, Sendable {
-            var sessionsAvailable: Bool
+            var sessionsAvailability: SessionsAvailability
         }
 
         struct RefreshResponse: Equatable, Sendable {
@@ -71,7 +75,7 @@ struct CommandSessionsFeature {
 
             switch action {
             case let .refreshRequested(request):
-                guard request.sessionsAvailable else {
+                guard request.sessionsAvailability.isAvailable else {
                     state.isLoading = false
                     state.sessions = []
                     state.loadErrorText = nil
