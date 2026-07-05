@@ -3,10 +3,13 @@ import OpenClawKit
 import SwiftUI
 
 struct IPadSkillWorkshopClient {
-    var list: @Sendable @MainActor (_ agentID: String?) async throws -> IPadSkillProposalManifest
-    var inspect: @Sendable @MainActor (_ agentID: String?, _ proposalID: String) async throws
+    var list: @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam) async throws -> IPadSkillProposalManifest
+    var inspect: @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam, _ proposalID: String) async throws
         -> IPadSkillProposalInspectResponse
-    var run: @Sendable @MainActor (_ action: IPadSkillProposalAction.Kind, _ agentID: String?, _ proposalID: String)
+    var run: @Sendable @MainActor (
+        _ action: IPadSkillProposalAction.Kind,
+        IPadSkillWorkshopAgentScopeParam,
+        _ proposalID: String)
     async throws -> Void
 }
 
@@ -24,31 +27,31 @@ extension IPadSkillWorkshopClient: DependencyKey {
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
         IPadSkillWorkshopClient(
-            list: { agentID in
+            list: { agentScope in
                 let data = try await Self.request(
                     appModel: appModel,
                     method: "skills.proposals.list",
-                    params: IPadSkillProposalListParams(agentId: agentID),
+                    params: IPadSkillProposalListParams(agentId: agentScope.agentID),
                     timeoutSeconds: 20)
                 return try JSONDecoder().decode(IPadSkillProposalManifest.self, from: data)
             },
-            inspect: { agentID, proposalID in
+            inspect: { agentScope, proposalID in
                 let data = try await Self.request(
                     appModel: appModel,
                     method: "skills.proposals.inspect",
                     params: IPadSkillProposalInspectParams(
-                        agentId: agentID,
+                        agentId: agentScope.agentID,
                         proposalId: proposalID),
                     timeoutSeconds: 20)
                 return try JSONDecoder().decode(IPadSkillProposalInspectResponse.self, from: data)
             },
-            run: { action, agentID, proposalID in
+            run: { action, agentScope, proposalID in
                 let method = action == .apply ? "skills.proposals.apply" : "skills.proposals.reject"
                 _ = try await Self.request(
                     appModel: appModel,
                     method: method,
                     params: IPadSkillProposalInspectParams(
-                        agentId: agentID,
+                        agentId: agentScope.agentID,
                         proposalId: proposalID),
                     timeoutSeconds: 30)
             })
@@ -91,6 +94,10 @@ enum IPadSkillWorkshopError: Error, Equatable, Sendable {
             failure.message
         }
     }
+}
+
+struct IPadSkillWorkshopAgentScopeParam: Equatable, Sendable {
+    var agentID: String?
 }
 
 // swiftformat:enable redundantSendable
@@ -316,10 +323,10 @@ struct IPadSkillWorkshopFeature {
                 state.busyAction = IPadSkillProposalAction(kind: request.kind, proposalID: request.proposalID)
                 state.errorText = nil
                 state.noticeText = nil
-                let agentID = state.selectedAgentParam
+                let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
                 return .run { send in
                     do {
-                        try await client.run(request.kind, agentID, request.proposalID)
+                        try await client.run(request.kind, agentScope, request.proposalID)
                         await send(.proposalMutationResponse(.init(
                             kind: request.kind,
                             sceneActive: request.sceneActive,
@@ -390,10 +397,10 @@ struct IPadSkillWorkshopFeature {
 
                 state.isLoading = true
                 state.errorText = nil
-                let agentID = state.selectedAgentParam
+                let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
                 return .run { send in
                     do {
-                        let manifest = try await client.list(agentID)
+                        let manifest = try await client.list(agentScope)
                         await send(.refreshResponse(.init(
                             force: request.force,
                             result: .success(manifest))))
@@ -450,10 +457,10 @@ struct IPadSkillWorkshopFeature {
 
         state.inspectingProposalID = request.proposalID
         state.errorText = nil
-        let agentID = state.selectedAgentParam
+        let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
         return .run { send in
             do {
-                let response = try await client.inspect(agentID, request.proposalID)
+                let response = try await client.inspect(agentScope, request.proposalID)
                 await send(.inspectResponse(.init(
                     proposalID: request.proposalID,
                     result: .success(response))))
@@ -1007,13 +1014,13 @@ struct IPadSkillWorkshopScreen: View {
             hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)
     }
 
-    private var agentScopeOptions: [IPadSkillWorkshopAgentScope] {
+    private var agentScopeOptions: [IPadSkillWorkshopAgentScopeOption] {
         let defaultID = Self.normalizedScopeID(self.appModel.gatewayDefaultAgentId)
         return self.appModel.gatewayAgents
             .filter { Self.normalizedScopeID($0.id) != defaultID }
             .map { agent in
                 let name = Self.normalizedScopeID(agent.name)
-                return IPadSkillWorkshopAgentScope(
+                return IPadSkillWorkshopAgentScopeOption(
                     id: Self.normalizedScopeID(agent.id),
                     title: name.isEmpty ? agent.id : name)
             }
@@ -1468,7 +1475,7 @@ struct IPadSkillProposalManifestEntry: Decodable, Equatable, Sendable {
     let scanState: String
 }
 
-private struct IPadSkillWorkshopAgentScope: Identifiable {
+private struct IPadSkillWorkshopAgentScopeOption: Identifiable {
     let id: String
     let title: String
 }

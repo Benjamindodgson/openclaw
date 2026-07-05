@@ -981,8 +981,9 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))
         #expect(phoneSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))
         #expect(source.contains("private var agentScopeMenu: some View"))
-        #expect(source.contains("IPadSkillProposalListParams(agentId: agentID)"))
-        #expect(source.contains("agentId: agentID"))
+        #expect(source.contains("struct IPadSkillWorkshopAgentScopeParam: Equatable, Sendable"))
+        #expect(source.contains("IPadSkillProposalListParams(agentId: agentScope.agentID)"))
+        #expect(source.contains("agentId: agentScope.agentID"))
         #expect(!source
             .contains(
                 "params: EmptyParams(),\n                timeoutSeconds: 20)\n            let response = try JSONDecoder().decode(IPadSkillProposalManifest.self"))

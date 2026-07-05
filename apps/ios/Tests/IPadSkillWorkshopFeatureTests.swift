@@ -124,16 +124,17 @@ struct IPadSkillWorkshopFeatureTests {
     }
 
     private static func client(
-        list: @escaping @Sendable @MainActor (_ agentID: String?) async throws -> IPadSkillProposalManifest = { _ in
+        list: @escaping @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam) async throws
+            -> IPadSkillProposalManifest = { _ in
             IPadSkillProposalManifest(proposals: [])
         },
-        inspect: @escaping @Sendable @MainActor (_ agentID: String?, _ proposalID: String)
+        inspect: @escaping @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam, _ proposalID: String)
         async throws -> IPadSkillProposalInspectResponse = { _, proposalID in
             Self.inspectResponse(id: proposalID, status: "pending", content: "")
         },
         run: @escaping @Sendable @MainActor (
             _ action: IPadSkillProposalAction.Kind,
-            _ agentID: String?,
+            IPadSkillWorkshopAgentScopeParam,
             _ proposalID: String)
         async throws -> Void = { _, _, _ in })
         -> IPadSkillWorkshopClient
