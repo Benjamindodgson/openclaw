@@ -2130,7 +2130,8 @@ struct SettingsNavigationFeatureTests {
             SettingsOnboardingStateFeature(resetClient: resetProbe.client)
         }
 
-        await store.send(.onboardingResetRequested(.init(instanceId: "instance-reset"))) {
+        await store.send(.onboardingResetRequested(.init(
+            instanceId: .init(value: "instance-reset")))) {
             $0.hasConnectedOnce = false
             $0.onboardingComplete = false
             $0.onboardingRequestID = 5
@@ -2650,7 +2651,7 @@ private final class SettingsOnboardingResetProbe: @unchecked Sendable {
 
     var client: SettingsOnboardingResetClient {
         SettingsOnboardingResetClient(reset: { instanceId in
-            self.resetInstanceIds.append(instanceId)
+            self.resetInstanceIds.append(instanceId.value)
         })
     }
 }
