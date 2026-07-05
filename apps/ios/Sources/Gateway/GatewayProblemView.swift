@@ -3,14 +3,21 @@ import OpenClawKit
 import SwiftUI
 import UIKit
 
+// swiftformat:disable redundantSendable
+struct GatewayProblemClipboardText: Equatable, Sendable {
+    var value: String
+}
+
+// swiftformat:enable redundantSendable
+
 struct GatewayProblemClipboardClient {
-    var copy: @Sendable (String) async -> Void
+    var copy: @Sendable (GatewayProblemClipboardText) async -> Void
 }
 
 extension GatewayProblemClipboardClient: DependencyKey {
     static let liveValue = GatewayProblemClipboardClient(copy: { text in
         await MainActor.run {
-            UIPasteboard.general.string = text
+            UIPasteboard.general.string = text.value
         }
     })
 
@@ -40,11 +47,11 @@ struct GatewayProblemDetailsFeature {
 
     enum Action: Equatable, Sendable {
         struct CommandCopyRequest: Equatable, Sendable {
-            var command: String
+            var command: GatewayProblemClipboardText
         }
 
         struct RequestIDCopyRequest: Equatable, Sendable {
-            var requestID: String
+            var requestID: GatewayProblemClipboardText
         }
 
         case copyRequestIDButtonTapped(RequestIDCopyRequest)
@@ -196,7 +203,7 @@ struct GatewayProblemDetailsSheet: View {
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Button("Copy request ID") {
-                            self.store.send(.copyRequestIDButtonTapped(.init(requestID: requestId)))
+                            self.store.send(.copyRequestIDButtonTapped(.init(requestID: .init(value: requestId))))
                         }
                     }
                 }
@@ -207,7 +214,7 @@ struct GatewayProblemDetailsSheet: View {
                             .font(.system(.body, design: .monospaced))
                             .textSelection(.enabled)
                         Button("Copy command") {
-                            self.store.send(.copyCommandButtonTapped(.init(command: actionCommand)))
+                            self.store.send(.copyCommandButtonTapped(.init(command: .init(value: actionCommand))))
                         }
                     }
                 }

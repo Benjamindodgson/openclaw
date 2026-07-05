@@ -10,7 +10,7 @@ struct GatewayProblemDetailsFeatureTests {
             GatewayProblemDetailsFeature(clipboard: probe.client)
         }
 
-        await store.send(.copyRequestIDButtonTapped(.init(requestID: "req-123"))) {
+        await store.send(.copyRequestIDButtonTapped(.init(requestID: .init(value: "req-123")))) {
             $0.copyFeedback = "Copied request ID"
         }
         await store.finish()
@@ -24,7 +24,7 @@ struct GatewayProblemDetailsFeatureTests {
             GatewayProblemDetailsFeature(clipboard: probe.client)
         }
 
-        await store.send(.copyCommandButtonTapped(.init(command: "openclaw gateway approve req-123"))) {
+        await store.send(.copyCommandButtonTapped(.init(command: .init(value: "openclaw gateway approve req-123")))) {
             $0.copyFeedback = "Copied command"
         }
         await store.finish()
@@ -38,7 +38,7 @@ private final class GatewayProblemClipboardProbe: @unchecked Sendable {
 
     var client: GatewayProblemClipboardClient {
         GatewayProblemClipboardClient(copy: { text in
-            self.copiedText = text
+            self.copiedText = text.value
         })
     }
 }
