@@ -152,7 +152,7 @@ struct SettingsTalkPreferencesFeature {
 
     enum Action: Equatable, Sendable {
         struct ProviderSelectionChange: Equatable, Sendable {
-            var rawValue: String
+            var selection: TalkModeProviderSelection
         }
 
         struct RealtimeVoiceSelectionChange: Equatable, Sendable {
@@ -249,7 +249,7 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .providerSelectionChanged(change):
-                let selection = TalkModeProviderSelection.resolved(change.rawValue)
+                let selection = change.selection
                 state.providerSelectionRaw = selection.rawValue
                 return .run { _ in
                     await preferencesClient.setProviderSelection(selection)
