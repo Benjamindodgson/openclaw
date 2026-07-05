@@ -2564,6 +2564,8 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("var selection: TalkModeProviderSelection"))
         #expect(preferencesSource.contains("struct RealtimeVoiceSelectionChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("var voice: SettingsTalkRealtimeVoiceSelection"))
+        #expect(preferencesSource.contains("struct SettingsTalkSpeechLocale: Equatable, Sendable"))
+        #expect(preferencesSource.contains("var locale: SettingsTalkSpeechLocale"))
         #expect(preferencesSource.contains("struct TalkSpeakerphoneEnabledChange: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct GatewayTalkConfigSync: Equatable, Sendable"))
         #expect(preferencesSource.contains("struct GatewayTalkDisplayContextSync: Equatable, Sendable"))
@@ -2590,6 +2592,7 @@ struct RootTabsSourceGuardTests {
             .contains("self.talkPreferencesStore.send(.realtimeVoiceSelectionChanged(.init(voice: voice)))"))
         #expect(updateRealtimeVoiceFunction.contains("self.storedTalkRealtimeVoiceSelectionRaw = voice.value"))
         #expect(!updateRealtimeVoiceFunction.contains("self.appModel.setTalkRealtimeVoiceSelection"))
+        #expect(actionsSource.contains("locale: SettingsTalkSpeechLocale(value: speechLocale)"))
         #expect(updateSpeakerphoneFunction
             .contains("self.talkPreferencesStore.send(.talkSpeakerphoneEnabledChanged(.init(isEnabled: enabled)))"))
         #expect(updateSpeakerphoneFunction.contains("self.storedTalkSpeakerphoneEnabled = enabled"))

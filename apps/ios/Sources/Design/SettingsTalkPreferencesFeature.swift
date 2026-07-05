@@ -18,6 +18,10 @@ struct SettingsTalkRealtimeVoiceSelection: Equatable, Sendable {
     }
 }
 
+struct SettingsTalkSpeechLocale: Equatable, Sendable {
+    var value: String
+}
+
 // swiftformat:enable redundantSendable
 
 extension SettingsTalkPreferencesClient: DependencyKey {
@@ -160,7 +164,7 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct SpeechLocaleChange: Equatable, Sendable {
-            var locale: String
+            var locale: SettingsTalkSpeechLocale
         }
 
         struct TalkBackgroundEnabledChange: Equatable, Sendable {
@@ -263,7 +267,7 @@ struct SettingsTalkPreferencesFeature {
                 }
 
             case let .speechLocaleChanged(change):
-                state.speechLocale = change.locale
+                state.speechLocale = change.locale.value
                 return .none
 
             case let .talkBackgroundEnabledChanged(change):

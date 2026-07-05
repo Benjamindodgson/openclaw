@@ -886,7 +886,8 @@ extension SettingsProTab {
     }
 
     func updateTalkSpeechLocale(_ speechLocale: String) {
-        self.talkPreferencesStore.send(.speechLocaleChanged(.init(locale: speechLocale)))
+        self.talkPreferencesStore.send(.speechLocaleChanged(.init(
+            locale: SettingsTalkSpeechLocale(value: speechLocale))))
         self.storedTalkSpeechLocale = speechLocale
     }
 
