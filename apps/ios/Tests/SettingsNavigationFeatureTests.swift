@@ -2674,7 +2674,7 @@ private final class SettingsSelectedAgentProbe: @unchecked Sendable {
 
     var client: SettingsSelectedAgentClient {
         SettingsSelectedAgentClient(setSelectedAgentId: { selectedAgentId in
-            self.selectedAgentIds.append(selectedAgentId)
+            self.selectedAgentIds.append(selectedAgentId?.value)
         })
     }
 }
