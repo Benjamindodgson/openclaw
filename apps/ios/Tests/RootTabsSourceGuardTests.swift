@@ -2484,6 +2484,19 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains(oldTalkToggleGuard) == false)
     }
 
+    @Test func `settings appearance preference picker change is typed`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+
+        #expect(settingsSource.contains("struct SettingsAppearanceFeature"))
+        #expect(settingsSource
+            .contains("struct AppearancePreferenceChange: Equatable, Sendable { var preference: AppAppearancePreference }"))
+        #expect(settingsSource.contains("state.appearancePreferenceRaw = change.preference.rawValue"))
+        #expect(actionsSource.contains("guard let preference = AppAppearancePreference(rawValue: rawValue) else { return }"))
+        #expect(actionsSource.contains("self.appearanceStore.send(.appearancePreferenceChanged(.init(preference: preference)))"))
+        #expect(actionsSource.contains("self.storedAppearancePreferenceRaw = preference.rawValue"))
+    }
+
     @Test func `settings voice control persistence is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)

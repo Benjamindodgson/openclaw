@@ -641,8 +641,9 @@ extension SettingsProTab {
     }
 
     func updateAppearancePreferenceRaw(_ rawValue: String) {
-        self.appearanceStore.send(.appearancePreferenceChanged(.init(rawValue: rawValue)))
-        self.storedAppearancePreferenceRaw = rawValue
+        guard let preference = AppAppearancePreference(rawValue: rawValue) else { return }
+        self.appearanceStore.send(.appearancePreferenceChanged(.init(preference: preference)))
+        self.storedAppearancePreferenceRaw = preference.rawValue
     }
 
     var displayNameBinding: Binding<String> {
