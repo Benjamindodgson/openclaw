@@ -745,7 +745,7 @@ struct SettingsAgentSelectionFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct PickerSelectionChange: Equatable, Sendable { var selectedAgentPickerId: String }
+        struct PickerSelectionChange: Equatable, Sendable { var selection: SelectedAgentID }
 
         struct SelectedAgentSync: Equatable, Sendable { var selectedAgentId: String? }
 
@@ -762,8 +762,8 @@ struct SettingsAgentSelectionFeature {
 
             switch action {
             case let .pickerSelectionChanged(change):
-                state.selectedAgentPickerId = change.selectedAgentPickerId
-                let selectedAgentId = SelectedAgentID(value: change.selectedAgentPickerId).normalized
+                state.selectedAgentPickerId = change.selection.value
+                let selectedAgentId = change.selection.normalized
                 return .run { _ in
                     await selectedAgentClient.setSelectedAgentId(selectedAgentId)
                 }
@@ -1957,7 +1957,7 @@ extension SettingsProTab {
     var agentSelectionBinding: Binding<String> {
         Binding(
             get: { self.agentSelectionStore.selectedAgentPickerId },
-            set: { self.agentSelectionStore.send(.pickerSelectionChanged(.init(selectedAgentPickerId: $0))) })
+            set: { self.agentSelectionStore.send(.pickerSelectionChanged(.init(selection: .init(value: $0)))) })
     }
 
     private var gatewayProblemDetailsBinding: Binding<Bool> {
