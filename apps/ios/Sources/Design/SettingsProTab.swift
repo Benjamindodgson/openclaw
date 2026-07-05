@@ -768,7 +768,7 @@ struct SettingsGatewayAutoConnectFeature {
     enum Action: Equatable, Sendable {
         struct GatewayAutoConnectEnabled: Equatable, Sendable { var value: Bool }
         struct EnabledChange: Equatable, Sendable { var enabled: GatewayAutoConnectEnabled }
-        struct EnabledSync: Equatable, Sendable { var isEnabled: Bool }
+        struct EnabledSync: Equatable, Sendable { var enabled: GatewayAutoConnectEnabled }
 
         case disabledForOnboardingReset
         case enabledChanged(EnabledChange)
@@ -789,7 +789,7 @@ struct SettingsGatewayAutoConnectFeature {
                 return .none
 
             case let .enabledSynced(sync):
-                state.isEnabled = sync.isEnabled
+                state.isEnabled = sync.enabled.value
                 return .none
             }
         }
@@ -1572,7 +1572,7 @@ struct SettingsProTab: View {
                 self.syncTalkPreferencesState()
             }
             .onChange(of: self.storedGatewayAutoConnect) { _, newValue in
-                self.gatewayAutoConnectStore.send(.enabledSynced(.init(isEnabled: newValue)))
+                self.gatewayAutoConnectStore.send(.enabledSynced(.init(enabled: .init(value: newValue))))
             }
             .onChange(of: self.storedOnboardingComplete) { _, _ in
                 self.syncOnboardingState()

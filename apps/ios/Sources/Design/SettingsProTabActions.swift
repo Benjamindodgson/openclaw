@@ -180,7 +180,8 @@ extension SettingsProTab {
         self.syncTalkRuntimeState()
         self.locationStore.send(.locationModeSynced(.init(rawValue: self.storedLocationModeRaw)))
         self.syncNotificationRelayState()
-        self.gatewayAutoConnectStore.send(.enabledSynced(.init(isEnabled: self.storedGatewayAutoConnect)))
+        self.gatewayAutoConnectStore.send(.enabledSynced(.init(
+            enabled: .init(value: self.storedGatewayAutoConnect))))
         self.manualGatewayEndpointStore.send(.endpointSynced(.init(
             enabled: .init(value: self.storedManualGatewayEnabled),
             host: .init(value: self.storedManualGatewayHost),

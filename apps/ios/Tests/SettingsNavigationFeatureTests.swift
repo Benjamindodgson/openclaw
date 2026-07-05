@@ -2103,7 +2103,7 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayAutoConnectFeature()
         }
 
-        await store.send(.enabledSynced(.init(isEnabled: true))) {
+        await store.send(.enabledSynced(.init(enabled: .init(value: true)))) {
             $0.isEnabled = true
         }
     }
