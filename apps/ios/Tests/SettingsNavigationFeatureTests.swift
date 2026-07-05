@@ -2353,7 +2353,7 @@ struct SettingsNavigationFeatureTests {
             SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
 
-        await store.send(.speechLocaleChanged(.init(locale: "en-US"))) {
+        await store.send(.speechLocaleChanged(.init(locale: .init(value: "en-US")))) {
             $0.speechLocale = "en-US"
         }
         await store.send(.talkBackgroundEnabledChanged(.init(isEnabled: true))) {
