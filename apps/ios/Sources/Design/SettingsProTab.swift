@@ -561,10 +561,6 @@ struct SettingsGatewayCredentialsFeature {
 
     enum Action: Equatable, Sendable {
         struct CredentialsLoadRequest: Equatable, Sendable { var instanceId: String }
-        struct LoadedCredentials: Equatable, Sendable {
-            var token: String
-            var password: String
-        }
 
         struct ManualCredentialChange: Equatable, Sendable { var value: String }
 
@@ -581,7 +577,7 @@ struct SettingsGatewayCredentialsFeature {
 
         case credentialsClearedForOnboardingReset
         case credentialsLoadRequested(CredentialsLoadRequest)
-        case credentialsLoaded(LoadedCredentials)
+        case credentialsLoaded(SettingsGatewayStoredCredentials)
         case gatewayPasswordChanged(ManualCredentialChange)
         case gatewayPasswordPersistenceRequested(ManualCredentialPersistenceRequest)
         case gatewayTokenChanged(ManualCredentialChange)
@@ -612,8 +608,9 @@ struct SettingsGatewayCredentialsFeature {
 
             case let .credentialsLoadRequested(request):
                 guard let trimmedInstanceId = Self.trimmedInstanceId(request.instanceId) else { return .none }
-                state.gatewayToken = persistenceClient.loadGatewayToken(trimmedInstanceId) ?? ""
-                state.gatewayPassword = persistenceClient.loadGatewayPassword(trimmedInstanceId) ?? ""
+                let credentials = persistenceClient.loadCredentials(trimmedInstanceId)
+                state.gatewayToken = credentials.token
+                state.gatewayPassword = credentials.password
                 return .none
 
             case let .credentialsLoaded(credentials):

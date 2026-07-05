@@ -1075,6 +1075,8 @@ struct SettingsNavigationFeatureTests {
             $0.gatewayToken = "token-1"
             $0.gatewayPassword = "password-1"
         }
+
+        #expect(probe.loadedInstanceIds == ["instance-1"])
     }
 
     @Test func `settings gateway credentials ignore load without instance id`() async {
@@ -2595,13 +2597,11 @@ private final class SettingsGatewayCredentialsPersistenceProbe: @unchecked Senda
 
     var client: SettingsGatewayCredentialsPersistenceClient {
         SettingsGatewayCredentialsPersistenceClient(
-            loadGatewayPassword: { instanceId in
+            loadCredentials: { instanceId in
                 self.loadedInstanceIds.append(instanceId)
-                return self.gatewayPasswords[instanceId]
-            },
-            loadGatewayToken: { instanceId in
-                self.loadedInstanceIds.append(instanceId)
-                return self.gatewayTokens[instanceId]
+                return .init(
+                    token: self.gatewayTokens[instanceId] ?? "",
+                    password: self.gatewayPasswords[instanceId] ?? "")
             },
             saveGatewayPassword: { value, instanceId in
                 self.savedPasswords.append("\(instanceId):\(value)")
