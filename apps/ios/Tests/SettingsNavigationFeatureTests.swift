@@ -2186,9 +2186,9 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.capabilitiesSynced(SettingsDeviceCapabilityFeature.CapabilitiesSync(
-            cameraEnabled: false,
-            preventSleep: true,
-            locationModeRaw: OpenClawLocationMode.always.rawValue)))
+            cameraEnabled: .init(value: false),
+            preventSleep: .init(value: true),
+            locationMode: .init(mode: .always))))
         {
             $0.cameraEnabled = false
             $0.preventSleep = true

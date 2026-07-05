@@ -54,9 +54,9 @@ struct SettingsDeviceCapabilityFeature {
     struct CameraEnabledChange: Equatable, Sendable { var enabled: CameraEnabled }
 
     struct CapabilitiesSync: Equatable, Sendable {
-        var cameraEnabled: Bool
-        var preventSleep: Bool
-        var locationModeRaw: String
+        var cameraEnabled: CameraEnabled
+        var preventSleep: PreventSleepEnabled
+        var locationMode: SettingsDeviceCapabilityLocationMode
     }
 
     struct LocationModeChange: Equatable, Sendable {
@@ -83,9 +83,9 @@ struct SettingsDeviceCapabilityFeature {
                 return .none
 
             case let .capabilitiesSynced(sync):
-                state.cameraEnabled = sync.cameraEnabled
-                state.preventSleep = sync.preventSleep
-                state.locationModeRaw = sync.locationModeRaw
+                state.cameraEnabled = sync.cameraEnabled.value
+                state.preventSleep = sync.preventSleep.value
+                state.locationModeRaw = sync.locationMode.rawValue
                 return .none
 
             case let .locationModeChanged(change):
