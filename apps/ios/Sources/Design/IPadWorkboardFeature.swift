@@ -3,12 +3,12 @@ import Foundation
 import OpenClawKit
 
 struct IPadWorkboardClient {
-    var listCards: @Sendable @MainActor (_ boardID: String?) async throws -> IPadWorkboardCardsResponse
+    var listCards: @Sendable @MainActor (IPadWorkboardBoardScope) async throws -> IPadWorkboardCardsResponse
     var listBoards: @Sendable @MainActor () async throws -> [IPadWorkboardBoardSummary]
     var create: @Sendable @MainActor (IPadWorkboardCreateParams) async throws -> IPadWorkboardCard
     var move: @Sendable @MainActor (IPadWorkboardMoveParams) async throws -> IPadWorkboardCard
     var archive: @Sendable @MainActor (IPadWorkboardArchiveParams) async throws -> IPadWorkboardCard
-    var dispatch: @Sendable @MainActor (_ boardID: String?) async throws -> IPadWorkboardDispatchSummary
+    var dispatch: @Sendable @MainActor (IPadWorkboardBoardScope) async throws -> IPadWorkboardDispatchSummary
 }
 
 extension IPadWorkboardClient: DependencyKey {
@@ -26,11 +26,11 @@ extension IPadWorkboardClient: DependencyKey {
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
         IPadWorkboardClient(
-            listCards: { boardID in
+            listCards: { boardScope in
                 let data = try await Self.request(
                     appModel: appModel,
                     method: "workboard.cards.list",
-                    params: IPadWorkboardListParams(boardId: boardID),
+                    params: IPadWorkboardListParams(boardId: boardScope.boardID),
                     timeoutSeconds: 20)
                 return try JSONDecoder().decode(IPadWorkboardCardsResponse.self, from: data)
             },
@@ -66,11 +66,11 @@ extension IPadWorkboardClient: DependencyKey {
                     timeoutSeconds: 20)
                 return try Self.decodeCardResponse(data)
             },
-            dispatch: { boardID in
+            dispatch: { boardScope in
                 let data = try await Self.request(
                     appModel: appModel,
                     method: "workboard.cards.dispatch",
-                    params: IPadWorkboardListParams(boardId: boardID),
+                    params: IPadWorkboardListParams(boardId: boardScope.boardID),
                     timeoutSeconds: 45)
                 return try JSONDecoder().decode(IPadWorkboardDispatchSummary.self, from: data)
             })
@@ -123,6 +123,10 @@ enum IPadWorkboardError: Error, Equatable, Sendable {
 struct IPadWorkboardDispatchSnapshot: Equatable, Sendable {
     let summary: IPadWorkboardDispatchSummary
     let cardsResponse: IPadWorkboardCardsResponse
+}
+
+struct IPadWorkboardBoardScope: Equatable, Sendable {
+    var boardID: String?
 }
 
 // swiftformat:enable redundantSendable
@@ -390,7 +394,7 @@ struct IPadWorkboardFeature {
         }
 
         struct DispatchResponse: Equatable, Sendable {
-            var boardID: String?
+            var boardScope: IPadWorkboardBoardScope
             var result: Result<IPadWorkboardDispatchSnapshot, IPadWorkboardError>
         }
 
@@ -435,7 +439,7 @@ struct IPadWorkboardFeature {
         }
 
         struct RefreshResponse: Equatable, Sendable {
-            var boardID: String?
+            var boardScope: IPadWorkboardBoardScope
             var force: Bool
             var result: Result<IPadWorkboardCardsResponse, IPadWorkboardError>
         }
@@ -569,26 +573,26 @@ struct IPadWorkboardFeature {
                 state.isDispatching = true
                 state.errorText = nil
                 state.dispatchSummaryText = nil
-                let boardID = state.selectedBoardParam
+                let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
                 return .run { send in
                     do {
-                        let summary = try await client.dispatch(boardID)
-                        let cardsResponse = try await client.listCards(boardID)
+                        let summary = try await client.dispatch(boardScope)
+                        let cardsResponse = try await client.listCards(boardScope)
                         await send(.dispatchResponse(.init(
-                            boardID: boardID,
+                            boardScope: boardScope,
                             result: .success(IPadWorkboardDispatchSnapshot(
                                 summary: summary,
                                 cardsResponse: cardsResponse)))))
                     } catch {
                         await send(.dispatchResponse(.init(
-                            boardID: boardID,
+                            boardScope: boardScope,
                             result: .failure(Self.failure(for: error)))))
                     }
                 }
 
             case let .dispatchResponse(response):
                 state.isDispatching = false
-                guard state.selectedBoardParam == response.boardID else { return .none }
+                guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
                 switch response.result {
                 case let .success(snapshot):
                     state.dispatchSummaryText = snapshot.summary.summaryText
@@ -657,22 +661,22 @@ struct IPadWorkboardFeature {
                 }
 
                 state.isRefreshing = true
-                let boardID = state.selectedBoardParam
-                state.activeRefreshBoardID = boardID
+                let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
+                state.activeRefreshBoardID = boardScope.boardID
                 state.errorText = nil
                 if !state.statuses.contains(state.selectedStatus), state.selectedStatus != "active" {
                     state.selectedStatus = "active"
                 }
                 return .run { send in
                     do {
-                        let response = try await client.listCards(boardID)
+                        let response = try await client.listCards(boardScope)
                         await send(.refreshResponse(.init(
-                            boardID: boardID,
+                            boardScope: boardScope,
                             force: request.force,
                             result: .success(response))))
                     } catch {
                         await send(.refreshResponse(.init(
-                            boardID: boardID,
+                            boardScope: boardScope,
                             force: request.force,
                             result: .failure(Self.failure(for: error)))))
                     }
@@ -680,10 +684,10 @@ struct IPadWorkboardFeature {
                 .cancellable(id: CancelID.refresh, cancelInFlight: true)
 
             case let .refreshResponse(response):
-                guard state.activeRefreshBoardID == response.boardID else { return .none }
+                guard state.activeRefreshBoardID == response.boardScope.boardID else { return .none }
                 state.isRefreshing = false
                 state.activeRefreshBoardID = nil
-                guard state.selectedBoardParam == response.boardID else { return .none }
+                guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
                 switch response.result {
                 case let .success(cardsResponse):
                     state.applyCardsResponse(cardsResponse)
