@@ -2300,14 +2300,21 @@ struct RootTabsSourceGuardTests {
         #expect(autoConnectFeature.contains("struct GatewayAutoConnectEnabled: Equatable, Sendable"))
         #expect(autoConnectFeature.contains("struct EnabledChange: Equatable, Sendable"))
         #expect(autoConnectFeature.contains("var enabled: GatewayAutoConnectEnabled"))
-        #expect(autoConnectFeature.contains("struct EnabledSync: Equatable, Sendable { var isEnabled: Bool }"))
+        #expect(autoConnectFeature.contains("struct EnabledSync: Equatable, Sendable { var enabled: GatewayAutoConnectEnabled }"))
         #expect(autoConnectFeature.contains("state.isEnabled = change.enabled.value"))
-        #expect(autoConnectFeature.contains("state.isEnabled = sync.isEnabled"))
+        #expect(autoConnectFeature.contains("state.isEnabled = sync.enabled.value"))
         #expect(actionsSource.contains("self.gatewayAutoConnectStore.send(.enabledChanged(.init("))
         #expect(actionsSource.contains("enabled: .init(value: enabled)"))
+        #expect(actionsSource.contains("self.gatewayAutoConnectStore.send(.enabledSynced(.init("))
+        #expect(actionsSource.contains("enabled: .init(value: self.storedGatewayAutoConnect)"))
+        #expect(settingsSource.contains(
+            "self.gatewayAutoConnectStore.send(.enabledSynced(.init(enabled: .init(value: newValue))))"))
         #expect(!autoConnectFeature.contains("struct EnabledChange: Equatable, Sendable { var isEnabled: Bool }"))
+        #expect(!autoConnectFeature.contains("struct EnabledSync: Equatable, Sendable { var isEnabled: Bool }"))
         #expect(!autoConnectFeature.contains("state.isEnabled = change.isEnabled"))
+        #expect(!autoConnectFeature.contains("state.isEnabled = sync.isEnabled"))
         #expect(!actionsSource.contains("enabledChanged(.init(isEnabled:"))
+        #expect(!settingsSource.contains("enabledSynced(.init(isEnabled:"))
     }
 
     @Test func `settings gateway preflight decision is reducer owned`() throws {
