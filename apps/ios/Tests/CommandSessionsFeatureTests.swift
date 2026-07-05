@@ -15,7 +15,7 @@ struct CommandSessionsFeatureTests {
             CommandSessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(.init(sessionsAvailable: false))) {
+        await store.send(.refreshRequested(.init(sessionsAvailability: .init(isAvailable: false)))) {
             $0.isLoading = false
             $0.sessions = []
             $0.loadErrorText = nil
@@ -35,7 +35,7 @@ struct CommandSessionsFeatureTests {
             CommandSessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(.init(sessionsAvailable: true))) {
+        await store.send(.refreshRequested(.init(sessionsAvailability: .init(isAvailable: true)))) {
             $0.isLoading = true
             $0.loadErrorText = nil
         }
@@ -57,7 +57,7 @@ struct CommandSessionsFeatureTests {
             CommandSessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(.init(sessionsAvailable: true))) {
+        await store.send(.refreshRequested(.init(sessionsAvailability: .init(isAvailable: true)))) {
             $0.isLoading = true
             $0.loadErrorText = nil
         }
