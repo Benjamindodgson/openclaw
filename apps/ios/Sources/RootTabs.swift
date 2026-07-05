@@ -1108,7 +1108,7 @@ extension RootTabs {
     private func applyInitialAppearanceIfNeeded() {
         self.launchStore.send(.initialAppearanceRequested(
             RootLaunchFeature.InitialAppearanceRequest(
-                rawValue: AppAppearancePreference.launchArgumentPreference?.rawValue)))
+                preference: AppAppearancePreference.launchArgumentPreference)))
         self.handleLaunchCommand()
     }
 
@@ -1130,7 +1130,7 @@ extension RootTabs {
 
         switch command {
         case let .applyAppearance(command):
-            self.appearancePreferenceRaw = command.rawValue
+            self.appearancePreferenceRaw = command.preference.rawValue
 
         case let .focusChatSession(command):
             self.appModel.focusChatSession(command.sessionKey?.value)
