@@ -702,7 +702,8 @@ extension SettingsProTab {
     }
 
     func updateGatewayAutoConnect(_ enabled: Bool) {
-        self.gatewayAutoConnectStore.send(.enabledChanged(.init(isEnabled: enabled)))
+        self.gatewayAutoConnectStore.send(.enabledChanged(.init(
+            enabled: .init(value: enabled))))
         self.storedGatewayAutoConnect = enabled
     }
 

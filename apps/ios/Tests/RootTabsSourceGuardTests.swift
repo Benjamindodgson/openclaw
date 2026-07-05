@@ -2104,6 +2104,27 @@ struct RootTabsSourceGuardTests {
         #expect(!scannedConnectFunction.contains("Failed: invalid port"))
     }
 
+    @Test func `settings gateway auto connect toggle is reducer typed`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let autoConnectFeature = try Self.extract(
+            settingsSource,
+            from: "struct SettingsGatewayAutoConnectFeature",
+            to: "struct SettingsOnboardingStateFeature")
+
+        #expect(autoConnectFeature.contains("struct GatewayAutoConnectEnabled: Equatable, Sendable"))
+        #expect(autoConnectFeature.contains("struct EnabledChange: Equatable, Sendable"))
+        #expect(autoConnectFeature.contains("var enabled: GatewayAutoConnectEnabled"))
+        #expect(autoConnectFeature.contains("struct EnabledSync: Equatable, Sendable { var isEnabled: Bool }"))
+        #expect(autoConnectFeature.contains("state.isEnabled = change.enabled.value"))
+        #expect(autoConnectFeature.contains("state.isEnabled = sync.isEnabled"))
+        #expect(actionsSource.contains("self.gatewayAutoConnectStore.send(.enabledChanged(.init("))
+        #expect(actionsSource.contains("enabled: .init(value: enabled)"))
+        #expect(!autoConnectFeature.contains("struct EnabledChange: Equatable, Sendable { var isEnabled: Bool }"))
+        #expect(!autoConnectFeature.contains("state.isEnabled = change.isEnabled"))
+        #expect(!actionsSource.contains("enabledChanged(.init(isEnabled:"))
+    }
+
     @Test func `settings gateway preflight decision is reducer owned`() throws {
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
