@@ -10,7 +10,7 @@ struct NotificationPermissionGuidanceFeatureTests {
             NotificationPermissionGuidanceFeature(client: probe.client)
         }
 
-        await store.send(.openNotificationsButtonTapped(.init(approvalID: "approval-1")))
+        await store.send(.openNotificationsButtonTapped(.init(approvalID: .init(value: "approval-1"))))
         await store.finish()
 
         #expect(probe.events == [
@@ -58,7 +58,7 @@ private final class NotificationPermissionGuidanceProbe: @unchecked Sendable {
                 self.events.append(.dismiss(suppressFuture: suppressFuture))
             },
             openNotifications: { approvalID in
-                self.events.append(.openNotifications(approvalID))
+                self.events.append(.openNotifications(approvalID.value))
             })
     }
 }

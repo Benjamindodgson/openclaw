@@ -1,9 +1,16 @@
 import ComposableArchitecture
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct NotificationPermissionGuidanceApprovalID: Equatable, Sendable {
+    var value: String
+}
+
+// swiftformat:enable redundantSendable
+
 struct NotificationPermissionGuidanceClient {
     var dismissNotificationPermissionGuidancePrompt: @Sendable @MainActor (Bool) async -> Void
-    var openNotifications: @Sendable @MainActor (String) async -> Void
+    var openNotifications: @Sendable @MainActor (NotificationPermissionGuidanceApprovalID) async -> Void
 }
 
 extension NotificationPermissionGuidanceClient: DependencyKey {
@@ -26,7 +33,7 @@ extension NotificationPermissionGuidanceClient: DependencyKey {
                 appModel.dismissNotificationPermissionGuidancePrompt(suppressFuture: suppressFuture)
             },
             openNotifications: { approvalID in
-                openNotifications(approvalID)
+                openNotifications(approvalID.value)
             })
     }
 }
@@ -52,7 +59,7 @@ struct NotificationPermissionGuidanceFeature {
 
     enum Action: Equatable, Sendable {
         struct OpenNotificationsRequest: Equatable, Sendable {
-            var approvalID: String
+            var approvalID: NotificationPermissionGuidanceApprovalID
         }
 
         case dontShowAgainButtonTapped
@@ -119,7 +126,8 @@ private struct NotificationPermissionGuidanceDialogModifier: ViewModifier {
 
                         NotificationPermissionGuidanceCard(
                             onOpenNotifications: {
-                                self.store.send(.openNotificationsButtonTapped(.init(approvalID: prompt.approvalId)))
+                                self.store.send(.openNotificationsButtonTapped(.init(
+                                    approvalID: .init(value: prompt.approvalId))))
                             },
                             onDismiss: {
                                 self.store.send(.notNowButtonTapped)
