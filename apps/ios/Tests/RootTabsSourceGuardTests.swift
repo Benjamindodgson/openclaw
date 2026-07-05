@@ -970,12 +970,13 @@ struct RootTabsSourceGuardTests {
 
         #expect(source.contains("private var boardScopeMenu: some View"))
         #expect(source.contains("method: \"workboard.boards.list\""))
-        #expect(source.contains("let boardID = state.selectedBoardParam"))
-        #expect(source.contains("IPadWorkboardListParams(boardId: boardID)"))
+        #expect(source.contains("struct IPadWorkboardBoardScope: Equatable, Sendable"))
+        #expect(source.contains("let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)"))
+        #expect(source.contains("IPadWorkboardListParams(boardId: boardScope.boardID)"))
         #expect(source.contains("boardId: state.selectedBoardParam"))
         #expect(source
             .matches(
-                of: /method: "workboard\.cards\.dispatch"[\s\S]*?IPadWorkboardListParams\(boardId: boardID\)/)
+                of: /method: "workboard\.cards\.dispatch"[\s\S]*?IPadWorkboardListParams\(boardId: boardScope\.boardID\)/)
             .count == 1)
         #expect(rootSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))
         #expect(phoneSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))

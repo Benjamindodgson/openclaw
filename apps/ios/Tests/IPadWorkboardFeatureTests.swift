@@ -58,8 +58,8 @@ struct IPadWorkboardFeatureTests {
         let response = IPadWorkboardCardsResponse(cards: [card], statuses: ["todo", "done"])
         let boards = [IPadWorkboardBoardSummary(id: "ops"), IPadWorkboardBoardSummary(id: "planning")]
         var client = Self.failingClient()
-        client.listCards = { boardID in
-            #expect(boardID == "planning")
+        client.listCards = { boardScope in
+            #expect(boardScope.boardID == "planning")
             return response
         }
         client.listBoards = { boards }
@@ -78,7 +78,11 @@ struct IPadWorkboardFeatureTests {
             $0.errorText = nil
             $0.selectedStatus = "active"
         }
-        await store.receive(.refreshResponse(.init(boardID: "planning", force: false, result: .success(response)))) {
+        await store.receive(.refreshResponse(.init(
+            boardScope: .init(boardID: "planning"),
+            force: false,
+            result: .success(response))))
+        {
             $0.isRefreshing = false
             $0.activeRefreshBoardID = nil
             $0.cards = [card]
@@ -104,7 +108,7 @@ struct IPadWorkboardFeatureTests {
 
         await store.send(.refreshResponse(
             .init(
-                boardID: "old",
+                boardScope: .init(boardID: "old"),
                 force: true,
                 result: .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"])))))
         {
@@ -198,12 +202,12 @@ struct IPadWorkboardFeatureTests {
         let response = IPadWorkboardCardsResponse(cards: [refreshed], statuses: ["running"])
         let summary = IPadWorkboardDispatchSummary(startedCount: 1, dispatchCount: 1)
         var client = Self.failingClient()
-        client.dispatch = { boardID in
-            #expect(boardID == nil)
+        client.dispatch = { boardScope in
+            #expect(boardScope.boardID == nil)
             return summary
         }
-        client.listCards = { boardID in
-            #expect(boardID == nil)
+        client.listCards = { boardScope in
+            #expect(boardScope.boardID == nil)
             return response
         }
         let store = TestStore(initialState: IPadWorkboardFeature.State()) {
@@ -216,7 +220,7 @@ struct IPadWorkboardFeatureTests {
             $0.dispatchSummaryText = nil
         }
         await store.receive(.dispatchResponse(.init(
-            boardID: nil,
+            boardScope: .init(boardID: nil),
             result: .success(IPadWorkboardDispatchSnapshot(
                 summary: summary,
                 cardsResponse: response)))))
@@ -241,7 +245,11 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.refreshResponse(.init(boardID: nil, force: true, result: .success(response)))) {
+        await store.send(.refreshResponse(.init(
+            boardScope: .init(boardID: nil),
+            force: true,
+            result: .success(response))))
+        {
             $0.isRefreshing = false
             $0.activeRefreshBoardID = nil
             $0.cards = [refreshed]
