@@ -2733,8 +2733,13 @@ struct RootTabsSourceGuardTests {
             to: "func handleLocationModeApplyResult")
 
         #expect(locationSource.contains("struct LocationModeRequest: Equatable, Sendable"))
+        #expect(locationSource.contains("struct LocationModeChange: Equatable, Sendable"))
+        #expect(locationSource.contains("var mode: OpenClawLocationMode"))
         #expect(locationSource.contains("struct LocationModeChangeRequest: Equatable, Sendable"))
+        #expect(locationSource.contains("case locationModeChanged(LocationModeChange)"))
         #expect(locationSource.contains("case locationModeChangeRequested(LocationModeChangeRequest)"))
+        #expect(actionsSource.contains("guard let mode = OpenClawLocationMode(rawValue: rawValue) else { return }"))
+        #expect(actionsSource.contains("self.locationStore.send(.locationModeChanged(.init(mode: mode)))"))
         #expect(locationSource.contains("guard let mode = OpenClawLocationMode(rawValue: rawValue) else"))
         #expect(locationSource.contains("state.locationModeRequest = LocationModeRequest("))
         #expect(settingsSource.contains("self.locationStore.send(.locationModeChangeRequested(.init(rawValue: newValue)))"))
