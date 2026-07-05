@@ -5,23 +5,23 @@ import SwiftUI
 
 struct SettingsChannelsClient {
     var status: @Sendable @MainActor () async throws -> ChannelsStatusResult
-    var start: @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void
-    var stop: @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void
-    var logout: @Sendable @MainActor (_ channelID: String, _ accountID: String?) async throws -> Void
+    var start: @Sendable @MainActor (SettingsChannelOperationTarget) async throws -> Void
+    var stop: @Sendable @MainActor (SettingsChannelOperationTarget) async throws -> Void
+    var logout: @Sendable @MainActor (SettingsChannelOperationTarget) async throws -> Void
 }
 
 extension SettingsChannelsClient: DependencyKey {
     static let liveValue = SettingsChannelsClient(
         status: { SettingsChannelsClient.emptyStatus() },
-        start: { _, _ in },
-        stop: { _, _ in },
-        logout: { _, _ in })
+        start: { _ in },
+        stop: { _ in },
+        logout: { _ in })
 
     static let testValue = SettingsChannelsClient(
         status: { SettingsChannelsClient.emptyStatus() },
-        start: { _, _ in },
-        stop: { _, _ in },
-        logout: { _, _ in })
+        start: { _ in },
+        stop: { _ in },
+        logout: { _ in })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
@@ -35,24 +35,24 @@ extension SettingsChannelsClient: DependencyKey {
                     timeoutSeconds: 12)
                 return try JSONDecoder().decode(ChannelsStatusResult.self, from: data)
             },
-            start: { channelID, accountID in
-                let params = ChannelsStartParams(channel: channelID, accountid: accountID)
+            start: { target in
+                let params = ChannelsStartParams(channel: target.channelID, accountid: target.accountID)
                 _ = try await Self.request(
                     appModel: appModel,
                     method: "channels.start",
                     params: params,
                     timeoutSeconds: 20)
             },
-            stop: { channelID, accountID in
-                let params = ChannelsStopParams(channel: channelID, accountid: accountID)
+            stop: { target in
+                let params = ChannelsStopParams(channel: target.channelID, accountid: target.accountID)
                 _ = try await Self.request(
                     appModel: appModel,
                     method: "channels.stop",
                     params: params,
                     timeoutSeconds: 20)
             },
-            logout: { channelID, accountID in
-                let params = ChannelsLogoutParams(channel: channelID, accountid: accountID)
+            logout: { target in
+                let params = ChannelsLogoutParams(channel: target.channelID, accountid: target.accountID)
                 _ = try await Self.request(
                     appModel: appModel,
                     method: "channels.logout",
@@ -142,8 +142,7 @@ struct SettingsChannelsFeature {
 
         struct OperationRequest: Equatable, Sendable {
             var kind: SettingsChannelOperation.Kind
-            var channelID: String
-            var accountID: String?
+            var target: SettingsChannelOperationTarget
             var canRead: Bool
             var canAdmin: Bool
         }
@@ -219,18 +218,18 @@ struct SettingsChannelsFeature {
 
                 state.busyOperation = SettingsChannelOperation(
                     kind: request.kind,
-                    channelID: request.channelID,
-                    accountID: request.accountID)
+                    channelID: request.target.channelID,
+                    accountID: request.target.accountID)
                 state.errorText = nil
                 return .run { send in
                     do {
                         switch request.kind {
                         case .start:
-                            try await client.start(request.channelID, request.accountID)
+                            try await client.start(request.target)
                         case .stop:
-                            try await client.stop(request.channelID, request.accountID)
+                            try await client.stop(request.target)
                         case .logout:
-                            try await client.logout(request.channelID, request.accountID)
+                            try await client.logout(request.target)
                         }
                         let snapshot = try await client.status()
                         await send(.operationResponse(.init(result: .success(Self.entries(from: snapshot)))))
@@ -536,8 +535,7 @@ struct SettingsChannelsDestination: View {
     private func run(_ kind: SettingsChannelOperation.Kind, channelID: String, accountID: String?) async {
         await self.store.send(.operationRequested(.init(
             kind: kind,
-            channelID: channelID,
-            accountID: accountID,
+            target: .init(channelID: channelID, accountID: accountID),
             canRead: self.canRead,
             canAdmin: self.canAdmin))).finish()
     }
@@ -774,6 +772,11 @@ struct SettingsChannelOperation: Equatable, Sendable {
     let kind: Kind
     let channelID: String
     let accountID: String?
+}
+
+struct SettingsChannelOperationTarget: Equatable, Sendable {
+    var channelID: String
+    var accountID: String?
 }
 
 // swiftformat:enable redundantSendable
