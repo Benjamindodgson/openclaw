@@ -66,7 +66,7 @@ struct TalkProTabFeature {
 
         struct SpeakerphoneEnabledChange: Equatable, Sendable { var enabled: Bool }
 
-        struct StartTalkRequest: Equatable, Sendable { var sessionKey: String? }
+        struct StartTalkRequest: Equatable, Sendable { var sessionKey: ChatSessionKey? }
 
         struct TalkEnabledChange: Equatable, Sendable { var enabled: Bool }
 
@@ -117,9 +117,8 @@ struct TalkProTabFeature {
 
             case let .startTalkRequested(request):
                 state.talkEnabled = true
-                let sessionKey = ChatSessionKey(rawValue: request.sessionKey)
                 return .run { _ in
-                    await client.startTalk(sessionKey)
+                    await client.startTalk(request.sessionKey)
                 }
 
             case let .talkEnabledChanged(change):
@@ -403,7 +402,7 @@ struct TalkProTab: View {
     private func startTalk() {
         guard !self.appModel.isAppleReviewDemoModeEnabled else { return }
         self.talkEnabled = true
-        self.store.send(.startTalkRequested(.init(sessionKey: self.appModel.chatSessionKey)))
+        self.store.send(.startTalkRequested(.init(sessionKey: ChatSessionKey(rawValue: self.appModel.chatSessionKey))))
     }
 
     private func stopTalk() {

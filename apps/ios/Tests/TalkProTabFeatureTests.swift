@@ -77,7 +77,7 @@ struct TalkProTabFeatureTests {
             TalkProTabFeature(client: probe.client)
         }
 
-        await store.send(.startTalkRequested(.init(sessionKey: "session-1"))) {
+        await store.send(.startTalkRequested(.init(sessionKey: ChatSessionKey(rawValue: "session-1")))) {
             $0.talkEnabled = true
         }
         await store.finish()
