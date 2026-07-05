@@ -22,6 +22,14 @@ struct SettingsTalkSpeechLocale: Equatable, Sendable {
     var value: String
 }
 
+struct SettingsTalkBackgroundEnabled: Equatable, Sendable {
+    var isEnabled: Bool
+}
+
+struct SettingsTalkButtonEnabled: Equatable, Sendable {
+    var isEnabled: Bool
+}
+
 struct SettingsTalkSpeakerphoneEnabled: Equatable, Sendable {
     var isEnabled: Bool
 }
@@ -172,11 +180,11 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct TalkBackgroundEnabledChange: Equatable, Sendable {
-            var isEnabled: Bool
+            var enabled: SettingsTalkBackgroundEnabled
         }
 
         struct TalkButtonEnabledChange: Equatable, Sendable {
-            var isEnabled: Bool
+            var enabled: SettingsTalkButtonEnabled
         }
 
         struct TalkSpeakerphoneEnabledChange: Equatable, Sendable {
@@ -275,11 +283,11 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .talkBackgroundEnabledChanged(change):
-                state.talkBackgroundEnabled = change.isEnabled
+                state.talkBackgroundEnabled = change.enabled.isEnabled
                 return .none
 
             case let .talkButtonEnabledChanged(change):
-                state.talkButtonEnabled = change.isEnabled
+                state.talkButtonEnabled = change.enabled.isEnabled
                 return .none
 
             case let .talkSpeakerphoneEnabledChanged(change):

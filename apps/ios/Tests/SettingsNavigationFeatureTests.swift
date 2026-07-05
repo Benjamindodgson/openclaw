@@ -2363,10 +2363,10 @@ struct SettingsNavigationFeatureTests {
         await store.send(.speechLocaleChanged(.init(locale: .init(value: "en-US")))) {
             $0.speechLocale = "en-US"
         }
-        await store.send(.talkBackgroundEnabledChanged(.init(isEnabled: true))) {
+        await store.send(.talkBackgroundEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
             $0.talkBackgroundEnabled = true
         }
-        await store.send(.talkButtonEnabledChanged(.init(isEnabled: false))) {
+        await store.send(.talkButtonEnabledChanged(.init(enabled: .init(isEnabled: false)))) {
             $0.talkButtonEnabled = false
         }
         await store.send(.talkSpeakerphoneEnabledChanged(.init(enabled: .init(isEnabled: false)))) {
