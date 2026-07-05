@@ -1996,9 +1996,9 @@ struct SettingsNavigationFeatureTests {
             isPortValid: .init(value: true))))
         {
             $0.manualConnectionResult = .request(SettingsManualGatewayEndpointFeature.ManualConnectionRequest(
-                host: "gateway.example.com",
-                port: 18789,
-                useTLS: false))
+                host: .init(value: "gateway.example.com"),
+                port: .init(value: 18789),
+                useTLS: .init(value: false)))
         }
     }
 

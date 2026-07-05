@@ -420,9 +420,9 @@ extension SettingsProTab {
                 password: self.gatewayCredentialsStore.gatewayPassword)
             self.gatewayCredentialsStore.send(.pendingManualAuthOverrideConsumed)
             await self.gatewayController.connectManual(
-                host: request.host,
-                port: request.port,
-                useTLS: request.useTLS,
+                host: request.host.value,
+                port: request.port.value,
+                useTLS: request.useTLS.value,
                 authOverride: authOverride)
         }
     }
