@@ -241,12 +241,12 @@ struct SettingsTalkPreferencesFeature {
         }
 
         struct PreferencesSync: Equatable, Sendable {
-            var providerSelectionRaw: String
-            var realtimeVoiceSelectionRaw: String
-            var speechLocale: String
-            var talkButtonEnabled: Bool
-            var talkBackgroundEnabled: Bool
-            var talkSpeakerphoneEnabled: Bool
+            var providerSelection: TalkModeProviderSelection
+            var realtimeVoiceSelection: SettingsTalkRealtimeVoiceSelection
+            var speechLocale: SettingsTalkSpeechLocale
+            var talkButtonEnabled: SettingsTalkButtonEnabled
+            var talkBackgroundEnabled: SettingsTalkBackgroundEnabled
+            var talkSpeakerphoneEnabled: SettingsTalkSpeakerphoneEnabled
         }
 
         case gatewayTalkConfigSynced(GatewayTalkConfigSync)
@@ -287,13 +287,12 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .preferencesSynced(sync):
-                state.providerSelectionRaw = TalkModeProviderSelection.resolved(sync.providerSelectionRaw).rawValue
-                state.realtimeVoiceSelectionRaw =
-                    SettingsTalkRealtimeVoiceSelection(rawValue: sync.realtimeVoiceSelectionRaw).value
-                state.speechLocale = sync.speechLocale
-                state.talkButtonEnabled = sync.talkButtonEnabled
-                state.talkBackgroundEnabled = sync.talkBackgroundEnabled
-                state.talkSpeakerphoneEnabled = sync.talkSpeakerphoneEnabled
+                state.providerSelectionRaw = sync.providerSelection.rawValue
+                state.realtimeVoiceSelectionRaw = sync.realtimeVoiceSelection.value
+                state.speechLocale = sync.speechLocale.value
+                state.talkButtonEnabled = sync.talkButtonEnabled.isEnabled
+                state.talkBackgroundEnabled = sync.talkBackgroundEnabled.isEnabled
+                state.talkSpeakerphoneEnabled = sync.talkSpeakerphoneEnabled.isEnabled
                 return .none
 
             case let .providerSelectionChanged(change):

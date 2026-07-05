@@ -2339,12 +2339,12 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.preferencesSynced(.init(
-            providerSelectionRaw: TalkModeProviderSelection.openAIRealtime.rawValue,
-            realtimeVoiceSelectionRaw: " Cedar ",
-            speechLocale: "en-US",
-            talkButtonEnabled: false,
-            talkBackgroundEnabled: true,
-            talkSpeakerphoneEnabled: false)))
+            providerSelection: .openAIRealtime,
+            realtimeVoiceSelection: .init(rawValue: " Cedar "),
+            speechLocale: .init(value: "en-US"),
+            talkButtonEnabled: .init(isEnabled: false),
+            talkBackgroundEnabled: .init(isEnabled: true),
+            talkSpeakerphoneEnabled: .init(isEnabled: false))))
         {
             $0.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
             $0.realtimeVoiceSelectionRaw = "cedar"
