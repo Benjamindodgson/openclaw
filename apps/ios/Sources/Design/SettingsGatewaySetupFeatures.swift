@@ -220,10 +220,14 @@ struct SettingsManualGatewayEndpointFeature {
         }
     }
 
+    struct ManualConnectionHost: Equatable, Sendable { var value: String }
+    struct ManualConnectionResolvedPort: Equatable, Sendable { var value: Int }
+    struct ManualConnectionTLS: Equatable, Sendable { var value: Bool }
+
     struct ManualConnectionRequest: Equatable, Sendable {
-        var host: String
-        var port: Int
-        var useTLS: Bool
+        var host: ManualConnectionHost
+        var port: ManualConnectionResolvedPort
+        var useTLS: ManualConnectionTLS
     }
 
     enum ManualConnectionResult: Equatable, Sendable {
@@ -324,9 +328,9 @@ struct SettingsManualGatewayEndpointFeature {
                     return .none
                 }
                 state.manualConnectionResult = .request(ManualConnectionRequest(
-                    host: host,
-                    port: request.port.value,
-                    useTLS: state.manualGatewayTLS))
+                    host: .init(value: host),
+                    port: .init(value: request.port.value),
+                    useTLS: .init(value: state.manualGatewayTLS)))
                 return .none
 
             case .manualConnectionResultHandled:
