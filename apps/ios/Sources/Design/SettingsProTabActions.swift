@@ -429,8 +429,8 @@ extension SettingsProTab {
 
     func preflightGateway(host: String) async -> Bool {
         self.manualGatewayEndpointStore.send(.preflightRequested(.init(
-            host: host,
-            hasTailnetIPv4: Self.hasTailnetIPv4())))
+            host: .init(value: host),
+            hasTailnetIPv4: .init(value: Self.hasTailnetIPv4()))))
         guard let result = self.manualGatewayEndpointStore.preflightResult else { return false }
         self.manualGatewayEndpointStore.send(.preflightResultHandled)
 
