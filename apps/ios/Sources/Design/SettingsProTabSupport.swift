@@ -27,7 +27,14 @@ struct SettingsGatewayStoredCredentials: Equatable, Sendable {
     var password: String
 }
 
-struct SettingsGatewayCurrentInstanceID: Equatable, Sendable { var value: String }
+struct SettingsGatewayCurrentInstanceID: Equatable, Sendable {
+    var value: String
+
+    var trimmedValue: String? {
+        let trimmed = self.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
 
 struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String }
 
@@ -68,12 +75,13 @@ extension DependencyValues {
 
 struct SettingsGatewaySetupAuthPersistenceClient {
     var currentInstanceID: @Sendable () -> SettingsGatewayCurrentInstanceID
-    var prepareForBootstrapPairing: @MainActor @Sendable (_ instanceId: String) -> Void
+    var prepareForBootstrapPairing: @MainActor @Sendable (_ instanceId: SettingsGatewayCurrentInstanceID) -> Void
     var saveSetupAuth: @MainActor @Sendable (_ request: SettingsGatewaySetupAuthPersistenceRequest) -> Void
 
     init(
         currentInstanceID: @escaping @Sendable () -> SettingsGatewayCurrentInstanceID,
-        prepareForBootstrapPairing: @escaping @MainActor @Sendable (_ instanceId: String) -> Void = { _ in },
+        prepareForBootstrapPairing: @escaping @MainActor @Sendable (
+            _ instanceId: SettingsGatewayCurrentInstanceID) -> Void = { _ in },
         saveSetupAuth: @escaping @MainActor @Sendable (_ request: SettingsGatewaySetupAuthPersistenceRequest) -> Void)
     {
         self.currentInstanceID = currentInstanceID
@@ -84,10 +92,14 @@ struct SettingsGatewaySetupAuthPersistenceClient {
 
 struct SettingsGatewaySetupAuthPersistenceRequest: Equatable {
     let setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth
-    let instanceId: String
+    let instanceId: SettingsGatewayCurrentInstanceID
 
     var hasBootstrapToken: Bool {
         self.setupAuth.hasBootstrapToken
+    }
+
+    var trimmedInstanceId: String? {
+        self.instanceId.trimmedValue
     }
 }
 
@@ -97,8 +109,7 @@ extension SettingsGatewaySetupAuthPersistenceClient: DependencyKey {
             .init(value: GatewaySettingsStore.currentInstanceID())
         },
         saveSetupAuth: { request in
-            let instanceId = request.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !instanceId.isEmpty else { return }
+            guard let instanceId = request.trimmedInstanceId else { return }
 
             GatewaySettingsStore.saveGatewayBootstrapToken(
                 request.setupAuth.bootstrapToken,
@@ -118,6 +129,7 @@ extension SettingsGatewaySetupAuthPersistenceClient: DependencyKey {
                 .init(value: GatewaySettingsStore.currentInstanceID())
             },
             prepareForBootstrapPairing: { instanceId in
+                guard let instanceId = instanceId.trimmedValue else { return }
                 GatewayOnboardingReset.prepareForBootstrapPairing(appModel: appModel, instanceId: instanceId)
             },
             saveSetupAuth: self.liveValue.saveSetupAuth)
