@@ -36,6 +36,15 @@ struct SettingsGatewayCurrentInstanceID: Equatable, Sendable {
     }
 }
 
+struct SettingsGatewayStableID: Equatable, Sendable {
+    var value: String
+
+    var trimmedValue: String? {
+        let trimmed = self.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
 struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String }
 
 // swiftformat:enable redundantSendable
@@ -228,12 +237,13 @@ extension DependencyValues {
 }
 
 struct SettingsDiscoveredGatewayPersistenceClient {
-    var saveSelectedGatewayStableID: @MainActor @Sendable (_ stableID: String) -> Void
+    var saveSelectedGatewayStableID: @MainActor @Sendable (_ stableID: SettingsGatewayStableID) -> Void
 }
 
 extension SettingsDiscoveredGatewayPersistenceClient: DependencyKey {
     static let liveValue = SettingsDiscoveredGatewayPersistenceClient(
         saveSelectedGatewayStableID: { stableID in
+            guard let stableID = stableID.trimmedValue else { return }
             GatewaySettingsStore.savePreferredGatewayStableID(stableID)
             GatewaySettingsStore.saveLastDiscoveredGatewayStableID(stableID)
         })

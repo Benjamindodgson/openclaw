@@ -577,7 +577,8 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.discoveredGatewayPersistenceRequested(.init(stableID: " gateway-stable-1 ")))
+        await store.send(.discoveredGatewayPersistenceRequested(.init(
+            stableID: .init(value: " gateway-stable-1 "))))
         await store.finish()
 
         #expect(probe.savedStableIDs == ["gateway-stable-1"])
@@ -589,7 +590,8 @@ struct SettingsNavigationFeatureTests {
             SettingsGatewayConnectionFeature(persistenceClient: probe.client)
         }
 
-        await store.send(.discoveredGatewayPersistenceRequested(.init(stableID: " ")))
+        await store.send(.discoveredGatewayPersistenceRequested(.init(
+            stableID: .init(value: " "))))
         await store.finish()
 
         #expect(probe.savedStableIDs.isEmpty)
@@ -2551,6 +2553,7 @@ private final class SettingsDiscoveredGatewayPersistenceProbe: @unchecked Sendab
 
     var client: SettingsDiscoveredGatewayPersistenceClient {
         SettingsDiscoveredGatewayPersistenceClient(saveSelectedGatewayStableID: { stableID in
+            guard let stableID = stableID.trimmedValue else { return }
             self.savedStableIDs.append(stableID)
         })
     }
