@@ -46,7 +46,7 @@ struct TalkProTabFeatureTests {
             TalkProTabFeature(client: probe.client)
         }
 
-        await store.send(.speakerphoneEnabledChanged(.init(enabled: false))) {
+        await store.send(.speakerphoneEnabledChanged(.init(enabled: .init(isEnabled: false)))) {
             $0.speakerphoneEnabled = false
         }
         await store.finish()
@@ -60,10 +60,10 @@ struct TalkProTabFeatureTests {
             TalkProTabFeature(client: probe.client)
         }
 
-        await store.send(.talkEnabledChanged(.init(enabled: true))) {
+        await store.send(.talkEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
             $0.talkEnabled = true
         }
-        await store.send(.talkEnabledChanged(.init(enabled: false))) {
+        await store.send(.talkEnabledChanged(.init(enabled: .init(isEnabled: false)))) {
             $0.talkEnabled = false
         }
         await store.finish()
