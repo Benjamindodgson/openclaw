@@ -15,7 +15,11 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client())
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: false, force: false))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: false),
+            force: .init(isForced: false))))
+        {
             $0.entries = []
             $0.isLoading = false
             $0.errorText = nil
@@ -27,10 +31,17 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { Self.connectedStatus }))
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: false))))
+        {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(.init(force: false, result: .success(Self.connectedEntries)))) {
+        await store.receive(.refreshResponse(.init(
+            force: .init(isForced: false),
+            result: .success(Self.connectedEntries))))
+        {
             $0.entries = Self.connectedEntries
             $0.isLoading = false
         }
@@ -43,10 +54,17 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { throw TestChannelsFailure.failed }))
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: false))))
+        {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(.init(force: false, result: .failure(.failed(.init(message: "boom")))))) {
+        await store.receive(.refreshResponse(.init(
+            force: .init(isForced: false),
+            result: .failure(.failed(.init(message: "boom"))))))
+        {
             $0.isLoading = false
         }
     }
@@ -58,10 +76,17 @@ struct SettingsChannelsFeatureTests {
             SettingsChannelsFeature(client: Self.client(status: { throw TestChannelsFailure.failed }))
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: true))))
+        {
             $0.isLoading = true
         }
-        await store.receive(.refreshResponse(.init(force: true, result: .failure(.failed(.init(message: "boom")))))) {
+        await store.receive(.refreshResponse(.init(
+            force: .init(isForced: true),
+            result: .failure(.failed(.init(message: "boom"))))))
+        {
             $0.isLoading = false
             $0.errorText = "boom"
         }
@@ -76,8 +101,8 @@ struct SettingsChannelsFeatureTests {
         await store.send(.operationRequested(.init(
             kind: .start,
             target: .init(channelID: "telegram", accountID: "main"),
-            canRead: true,
-            canAdmin: true)))
+            readAccess: .init(canRead: true),
+            adminAccess: .init(canAdmin: true))))
         {
             $0.busyOperation = operation
         }
@@ -95,8 +120,8 @@ struct SettingsChannelsFeatureTests {
         await store.send(.operationRequested(.init(
             kind: .stop,
             target: .init(channelID: "telegram", accountID: "main"),
-            canRead: true,
-            canAdmin: false)))
+            readAccess: .init(canRead: true),
+            adminAccess: .init(canAdmin: false))))
     }
 
     private static var connectedEntries: [SettingsChannelEntry] {
