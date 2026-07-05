@@ -558,6 +558,7 @@ struct RootTabsSourceGuardTests {
             to: "private func makeCanvasDebugStatusSnapshot()")
 
         #expect(featureSource.contains("struct RootCanvasDebugStatusClient"))
+        #expect(featureSource.contains("struct Update: Equatable, Sendable"))
         #expect(featureSource.contains("var rootCanvasDebugStatus: RootCanvasDebugStatusClient"))
         #expect(featureSource.contains("@Reducer\nstruct RootCanvasDebugStatusFeature"))
         #expect(featureSource.contains("extension RootCanvasDebugStatusFeature.Snapshot"))
@@ -565,7 +566,7 @@ struct RootTabsSourceGuardTests {
         #expect(featureSource.contains("gatewayDisplayStatusText: appModel.gatewayDisplayStatusText"))
         #expect(featureSource.contains("case snapshotChanged(Snapshot)"))
         #expect(featureSource.contains("await client.setDebugStatusEnabled(snapshot.isEnabled)"))
-        #expect(featureSource.contains("await client.updateDebugStatus(title, subtitle)"))
+        #expect(featureSource.contains("await client.updateDebugStatus(.init(title: title, subtitle: subtitle))"))
         #expect(storesSource.contains("func makeCanvasDebugStatusStore()"))
         #expect(storesSource.contains("RootCanvasDebugStatusFeature(client: .live(appModel: self.appModel))"))
         #expect(rootSource.contains(".send(.snapshotChanged(self.makeCanvasDebugStatusSnapshot()))"))
