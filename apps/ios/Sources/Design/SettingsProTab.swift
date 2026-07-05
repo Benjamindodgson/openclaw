@@ -911,9 +911,9 @@ struct SettingsDeviceIdentityFeature {
     enum Action: Equatable, Sendable {
         struct DisplayNameChange: Equatable, Sendable { var displayName: SettingsDeviceDisplayName }
 
-        struct DisplayNameSync: Equatable, Sendable { var displayName: String }
+        struct DisplayNameSync: Equatable, Sendable { var displayName: SettingsDeviceDisplayName }
 
-        struct InstanceIDSync: Equatable, Sendable { var instanceId: String }
+        struct InstanceIDSync: Equatable, Sendable { var instanceId: SettingsGatewayCurrentInstanceID }
 
         case displayNameChanged(DisplayNameChange)
         case displayNameSynced(DisplayNameSync)
@@ -930,11 +930,11 @@ struct SettingsDeviceIdentityFeature {
                 return .none
 
             case let .displayNameSynced(sync):
-                state.displayName = sync.displayName
+                state.displayName = sync.displayName.value
                 return .none
 
             case let .instanceIdSynced(sync):
-                state.instanceId = sync.instanceId
+                state.instanceId = sync.instanceId.value
                 return .none
             }
         }
@@ -1503,10 +1503,10 @@ struct SettingsProTab: View {
                 self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: newValue)))
             }
             .onChange(of: self.storedDisplayName) { _, newValue in
-                self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: newValue)))
+                self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: .init(value: newValue))))
             }
             .onChange(of: self.storedInstanceId) { _, newValue in
-                self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: newValue)))
+                self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: .init(value: newValue))))
             }
             .onChange(of: self.storedDiscoveryDebugLogsEnabled) { _, newValue in
                 self.debugOptionsStore.send(.discoveryDebugLogsChanged(.init(
