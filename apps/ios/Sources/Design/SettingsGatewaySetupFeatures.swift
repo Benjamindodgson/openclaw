@@ -59,15 +59,15 @@ struct SettingsGatewaySetupStatusFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var gatewayProblemMessage: String?
-        var gatewayStatusText = ""
-        var statusText: String?
+        var gatewayProblemMessage = SettingsGatewaySetupProblemMessage(value: nil)
+        var gatewayStatusText = SettingsGatewayStatusText(value: "")
+        var statusText = SettingsGatewaySetupStatusText(value: nil)
 
         var setupStatusLine: String? {
             SettingsGatewaySetupStatusFeature.setupStatusLine(
-                problemMessage: self.gatewayProblemMessage,
-                setupStatusText: self.statusText,
-                gatewayStatusText: self.gatewayStatusText)
+                problemMessage: self.gatewayProblemMessage.value,
+                setupStatusText: self.statusText.value,
+                gatewayStatusText: self.gatewayStatusText.value)
         }
     }
 
@@ -93,24 +93,24 @@ struct SettingsGatewaySetupStatusFeature {
         Reduce { state, action in
             switch action {
             case let .gatewayStatusSynced(sync):
-                state.gatewayProblemMessage = sync.problemMessage.value
-                state.gatewayStatusText = sync.gatewayStatusText.value
+                state.gatewayProblemMessage = sync.problemMessage
+                state.gatewayStatusText = sync.gatewayStatusText
                 return .none
 
             case let .qrScannerErrorReceived(error):
-                state.statusText = Self.qrScannerErrorStatusText(error.message.value)
+                state.statusText = .init(value: Self.qrScannerErrorStatusText(error.message.value))
                 return .none
 
             case .qrScannerOpeningStarted:
-                state.statusText = Self.qrScannerOpeningStartedStatusText
+                state.statusText = .init(value: Self.qrScannerOpeningStartedStatusText)
                 return .none
 
             case .setupConnectionStarted:
-                state.statusText = Self.setupConnectionStartedStatusText
+                state.statusText = .init(value: Self.setupConnectionStartedStatusText)
                 return .none
 
             case let .statusChanged(change):
-                state.statusText = change.statusText.value
+                state.statusText = change.statusText
                 return .none
             }
         }

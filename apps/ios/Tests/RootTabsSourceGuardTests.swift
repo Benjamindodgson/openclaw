@@ -2451,6 +2451,10 @@ struct RootTabsSourceGuardTests {
             settingsSource,
             from: ".sheet(isPresented: self.qrScannerBinding)",
             to: ".sheet(isPresented: self.notificationRelayDisclosureBinding)")
+        let setupStatusFeature = try Self.extract(
+            gatewaySetupFeaturesSource,
+            from: "@Reducer\nstruct SettingsGatewaySetupStatusFeature",
+            to: "@Reducer\nstruct SettingsManualGatewayEndpointFeature")
 
         #expect(gatewaySetupFeaturesSource.contains("struct GatewayStatusSync: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct QRScannerError: Equatable, Sendable"))
@@ -2459,18 +2463,31 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("struct SettingsGatewaySetupStatusText: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SettingsGatewaySetupScannerErrorMessage: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct SetupStatusChange: Equatable, Sendable"))
+        #expect(setupStatusFeature
+            .contains("var gatewayProblemMessage = SettingsGatewaySetupProblemMessage(value: nil)"))
+        #expect(setupStatusFeature.contains("var gatewayStatusText = SettingsGatewayStatusText(value: \"\")"))
+        #expect(setupStatusFeature.contains("var statusText = SettingsGatewaySetupStatusText(value: nil)"))
         #expect(gatewaySetupFeaturesSource.contains("var problemMessage: SettingsGatewaySetupProblemMessage"))
         #expect(gatewaySetupFeaturesSource.contains("var gatewayStatusText: SettingsGatewayStatusText"))
         #expect(gatewaySetupFeaturesSource.contains("var message: SettingsGatewaySetupScannerErrorMessage"))
         #expect(gatewaySetupFeaturesSource.contains("var statusText: SettingsGatewaySetupStatusText"))
-        #expect(gatewaySetupFeaturesSource.contains("state.gatewayProblemMessage = sync.problemMessage.value"))
-        #expect(gatewaySetupFeaturesSource.contains("state.gatewayStatusText = sync.gatewayStatusText.value"))
-        #expect(gatewaySetupFeaturesSource.contains("Self.qrScannerErrorStatusText(error.message.value)"))
-        #expect(gatewaySetupFeaturesSource.contains("state.statusText = change.statusText.value"))
+        #expect(setupStatusFeature.contains("problemMessage: self.gatewayProblemMessage.value"))
+        #expect(setupStatusFeature.contains("setupStatusText: self.statusText.value"))
+        #expect(setupStatusFeature.contains("gatewayStatusText: self.gatewayStatusText.value"))
+        #expect(setupStatusFeature.contains("state.gatewayProblemMessage = sync.problemMessage"))
+        #expect(setupStatusFeature.contains("state.gatewayStatusText = sync.gatewayStatusText"))
+        #expect(setupStatusFeature
+            .contains("state.statusText = .init(value: Self.qrScannerErrorStatusText(error.message.value))"))
+        #expect(setupStatusFeature.contains("state.statusText = change.statusText"))
         #expect(gatewaySetupFeaturesSource.contains("case gatewayStatusSynced(GatewayStatusSync)"))
         #expect(gatewaySetupFeaturesSource.contains("case qrScannerErrorReceived(QRScannerError)"))
         #expect(gatewaySetupFeaturesSource.contains("case statusChanged(SetupStatusChange)"))
         #expect(gatewaySetupFeaturesSource.contains("private static func qrScannerErrorStatusText(_ error: String)"))
+        #expect(settingsSource.contains("self.gatewaySetupStatusStore.statusText.value"))
+        #expect(!setupStatusFeature.contains("var gatewayProblemMessage: String?"))
+        #expect(!setupStatusFeature.contains("var gatewayStatusText = \"\""))
+        #expect(!setupStatusFeature.contains("var statusText: String?"))
+        #expect(!setupStatusFeature.contains("state.statusText = change.statusText.value"))
         #expect(settingsSource.contains("struct QRScannerError: Equatable, Sendable"))
         #expect(supportSource.contains("struct SettingsPresentationScannerErrorMessage: Equatable, Sendable"))
         #expect(settingsSource.contains("var message: SettingsPresentationScannerErrorMessage"))
