@@ -248,7 +248,7 @@ struct AgentSkillFilterFeatureTests {
         }
 
         await store.send(.searchTextChanged(.init(text: .init(value: "gateway")))) {
-            $0.searchText = "gateway"
+            $0.searchText = .init(value: "gateway")
         }
     }
 
@@ -264,14 +264,14 @@ struct AgentSkillFilterFeatureTests {
 
     @Test func `clear search leaves selected status filter alone`() async {
         var initialState = AgentSkillFilterFeature.State()
-        initialState.searchText = "memory"
+        initialState.searchText = .init(value: "memory")
         initialState.statusFilter = .blocked
         let store = TestStore(initialState: initialState) {
             AgentSkillFilterFeature()
         }
 
         await store.send(.clearSearchTapped) {
-            $0.searchText = ""
+            $0.searchText = .init(value: "")
         }
     }
 }

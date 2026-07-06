@@ -189,6 +189,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "@Reducer\nstruct AgentClawHubSearchFeature",
             to: "@Reducer\nstruct AgentOverviewLoadFeature")
+        let skillFilterFeature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentSkillFilterFeature",
+            to: "// swiftformat:disable redundantSendable\nstruct AgentClawHubInstallSlug")
         let skillPolicyMutationFeature = try Self.extract(
             source,
             from: "@Reducer\nstruct AgentSkillPolicyMutationFeature",
@@ -325,10 +329,18 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains(
             "struct InstallFailure: Equatable, Sendable {\n            var slug: String\n            var message: String"))
         #expect(skillsSource.contains("text: self.skillFilterBinding"))
+        #expect(source.contains("var skillFilter: String {\n        self.skillFilterStore.searchText.value"))
+        #expect(source.contains("get: { self.skillFilterStore.searchText.value }"))
         #expect(source.contains("set: { self.skillFilterStore.send(.searchTextChanged(.init(text: .init(value: $0)))) }"))
         #expect(source.contains("struct AgentSkillFilterSearchText: Equatable, Sendable"))
+        #expect(skillFilterFeature.contains("var searchText = AgentSkillFilterSearchText(value: \"\")"))
         #expect(source.contains("var text: AgentSkillFilterSearchText"))
-        #expect(source.contains("state.searchText = change.text.value"))
+        #expect(skillFilterFeature.contains("state.searchText = change.text"))
+        #expect(skillFilterFeature.contains("state.searchText = .init(value: \"\")"))
+        #expect(!skillFilterFeature.contains("var searchText = \"\""))
+        #expect(!source.contains("self.skillFilterStore.searchText\n"))
+        #expect(!source.contains("get: { self.skillFilterStore.searchText }"))
+        #expect(!skillFilterFeature.contains("state.searchText = change.text.value"))
         #expect(!source.contains(
             "struct SearchTextChange: Equatable, Sendable {\n            var text: String\n        }\n\n        case clearSearchTapped"))
         #expect(skillsSource.contains("selection: self.skillStatusFilterBinding"))

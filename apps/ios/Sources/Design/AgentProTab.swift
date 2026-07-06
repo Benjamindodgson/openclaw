@@ -235,12 +235,12 @@ struct AgentProTab: View {
     }
 
     var skillFilter: String {
-        self.skillFilterStore.searchText
+        self.skillFilterStore.searchText.value
     }
 
     var skillFilterBinding: Binding<String> {
         Binding(
-            get: { self.skillFilterStore.searchText },
+            get: { self.skillFilterStore.searchText.value },
             set: { self.skillFilterStore.send(.searchTextChanged(.init(text: .init(value: $0)))) })
     }
 
@@ -648,7 +648,7 @@ struct AgentSkillFilterFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var searchText = ""
+        var searchText = AgentSkillFilterSearchText(value: "")
         var statusFilter: AgentProTab.SkillStatusFilter = .all
     }
 
@@ -668,11 +668,11 @@ struct AgentSkillFilterFeature {
         Reduce { state, action in
             switch action {
             case .clearSearchTapped:
-                state.searchText = ""
+                state.searchText = .init(value: "")
                 return .none
 
             case let .searchTextChanged(change):
-                state.searchText = change.text.value
+                state.searchText = change.text
                 return .none
 
             case let .statusFilterChanged(statusFilter):
