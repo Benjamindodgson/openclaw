@@ -201,7 +201,7 @@ struct AgentProTab: View {
     }
 
     var overviewErrorText: String? {
-        self.overviewStore.errorText
+        self.overviewStore.errorText.value
     }
 
     var overviewLoading: Bool {
@@ -781,6 +781,10 @@ struct AgentClawHubSearchFeature {
 @Reducer
 struct AgentOverviewLoadFeature {
     // swiftformat:disable redundantSendable
+    struct AgentOverviewErrorText: Equatable, Sendable {
+        var value: String?
+    }
+
     struct AgentOverviewRefreshRequestID: Equatable, Sendable {
         var value: Int
     }
@@ -793,7 +797,7 @@ struct AgentOverviewLoadFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var overview: AgentOverviewSnapshot?
-        var errorText: String?
+        var errorText = AgentOverviewErrorText(value: nil)
         var isLoading = false
         var refreshRequest: RefreshRequest?
         var nextRefreshRequestID = 0
@@ -840,7 +844,7 @@ struct AgentOverviewLoadFeature {
             case let .refreshRequested(request):
                 guard request.gatewayConnection.isConnected else {
                     state.overview = nil
-                    state.errorText = nil
+                    state.errorText = .init(value: nil)
                     state.isLoading = false
                     state.refreshRequest = nil
                     return .none
@@ -856,12 +860,13 @@ struct AgentOverviewLoadFeature {
                     id: .init(value: state.nextRefreshRequestID),
                     activeAgentID: request.activeAgent.value)
                 state.isLoading = true
-                state.errorText = nil
+                state.errorText = .init(value: nil)
                 return .none
 
             case let .refreshFinished(result):
                 state.overview = result.snapshot
-                state.errorText = result.snapshot.hasAnyLiveData ? nil : "Live overview could not load yet."
+                state.errorText = .init(
+                    value: result.snapshot.hasAnyLiveData ? nil : "Live overview could not load yet.")
                 state.isLoading = false
                 if state.refreshRequest?.id == result.requestID {
                     state.refreshRequest = nil

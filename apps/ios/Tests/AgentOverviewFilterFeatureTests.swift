@@ -381,7 +381,7 @@ struct AgentOverviewLoadFeatureTests {
     @Test func `disconnected refresh clears stale overview state`() async {
         var initialState = AgentOverviewLoadFeature.State()
         initialState.overview = Self.snapshot(hasLiveData: true)
-        initialState.errorText = "old warning"
+        initialState.errorText = .init(value: "old warning")
         initialState.isLoading = true
         initialState.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
             id: .init(value: 1),
@@ -396,7 +396,7 @@ struct AgentOverviewLoadFeatureTests {
             activeAgent: .init(value: "mobile"))))
         {
             $0.overview = nil
-            $0.errorText = nil
+            $0.errorText = .init(value: nil)
             $0.isLoading = false
             $0.refreshRequest = nil
         }
@@ -439,7 +439,7 @@ struct AgentOverviewLoadFeatureTests {
 
         await store.send(.refreshFinished(.init(snapshot: snapshot, requestID: .init(value: 1)))) {
             $0.overview = snapshot
-            $0.errorText = "Live overview could not load yet."
+            $0.errorText = .init(value: "Live overview could not load yet.")
             $0.isLoading = false
         }
     }
