@@ -105,10 +105,10 @@ struct GatewayStatusBuilderTests {
             ChatViewModelLifecycleFeature()
         }
 
-        await store.send(.transportModeRecorded(.init(transportModeID: "gateway"))) {
+        await store.send(.transportModeRecorded(.init(transportModeID: .init(value: "gateway")))) {
             $0.transportModeID = "gateway"
         }
-        await store.send(.transportModeRecorded(.init(transportModeID: "demo"))) {
+        await store.send(.transportModeRecorded(.init(transportModeID: .init(value: "demo")))) {
             $0.transportModeID = "demo"
         }
     }
