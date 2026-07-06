@@ -32,8 +32,16 @@ struct RootPresentationFeature {
         }
     }
 
+    struct GatewayConnection: Equatable, Sendable {
+        var isConnected: Bool
+
+        init(isConnected: Bool = false) {
+            self.isConnected = isConnected
+        }
+    }
+
     struct StartupSnapshot: Equatable, Sendable {
-        var gatewayConnected: Bool
+        var gatewayConnection: GatewayConnection
         var hasConnectedOnce: Bool
         var onboardingComplete: Bool
         var hasExistingGatewayConfig: Bool
@@ -55,7 +63,7 @@ struct RootPresentationFeature {
     struct QuickSetupSnapshot: Equatable, Sendable {
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
-        var gatewayConnected: Bool
+        var gatewayConnection: GatewayConnection
         var hasExistingGatewayConfig: Bool
         var discoveredGatewayCount: DiscoveredGatewayCount
     }
@@ -143,7 +151,7 @@ struct RootPresentationFeature {
 
     @ObservableState
     struct State: Equatable, Sendable {
-        var gatewayConnected: Bool
+        var gatewayConnection: GatewayConnection
         var hasConnectedOnce: Bool
         var onboardingComplete: Bool
         var hasExistingGatewayConfig: Bool
@@ -162,7 +170,7 @@ struct RootPresentationFeature {
         var presentationCommand: PresentationCommand?
 
         init(
-            gatewayConnected: Bool = false,
+            gatewayConnection: GatewayConnection = .init(),
             hasConnectedOnce: Bool = false,
             onboardingComplete: Bool = false,
             hasExistingGatewayConfig: Bool = false,
@@ -173,7 +181,7 @@ struct RootPresentationFeature {
             presentedSheet: PresentedSheet? = nil,
             discoveredGatewayCount: DiscoveredGatewayCount = .init())
         {
-            self.gatewayConnected = gatewayConnected
+            self.gatewayConnection = gatewayConnection
             self.hasConnectedOnce = hasConnectedOnce
             self.onboardingComplete = onboardingComplete
             self.hasExistingGatewayConfig = hasExistingGatewayConfig
@@ -226,7 +234,7 @@ struct RootPresentationFeature {
         mutating func refreshPresentation() {
             self.startupRoute = Self.startupRoute(
                 snapshot: RootPresentationFeature.StartupSnapshot(
-                    gatewayConnected: self.gatewayConnected,
+                    gatewayConnection: self.gatewayConnection,
                     hasConnectedOnce: self.hasConnectedOnce,
                     onboardingComplete: self.onboardingComplete,
                     hasExistingGatewayConfig: self.hasExistingGatewayConfig,
@@ -235,14 +243,14 @@ struct RootPresentationFeature {
                 snapshot: RootPresentationFeature.QuickSetupSnapshot(
                     quickSetupDismissed: self.quickSetupDismissed,
                     showOnboarding: self.showOnboarding,
-                    gatewayConnected: self.gatewayConnected,
+                    gatewayConnection: self.gatewayConnection,
                     hasExistingGatewayConfig: self.hasExistingGatewayConfig,
                     discoveredGatewayCount: self.discoveredGatewayCount),
                 hasPresentedSheet: self.presentedSheet != nil)
         }
 
         mutating func apply(startupSnapshot snapshot: RootPresentationFeature.StartupSnapshot) {
-            self.gatewayConnected = snapshot.gatewayConnected
+            self.gatewayConnection = snapshot.gatewayConnection
             self.hasConnectedOnce = snapshot.hasConnectedOnce
             self.onboardingComplete = snapshot.onboardingComplete
             self.hasExistingGatewayConfig = snapshot.hasExistingGatewayConfig
@@ -254,7 +262,7 @@ struct RootPresentationFeature {
             snapshot: RootPresentationFeature.StartupSnapshot)
             -> RootTabs.StartupPresentationRoute
         {
-            if snapshot.gatewayConnected {
+            if snapshot.gatewayConnection.isConnected {
                 return .none
             }
             if snapshot.shouldPresentOnLaunch || !snapshot.hasConnectedOnce || !snapshot.onboardingComplete {
@@ -274,7 +282,7 @@ struct RootPresentationFeature {
             guard !snapshot.quickSetupDismissed else { return false }
             guard !snapshot.showOnboarding else { return false }
             guard !hasPresentedSheet else { return false }
-            guard !snapshot.gatewayConnected else { return false }
+            guard !snapshot.gatewayConnection.isConnected else { return false }
             guard !snapshot.hasExistingGatewayConfig else { return false }
             return snapshot.discoveredGatewayCount.hasDiscoveredGateway
         }
@@ -341,7 +349,7 @@ struct RootPresentationFeature {
                 let snapshot = change.snapshot
                 state.quickSetupDismissed = snapshot.quickSetupDismissed
                 state.showOnboarding = snapshot.showOnboarding
-                state.gatewayConnected = snapshot.gatewayConnected
+                state.gatewayConnection = snapshot.gatewayConnection
                 state.hasExistingGatewayConfig = snapshot.hasExistingGatewayConfig
                 state.discoveredGatewayCount = snapshot.discoveredGatewayCount
                 state.refreshPresentation()

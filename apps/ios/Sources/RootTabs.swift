@@ -1062,7 +1062,7 @@ extension RootTabs {
 
     private func makeStartupSnapshot(shouldPresentOnLaunch: Bool) -> RootPresentationFeature.StartupSnapshot {
         RootPresentationFeature.StartupSnapshot(
-            gatewayConnected: self.appModel.gatewayServerName != nil,
+            gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
             hasConnectedOnce: self.hasConnectedOnce,
             onboardingComplete: self.onboardingComplete,
             hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
@@ -1121,7 +1121,7 @@ extension RootTabs {
             RootPresentationFeature.QuickSetupSnapshotChange(snapshot: RootPresentationFeature.QuickSetupSnapshot(
                 quickSetupDismissed: self.quickSetupDismissed,
                 showOnboarding: self.presentationStore.showOnboarding,
-                gatewayConnected: self.appModel.gatewayServerName != nil,
+                gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
                 hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
                 discoveredGatewayCount: .init(value: self.gatewayController.gateways.count)))))
     }
