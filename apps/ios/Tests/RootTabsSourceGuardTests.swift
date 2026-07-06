@@ -101,6 +101,19 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("state.didApplyInitialDestination = true"))
     }
 
+    @Test func `gateway problem copy feedback is typed reducer state`() throws {
+        let source = try String(contentsOf: Self.gatewayProblemSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct GatewayProblemCopyFeedbackText: Equatable, Sendable"))
+        #expect(source.contains("var copyFeedback: GatewayProblemCopyFeedbackText?"))
+        #expect(source.contains("state.copyFeedback = .init(value: \"Copied request ID\")"))
+        #expect(source.contains("state.copyFeedback = .init(value: \"Copied command\")"))
+        #expect(source.contains("Text(copyFeedback.value)"))
+        #expect(!source.contains("var copyFeedback: String?"))
+        #expect(!source.contains("state.copyFeedback = \"Copied request ID\""))
+        #expect(!source.contains("state.copyFeedback = \"Copied command\""))
+    }
+
     @Test func `sidebar keeps navigation model destination only`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
@@ -5703,6 +5716,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Gateway/GatewayQuickSetupSheet.swift")
+    }
+
+    private static func gatewayProblemSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Gateway/GatewayProblemView.swift")
     }
 
     private static func gatewayConnectionControllerSourceURL() -> URL {

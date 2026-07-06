@@ -11,7 +11,7 @@ struct GatewayProblemDetailsFeatureTests {
         }
 
         await store.send(.copyRequestIDButtonTapped(.init(requestID: .init(value: "req-123")))) {
-            $0.copyFeedback = "Copied request ID"
+            $0.copyFeedback = .init(value: "Copied request ID")
         }
         await store.finish()
 
@@ -25,7 +25,7 @@ struct GatewayProblemDetailsFeatureTests {
         }
 
         await store.send(.copyCommandButtonTapped(.init(command: .init(value: "openclaw gateway approve req-123")))) {
-            $0.copyFeedback = "Copied command"
+            $0.copyFeedback = .init(value: "Copied command")
         }
         await store.finish()
 
