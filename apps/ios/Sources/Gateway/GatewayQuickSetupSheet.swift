@@ -2,9 +2,14 @@ import ComposableArchitecture
 import OpenClawKit
 import SwiftUI
 
-struct GatewayQuickSetupConnectFailure: Equatable {
-    var message: String
+// swiftformat:disable redundantSendable
+struct GatewayQuickSetupConnectFailureMessage: Equatable, Sendable { var value: String }
+
+struct GatewayQuickSetupConnectFailure: Equatable, Sendable {
+    var message: GatewayQuickSetupConnectFailureMessage
 }
+
+// swiftformat:enable redundantSendable
 
 struct GatewayQuickSetupClient {
     var connect: @Sendable @MainActor (GatewayDiscoveryModel.DiscoveredGateway) async
@@ -29,7 +34,7 @@ extension GatewayQuickSetupClient: DependencyKey {
         GatewayQuickSetupClient(
             connect: { candidate in
                 let result = await gatewayController.connectWithDiagnostics(candidate)
-                return result.failure.map { .init(message: $0.message) }
+                return result.failure.map { .init(message: .init(value: $0.message)) }
             },
             trustRotatedGatewayCertificate: { problem in
                 await gatewayController.trustRotatedGatewayCertificate(from: problem)
@@ -97,7 +102,7 @@ struct GatewayQuickSetupFeature {
 
             case let .connectResponse(response):
                 state.connecting = false
-                state.connectError = response.failure?.message
+                state.connectError = response.failure?.message.value
                 return .none
 
             case .gatewayProblemDetailsButtonTapped:
