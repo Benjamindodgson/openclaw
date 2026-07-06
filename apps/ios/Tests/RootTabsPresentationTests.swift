@@ -276,21 +276,21 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.snapshotChanged(RootIdleTimerFeature.Snapshot(
-            isSceneActive: true,
-            preventSleep: false,
-            talkModeEnabled: false)))
+            sceneActivity: .init(isActive: true),
+            preventSleep: .init(isEnabled: false),
+            talkMode: .init(isEnabled: false))))
         await store.finish()
 
         await store.send(.snapshotChanged(RootIdleTimerFeature.Snapshot(
-            isSceneActive: true,
-            preventSleep: true,
-            talkModeEnabled: false)))
+            sceneActivity: .init(isActive: true),
+            preventSleep: .init(isEnabled: true),
+            talkMode: .init(isEnabled: false))))
         await store.finish()
 
         await store.send(.snapshotChanged(RootIdleTimerFeature.Snapshot(
-            isSceneActive: false,
-            preventSleep: true,
-            talkModeEnabled: true)))
+            sceneActivity: .init(isActive: false),
+            preventSleep: .init(isEnabled: true),
+            talkMode: .init(isEnabled: true))))
         await store.finish()
 
         await store.send(.disappeared)

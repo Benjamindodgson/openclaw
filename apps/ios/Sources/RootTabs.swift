@@ -882,8 +882,8 @@ struct RootTabs: View {
     private func makeIdleTimerSnapshot() -> RootIdleTimerFeature.Snapshot {
         RootIdleTimerFeature.Snapshot(
             scenePhase: self.scenePhase,
-            preventSleep: self.preventSleep,
-            talkModeEnabled: self.appModel.talkMode.isEnabled)
+            preventSleep: .init(isEnabled: self.preventSleep),
+            talkMode: .init(isEnabled: self.appModel.talkMode.isEnabled))
     }
 
     private func updateCanvasState() {

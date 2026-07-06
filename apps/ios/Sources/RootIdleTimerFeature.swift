@@ -33,10 +33,14 @@ struct RootIdleTimerFeature {
     @ObservableState
     struct State: Equatable, Sendable {}
 
+    struct SceneActivity: Equatable, Sendable { var isActive: Bool }
+    struct PreventSleepPreference: Equatable, Sendable { var isEnabled: Bool }
+    struct TalkModeEnabled: Equatable, Sendable { var isEnabled: Bool }
+
     struct Snapshot: Equatable, Sendable {
-        var isSceneActive: Bool
-        var preventSleep: Bool
-        var talkModeEnabled: Bool
+        var sceneActivity: SceneActivity
+        var preventSleep: PreventSleepPreference
+        var talkMode: TalkModeEnabled
     }
 
     enum Action: Equatable, Sendable {
@@ -57,7 +61,8 @@ struct RootIdleTimerFeature {
 
             switch action {
             case let .snapshotChanged(snapshot):
-                let isDisabled = snapshot.isSceneActive && (snapshot.preventSleep || snapshot.talkModeEnabled)
+                let isDisabled = snapshot.sceneActivity.isActive &&
+                    (snapshot.preventSleep.isEnabled || snapshot.talkMode.isEnabled)
                 return .run { _ in
                     try Task.checkCancellation()
                     await client.setIdleTimerDisabled(isDisabled)
@@ -73,10 +78,14 @@ struct RootIdleTimerFeature {
 }
 
 extension RootIdleTimerFeature.Snapshot {
-    init(scenePhase: ScenePhase, preventSleep: Bool, talkModeEnabled: Bool) {
+    init(
+        scenePhase: ScenePhase,
+        preventSleep: RootIdleTimerFeature.PreventSleepPreference,
+        talkMode: RootIdleTimerFeature.TalkModeEnabled)
+    {
         self.init(
-            isSceneActive: scenePhase == .active,
+            sceneActivity: .init(isActive: scenePhase == .active),
             preventSleep: preventSleep,
-            talkModeEnabled: talkModeEnabled)
+            talkMode: talkMode)
     }
 }
