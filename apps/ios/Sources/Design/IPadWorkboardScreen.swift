@@ -544,7 +544,7 @@ struct IPadWorkboardScreen: View {
         [
             self.canRead ? "connected" : "offline",
             self.scenePhase == .active ? "active" : "inactive",
-            self.store.selectedBoardID.isEmpty ? "all" : self.store.selectedBoardID,
+            self.store.selectedBoardID.value.isEmpty ? "all" : self.store.selectedBoardID.value,
         ].joined(separator: ":")
     }
 

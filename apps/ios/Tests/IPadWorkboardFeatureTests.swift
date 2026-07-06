@@ -74,7 +74,7 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.boardScopeChanged(.init(boardID: .init(value: " planning ")))) {
-            $0.selectedBoardID = "planning"
+            $0.selectedBoardID = .init(value: "planning")
         }
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
             $0.isRefreshing = true
@@ -102,7 +102,7 @@ struct IPadWorkboardFeatureTests {
         let currentCard = Self.card(id: "current", status: "todo", position: 10, boardID: "current")
         let staleCard = Self.card(id: "stale", status: "done", position: 20, boardID: "old")
         var initialState = IPadWorkboardFeature.State()
-        initialState.selectedBoardID = "current"
+        initialState.selectedBoardID = .init(value: "current")
         initialState.activeRefreshBoardID = .init(value: "old")
         initialState.cards = [currentCard]
         initialState.isRefreshing = true
@@ -157,7 +157,7 @@ struct IPadWorkboardFeatureTests {
         initialState.cards = [existing]
         initialState.statuses = ["todo", "ready"]
         initialState.selectedStatus = "ready"
-        initialState.selectedBoardID = "planning"
+        initialState.selectedBoardID = .init(value: "planning")
         initialState.presentedSheet = .create
         initialState.draftTitle = "  New card  "
         initialState.draftNotes = " notes "
