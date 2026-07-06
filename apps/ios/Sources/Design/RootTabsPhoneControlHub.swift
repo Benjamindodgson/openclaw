@@ -17,9 +17,10 @@ struct RootTabsPhoneControlHubFeature {
             var presentation: RootTabsPhoneControlHubPresentationState
         }
 
-        struct InitialDestinationAppearance: Equatable, Sendable {
-            var destination: RootTabs.SidebarDestination?
-            var opensRootTab: Bool
+        enum InitialDestinationAppearance: Equatable, Sendable {
+            case none
+            case detail(RootTabs.SidebarDestination)
+            case rootTab(RootTabs.SidebarDestination)
         }
 
         struct NavigationPathChange: Equatable, Sendable {
@@ -51,14 +52,19 @@ struct RootTabsPhoneControlHubFeature {
             case let .initialDestinationAppeared(appearance):
                 guard !state.didApplyInitialDestination else { return .none }
                 state.didApplyInitialDestination = true
-                let initialDestination = appearance.destination
-                guard let initialDestination, initialDestination != .overview else { return .none }
-                guard !appearance.opensRootTab else {
+
+                switch appearance {
+                case .none:
+                    return .none
+
+                case let .detail(destination):
+                    state.navigationPath = [destination]
+                    return .none
+
+                case .rootTab:
                     state.navigationPath = []
                     return .none
                 }
-                state.navigationPath = [initialDestination]
-                return .none
 
             case let .navigationPathChanged(change):
                 state.navigationPath = change.path
@@ -342,14 +348,16 @@ struct RootTabsPhoneControlHub: View {
 
     private func applyInitialDestinationIfNeeded() {
         guard !self.store.didApplyInitialDestination else { return }
-        let shouldOpenRoot = self.initialDestination.map(self.opensRootTab) ?? false
-        self.store.send(.initialDestinationAppeared(.init(
-            destination: self.initialDestination,
-            opensRootTab: shouldOpenRoot)))
-        guard let initialDestination, initialDestination != .overview else { return }
-        if shouldOpenRoot {
+        let appearance = self.initialDestinationAppearance
+        self.store.send(.initialDestinationAppeared(appearance))
+        if case let .rootTab(initialDestination) = appearance {
             self.openRootDestination(initialDestination)
         }
+    }
+
+    private var initialDestinationAppearance: RootTabsPhoneControlHubFeature.Action.InitialDestinationAppearance {
+        guard let initialDestination, initialDestination != .overview else { return .none }
+        return self.opensRootTab(initialDestination) ? .rootTab(initialDestination) : .detail(initialDestination)
     }
 
     private var currentPresentation: RootTabsPhoneControlHubPresentationState {

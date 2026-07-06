@@ -1217,6 +1217,10 @@ struct RootTabsSourceGuardTests {
         let openRange = try #require(handoff.range(of: "self.openRootDestination(destination)"))
 
         #expect(source.contains("NavigationStack(path: self.navigationPathBinding)"))
+        #expect(source.contains("enum InitialDestinationAppearance: Equatable, Sendable"))
+        #expect(source.contains("case detail(RootTabs.SidebarDestination)"))
+        #expect(source.contains("case rootTab(RootTabs.SidebarDestination)"))
+        #expect(!source.contains("var opensRootTab: Bool"))
         #expect(source.contains("case navigationPathChanged(NavigationPathChange)"))
         #expect(source.contains("set: { self.store.send(.navigationPathChanged(.init(path: $0))) }"))
         #expect(!source.contains("self.openRootDestination(.gateway)"))
