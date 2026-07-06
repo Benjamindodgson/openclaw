@@ -739,32 +739,32 @@ extension SettingsProTab {
     }
 
     var manualGatewayEnabled: Bool {
-        self.manualGatewayEndpointStore.manualGatewayEnabled
+        self.manualGatewayEndpointStore.manualGatewayEnabled.value
     }
 
     var manualGatewayHost: String {
-        self.manualGatewayEndpointStore.manualGatewayHost
+        self.manualGatewayEndpointStore.manualGatewayHost.value
     }
 
     var manualGatewayTLS: Bool {
-        self.manualGatewayEndpointStore.manualGatewayTLS
+        self.manualGatewayEndpointStore.manualGatewayTLS.value
     }
 
     var manualGatewayEnabledBinding: Binding<Bool> {
         Binding(
-            get: { self.manualGatewayEndpointStore.manualGatewayEnabled },
+            get: { self.manualGatewayEndpointStore.manualGatewayEnabled.value },
             set: { self.updateManualGatewayEnabled($0) })
     }
 
     var manualGatewayHostBinding: Binding<String> {
         Binding(
-            get: { self.manualGatewayEndpointStore.manualGatewayHost },
+            get: { self.manualGatewayEndpointStore.manualGatewayHost.value },
             set: { self.updateManualGatewayHost($0) })
     }
 
     var manualGatewayTLSBinding: Binding<Bool> {
         Binding(
-            get: { self.manualGatewayEndpointStore.manualGatewayTLS },
+            get: { self.manualGatewayEndpointStore.manualGatewayTLS.value },
             set: { self.updateManualGatewayTLS($0) })
     }
 
