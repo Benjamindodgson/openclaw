@@ -271,7 +271,7 @@ struct IPadWorkboardFeatureTests {
                 cardsResponse: response)))))
         {
             $0.isDispatching = false
-            $0.dispatchSummaryText = "1 dispatched: 1 started."
+            $0.dispatchSummaryText = .init(value: "1 dispatched: 1 started.")
             $0.cards = [refreshed]
             $0.statuses = ["running"]
             $0.knownBoardIDs = ["default"]

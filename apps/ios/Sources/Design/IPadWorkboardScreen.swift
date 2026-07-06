@@ -153,7 +153,7 @@ struct IPadWorkboardScreen: View {
                 }
 
                 if let dispatchSummaryText = self.store.dispatchSummaryText {
-                    Text(dispatchSummaryText)
+                    Text(dispatchSummaryText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
@@ -202,7 +202,7 @@ struct IPadWorkboardScreen: View {
                 }
 
                 if let dispatchSummaryText = self.store.dispatchSummaryText {
-                    Text(dispatchSummaryText)
+                    Text(dispatchSummaryText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
