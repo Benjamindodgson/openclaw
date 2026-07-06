@@ -1706,7 +1706,7 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings notifications action button requests relay disclosure when hosted relay is active`() async {
         var initialState = SettingsNotificationFeature.State()
         initialState.status = .notSet
-        initialState.usesOpenClawHostedRelay = true
+        initialState.usesOpenClawHostedRelay = .init(value: true)
         let store = TestStore(initialState: initialState) {
             SettingsNotificationFeature()
         }
@@ -1754,14 +1754,14 @@ struct SettingsNavigationFeatureTests {
             usesOpenClawHostedRelay: .init(value: true),
             hostedRelayHost: .init(value: "relay.example.com"))))
         {
-            $0.usesOpenClawHostedRelay = true
+            $0.usesOpenClawHostedRelay = .init(value: true)
             $0.hostedRelayHost = .init(value: "relay.example.com")
         }
         await store.send(.relayConfigSynced(.init(
             usesOpenClawHostedRelay: .init(value: false),
             hostedRelayHost: .init(value: nil))))
         {
-            $0.usesOpenClawHostedRelay = false
+            $0.usesOpenClawHostedRelay = .init(value: false)
             $0.hostedRelayHost = .init(value: "ios-push-relay.openclaw.ai")
         }
     }
@@ -1773,7 +1773,7 @@ struct SettingsNavigationFeatureTests {
         #expect(state.relayDisclosureMessage ==
             "Enabling this sends delivery data through OpenClaw's hosted push relay.")
 
-        state.usesOpenClawHostedRelay = true
+        state.usesOpenClawHostedRelay = .init(value: true)
         state.hostedRelayHost = .init(value: "ios-push-relay-sandbox.openclaw.ai")
         #expect(state.hostedRelayHostText == "ios-push-relay-sandbox.openclaw.ai")
 

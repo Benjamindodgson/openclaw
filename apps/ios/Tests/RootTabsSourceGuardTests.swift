@@ -4139,6 +4139,7 @@ struct RootTabsSourceGuardTests {
         #expect(notificationSource.contains("struct RelayConfigSync: Equatable, Sendable"))
         #expect(notificationSource.contains("struct HostedRelayEnabled: Equatable, Sendable"))
         #expect(notificationSource.contains("struct HostedRelayHost: Equatable, Sendable"))
+        #expect(notificationSource.contains("var usesOpenClawHostedRelay = Action.HostedRelayEnabled(value: false)"))
         #expect(notificationSource.contains("var usesOpenClawHostedRelay: HostedRelayEnabled"))
         #expect(notificationSource.contains("var hostedRelayHost: HostedRelayHost"))
         #expect(notificationSource.contains("private static let defaultHostedRelayHost = \"ios-push-relay.openclaw.ai\""))
@@ -4155,7 +4156,10 @@ struct RootTabsSourceGuardTests {
         #expect(notificationSource.contains("state.actionRequest = .openSettings"))
         #expect(notificationSource
             .contains(
-                "state.actionRequest = state.usesOpenClawHostedRelay ? .showRelayDisclosure : .requestAuthorization"))
+                "state.actionRequest = state.usesOpenClawHostedRelay.value ? .showRelayDisclosure : .requestAuthorization"))
+        #expect(notificationSource.contains("state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay"))
+        #expect(!notificationSource.contains("var usesOpenClawHostedRelay = false"))
+        #expect(!notificationSource.contains("state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay.value"))
         #expect(notificationSource.contains("case notificationSettingsOpenRequested"))
         #expect(notificationSource.contains("await registrationClient.openNotificationSettings()"))
         #expect(actionsSource.contains("self.notificationStore.send(.actionButtonTapped)"))

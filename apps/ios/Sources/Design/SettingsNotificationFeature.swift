@@ -98,7 +98,7 @@ struct SettingsNotificationFeature {
         var isRequestingAuthorization = false
         var status: SettingsNotificationStatus = .checking
         var statusRefreshResult: SettingsNotificationStatus?
-        var usesOpenClawHostedRelay = false
+        var usesOpenClawHostedRelay = Action.HostedRelayEnabled(value: false)
 
         var actionText: String {
             self.status.actionTitle
@@ -141,7 +141,7 @@ struct SettingsNotificationFeature {
         }
 
         var relayDetail: String {
-            if self.usesOpenClawHostedRelay {
+            if self.usesOpenClawHostedRelay.value {
                 return """
                 This build uses OpenClaw's hosted push relay at \(self.hostedRelayHostText) for notification \
                 delivery data.
@@ -205,7 +205,7 @@ struct SettingsNotificationFeature {
                     return .none
                 }
                 guard state.status == .notSet, !state.isRequestingAuthorization else { return .none }
-                state.actionRequest = state.usesOpenClawHostedRelay ? .showRelayDisclosure : .requestAuthorization
+                state.actionRequest = state.usesOpenClawHostedRelay.value ? .showRelayDisclosure : .requestAuthorization
                 return .none
 
             case .actionRequestHandled:
@@ -238,7 +238,7 @@ struct SettingsNotificationFeature {
                 }
 
             case let .relayConfigSynced(sync):
-                state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay.value
+                state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay
                 state.hostedRelayHost = .init(value: sync.hostedRelayHost.value ?? Self.defaultHostedRelayHost)
                 return .none
 
