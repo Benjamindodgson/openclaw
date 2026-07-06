@@ -41,7 +41,11 @@ struct RootTabsSidebarRegressionTests {
         #expect(reducer.contains("let didResolvePreviousLayout = state.didResolveLayout"))
         #expect(reducer.contains("state.didResolveLayout = true"))
         #expect(reducer.contains("if layoutModeDidChange && didResolvePreviousLayout"))
-        #expect(reducer.contains("guard resolution.force || !state.userOverridden else { return .none }"))
+        #expect(reducer.contains("struct LayoutResolutionForce: Equatable, Sendable"))
+        #expect(reducer.contains("var force: LayoutResolutionForce"))
+        #expect(reducer.contains("guard resolution.force.isForced || !state.userOverridden else { return .none }"))
+        #expect(!reducer.contains(
+            "struct LayoutModeResolution: Equatable, Sendable {\n        var layoutMode: RootTabs.SidebarLayoutMode\n        var force: Bool"))
     }
 
     @Test func `drawer dimming layer does not steal sidebar touches`() throws {

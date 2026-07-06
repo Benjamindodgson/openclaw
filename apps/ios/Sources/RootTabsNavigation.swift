@@ -389,13 +389,16 @@ struct RootPresentationFeature {
 @Reducer
 struct RootSidebarFeature {
     // swiftformat:disable redundantSendable
+    struct LayoutResolutionForce: Equatable, Sendable { var isForced: Bool }
+    struct SidebarVisibility: Equatable, Sendable { var isVisible: Bool }
+
     struct LayoutModeResolution: Equatable, Sendable {
         var layoutMode: RootTabs.SidebarLayoutMode
-        var force: Bool
+        var force: LayoutResolutionForce
     }
 
     struct VisibilityChange: Equatable, Sendable {
-        var isVisible: Bool
+        var visibility: SidebarVisibility
     }
 
     @ObservableState
@@ -439,7 +442,7 @@ struct RootSidebarFeature {
                 if layoutModeDidChange && didResolvePreviousLayout {
                     state.userOverridden = false
                 }
-                guard resolution.force || !state.userOverridden else { return .none }
+                guard resolution.force.isForced || !state.userOverridden else { return .none }
                 state.isVisible = State.preferredVisibility(layoutMode: layoutMode)
                 return .none
 
@@ -454,7 +457,7 @@ struct RootSidebarFeature {
                 return .none
 
             case let .visibilityChanged(change):
-                state.isVisible = change.isVisible
+                state.isVisible = change.visibility.isVisible
                 return .none
             }
         }
