@@ -194,14 +194,14 @@ struct SettingsManualGatewayEndpointFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var manualConnectionResult: ManualConnectionResult?
-        var manualGatewayEnabled = false
-        var manualGatewayHost = ""
-        var manualGatewayTLS = true
+        var manualGatewayEnabled = Action.ManualGatewayEnabled(value: false)
+        var manualGatewayHost = Action.ManualGatewayHost(value: "")
+        var manualGatewayTLS = Action.ManualGatewayTLS(value: true)
         var preflightResult: GatewayPreflightResult?
 
         func tailnetWarningText(hasTailnetIPv4: Bool) -> String? {
             Self.tailnetWarningText(
-                host: self.manualGatewayHost,
+                host: self.manualGatewayHost.value,
                 hasTailnetIPv4: hasTailnetIPv4)
         }
 
@@ -316,19 +316,19 @@ struct SettingsManualGatewayEndpointFeature {
 
             switch action {
             case .endpointClearedForOnboardingReset:
-                state.manualGatewayEnabled = false
-                state.manualGatewayHost = ""
+                state.manualGatewayEnabled = .init(value: false)
+                state.manualGatewayHost = .init(value: "")
                 return .none
 
             case let .endpointSynced(sync):
-                state.manualGatewayEnabled = sync.enabled.value
-                state.manualGatewayHost = sync.host.value
-                state.manualGatewayTLS = sync.useTLS.value
+                state.manualGatewayEnabled = sync.enabled
+                state.manualGatewayHost = sync.host
+                state.manualGatewayTLS = sync.useTLS
                 return .none
 
             case let .manualConnectionRequested(request):
                 state.manualConnectionResult = nil
-                let host = state.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
+                let host = state.manualGatewayHost.value.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !host.isEmpty else {
                     state.manualConnectionResult = .failure(.init(message: Self.hostRequiredFailureMessage))
                     return .none
@@ -340,7 +340,7 @@ struct SettingsManualGatewayEndpointFeature {
                 state.manualConnectionResult = .request(ManualConnectionRequest(
                     host: .init(value: host),
                     port: .init(value: request.port.value),
-                    useTLS: .init(value: state.manualGatewayTLS)))
+                    useTLS: .init(value: state.manualGatewayTLS.value)))
                 return .none
 
             case .manualConnectionResultHandled:
@@ -372,20 +372,20 @@ struct SettingsManualGatewayEndpointFeature {
                 }
 
             case let .manualGatewayEnabledChanged(change):
-                state.manualGatewayEnabled = change.enabled.value
+                state.manualGatewayEnabled = change.enabled
                 return .none
 
             case let .manualGatewayHostChanged(change):
-                state.manualGatewayHost = change.draft.value
+                state.manualGatewayHost = .init(value: change.draft.value)
                 return .none
 
             case let .manualGatewayTLSChanged(change):
-                state.manualGatewayTLS = change.tls.value
+                state.manualGatewayTLS = change.tls
                 return .none
 
             case let .setupLinkApplied(application):
-                state.manualGatewayHost = application.host.value
-                state.manualGatewayTLS = application.useTLS.value
+                state.manualGatewayHost = application.host
+                state.manualGatewayTLS = application.useTLS
                 return .none
             }
         }

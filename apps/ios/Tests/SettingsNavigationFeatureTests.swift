@@ -1949,9 +1949,9 @@ struct SettingsNavigationFeatureTests {
             host: .init(value: "gateway.example.com"),
             useTLS: .init(value: false))))
         {
-            $0.manualGatewayEnabled = true
-            $0.manualGatewayHost = "gateway.example.com"
-            $0.manualGatewayTLS = false
+            $0.manualGatewayEnabled = .init(value: true)
+            $0.manualGatewayHost = .init(value: "gateway.example.com")
+            $0.manualGatewayTLS = .init(value: false)
         }
     }
 
@@ -1961,13 +1961,13 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualGatewayEnabledChanged(.init(enabled: .init(value: true)))) {
-            $0.manualGatewayEnabled = true
+            $0.manualGatewayEnabled = .init(value: true)
         }
         await store.send(.manualGatewayHostChanged(.init(draft: .init(value: "manual.example.com")))) {
-            $0.manualGatewayHost = "manual.example.com"
+            $0.manualGatewayHost = .init(value: "manual.example.com")
         }
         await store.send(.manualGatewayTLSChanged(.init(tls: .init(value: false)))) {
-            $0.manualGatewayTLS = false
+            $0.manualGatewayTLS = .init(value: false)
         }
     }
 
@@ -1989,7 +1989,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualGatewayHostChanged(.init(draft: .init(value: "  gateway.example.com  ")))) {
-            $0.manualGatewayHost = "  gateway.example.com  "
+            $0.manualGatewayHost = .init(value: "  gateway.example.com  ")
         }
 
         await store.send(.manualConnectionRequested(.init(
@@ -2005,7 +2005,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualGatewayTLSChanged(.init(tls: .init(value: false)))) {
-            $0.manualGatewayTLS = false
+            $0.manualGatewayTLS = .init(value: false)
         }
 
         await store.send(.manualConnectionRequested(.init(
@@ -2076,42 +2076,42 @@ struct SettingsNavigationFeatureTests {
             host: .init(value: "link.example.com"),
             useTLS: .init(value: true))))
         {
-            $0.manualGatewayHost = "link.example.com"
-            $0.manualGatewayTLS = true
+            $0.manualGatewayHost = .init(value: "link.example.com")
+            $0.manualGatewayTLS = .init(value: true)
         }
     }
 
     @Test func `settings manual gateway endpoint resolves tailnet warnings`() {
         var state = SettingsManualGatewayEndpointFeature.State()
 
-        state.manualGatewayHost = "gateway.example.com"
+        state.manualGatewayHost = .init(value: "gateway.example.com")
         #expect(state.tailnetWarningText(hasTailnetIPv4: false) == nil)
 
-        state.manualGatewayHost = "device.sample.ts.net"
+        state.manualGatewayHost = .init(value: "device.sample.ts.net")
         #expect(state.tailnetWarningText(hasTailnetIPv4: false) ==
             "This gateway is on your tailnet. Turn on Tailscale on this device, then tap Connect.")
         #expect(state.tailnetWarningText(hasTailnetIPv4: true) == nil)
 
-        state.manualGatewayHost = "100.64.1.2"
-        #expect(SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(state.manualGatewayHost))
+        state.manualGatewayHost = .init(value: "100.64.1.2")
+        #expect(SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(state.manualGatewayHost.value))
         #expect(state.tailnetWarningText(hasTailnetIPv4: false) != nil)
 
-        state.manualGatewayHost = "192.168.1.10"
-        #expect(!SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(state.manualGatewayHost))
+        state.manualGatewayHost = .init(value: "192.168.1.10")
+        #expect(!SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP(state.manualGatewayHost.value))
     }
 
     @Test func `settings manual gateway endpoint reset clears enabled and host only`() async {
         var initialState = SettingsManualGatewayEndpointFeature.State()
-        initialState.manualGatewayEnabled = true
-        initialState.manualGatewayHost = "manual.example.com"
-        initialState.manualGatewayTLS = false
+        initialState.manualGatewayEnabled = .init(value: true)
+        initialState.manualGatewayHost = .init(value: "manual.example.com")
+        initialState.manualGatewayTLS = .init(value: false)
         let store = TestStore(initialState: initialState) {
             SettingsManualGatewayEndpointFeature()
         }
 
         await store.send(.endpointClearedForOnboardingReset) {
-            $0.manualGatewayEnabled = false
-            $0.manualGatewayHost = ""
+            $0.manualGatewayEnabled = .init(value: false)
+            $0.manualGatewayHost = .init(value: "")
         }
     }
 
