@@ -720,7 +720,7 @@ extension AgentProTab {
         action: () async throws -> AgentSkillEditorMutationSummary) async
     {
         guard self.liveGatewayConnected else { return }
-        let key = skill.effectiveSkillKey
+        let key = AgentSkillEditorMutationKey(value: skill.effectiveSkillKey)
         self.skillEditorStore.send(.mutationStarted(.init(key: key)))
 
         do {

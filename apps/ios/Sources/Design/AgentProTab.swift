@@ -455,6 +455,7 @@ struct AgentSkillPolicyMutationFeature {
 }
 
 // swiftformat:disable redundantSendable
+struct AgentSkillEditorMutationKey: Equatable, Sendable { var value: String }
 struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -471,16 +472,16 @@ struct AgentSkillEditorFeature {
 
     enum Action: Equatable, Sendable {
         struct MutationKey: Equatable, Sendable {
-            var key: String
+            var key: AgentSkillEditorMutationKey
         }
 
         struct MutationFailure: Equatable, Sendable {
-            var key: String
+            var key: AgentSkillEditorMutationKey
             var message: AgentSkillEditorMutationFailureMessage
         }
 
         struct MutationSuccess: Equatable, Sendable {
-            var key: String
+            var key: AgentSkillEditorMutationKey
             var summary: AgentSkillEditorMutationSummary
         }
 
@@ -538,23 +539,23 @@ struct AgentSkillEditorFeature {
                 return .none
 
             case let .mutationStarted(mutation):
-                state.busyKeys.insert(mutation.key)
-                state.messages[mutation.key] = nil
+                state.busyKeys.insert(mutation.key.value)
+                state.messages[mutation.key.value] = nil
                 return .none
 
             case let .mutationSucceeded(result):
-                state.messages[result.key] = AgentProTab.SkillEditorMessage(
+                state.messages[result.key.value] = AgentProTab.SkillEditorMessage(
                     kind: .success,
                     text: result.summary.message.value)
                 return .none
 
             case let .mutationFinished(mutation):
-                state.busyKeys.remove(mutation.key)
+                state.busyKeys.remove(mutation.key.value)
                 return .none
 
             case let .mutationFailed(failure):
-                state.busyKeys.remove(failure.key)
-                state.messages[failure.key] = AgentProTab.SkillEditorMessage(
+                state.busyKeys.remove(failure.key.value)
+                state.messages[failure.key.value] = AgentProTab.SkillEditorMessage(
                     kind: .error,
                     text: failure.message.value)
                 return .none
