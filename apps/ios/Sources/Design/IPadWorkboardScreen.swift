@@ -158,7 +158,7 @@ struct IPadWorkboardScreen: View {
                         .foregroundStyle(OpenClawBrand.accent)
                 }
                 if let errorText = self.store.errorText {
-                    Text(errorText)
+                    Text(errorText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
                 }
@@ -207,7 +207,7 @@ struct IPadWorkboardScreen: View {
                         .foregroundStyle(OpenClawBrand.accent)
                 }
                 if let errorText = self.store.errorText {
-                    Text(errorText)
+                    Text(errorText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
                 }
@@ -513,7 +513,7 @@ struct IPadWorkboardScreen: View {
             }
             if let errorText = self.store.errorText {
                 Section {
-                    Text(errorText)
+                    Text(errorText.value)
                         .foregroundStyle(OpenClawBrand.warn)
                 }
             }

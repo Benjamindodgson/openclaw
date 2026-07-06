@@ -181,7 +181,7 @@ struct IPadWorkboardFeature {
         var draftTitle = IPadWorkboardDraftTitle(value: "")
         var draftNotes = IPadWorkboardDraftNotes(value: "")
         var isCreatingCard = false
-        var errorText: String?
+        var errorText: IPadWorkboardFailureMessage?
         var presentedSheet: IPadWorkboardSheet?
 
         var boardScopeLabel: String {
@@ -510,7 +510,7 @@ struct IPadWorkboardFeature {
 
                 case let .failure(error):
                     state.busyCardID = nil
-                    state.errorText = error.message
+                    state.errorText = .init(value: error.message)
                     return .none
                 }
 
@@ -529,7 +529,7 @@ struct IPadWorkboardFeature {
 
                 case let .failure(error):
                     if response.force, state.knownBoardIDs.isEmpty {
-                        state.errorText = error.message
+                        state.errorText = .init(value: error.message)
                     }
                     return .none
                 }
@@ -548,7 +548,7 @@ struct IPadWorkboardFeature {
 
             case let .createRequested(request):
                 if let message = state.createUnavailableMessage(canRead: request.canRead, canWrite: request.canWrite) {
-                    state.errorText = message
+                    state.errorText = .init(value: message)
                     return .none
                 }
 
@@ -586,7 +586,7 @@ struct IPadWorkboardFeature {
 
                 case let .failure(error):
                     state.isCreatingCard = false
-                    state.errorText = error.message
+                    state.errorText = .init(value: error.message)
                     return .none
                 }
 
@@ -622,7 +622,7 @@ struct IPadWorkboardFeature {
                     return .none
 
                 case let .failure(error):
-                    state.errorText = error.message
+                    state.errorText = .init(value: error.message)
                     return .none
                 }
 
@@ -660,7 +660,7 @@ struct IPadWorkboardFeature {
 
                 case let .failure(error):
                     state.busyCardID = nil
-                    state.errorText = error.message
+                    state.errorText = .init(value: error.message)
                     return .none
                 }
 
@@ -728,7 +728,7 @@ struct IPadWorkboardFeature {
 
                 case let .failure(error):
                     if response.force || state.cards.isEmpty {
-                        state.errorText = error.message
+                        state.errorText = .init(value: error.message)
                     }
                     return .none
                 }

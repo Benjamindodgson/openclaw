@@ -9,7 +9,7 @@ struct IPadWorkboardFeatureTests {
         var initialState = IPadWorkboardFeature.State()
         initialState.draftTitle = .init(value: "Old")
         initialState.draftNotes = .init(value: "Old notes")
-        initialState.errorText = "old error"
+        initialState.errorText = .init(value: "old error")
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature()
         }
@@ -137,7 +137,7 @@ struct IPadWorkboardFeatureTests {
             result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
         {
             $0.isRefreshing = false
-            $0.errorText = "workboard boom"
+            $0.errorText = .init(value: "workboard boom")
         }
     }
 
@@ -196,7 +196,7 @@ struct IPadWorkboardFeatureTests {
             result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
         {
             $0.isCreatingCard = false
-            $0.errorText = "workboard boom"
+            $0.errorText = .init(value: "workboard boom")
         }
     }
 

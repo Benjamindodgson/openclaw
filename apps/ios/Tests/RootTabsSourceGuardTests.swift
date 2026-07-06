@@ -1069,6 +1069,11 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("@Reducer\nstruct IPadWorkboardFeature"))
         #expect(source.contains("enum IPadWorkboardStoreFactory"))
         #expect(source.contains("struct IPadWorkboardFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("var errorText: IPadWorkboardFailureMessage?"))
+        #expect(source.contains("state.errorText = .init(value: error.message)"))
+        #expect(source.contains("state.errorText = .init(value: message)"))
+        #expect(source.contains("Text(errorText.value)"))
+        #expect(!source.contains("var errorText: String?"))
         #expect(source.contains(
             "struct Failure: Equatable, Sendable { var message: IPadWorkboardFailureMessage }"))
         #expect(source.contains("case failed(Failure)"))
