@@ -549,7 +549,7 @@ extension SettingsProTab {
     }
 
     func requestNotificationAuthorizationFromSettings() {
-        guard !self.notificationStore.isRequestingAuthorization else { return }
+        guard !self.notificationStore.isRequestingAuthorization.value else { return }
         self.pushEnrollmentConsentStore.send(.acceptDisclosure)
         self.notificationStore.send(.authorizationRequestRequested)
     }
