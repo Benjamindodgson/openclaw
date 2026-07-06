@@ -3,13 +3,20 @@ import Foundation
 import OpenClawKit
 import OpenClawProtocol
 
+// swiftformat:disable redundantSendable
+struct RootHomeCanvasPayloadJSON: Equatable, Sendable {
+    var value: String?
+}
+
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct RootHomeCanvasFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var payload: Payload?
-        var payloadJSON: String?
+        var payloadJSON = RootHomeCanvasPayloadJSON(value: nil)
     }
 
     struct Snapshot: Equatable, Sendable {
@@ -62,7 +69,7 @@ struct RootHomeCanvasFeature {
             case let .snapshotChanged(snapshot):
                 let payload = Self.payload(snapshot: snapshot)
                 state.payload = payload
-                state.payloadJSON = Self.payloadJSON(payload)
+                state.payloadJSON = .init(value: Self.payloadJSON(payload))
                 return .none
             }
         }

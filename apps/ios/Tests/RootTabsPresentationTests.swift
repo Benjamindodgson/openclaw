@@ -492,9 +492,9 @@ struct RootTabsPresentationTests {
 
         await store.send(.snapshotChanged(snapshot)) {
             $0.payload = expectedPayload
-            $0.payloadJSON = RootHomeCanvasFeature.payloadJSON(expectedPayload)
+            $0.payloadJSON = .init(value: RootHomeCanvasFeature.payloadJSON(expectedPayload))
         }
-        let payloadJSON = try #require(store.state.payloadJSON)
+        let payloadJSON = try #require(store.state.payloadJSON.value)
         let decodedPayload = try JSONDecoder().decode(
             RootHomeCanvasFeature.Payload.self,
             from: Data(payloadJSON.utf8))
@@ -539,9 +539,9 @@ struct RootTabsPresentationTests {
 
         await store.send(.snapshotChanged(snapshot)) {
             $0.payload = expectedPayload
-            $0.payloadJSON = RootHomeCanvasFeature.payloadJSON(expectedPayload)
+            $0.payloadJSON = .init(value: RootHomeCanvasFeature.payloadJSON(expectedPayload))
         }
-        let payloadJSON = try #require(store.state.payloadJSON)
+        let payloadJSON = try #require(store.state.payloadJSON.value)
         let decodedPayload = try JSONDecoder().decode(
             RootHomeCanvasFeature.Payload.self,
             from: Data(payloadJSON.utf8))

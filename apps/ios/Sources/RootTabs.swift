@@ -909,7 +909,7 @@ struct RootTabs: View {
 
     private func updateHomeCanvasState() {
         self.homeCanvasStore.send(.snapshotChanged(self.makeHomeCanvasSnapshot()))
-        self.appModel.screen.updateHomeCanvasState(json: self.homeCanvasStore.payloadJSON)
+        self.appModel.screen.updateHomeCanvasState(json: self.homeCanvasStore.payloadJSON.value)
     }
 
     private func makeHomeCanvasSnapshot() -> RootHomeCanvasFeature.Snapshot {
