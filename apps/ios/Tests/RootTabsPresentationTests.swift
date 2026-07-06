@@ -725,7 +725,7 @@ struct RootTabsPresentationTests {
 
         await store.send(.presentedSheetChanged(Self.presentedSheetChange(nil))) {
             $0.presentedSheet = nil
-            $0.shouldPresentQuickSetup = true
+            $0.quickSetupPresentationDecision = .init(shouldPresent: true)
         }
 
         await store.send(.quickSetupSnapshotChanged(Self.quickSetupSnapshotChange(
@@ -736,7 +736,7 @@ struct RootTabsPresentationTests {
             discoveredGatewayCount: 1)))
         {
             $0.onboardingPresentation = .init(isPresented: true)
-            $0.shouldPresentQuickSetup = false
+            $0.quickSetupPresentationDecision = .init(shouldPresent: false)
         }
     }
 

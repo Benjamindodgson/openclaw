@@ -112,6 +112,14 @@ struct RootPresentationFeature {
         var snapshot: QuickSetupSnapshot
     }
 
+    struct QuickSetupPresentationDecision: Equatable, Sendable {
+        var shouldPresent: Bool
+
+        init(shouldPresent: Bool = false) {
+            self.shouldPresent = shouldPresent
+        }
+    }
+
     struct SidebarGatewayStatusChange: Equatable, Sendable {
         var status: GatewayDisplayState
     }
@@ -221,7 +229,7 @@ struct RootPresentationFeature {
         var handledGatewaySetupRequestID: GatewaySetupRequestID
         var sidebarGatewayStatus: GatewayDisplayState
         var startupRoute: RootTabs.StartupPresentationRoute
-        var shouldPresentQuickSetup: Bool
+        var quickSetupPresentationDecision: QuickSetupPresentationDecision
         var presentationCommand: PresentationCommand?
 
         init(
@@ -251,7 +259,7 @@ struct RootPresentationFeature {
             self.handledGatewaySetupRequestID = .init()
             self.sidebarGatewayStatus = .disconnected
             self.startupRoute = .none
-            self.shouldPresentQuickSetup = false
+            self.quickSetupPresentationDecision = .init()
             self.presentationCommand = nil
             self.refreshPresentation()
         }
@@ -294,14 +302,14 @@ struct RootPresentationFeature {
                     onboardingCompletion: self.onboardingCompletion,
                     gatewayConfigPresence: self.gatewayConfigPresence,
                     launchOnboardingPresentation: self.launchOnboardingPresentation))
-            self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
+            self.quickSetupPresentationDecision = .init(shouldPresent: Self.shouldPresentQuickSetup(
                 snapshot: RootPresentationFeature.QuickSetupSnapshot(
                     quickSetupDismissal: self.quickSetupDismissal,
                     onboardingPresentation: self.onboardingPresentation,
                     gatewayConnection: self.gatewayConnection,
                     gatewayConfigPresence: self.gatewayConfigPresence,
                     discoveredGatewayCount: self.discoveredGatewayCount),
-                hasPresentedSheet: self.presentedSheet != nil)
+                hasPresentedSheet: self.presentedSheet != nil))
         }
 
         mutating func apply(startupSnapshot snapshot: RootPresentationFeature.StartupSnapshot) {
@@ -411,7 +419,7 @@ struct RootPresentationFeature {
                 state.gatewayConfigPresence = snapshot.gatewayConfigPresence
                 state.discoveredGatewayCount = snapshot.discoveredGatewayCount
                 state.refreshPresentation()
-                if state.shouldPresentQuickSetup {
+                if state.quickSetupPresentationDecision.shouldPresent {
                     state.presentedSheet = .quickSetup
                     state.refreshPresentation()
                 }
