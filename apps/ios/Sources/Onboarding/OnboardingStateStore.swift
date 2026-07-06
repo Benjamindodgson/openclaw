@@ -679,7 +679,12 @@ struct OnboardingQRPhotoImportFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var isImporting = false
+        enum ImportPhase: Equatable, Sendable {
+            case idle
+            case inFlight
+        }
+
+        var importPhase = ImportPhase.idle
         var result: ImportResult?
     }
 
@@ -707,17 +712,17 @@ struct OnboardingQRPhotoImportFeature {
         Reduce { state, action in
             switch action {
             case .imageLoadFailed:
-                state.isImporting = false
+                state.importPhase = .idle
                 state.result = .failure(.init(message: Self.imageLoadFailureMessage))
                 return .none
 
             case .importStarted:
-                state.isImporting = true
+                state.importPhase = .inFlight
                 state.result = nil
                 return .none
 
             case let .qrMessageDetected(detection):
-                state.isImporting = false
+                state.importPhase = .idle
                 state.result = Self.importResult(message: detection.message.value)
                 return .none
 
