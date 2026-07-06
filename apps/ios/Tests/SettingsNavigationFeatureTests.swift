@@ -409,8 +409,8 @@ struct SettingsNavigationFeatureTests {
             discoveryDebugLogsEnabled: .init(isEnabled: true),
             canvasDebugStatusEnabled: .init(isEnabled: true))))
         {
-            $0.discoveryDebugLogsEnabled = true
-            $0.canvasDebugStatusEnabled = true
+            $0.discoveryDebugLogs = .init(isEnabled: true)
+            $0.canvasDebugStatus = .init(isEnabled: true)
         }
     }
 
@@ -421,10 +421,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.discoveryDebugLogsChanged(.init(enabled: .init(isEnabled: true)))) {
-            $0.discoveryDebugLogsEnabled = true
+            $0.discoveryDebugLogs = .init(isEnabled: true)
         }
         await store.send(.canvasDebugStatusChanged(.init(enabled: .init(isEnabled: true)))) {
-            $0.canvasDebugStatusEnabled = true
+            $0.canvasDebugStatus = .init(isEnabled: true)
         }
         await store.finish()
 
