@@ -177,8 +177,8 @@ struct IPadWorkboardFeature {
         var selectedStatus = IPadWorkboardSelectedStatus(value: "active")
         var selectedBoardID = IPadWorkboardSelectedBoardID(value: "")
         var query = IPadWorkboardQuery(value: "")
-        var draftTitle = ""
-        var draftNotes = ""
+        var draftTitle = IPadWorkboardDraftTitle(value: "")
+        var draftNotes = IPadWorkboardDraftNotes(value: "")
         var isCreatingCard = false
         var errorText: String?
         var presentedSheet: IPadWorkboardSheet?
@@ -198,7 +198,7 @@ struct IPadWorkboardFeature {
         }
 
         var trimmedDraftTitle: String {
-            self.draftTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+            self.draftTitle.value.trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         func createUnavailableMessage(canRead: Bool, canWrite: Bool) -> String? {
@@ -514,8 +514,8 @@ struct IPadWorkboardFeature {
                 }
 
             case .beginCreateCardTapped:
-                state.draftTitle = ""
-                state.draftNotes = ""
+                state.draftTitle = .init(value: "")
+                state.draftNotes = .init(value: "")
                 state.errorText = nil
                 state.presentedSheet = .create
                 return .none
@@ -556,7 +556,7 @@ struct IPadWorkboardFeature {
                 let status = state.statuses.contains(state.selectedStatus.value) ? state.selectedStatus.value : "todo"
                 let params = IPadWorkboardCreateParams(
                     title: state.trimmedDraftTitle,
-                    notes: state.draftNotes.trimmingCharacters(in: .whitespacesAndNewlines),
+                    notes: state.draftNotes.value.trimmingCharacters(in: .whitespacesAndNewlines),
                     status: status,
                     priority: "normal",
                     labels: [],
@@ -577,8 +577,8 @@ struct IPadWorkboardFeature {
                 switch response.result {
                 case let .success(card):
                     state.isCreatingCard = false
-                    state.draftTitle = ""
-                    state.draftNotes = ""
+                    state.draftTitle = .init(value: "")
+                    state.draftNotes = .init(value: "")
                     state.presentedSheet = nil
                     state.replace(card)
                     return .none
@@ -626,11 +626,11 @@ struct IPadWorkboardFeature {
                 }
 
             case let .draftNotesChanged(change):
-                state.draftNotes = change.notes.value
+                state.draftNotes = change.notes
                 return .none
 
             case let .draftTitleChanged(change):
-                state.draftTitle = change.title.value
+                state.draftTitle = change.title
                 return .none
 
             case let .moveRequested(request):

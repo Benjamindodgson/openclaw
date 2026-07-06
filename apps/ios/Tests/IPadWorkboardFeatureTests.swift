@@ -7,16 +7,16 @@ import Testing
 struct IPadWorkboardFeatureTests {
     @Test func `begin create clears drafts and presents create sheet`() async {
         var initialState = IPadWorkboardFeature.State()
-        initialState.draftTitle = "Old"
-        initialState.draftNotes = "Old notes"
+        initialState.draftTitle = .init(value: "Old")
+        initialState.draftNotes = .init(value: "Old notes")
         initialState.errorText = "old error"
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature()
         }
 
         await store.send(.beginCreateCardTapped) {
-            $0.draftTitle = ""
-            $0.draftNotes = ""
+            $0.draftTitle = .init(value: "")
+            $0.draftNotes = .init(value: "")
             $0.errorText = nil
             $0.presentedSheet = .create
         }
@@ -28,10 +28,10 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.draftTitleChanged(.init(title: .init(value: "  Ship TCA  ")))) {
-            $0.draftTitle = "  Ship TCA  "
+            $0.draftTitle = .init(value: "  Ship TCA  ")
         }
         await store.send(.draftNotesChanged(.init(notes: .init(value: "notes")))) {
-            $0.draftNotes = "notes"
+            $0.draftNotes = .init(value: "notes")
         }
         await store.send(.queryChanged(.init(query: .init(value: "gateway")))) {
             $0.query = .init(value: "gateway")
@@ -48,7 +48,7 @@ struct IPadWorkboardFeatureTests {
         var state = IPadWorkboardFeature.State()
         #expect(state.createUnavailableMessage(canRead: true, canWrite: true) == "Enter a title to create a card.")
 
-        state.draftTitle = "Card"
+        state.draftTitle = .init(value: "Card")
         #expect(state.createUnavailableMessage(canRead: false, canWrite: false) ==
             "Connect from Settings to create, move, and dispatch cards.")
 
@@ -159,8 +159,8 @@ struct IPadWorkboardFeatureTests {
         initialState.selectedStatus = .init(value: "ready")
         initialState.selectedBoardID = .init(value: "planning")
         initialState.presentedSheet = .create
-        initialState.draftTitle = "  New card  "
-        initialState.draftNotes = " notes "
+        initialState.draftTitle = .init(value: "  New card  ")
+        initialState.draftNotes = .init(value: " notes ")
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: client)
         }
@@ -171,8 +171,8 @@ struct IPadWorkboardFeatureTests {
         }
         await store.receive(.createResponse(.init(result: .success(created)))) {
             $0.isCreatingCard = false
-            $0.draftTitle = ""
-            $0.draftNotes = ""
+            $0.draftTitle = .init(value: "")
+            $0.draftNotes = .init(value: "")
             $0.presentedSheet = nil
             $0.cards = [existing, created]
             $0.knownBoardIDs = ["planning"]
@@ -183,7 +183,7 @@ struct IPadWorkboardFeatureTests {
         var client = Self.failingClient()
         client.create = { _ in throw TestWorkboardFailure.failed }
         var initialState = IPadWorkboardFeature.State()
-        initialState.draftTitle = "New card"
+        initialState.draftTitle = .init(value: "New card")
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: client)
         }
