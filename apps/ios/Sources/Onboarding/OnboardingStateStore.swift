@@ -87,6 +87,8 @@ struct OnboardingGatewayPassword: Equatable, Sendable { var value: String }
 
 struct OnboardingQRMessage: Equatable, Sendable { var value: String? }
 
+struct OnboardingQRPhotoImportFailureMessage: Equatable, Sendable { var value: String }
+
 struct OnboardingSetupCode: Equatable, Sendable { var value: String }
 
 struct OnboardingManualHost: Equatable, Sendable { var value: String }
@@ -669,8 +671,10 @@ extension DependencyValues {
 
 @Reducer
 struct OnboardingQRPhotoImportFeature {
-    static let imageLoadFailureMessage = "Could not load the selected image."
-    static let invalidQRCodeMessage = "No valid QR code found in the selected image."
+    static let imageLoadFailureMessage = OnboardingQRPhotoImportFailureMessage(
+        value: "Could not load the selected image.")
+    static let invalidQRCodeMessage = OnboardingQRPhotoImportFailureMessage(
+        value: "No valid QR code found in the selected image.")
 
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -681,7 +685,7 @@ struct OnboardingQRPhotoImportFeature {
 
     enum ImportResult: Equatable, Sendable {
         struct AppleReviewSetupCode: Equatable, Sendable { var code: OnboardingSetupCode }
-        struct Failure: Equatable, Sendable { var message: String }
+        struct Failure: Equatable, Sendable { var message: OnboardingQRPhotoImportFailureMessage }
 
         case appleReviewSetupCode(AppleReviewSetupCode)
         case failure(Failure)

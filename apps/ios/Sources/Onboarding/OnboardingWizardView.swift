@@ -843,7 +843,7 @@ extension OnboardingWizardView {
         case let .appleReviewSetupCode(setupCode):
             self.handleScannedSetupCode(setupCode.code.value)
         case let .failure(failure):
-            self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message))))
+            self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message.value))))
         }
     }
 
