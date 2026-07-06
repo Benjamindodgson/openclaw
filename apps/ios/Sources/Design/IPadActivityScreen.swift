@@ -30,6 +30,7 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct IPadActivitySessionsFailureMessage: Equatable, Sendable { var value: String }
+struct IPadActivitySessionsLoadingInFlight: Equatable, Sendable { var value: Bool }
 
 enum IPadActivitySessionsError: Error, Equatable, Sendable {
     case failed
@@ -49,7 +50,7 @@ struct IPadActivitySessionsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var sessions: [OpenClawChatSessionEntry] = []
-        var isLoading = false
+        var isLoading = IPadActivitySessionsLoadingInFlight(value: false)
         var loadErrorText: IPadActivitySessionsFailureMessage?
         var gatewayPresentation = IPadActivityGatewayPresentationState()
     }
@@ -91,17 +92,17 @@ struct IPadActivitySessionsFeature {
 
             case let .refreshRequested(request):
                 guard request.sceneActivity.isActive else {
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     return .none
                 }
                 guard request.sessionsAvailability.isAvailable else {
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.sessions = []
                     state.loadErrorText = nil
                     return .none
                 }
 
-                state.isLoading = true
+                state.isLoading = .init(value: true)
                 state.loadErrorText = nil
                 return .run { send in
                     do {
@@ -115,13 +116,13 @@ struct IPadActivitySessionsFeature {
             case let .refreshResponse(response):
                 switch response.result {
                 case let .success(sessions):
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.sessions = sessions
                     state.loadErrorText = nil
                     return .none
 
                 case .failure:
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.sessions = []
                     state.loadErrorText = .init(value: "Try again after the gateway reconnects.")
                     return .none
@@ -202,7 +203,7 @@ struct IPadActivityScreen: View {
             ProMetric(
                 icon: "bubble.left.and.text.bubble.right",
                 title: "Sessions",
-                value: self.store.isLoading ? "..." : "\(self.sessionRows.count)",
+                value: self.store.isLoading.value ? "..." : "\(self.sessionRows.count)",
                 color: OpenClawBrand.accentHot),
         ]
     }
@@ -212,7 +213,7 @@ struct IPadActivityScreen: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: "Recent activity",
-                    value: self.store.isLoading ? "Loading" : nil,
+                    value: self.store.isLoading.value ? "Loading" : nil,
                     actionTitle: "Refresh",
                     action: {
                         Task { await self.refreshSessions() }
@@ -250,7 +251,7 @@ struct IPadActivityScreen: View {
                     actionTitle: nil,
                     action: nil)
 
-                if self.store.isLoading, self.store.sessions.isEmpty {
+                if self.store.isLoading.value, self.store.sessions.isEmpty {
                     Divider().padding(.leading, 58)
                     ProStatusRow(
                         icon: "hourglass",
