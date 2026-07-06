@@ -3379,6 +3379,10 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("var settingsDiscoveryDebugLogging: SettingsDiscoveryDebugLoggingClient"))
         #expect(settingsSource.contains("struct DebugOptionsSync: Equatable, Sendable"))
         #expect(settingsSource.contains("struct SettingsDebugOptionEnabled: Equatable, Sendable"))
+        #expect(settingsSource.contains("var discoveryDebugLogsEnabled: SettingsDebugOptionEnabled"))
+        #expect(settingsSource.contains("var canvasDebugStatusEnabled: SettingsDebugOptionEnabled"))
+        #expect(settingsSource.contains("state.discoveryDebugLogsEnabled = sync.discoveryDebugLogsEnabled.isEnabled"))
+        #expect(settingsSource.contains("state.canvasDebugStatusEnabled = sync.canvasDebugStatusEnabled.isEnabled"))
         #expect(settingsSource.contains("struct DebugOptionToggleChange: Equatable, Sendable"))
         #expect(settingsSource.contains("var enabled: SettingsDebugOptionEnabled"))
         #expect(settingsSource.contains("case discoveryDebugLogsChanged(DebugOptionToggleChange)"))
@@ -3389,6 +3393,10 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("debugOptionsStore: self.makeSettingsDebugOptionsStore()"))
         #expect(storesSource.contains("func makeSettingsDebugOptionsStore()"))
         #expect(storesSource.contains("discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController)"))
+        #expect(actionsSource.contains(
+            "discoveryDebugLogsEnabled: .init(isEnabled: self.storedDiscoveryDebugLogsEnabled)"))
+        #expect(actionsSource.contains(
+            "canvasDebugStatusEnabled: .init(isEnabled: self.storedCanvasDebugStatusEnabled)"))
         #expect(updateFunction.contains("enabled: .init(isEnabled: enabled)"))
         #expect(!updateFunction.contains("self.gatewayController.setDiscoveryDebugLoggingEnabled(enabled)"))
         #expect(storedDebugChange.contains("enabled: .init(isEnabled: newValue)"))
@@ -3397,6 +3405,11 @@ struct RootTabsSourceGuardTests {
         #expect(!settingsSource.contains("state.discoveryDebugLogsEnabled = change.enabled\n"))
         #expect(!actionsSource.contains("discoveryDebugLogsChanged(.init(enabled: enabled))"))
         #expect(!actionsSource.contains("canvasDebugStatusChanged(.init(enabled: enabled))"))
+        #expect(!settingsSource.contains(
+            "struct DebugOptionsSync: Equatable, Sendable {\n            var discoveryDebugLogsEnabled: Bool"))
+        #expect(!settingsSource.contains(
+            "struct DebugOptionsSync: Equatable, Sendable {\n            var discoveryDebugLogsEnabled: Bool\n" +
+                "            var canvasDebugStatusEnabled: Bool"))
         #expect(!settingsSource.contains("discoveryDebugLogsChanged(.init(enabled: newValue))"))
         #expect(!settingsSource.contains("canvasDebugStatusChanged(.init(enabled: newValue))"))
     }

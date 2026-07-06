@@ -996,8 +996,8 @@ struct SettingsDebugOptionsFeature {
 
     enum Action: Equatable, Sendable {
         struct DebugOptionsSync: Equatable, Sendable {
-            var discoveryDebugLogsEnabled: Bool
-            var canvasDebugStatusEnabled: Bool
+            var discoveryDebugLogsEnabled: SettingsDebugOptionEnabled
+            var canvasDebugStatusEnabled: SettingsDebugOptionEnabled
         }
 
         struct SettingsDebugOptionEnabled: Equatable, Sendable { var isEnabled: Bool }
@@ -1022,8 +1022,8 @@ struct SettingsDebugOptionsFeature {
                 return .none
 
             case let .debugOptionsSynced(sync):
-                state.discoveryDebugLogsEnabled = sync.discoveryDebugLogsEnabled
-                state.canvasDebugStatusEnabled = sync.canvasDebugStatusEnabled
+                state.discoveryDebugLogsEnabled = sync.discoveryDebugLogsEnabled.isEnabled
+                state.canvasDebugStatusEnabled = sync.canvasDebugStatusEnabled.isEnabled
                 return .none
 
             case let .discoveryDebugLogsChanged(change):
