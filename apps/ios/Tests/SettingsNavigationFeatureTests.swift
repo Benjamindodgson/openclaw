@@ -1073,8 +1073,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.credentialsLoaded(.init(token: "token-1", password: "password-1"))) {
-            $0.gatewayToken = "token-1"
-            $0.gatewayPassword = "password-1"
+            $0.gatewayTokenDraft = .init(value: "token-1")
+            $0.gatewayPasswordDraft = .init(value: "password-1")
         }
     }
 
@@ -1088,8 +1088,8 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.credentialsLoadRequested(.init(
             instanceId: .init(value: " instance-1 ")))) {
-            $0.gatewayToken = "token-1"
-            $0.gatewayPassword = "password-1"
+            $0.gatewayTokenDraft = .init(value: "token-1")
+            $0.gatewayPasswordDraft = .init(value: "password-1")
         }
 
         #expect(probe.loadedInstanceIds == ["instance-1"])
@@ -1098,8 +1098,8 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings gateway credentials ignore load without instance id`() async {
         let probe = SettingsGatewayCredentialsPersistenceProbe()
         var initialState = SettingsGatewayCredentialsFeature.State()
-        initialState.gatewayToken = "existing-token"
-        initialState.gatewayPassword = "existing-password"
+        initialState.gatewayTokenDraft = .init(value: "existing-token")
+        initialState.gatewayPasswordDraft = .init(value: "existing-password")
         let store = TestStore(initialState: initialState) {
             SettingsGatewayCredentialsFeature(persistenceClient: probe.client)
         }
@@ -1116,10 +1116,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayTokenChanged(.init(draft: .init(value: " token-2 ")))) {
-            $0.gatewayToken = " token-2 "
+            $0.gatewayTokenDraft = .init(value: " token-2 ")
         }
         await store.send(.gatewayPasswordChanged(.init(draft: .init(value: " password-2 ")))) {
-            $0.gatewayPassword = " password-2 "
+            $0.gatewayPasswordDraft = .init(value: " password-2 ")
         }
     }
 
@@ -1173,8 +1173,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupAuthApplied(.init(setupAuth: setupAuth))) {
-            $0.gatewayToken = "token-3"
-            $0.gatewayPassword = "password-3"
+            $0.gatewayTokenDraft = .init(value: "token-3")
+            $0.gatewayPasswordDraft = .init(value: "password-3")
             $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
                 token: "token-3",
                 bootstrapToken: "bootstrap-1",
@@ -1184,8 +1184,8 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings gateway credentials clear reset state`() async {
         var initialState = SettingsGatewayCredentialsFeature.State()
-        initialState.gatewayToken = "token-4"
-        initialState.gatewayPassword = "password-4"
+        initialState.gatewayTokenDraft = .init(value: "token-4")
+        initialState.gatewayPasswordDraft = .init(value: "password-4")
         initialState.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
             token: "token-4",
             bootstrapToken: "bootstrap-4",
@@ -1195,8 +1195,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.credentialsClearedForOnboardingReset) {
-            $0.gatewayToken = ""
-            $0.gatewayPassword = ""
+            $0.gatewayTokenDraft = .init(value: "")
+            $0.gatewayPasswordDraft = .init(value: "")
             $0.pendingManualAuthOverride = nil
         }
     }
@@ -1217,8 +1217,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupLinkApplied(.init(link: link))) {
-            $0.gatewayToken = "token-6"
-            $0.gatewayPassword = "password-6"
+            $0.gatewayTokenDraft = .init(value: "token-6")
+            $0.gatewayPasswordDraft = .init(value: "password-6")
             $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
                 token: "token-6",
                 bootstrapToken: "bootstrap-6",
