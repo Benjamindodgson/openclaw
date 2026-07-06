@@ -160,7 +160,7 @@ struct OnboardingWizardView: View {
     private var setupCodeBinding: Binding<String> {
         Binding(
             get: { self.setupCodeStore.setupCode },
-            set: { self.setupCodeStore.send(.setupCodeChanged(.init(code: $0))) })
+            set: { self.setupCodeStore.send(.setupCodeChanged(.init(code: .init(value: $0)))) })
     }
 
     private var selectedMode: OnboardingConnectionMode? {
@@ -763,7 +763,7 @@ extension OnboardingWizardView {
 
         switch result {
         case let .appleReviewDemoSetupCode(setupCode):
-            self.handleScannedSetupCode(setupCode.code)
+            self.handleScannedSetupCode(setupCode.code.value)
 
         case let .gatewayLink(link):
             self.statusStore.send(.connectionStarted(.init(
@@ -807,7 +807,7 @@ extension OnboardingWizardView {
     }
 
     private func handleScannedSetupCode(_ code: String) {
-        self.setupCodeStore.send(.scannedSetupCodeReceived(.init(code: code)))
+        self.setupCodeStore.send(.scannedSetupCodeReceived(.init(code: .init(value: code))))
         guard let result = self.setupCodeStore.applyResult else { return }
         self.setupCodeStore.send(.applyResultHandled)
 
@@ -841,7 +841,7 @@ extension OnboardingWizardView {
         case let .gatewayLink(link):
             self.handleScannedLink(link)
         case let .appleReviewSetupCode(setupCode):
-            self.handleScannedSetupCode(setupCode.code)
+            self.handleScannedSetupCode(setupCode.code.value)
         case let .failure(failure):
             self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message))))
         }

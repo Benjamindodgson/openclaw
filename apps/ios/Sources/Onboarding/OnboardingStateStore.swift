@@ -87,6 +87,8 @@ struct OnboardingGatewayPassword: Equatable, Sendable { var value: String }
 
 struct OnboardingQRMessage: Equatable, Sendable { var value: String? }
 
+struct OnboardingSetupCode: Equatable, Sendable { var value: String }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -669,7 +671,7 @@ struct OnboardingQRPhotoImportFeature {
     }
 
     enum ImportResult: Equatable, Sendable {
-        struct AppleReviewSetupCode: Equatable, Sendable { var code: String }
+        struct AppleReviewSetupCode: Equatable, Sendable { var code: OnboardingSetupCode }
         struct Failure: Equatable, Sendable { var message: String }
 
         case appleReviewSetupCode(AppleReviewSetupCode)
@@ -722,7 +724,7 @@ struct OnboardingQRPhotoImportFeature {
             return .gatewayLink(link)
         }
         if AppleReviewDemoMode.isSetupCode(message) {
-            return .appleReviewSetupCode(.init(code: message))
+            return .appleReviewSetupCode(.init(code: .init(value: message)))
         }
         return .failure(.init(message: Self.invalidQRCodeMessage))
     }
@@ -747,7 +749,7 @@ struct OnboardingSetupCodeFeature {
     }
 
     enum ApplyResult: Equatable, Sendable {
-        struct AppleReviewDemoSetupCode: Equatable, Sendable { var code: String }
+        struct AppleReviewDemoSetupCode: Equatable, Sendable { var code: OnboardingSetupCode }
 
         case appleReviewDemoSetupCode(AppleReviewDemoSetupCode)
         case gatewayLink(GatewayConnectDeepLink)
@@ -755,8 +757,8 @@ struct OnboardingSetupCodeFeature {
 
     enum Action: Equatable, Sendable {
         struct ScannedGatewayLink: Equatable, Sendable { var link: GatewayConnectDeepLink }
-        struct ScannedSetupCode: Equatable, Sendable { var code: String }
-        struct SetupCodeChange: Equatable, Sendable { var code: String }
+        struct ScannedSetupCode: Equatable, Sendable { var code: OnboardingSetupCode }
+        struct SetupCodeChange: Equatable, Sendable { var code: OnboardingSetupCode }
 
         case appleReviewDemoCodeAccepted
         case applyRequested
@@ -794,7 +796,7 @@ struct OnboardingSetupCodeFeature {
                 if AppleReviewDemoMode.isSetupCode(raw) {
                     state.setupCode = ""
                     state.status = "Apple Review demo mode enabled."
-                    state.applyResult = .appleReviewDemoSetupCode(.init(code: raw))
+                    state.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: raw)))
                     return .none
                 }
 
@@ -834,11 +836,11 @@ struct OnboardingSetupCodeFeature {
 
             case let .scannedSetupCodeReceived(scan):
                 state.applyResult = nil
-                guard AppleReviewDemoMode.isSetupCode(scan.code) else {
+                guard AppleReviewDemoMode.isSetupCode(scan.code.value) else {
                     return .none
                 }
                 state.applyResult = .appleReviewDemoSetupCode(.init(
-                    code: scan.code.trimmingCharacters(in: .whitespacesAndNewlines)))
+                    code: .init(value: scan.code.value.trimmingCharacters(in: .whitespacesAndNewlines))))
                 return .none
 
             case .setupCodeAccepted:
@@ -848,7 +850,7 @@ struct OnboardingSetupCodeFeature {
                 return .none
 
             case let .setupCodeChanged(change):
-                state.setupCode = change.code
+                state.setupCode = change.code.value
                 return .none
 
             case .statusCleared:
