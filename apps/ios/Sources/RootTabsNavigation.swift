@@ -72,6 +72,14 @@ struct RootPresentationFeature {
         }
     }
 
+    struct QuickSetupDismissal: Equatable, Sendable {
+        var isDismissed: Bool
+
+        init(isDismissed: Bool = false) {
+            self.isDismissed = isDismissed
+        }
+    }
+
     struct StartupSnapshot: Equatable, Sendable {
         var gatewayConnection: GatewayConnection
         var connectionHistory: ConnectionHistory
@@ -93,7 +101,7 @@ struct RootPresentationFeature {
     }
 
     struct QuickSetupSnapshot: Equatable, Sendable {
-        var quickSetupDismissed: Bool
+        var quickSetupDismissal: QuickSetupDismissal
         var showOnboarding: Bool
         var gatewayConnection: GatewayConnection
         var gatewayConfigPresence: GatewayConfigPresence
@@ -188,7 +196,7 @@ struct RootPresentationFeature {
         var onboardingCompletion: OnboardingCompletion
         var gatewayConfigPresence: GatewayConfigPresence
         var launchOnboardingPresentation: LaunchOnboardingPresentation
-        var quickSetupDismissed: Bool
+        var quickSetupDismissal: QuickSetupDismissal
         var showOnboarding: Bool
         var onboardingAllowSkip: Bool
         var presentedSheet: PresentedSheet?
@@ -207,7 +215,7 @@ struct RootPresentationFeature {
             onboardingCompletion: OnboardingCompletion = .init(),
             gatewayConfigPresence: GatewayConfigPresence = .init(),
             launchOnboardingPresentation: LaunchOnboardingPresentation = .init(),
-            quickSetupDismissed: Bool = false,
+            quickSetupDismissal: QuickSetupDismissal = .init(),
             showOnboarding: Bool = false,
             onboardingAllowSkip: Bool = true,
             presentedSheet: PresentedSheet? = nil,
@@ -218,7 +226,7 @@ struct RootPresentationFeature {
             self.onboardingCompletion = onboardingCompletion
             self.gatewayConfigPresence = gatewayConfigPresence
             self.launchOnboardingPresentation = launchOnboardingPresentation
-            self.quickSetupDismissed = quickSetupDismissed
+            self.quickSetupDismissal = quickSetupDismissal
             self.showOnboarding = showOnboarding
             self.onboardingAllowSkip = onboardingAllowSkip
             self.presentedSheet = presentedSheet
@@ -273,7 +281,7 @@ struct RootPresentationFeature {
                     launchOnboardingPresentation: self.launchOnboardingPresentation))
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
                 snapshot: RootPresentationFeature.QuickSetupSnapshot(
-                    quickSetupDismissed: self.quickSetupDismissed,
+                    quickSetupDismissal: self.quickSetupDismissal,
                     showOnboarding: self.showOnboarding,
                     gatewayConnection: self.gatewayConnection,
                     gatewayConfigPresence: self.gatewayConfigPresence,
@@ -314,7 +322,7 @@ struct RootPresentationFeature {
             hasPresentedSheet: Bool)
             -> Bool
         {
-            guard !snapshot.quickSetupDismissed else { return false }
+            guard !snapshot.quickSetupDismissal.isDismissed else { return false }
             guard !snapshot.showOnboarding else { return false }
             guard !hasPresentedSheet else { return false }
             guard !snapshot.gatewayConnection.isConnected else { return false }
@@ -382,7 +390,7 @@ struct RootPresentationFeature {
 
             case let .quickSetupSnapshotChanged(change):
                 let snapshot = change.snapshot
-                state.quickSetupDismissed = snapshot.quickSetupDismissed
+                state.quickSetupDismissal = snapshot.quickSetupDismissal
                 state.showOnboarding = snapshot.showOnboarding
                 state.gatewayConnection = snapshot.gatewayConnection
                 state.gatewayConfigPresence = snapshot.gatewayConfigPresence
