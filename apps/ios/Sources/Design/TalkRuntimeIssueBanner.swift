@@ -7,6 +7,10 @@ struct TalkRuntimeIssueDiagnosticsText: Equatable, Sendable {
     var value: String
 }
 
+struct TalkRuntimeIssueCopyFeedbackText: Equatable, Sendable {
+    var value: String
+}
+
 // swiftformat:enable redundantSendable
 
 struct TalkRuntimeIssueClipboardClient {
@@ -42,7 +46,7 @@ struct TalkRuntimeIssueDetailsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var issue: TalkRuntimeIssue
-        var copyFeedback: String?
+        var copyFeedback: TalkRuntimeIssueCopyFeedbackText?
     }
 
     enum Action: Equatable, Sendable {
@@ -59,7 +63,7 @@ struct TalkRuntimeIssueDetailsFeature {
 
             switch action {
             case .copyDiagnosticsButtonTapped:
-                state.copyFeedback = "Copied diagnostics"
+                state.copyFeedback = .init(value: "Copied diagnostics")
                 let details = TalkRuntimeIssueDiagnosticsText(value: state.issue.technicalDetails)
                 return .run { _ in
                     await clipboard.copy(details)
@@ -153,7 +157,7 @@ struct TalkRuntimeIssueDetailsSheet: View {
 
                 if let copyFeedback = self.store.copyFeedback {
                     Section {
-                        Text(copyFeedback)
+                        Text(copyFeedback.value)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
