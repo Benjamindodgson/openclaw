@@ -20,7 +20,9 @@ struct AgentDreamingDestinationFeatureTests {
             AgentDreamingDestinationFeature(client: Self.client())
         }
 
-        await store.send(.dreamActionTapped(.init(action: .backfill, gatewayConnected: false)))
+        await store.send(.dreamActionTapped(.init(
+            action: .backfill,
+            gatewayConnection: .init(isConnected: false))))
     }
 
     @Test func `maintenance action stores success summary`() async {
@@ -30,7 +32,10 @@ struct AgentDreamingDestinationFeatureTests {
             }))
         }
 
-        await store.send(.dreamActionTapped(.init(action: .repair, gatewayConnected: true))) {
+        await store.send(.dreamActionTapped(.init(
+            action: .repair,
+            gatewayConnection: .init(isConnected: true))))
+        {
             $0.busyAction = .repair
             $0.statusText = .init(value: nil)
         }
@@ -47,7 +52,10 @@ struct AgentDreamingDestinationFeatureTests {
             AgentDreamingDestinationFeature(client: Self.client(run: { _ in throw DreamingFailure.failed }))
         }
 
-        await store.send(.dreamActionTapped(.init(action: .dedupe, gatewayConnected: true))) {
+        await store.send(.dreamActionTapped(.init(
+            action: .dedupe,
+            gatewayConnection: .init(isConnected: true))))
+        {
             $0.busyAction = .dedupe
             $0.statusText = .init(value: nil)
         }
