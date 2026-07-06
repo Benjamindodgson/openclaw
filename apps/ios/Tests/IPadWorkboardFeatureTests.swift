@@ -91,10 +91,10 @@ struct IPadWorkboardFeatureTests {
             $0.activeRefreshBoardID = nil
             $0.cards = [card]
             $0.statuses = [.init(value: "todo"), .init(value: "done")]
-            $0.knownBoardIDs = ["planning"]
+            $0.knownBoardIDs = [.init(value: "planning")]
         }
         await store.receive(.boardScopesResponse(.init(force: false, result: .success(boards)))) {
-            $0.knownBoardIDs = ["ops", "planning"]
+            $0.knownBoardIDs = [.init(value: "ops"), .init(value: "planning")]
         }
     }
 
@@ -175,7 +175,7 @@ struct IPadWorkboardFeatureTests {
             $0.draftNotes = .init(value: "")
             $0.presentedSheet = nil
             $0.cards = [existing, created]
-            $0.knownBoardIDs = ["planning"]
+            $0.knownBoardIDs = [.init(value: "planning")]
         }
     }
 
@@ -229,7 +229,7 @@ struct IPadWorkboardFeatureTests {
         await store.receive(.moveResponse(.init(result: .success(moved)))) {
             $0.busyCardID = nil
             $0.cards = [moved]
-            $0.knownBoardIDs = ["default"]
+            $0.knownBoardIDs = [.init(value: "default")]
         }
         await store.send(.archiveRequested(.init(card: moved, canWrite: true))) {
             $0.busyCardID = .init(value: "card-1")
@@ -238,7 +238,7 @@ struct IPadWorkboardFeatureTests {
         await store.receive(.archiveResponse(.init(result: .success(archived)))) {
             $0.busyCardID = nil
             $0.cards = [archived]
-            $0.knownBoardIDs = ["default"]
+            $0.knownBoardIDs = [.init(value: "default")]
         }
     }
 
@@ -274,7 +274,7 @@ struct IPadWorkboardFeatureTests {
             $0.dispatchSummaryText = .init(value: "1 dispatched: 1 started.")
             $0.cards = [refreshed]
             $0.statuses = [.init(value: "running")]
-            $0.knownBoardIDs = ["default"]
+            $0.knownBoardIDs = [.init(value: "default")]
         }
     }
 
@@ -299,7 +299,7 @@ struct IPadWorkboardFeatureTests {
             $0.activeRefreshBoardID = nil
             $0.cards = [refreshed]
             $0.statuses = [.init(value: "todo")]
-            $0.knownBoardIDs = ["default"]
+            $0.knownBoardIDs = [.init(value: "default")]
         }
         await store.receive(.boardScopesResponse(.init(force: true, result: .success([]))))
     }
