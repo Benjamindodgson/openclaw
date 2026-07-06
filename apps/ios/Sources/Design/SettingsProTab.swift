@@ -168,75 +168,79 @@ struct SettingsApprovalsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var activeAgentName = "Default Agent"
-        var gatewayConnected = false
-        var hasPendingApproval = false
-        var isAppleReviewDemoModeEnabled = false
-        var isResolvingPendingApproval = false
-        var notificationsNeedAttention = false
-        var pendingApprovalAllowsAllowAlways = false
-        var pendingCommandPreview: String?
+        var activeAgentName = Action.SettingsApprovalsActiveAgentName(value: "Default Agent")
+        var gatewayConnected = Action.SettingsApprovalsGatewayConnected(value: false)
+        var hasPendingApproval = Action.SettingsApprovalsHasPendingApproval(value: false)
+        var isAppleReviewDemoModeEnabled = Action.SettingsApprovalsDemoModeEnabled(value: false)
+        var isResolvingPendingApproval = Action.SettingsApprovalsResolvingPendingApproval(value: false)
+        var notificationsNeedAttention = Action.SettingsApprovalsNotificationsNeedAttention(value: false)
+        var pendingApprovalAllowsAllowAlways = Action.SettingsApprovalsPendingApprovalAllowsAllowAlways(value: false)
+        var pendingCommandPreview = Action.SettingsApprovalsPendingCommandPreview(value: nil)
 
         var approvalBadgeValue: String? {
-            self.hasPendingApproval ? "1" : nil
+            self.hasPendingApproval.value ? "1" : nil
         }
 
         var approvalEmptyDetail: String {
-            if self.isAppleReviewDemoModeEnabled {
+            if self.isAppleReviewDemoModeEnabled.value {
                 return "Live gateway requests are disabled in demo mode."
             }
-            if self.notificationsNeedAttention {
+            if self.notificationsNeedAttention.value {
                 return "Foreground approvals still appear while OpenClaw is connected."
             }
-            return self.gatewayConnected ? "Gateway requests will appear here." : "Connect to the gateway."
+            return self.gatewayConnected.value ? "Gateway requests will appear here." : "Connect to the gateway."
         }
 
         var approvalsDetail: String {
-            if self.notificationsNeedAttention {
-                return self.hasPendingApproval ? "1 waiting, notifications off" : "Notifications off"
+            if self.notificationsNeedAttention.value {
+                return self.hasPendingApproval.value ? "1 waiting, notifications off" : "Notifications off"
             }
-            return self.hasPendingApproval ? "1 request waiting" : "No approvals waiting"
+            return self.hasPendingApproval.value ? "1 request waiting" : "No approvals waiting"
         }
 
         var destinationDetail: String {
-            if self.notificationsNeedAttention {
+            if self.notificationsNeedAttention.value {
                 return "Out-of-app approval alerts need notification permission."
             }
-            return self.hasPendingApproval
+            return self.hasPendingApproval.value
                 ? "Review the pending gateway action."
                 : "No gateway actions are waiting for review."
         }
 
         var destinationValue: String {
-            if self.notificationsNeedAttention { return "Alerts Off" }
-            return self.hasPendingApproval ? "1 waiting" : "clear"
+            if self.notificationsNeedAttention.value { return "Alerts Off" }
+            return self.hasPendingApproval.value ? "1 waiting" : "clear"
         }
 
         var destinationColor: Color {
-            if self.notificationsNeedAttention { return OpenClawBrand.warn }
-            return self.hasPendingApproval ? OpenClawBrand.warn : OpenClawBrand.ok
+            if self.notificationsNeedAttention.value { return OpenClawBrand.warn }
+            return self.hasPendingApproval.value ? OpenClawBrand.warn : OpenClawBrand.ok
         }
 
         var listColor: Color {
-            self.hasPendingApproval ? OpenClawBrand.warn : .secondary
+            self.hasPendingApproval.value ? OpenClawBrand.warn : .secondary
         }
 
         var approvalItems: [SettingsApprovalItem] {
-            guard self.hasPendingApproval else { return [] }
+            guard self.hasPendingApproval.value else { return [] }
             return [
                 SettingsApprovalItem(
                     id: "pending-real",
                     icon: "terminal.fill",
-                    title: self.pendingCommandPreview ?? "Review gateway action",
-                    detail: "Agent: \(self.activeAgentName)",
-                    priority: self.isResolvingPendingApproval ? "Resolving" : "High",
+                    title: self.pendingCommandPreview.value ?? "Review gateway action",
+                    detail: "Agent: \(self.activeAgentName.value)",
+                    priority: self.isResolvingPendingApproval.value ? "Resolving" : "High",
                     color: OpenClawBrand.danger),
                 SettingsApprovalItem(
                     id: "pending-context",
                     icon: "doc.text.fill",
-                    title: self.pendingApprovalAllowsAllowAlways ? "Permission can be saved" : "One-time approval",
+                    title: self.pendingApprovalAllowsAllowAlways.value
+                        ? "Permission can be saved"
+                        : "One-time approval",
                     detail: "Gateway request",
-                    priority: self.pendingApprovalAllowsAllowAlways ? "Medium" : "Review",
+                    priority: self.pendingApprovalAllowsAllowAlways.value
+                        ? "Medium"
+                        : "Review",
                     color: OpenClawBrand.warn),
             ]
         }
@@ -272,14 +276,14 @@ struct SettingsApprovalsFeature {
         Reduce { state, action in
             switch action {
             case let .approvalsSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
-                state.gatewayConnected = sync.gatewayConnected.value
-                state.notificationsNeedAttention = sync.notificationsNeedAttention.value
-                state.hasPendingApproval = sync.hasPendingApproval.value
-                state.pendingCommandPreview = sync.pendingCommandPreview.value
-                state.activeAgentName = sync.activeAgentName.value
-                state.isResolvingPendingApproval = sync.isResolvingPendingApproval.value
-                state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways.value
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
+                state.gatewayConnected = sync.gatewayConnected
+                state.notificationsNeedAttention = sync.notificationsNeedAttention
+                state.hasPendingApproval = sync.hasPendingApproval
+                state.pendingCommandPreview = sync.pendingCommandPreview
+                state.activeAgentName = sync.activeAgentName
+                state.isResolvingPendingApproval = sync.isResolvingPendingApproval
+                state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways
                 return .none
             }
         }

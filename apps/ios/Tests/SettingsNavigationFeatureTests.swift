@@ -164,14 +164,14 @@ struct SettingsNavigationFeatureTests {
             isResolvingPendingApproval: .init(value: true),
             pendingApprovalAllowsAllowAlways: .init(value: true))))
         {
-            $0.isAppleReviewDemoModeEnabled = true
-            $0.gatewayConnected = true
-            $0.notificationsNeedAttention = true
-            $0.hasPendingApproval = true
-            $0.pendingCommandPreview = "git status"
-            $0.activeAgentName = "Joshtimus Prime"
-            $0.isResolvingPendingApproval = true
-            $0.pendingApprovalAllowsAllowAlways = true
+            $0.isAppleReviewDemoModeEnabled = .init(value: true)
+            $0.gatewayConnected = .init(value: true)
+            $0.notificationsNeedAttention = .init(value: true)
+            $0.hasPendingApproval = .init(value: true)
+            $0.pendingCommandPreview = .init(value: "git status")
+            $0.activeAgentName = .init(value: "Joshtimus Prime")
+            $0.isResolvingPendingApproval = .init(value: true)
+            $0.pendingApprovalAllowsAllowAlways = .init(value: true)
         }
     }
 
@@ -185,24 +185,24 @@ struct SettingsNavigationFeatureTests {
         #expect(state.destinationValue == "clear")
         #expect(state.approvalItems.isEmpty)
 
-        state.gatewayConnected = true
+        state.gatewayConnected = .init(value: true)
         #expect(state.approvalEmptyDetail == "Gateway requests will appear here.")
 
-        state.notificationsNeedAttention = true
+        state.notificationsNeedAttention = .init(value: true)
         #expect(state.approvalsDetail == "Notifications off")
         #expect(state.approvalEmptyDetail == "Foreground approvals still appear while OpenClaw is connected.")
         #expect(state.destinationDetail == "Out-of-app approval alerts need notification permission.")
         #expect(state.destinationValue == "Alerts Off")
 
-        state.isAppleReviewDemoModeEnabled = true
+        state.isAppleReviewDemoModeEnabled = .init(value: true)
         #expect(state.approvalEmptyDetail == "Live gateway requests are disabled in demo mode.")
     }
 
     @Test func `settings approvals summarize pending request`() {
         var state = SettingsApprovalsFeature.State()
-        state.hasPendingApproval = true
-        state.pendingCommandPreview = "git status"
-        state.activeAgentName = "Joshtimus Prime"
+        state.hasPendingApproval = .init(value: true)
+        state.pendingCommandPreview = .init(value: "git status")
+        state.activeAgentName = .init(value: "Joshtimus Prime")
 
         #expect(state.approvalBadgeValue == "1")
         #expect(state.approvalsDetail == "1 request waiting")
@@ -217,9 +217,9 @@ struct SettingsNavigationFeatureTests {
         #expect(items[1].title == "One-time approval")
         #expect(items[1].priority == "Review")
 
-        state.isResolvingPendingApproval = true
-        state.pendingApprovalAllowsAllowAlways = true
-        state.notificationsNeedAttention = true
+        state.isResolvingPendingApproval = .init(value: true)
+        state.pendingApprovalAllowsAllowAlways = .init(value: true)
+        state.notificationsNeedAttention = .init(value: true)
 
         #expect(state.approvalsDetail == "1 waiting, notifications off")
         items = state.approvalItems

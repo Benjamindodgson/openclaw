@@ -1014,7 +1014,7 @@ extension SettingsProTab {
     }
 
     var notificationsNeedAttention: Bool {
-        self.approvalsStore.notificationsNeedAttention
+        self.approvalsStore.notificationsNeedAttention.value
     }
 
     var approvalItems: [SettingsApprovalItem] {

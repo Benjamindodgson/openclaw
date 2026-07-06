@@ -2115,6 +2115,22 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains(
             "struct SettingsApprovalsPendingApprovalAllowsAllowAlways: Equatable, Sendable { var value: Bool }"))
         #expect(settingsSource.contains("struct ApprovalsSync: Equatable, Sendable"))
+        #expect(approvalsFeature.contains(
+            "var activeAgentName = Action.SettingsApprovalsActiveAgentName(value: \"Default Agent\")"))
+        #expect(approvalsFeature.contains(
+            "var gatewayConnected = Action.SettingsApprovalsGatewayConnected(value: false)"))
+        #expect(approvalsFeature.contains(
+            "var hasPendingApproval = Action.SettingsApprovalsHasPendingApproval(value: false)"))
+        #expect(approvalsFeature.contains(
+            "var isAppleReviewDemoModeEnabled = Action.SettingsApprovalsDemoModeEnabled(value: false)"))
+        #expect(approvalsFeature.contains(
+            "var isResolvingPendingApproval = Action.SettingsApprovalsResolvingPendingApproval(value: false)"))
+        #expect(approvalsFeature.contains(
+            "var notificationsNeedAttention = Action.SettingsApprovalsNotificationsNeedAttention(value: false)"))
+        #expect(approvalsFeature.contains(
+            "var pendingApprovalAllowsAllowAlways = Action.SettingsApprovalsPendingApprovalAllowsAllowAlways(value: false)"))
+        #expect(approvalsFeature.contains(
+            "var pendingCommandPreview = Action.SettingsApprovalsPendingCommandPreview(value: nil)"))
         #expect(approvalsSync.contains("var isAppleReviewDemoModeEnabled: SettingsApprovalsDemoModeEnabled"))
         #expect(approvalsSync.contains("var gatewayConnected: SettingsApprovalsGatewayConnected"))
         #expect(approvalsSync.contains(
@@ -2126,18 +2142,18 @@ struct RootTabsSourceGuardTests {
             "var isResolvingPendingApproval: SettingsApprovalsResolvingPendingApproval"))
         #expect(approvalsSync.contains(
             "var pendingApprovalAllowsAllowAlways: SettingsApprovalsPendingApprovalAllowsAllowAlways"))
-        #expect(settingsSource.contains(
-            "state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
-        #expect(settingsSource.contains("state.gatewayConnected = sync.gatewayConnected.value"))
-        #expect(settingsSource.contains(
-            "state.notificationsNeedAttention = sync.notificationsNeedAttention.value"))
-        #expect(settingsSource.contains("state.hasPendingApproval = sync.hasPendingApproval.value"))
-        #expect(settingsSource.contains("state.pendingCommandPreview = sync.pendingCommandPreview.value"))
-        #expect(settingsSource.contains("state.activeAgentName = sync.activeAgentName.value"))
-        #expect(settingsSource.contains(
-            "state.isResolvingPendingApproval = sync.isResolvingPendingApproval.value"))
-        #expect(settingsSource.contains(
-            "state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways.value"))
+        #expect(approvalsFeature.contains(
+            "state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled"))
+        #expect(approvalsFeature.contains("state.gatewayConnected = sync.gatewayConnected"))
+        #expect(approvalsFeature.contains(
+            "state.notificationsNeedAttention = sync.notificationsNeedAttention"))
+        #expect(approvalsFeature.contains("state.hasPendingApproval = sync.hasPendingApproval"))
+        #expect(approvalsFeature.contains("state.pendingCommandPreview = sync.pendingCommandPreview"))
+        #expect(approvalsFeature.contains("state.activeAgentName = sync.activeAgentName"))
+        #expect(approvalsFeature.contains(
+            "state.isResolvingPendingApproval = sync.isResolvingPendingApproval"))
+        #expect(approvalsFeature.contains(
+            "state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways"))
         #expect(settingsSource.contains("case approvalsSynced(ApprovalsSync)"))
         #expect(actionsSource.contains("self.approvalsStore.send(.approvalsSynced(.init("))
         #expect(actionsSource.contains(
@@ -2153,6 +2169,7 @@ struct RootTabsSourceGuardTests {
             "isResolvingPendingApproval: .init(value: self.appModel.pendingExecApprovalPromptResolving)"))
         #expect(actionsSource.contains(
             "pendingApprovalAllowsAllowAlways: .init(value: pendingApproval?.allowsAllowAlways ?? false)"))
+        #expect(actionsSource.contains("self.approvalsStore.notificationsNeedAttention.value"))
         #expect(!approvalsFeature.contains("var isAppleReviewDemoModeEnabled: Bool"))
         #expect(!approvalsSync.contains("var gatewayConnected: Bool"))
         #expect(!approvalsSync.contains("var notificationsNeedAttention: Bool"))
@@ -2161,6 +2178,27 @@ struct RootTabsSourceGuardTests {
         #expect(!approvalsSync.contains("var activeAgentName: String"))
         #expect(!approvalsSync.contains("var isResolvingPendingApproval: Bool"))
         #expect(!approvalsSync.contains("var pendingApprovalAllowsAllowAlways: Bool"))
+        #expect(!approvalsFeature.contains("var activeAgentName = \"Default Agent\""))
+        #expect(!approvalsFeature.contains("var gatewayConnected = false"))
+        #expect(!approvalsFeature.contains("var hasPendingApproval = false"))
+        #expect(!approvalsFeature.contains("var isAppleReviewDemoModeEnabled = false"))
+        #expect(!approvalsFeature.contains("var isResolvingPendingApproval = false"))
+        #expect(!approvalsFeature.contains("var notificationsNeedAttention = false"))
+        #expect(!approvalsFeature.contains("var pendingApprovalAllowsAllowAlways = false"))
+        #expect(!approvalsFeature.contains("var pendingCommandPreview: String?"))
+        #expect(!approvalsFeature.contains(
+            "state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
+        #expect(!approvalsFeature.contains("state.gatewayConnected = sync.gatewayConnected.value"))
+        #expect(!approvalsFeature.contains(
+            "state.notificationsNeedAttention = sync.notificationsNeedAttention.value"))
+        #expect(!approvalsFeature.contains("state.hasPendingApproval = sync.hasPendingApproval.value"))
+        #expect(!approvalsFeature.contains("state.pendingCommandPreview = sync.pendingCommandPreview.value"))
+        #expect(!approvalsFeature.contains("state.activeAgentName = sync.activeAgentName.value"))
+        #expect(!approvalsFeature.contains(
+            "state.isResolvingPendingApproval = sync.isResolvingPendingApproval.value"))
+        #expect(!approvalsFeature.contains(
+            "state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways.value"))
+        #expect(!actionsSource.contains("self.approvalsStore.notificationsNeedAttention\n"))
     }
 
     @Test func `gateway settings keeps pairing trust diagnostics and tailscale actions`() throws {
