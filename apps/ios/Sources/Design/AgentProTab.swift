@@ -31,6 +31,24 @@ enum AgentSkillStatusFilter: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum AgentRosterFilter: String, CaseIterable, Identifiable, Sendable {
+    case all
+    case online
+    case ready
+
+    var id: Self {
+        self
+    }
+
+    var title: String {
+        switch self {
+        case .all: "All"
+        case .online: "Online"
+        case .ready: "Ready"
+        }
+    }
+}
+
 // swiftformat:enable redundantSendable
 
 struct AgentProTab: View {
@@ -57,24 +75,6 @@ struct AgentProTab: View {
         case cron
         case usage
         case dreaming
-    }
-
-    enum AgentRosterFilter: String, CaseIterable, Identifiable {
-        case all
-        case online
-        case ready
-
-        var id: Self {
-            self
-        }
-
-        var title: String {
-            switch self {
-            case .all: "All"
-            case .online: "Online"
-            case .ready: "Ready"
-            }
-        }
     }
 
     enum AgentLayout {
@@ -933,7 +933,7 @@ struct AgentOverviewFilterFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var rosterFilter: AgentProTab.AgentRosterFilter = .all
+        var rosterFilter: AgentRosterFilter = .all
         var searchPresented = false
         var searchText = AgentOverviewSearchText(value: "")
 
@@ -949,7 +949,7 @@ struct AgentOverviewFilterFeature {
         }
 
         case clearFiltersTapped
-        case rosterFilterChanged(AgentProTab.AgentRosterFilter)
+        case rosterFilterChanged(AgentRosterFilter)
         case searchButtonTapped
         case searchTextChanged(SearchTextChange)
     }
