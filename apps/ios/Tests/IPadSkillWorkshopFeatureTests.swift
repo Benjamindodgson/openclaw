@@ -8,7 +8,7 @@ struct IPadSkillWorkshopFeatureTests {
     @Test func `offline refresh clears proposal state`() async {
         var initialState = IPadSkillWorkshopFeature.State()
         initialState.proposals = [Self.proposal(id: "pending-1", status: "pending")]
-        initialState.isLoading = true
+        initialState.isLoading = .init(value: true)
         initialState.inspectingProposalID = "pending-1"
         initialState.errorText = "old error"
         let store = TestStore(initialState: initialState) {
@@ -17,7 +17,7 @@ struct IPadSkillWorkshopFeatureTests {
 
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: false, force: false))) {
             $0.proposals = []
-            $0.isLoading = false
+            $0.isLoading = .init(value: false)
             $0.inspectingProposalID = nil
             $0.errorText = nil
         }
@@ -34,10 +34,10 @@ struct IPadSkillWorkshopFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
-            $0.isLoading = true
+            $0.isLoading = .init(value: true)
         }
         await store.receive(.refreshResponse(.init(force: false, result: .success(manifest)))) {
-            $0.isLoading = false
+            $0.isLoading = .init(value: false)
             $0.proposals = [IPadSkillProposal(entry: entry, previous: nil)]
             $0.selectedProposalID = "pending-1"
             $0.inspectingProposalID = "pending-1"
@@ -114,10 +114,10 @@ struct IPadSkillWorkshopFeatureTests {
             $0.noticeText = "Proposal applied."
         }
         await store.receive(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
-            $0.isLoading = true
+            $0.isLoading = .init(value: true)
         }
         await store.receive(.refreshResponse(.init(force: true, result: .success(refreshedManifest)))) {
-            $0.isLoading = false
+            $0.isLoading = .init(value: false)
             $0.proposals = [IPadSkillProposal(entry: after, previous: IPadSkillProposal(entry: before, previous: nil))]
             $0.selectedProposalID = nil
         }
@@ -130,13 +130,13 @@ struct IPadSkillWorkshopFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
-            $0.isLoading = true
+            $0.isLoading = .init(value: true)
         }
         await store.receive(.refreshResponse(.init(
             force: true,
             result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
         {
-            $0.isLoading = false
+            $0.isLoading = .init(value: false)
             $0.errorText = "skill boom"
         }
     }
