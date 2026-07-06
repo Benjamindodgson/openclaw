@@ -1873,7 +1873,9 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSectionsSource.contains("Connected services and message routing"))
         #expect(settingsSectionsSource.contains("SettingsChannelsStoreFactory.live(appModel: self.appModel)"))
         #expect(channelsSource.contains("@Reducer\nstruct SettingsChannelsFeature"))
-        #expect(channelsSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
+        #expect(channelsSource.contains("struct SettingsChannelsFailureMessage: Equatable, Sendable"))
+        #expect(channelsSource.contains(
+            "struct Failure: Equatable, Sendable { var message: SettingsChannelsFailureMessage }"))
         #expect(channelsSource.contains("struct RefreshRequest: Equatable, Sendable"))
         #expect(channelsSource.contains("struct RefreshResponse: Equatable, Sendable"))
         #expect(channelsSource.contains("struct OperationRequest: Equatable, Sendable"))
@@ -1898,8 +1900,12 @@ struct RootTabsSourceGuardTests {
         #expect(channelsSource.contains("hasOperatorAdminScope: request.adminAccess.canAdmin"))
         #expect(channelsSource
             .contains("await send(.operationResponse(.init(result: .success(Self.entries(from: snapshot)))))"))
-        #expect(channelsSource.contains("result: .failure(.failed(.init(message: Self.message(for: error))))"))
+        #expect(channelsSource.contains("result: .failure(Self.failure(for: error))"))
+        #expect(channelsSource.contains(
+            ".failed(.init(message: .init(value: self.message(for: error))))"))
         #expect(channelsSource.contains("case let .operationResponse(response):"))
+        #expect(channelsSource.contains("failure.message.value"))
+        #expect(!channelsSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
         #expect(!channelsSource.contains("case failed(String)"))
         #expect(channelsSource.contains("await self.store.send(.refreshRequested(.init("))
         #expect(channelsSource.contains("await self.store.send(.operationRequested(.init("))

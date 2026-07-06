@@ -103,8 +103,10 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct SettingsChannelsFailureMessage: Equatable, Sendable { var value: String }
+
 enum SettingsChannelsError: Error, Equatable, Sendable {
-    struct Failure: Equatable, Sendable { var message: String }
+    struct Failure: Equatable, Sendable { var message: SettingsChannelsFailureMessage }
 
     case failed(Failure)
 }
@@ -205,7 +207,7 @@ struct SettingsChannelsFeature {
                     } catch {
                         await send(.refreshResponse(.init(
                             force: request.force,
-                            result: .failure(.failed(.init(message: Self.message(for: error)))))))
+                            result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -251,7 +253,7 @@ struct SettingsChannelsFeature {
                         await send(.operationResponse(.init(result: .success(Self.entries(from: snapshot)))))
                     } catch {
                         await send(.operationResponse(.init(
-                            result: .failure(.failed(.init(message: Self.message(for: error)))))))
+                            result: .failure(Self.failure(for: error)))))
                     }
                 }
 
@@ -351,13 +353,17 @@ struct SettingsChannelsFeature {
         }
         return error.localizedDescription
     }
+
+    private static func failure(for error: Error) -> SettingsChannelsError {
+        .failed(.init(message: .init(value: self.message(for: error))))
+    }
 }
 
 extension SettingsChannelsError {
     var message: String {
         switch self {
         case let .failed(failure):
-            failure.message
+            failure.message.value
         }
     }
 }
