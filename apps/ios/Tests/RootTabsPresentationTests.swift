@@ -908,12 +908,12 @@ struct RootTabsPresentationTests {
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .voice
-            $0.selectedSettingsRouteRequestID = 1
+            $0.selectedSettingsRouteRequestID = .init(value: 1)
         }
 
         await store.send(.settingsRouteSelected(Self.settingsRouteSelection(.gateway))) {
             $0.selectedSettingsRoute = .gateway
-            $0.selectedSettingsRouteRequestID = 2
+            $0.selectedSettingsRouteRequestID = .init(value: 2)
         }
     }
 
@@ -931,8 +931,8 @@ struct RootTabsPresentationTests {
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .notifications
-            $0.selectedSettingsRouteRequestID = 1
-            $0.suppressedExecApprovalPromptIDForNotificationSettings = "approval-1"
+            $0.selectedSettingsRouteRequestID = .init(value: 1)
+            $0.notificationSettingsPromptSuppression = .init(value: "approval-1")
         }
         #expect(store.state.sidebarNavigationPath.isEmpty)
         #expect(store.state.activeExecApprovalPromptSuppressionID == "approval-1")
@@ -944,7 +944,7 @@ struct RootTabsPresentationTests {
         await store.send(.pendingExecApprovalPromptChanged(
             Self.pendingExecApprovalPromptChange(promptID: "approval-2")))
         {
-            $0.suppressedExecApprovalPromptIDForNotificationSettings = nil
+            $0.notificationSettingsPromptSuppression = nil
         }
         #expect(store.state.activeExecApprovalPromptSuppressionID == nil)
     }
@@ -960,7 +960,7 @@ struct RootTabsPresentationTests {
         await store.send(.settingsRouteSelected(Self.settingsRouteSelection(.voice))) {
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .voice
-            $0.selectedSettingsRouteRequestID = 1
+            $0.selectedSettingsRouteRequestID = .init(value: 1)
         }
 
         await store.send(.sidebarSettingsRoutePushed(Self.sidebarSettingsRoutePush(.privacy))) {
@@ -1640,14 +1640,17 @@ struct RootTabsPresentationTests {
         -> RootNavigationSelectionFeature.NotificationPermissionSettingsRequest
     {
         RootNavigationSelectionFeature.NotificationPermissionSettingsRequest(
-            suppressedApprovalID: suppressedApprovalID)
+            suppressedApprovalID: .init(value: suppressedApprovalID))
     }
 
     private static func pendingExecApprovalPromptChange(
         promptID: String?)
         -> RootNavigationSelectionFeature.PendingExecApprovalPromptChange
     {
-        RootNavigationSelectionFeature.PendingExecApprovalPromptChange(promptID: promptID)
+        RootNavigationSelectionFeature.PendingExecApprovalPromptChange(
+            promptID: promptID.map {
+                RootNavigationSelectionFeature.ExecApprovalPromptSuppressionID(value: $0)
+            })
     }
 
     private static func sidebarNavigationPathChange(

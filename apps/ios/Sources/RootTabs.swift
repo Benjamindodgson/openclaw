@@ -810,7 +810,10 @@ struct RootTabs: View {
             }
             .onChange(of: self.appModel.pendingExecApprovalPrompt?.id) { _, newValue in
                 self.navigationStore.send(.pendingExecApprovalPromptChanged(
-                    RootNavigationSelectionFeature.PendingExecApprovalPromptChange(promptID: newValue)))
+                    RootNavigationSelectionFeature.PendingExecApprovalPromptChange(
+                        promptID: newValue.map {
+                            RootNavigationSelectionFeature.ExecApprovalPromptSuppressionID(value: $0)
+                        })))
             }
     }
 
@@ -940,7 +943,7 @@ extension RootTabs {
     }
 
     private var selectedSettingsRouteRequestID: Int {
-        self.navigationStore.selectedSettingsRouteRequestID
+        self.navigationStore.selectedSettingsRouteRequestID.value
     }
 
     private var sidebarNavigationPathBinding: Binding<[SettingsRoute]> {
@@ -988,7 +991,7 @@ extension RootTabs {
     func openNotificationSettings(suppressedApprovalID: String) {
         self.navigationStore.send(.notificationPermissionSettingsOpened(
             RootNavigationSelectionFeature.NotificationPermissionSettingsRequest(
-                suppressedApprovalID: suppressedApprovalID)))
+                suppressedApprovalID: .init(value: suppressedApprovalID))))
         self.collapseSidebarAfterSelectionIfNeeded()
     }
 

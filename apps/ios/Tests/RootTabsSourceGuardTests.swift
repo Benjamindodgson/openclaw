@@ -2352,7 +2352,16 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("self.sidebarStore.isVisible"))
         #expect(rootSource.contains("@State private var navigationStore: StoreOf<RootNavigationSelectionFeature>"))
         #expect(navigationSource.contains("struct RootNavigationSelectionFeature"))
-        #expect(navigationSource.contains("state.selectedSettingsRouteRequestID &+= 1"))
+        #expect(navigationSource.contains("struct SettingsRouteRequestID: Equatable, Sendable"))
+        #expect(navigationSource.contains("struct ExecApprovalPromptSuppressionID: Equatable, Sendable"))
+        #expect(navigationSource.contains("var selectedSettingsRouteRequestID: SettingsRouteRequestID"))
+        #expect(navigationSource.contains(
+            "var notificationSettingsPromptSuppression: ExecApprovalPromptSuppressionID?"))
+        #expect(navigationSource.contains("state.selectedSettingsRouteRequestID.bump()"))
+        #expect(rootSource.contains("self.navigationStore.selectedSettingsRouteRequestID.value"))
+        #expect(!navigationSource.contains("var selectedSettingsRouteRequestID: Int"))
+        #expect(!navigationSource.contains("var suppressedExecApprovalPromptIDForNotificationSettings: String?"))
+        #expect(!navigationSource.contains("state.selectedSettingsRouteRequestID &+= 1"))
         #expect(navigationSource.contains("struct TabSelection: Equatable, Sendable"))
         #expect(navigationSource.contains("case tabSelected(TabSelection)"))
         #expect(rootSource.contains(".tabSelected("))
@@ -2370,6 +2379,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("self.navigationStore.activeExecApprovalPromptSuppressionID"))
         #expect(rootSource.contains("suppressedApprovalID: self.activeExecApprovalPromptSuppressionID"))
         #expect(navigationSource.contains("struct NotificationPermissionSettingsRequest: Equatable, Sendable"))
+        #expect(navigationSource.contains("var suppressedApprovalID: ExecApprovalPromptSuppressionID"))
         #expect(navigationSource.contains(
             "case notificationPermissionSettingsOpened(NotificationPermissionSettingsRequest)"))
         #expect(rootSource
@@ -2378,10 +2388,11 @@ struct RootTabsSourceGuardTests {
                         RootNavigationSelectionFeature.NotificationPermissionSettingsRequest(
             """))
         #expect(navigationSource.contains("struct PendingExecApprovalPromptChange: Equatable, Sendable"))
+        #expect(navigationSource.contains("var promptID: ExecApprovalPromptSuppressionID?"))
         #expect(navigationSource.contains("case pendingExecApprovalPromptChanged(PendingExecApprovalPromptChange)"))
         #expect(rootSource.contains(".pendingExecApprovalPromptChanged("))
         #expect(rootSource.contains(
-            "RootNavigationSelectionFeature.PendingExecApprovalPromptChange(promptID: newValue)"))
+            "RootNavigationSelectionFeature.ExecApprovalPromptSuppressionID(value: $0)"))
         #expect(navigationSource.contains("if destination.settingsRoute != .notifications"))
         #expect(navigationSource.contains("if route != .notifications"))
         #expect(navigationSource.contains("if route == nil"))
