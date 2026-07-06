@@ -1261,7 +1261,7 @@ struct RootTabsPresentationTests {
 
         await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false))) {
             $0.layoutMode = .drawer
-            $0.didResolveLayout = true
+            $0.layoutResolution = .init(didResolve: true)
         }
     }
 
@@ -1271,14 +1271,14 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.split, force: false))) {
-            $0.didResolveLayout = true
-            $0.isVisible = true
+            $0.layoutResolution = .init(didResolve: true)
+            $0.visibility = .init(isVisible: true)
         }
 
         await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false))) {
             $0.layoutMode = .drawer
-            $0.userOverridden = false
-            $0.isVisible = false
+            $0.userOverride = .init(value: false)
+            $0.visibility = .init(isVisible: false)
         }
     }
 
@@ -1289,18 +1289,18 @@ struct RootTabsPresentationTests {
 
         await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false))) {
             $0.layoutMode = .drawer
-            $0.didResolveLayout = true
+            $0.layoutResolution = .init(didResolve: true)
         }
 
         await store.send(.showRequested) {
-            $0.userOverridden = true
-            $0.isVisible = true
+            $0.userOverride = .init(value: true)
+            $0.visibility = .init(isVisible: true)
         }
 
         await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.drawer, force: false)))
 
         await store.send(.layoutModeResolved(Self.sidebarLayoutModeResolution(.split, force: false))) {
-            $0.userOverridden = false
+            $0.userOverride = .init(value: false)
             $0.layoutMode = .split
         }
     }
@@ -1311,9 +1311,9 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.visibilityChanged(Self.sidebarVisibilityChange(isVisible: false))) {
-            $0.isVisible = false
+            $0.visibility = .init(isVisible: false)
         }
-        #expect(store.state.userOverridden)
+        #expect(store.state.userOverride.value)
 
         await store.send(.hideRequested)
     }

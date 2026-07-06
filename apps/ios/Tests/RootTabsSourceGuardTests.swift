@@ -2190,6 +2190,14 @@ struct RootTabsSourceGuardTests {
         let notificationGuidanceSource = try String(
             contentsOf: Self.notificationPermissionGuidanceDialogSourceURL(),
             encoding: .utf8)
+        let sidebarFeature = try Self.extract(
+            navigationSource,
+            from: "struct RootSidebarFeature",
+            to: "@Reducer\nstruct RootNavigationSelectionFeature")
+        let sidebarState = try Self.extract(
+            sidebarFeature,
+            from: "struct State: Equatable, Sendable {",
+            to: "enum Action")
 
         #expect(rootSource.matches(of: /openSettings: \{ self\.selectSidebarDestination\(\.gateway\) \}/).count >= 2)
         #expect(rootSource.matches(of: /openVoiceSettings: \{ self\.selectSettingsRoute\(\.voice\) \}/).count == 2)
@@ -2319,18 +2327,29 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains(".visibilityChanged(RootSidebarFeature.VisibilityChange("))
         #expect(navigationSource.contains("struct LayoutResolutionForce: Equatable, Sendable"))
         #expect(navigationSource.contains("struct SidebarVisibility: Equatable, Sendable"))
+        #expect(navigationSource.contains("struct SidebarUserOverride: Equatable, Sendable"))
+        #expect(navigationSource.contains("struct LayoutResolutionState: Equatable, Sendable"))
+        #expect(sidebarState.contains("var visibility: SidebarVisibility"))
+        #expect(sidebarState.contains("var userOverride: SidebarUserOverride"))
+        #expect(sidebarState.contains("var layoutResolution: LayoutResolutionState"))
         #expect(navigationSource.contains("var force: LayoutResolutionForce"))
         #expect(navigationSource.contains("var visibility: SidebarVisibility"))
-        #expect(navigationSource.contains("guard resolution.force.isForced || !state.userOverridden"))
-        #expect(navigationSource.contains("state.isVisible = change.visibility.isVisible"))
+        #expect(navigationSource.contains("guard resolution.force.isForced || !state.userOverride.value"))
+        #expect(navigationSource.contains("state.visibility = change.visibility"))
+        #expect(rootSource.contains("self.sidebarStore.visibility.isVisible"))
         #expect(rootSource.contains("force: .init(isForced: force)"))
         #expect(rootSource.contains("visibility: .init(isVisible: isVisible)"))
         #expect(!navigationSource.contains(
             "struct LayoutModeResolution: Equatable, Sendable {\n        var layoutMode: RootTabs.SidebarLayoutMode\n        var force: Bool"))
         #expect(!navigationSource.contains(
             "struct VisibilityChange: Equatable, Sendable {\n        var isVisible: Bool"))
+        #expect(!sidebarState.contains("var isVisible: Bool"))
+        #expect(!sidebarState.contains("var userOverridden: Bool"))
+        #expect(!sidebarState.contains("var didResolveLayout: Bool"))
         #expect(!navigationSource.contains("guard resolution.force || !state.userOverridden"))
         #expect(!navigationSource.contains("state.isVisible = change.isVisible"))
+        #expect(!navigationSource.contains("state.isVisible = change.visibility.isVisible"))
+        #expect(!rootSource.contains("self.sidebarStore.isVisible"))
         #expect(rootSource.contains("@State private var navigationStore: StoreOf<RootNavigationSelectionFeature>"))
         #expect(navigationSource.contains("struct RootNavigationSelectionFeature"))
         #expect(navigationSource.contains("state.selectedSettingsRouteRequestID &+= 1"))
