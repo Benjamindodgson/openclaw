@@ -39,6 +39,9 @@ struct IPadWorkboardFeatureTests {
         await store.send(.clearQueryTapped) {
             $0.query = ""
         }
+        await store.send(.statusChanged(.init(status: .init(value: "review")))) {
+            $0.selectedStatus = "review"
+        }
     }
 
     @Test func `create unavailable message matches gateway and draft state`() {
