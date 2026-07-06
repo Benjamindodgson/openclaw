@@ -244,16 +244,23 @@ struct SettingsApprovalsFeature {
 
     enum Action: Equatable, Sendable {
         struct SettingsApprovalsDemoModeEnabled: Equatable, Sendable { var value: Bool }
+        struct SettingsApprovalsGatewayConnected: Equatable, Sendable { var value: Bool }
+        struct SettingsApprovalsNotificationsNeedAttention: Equatable, Sendable { var value: Bool }
+        struct SettingsApprovalsHasPendingApproval: Equatable, Sendable { var value: Bool }
+        struct SettingsApprovalsPendingCommandPreview: Equatable, Sendable { var value: String? }
+        struct SettingsApprovalsActiveAgentName: Equatable, Sendable { var value: String }
+        struct SettingsApprovalsResolvingPendingApproval: Equatable, Sendable { var value: Bool }
+        struct SettingsApprovalsPendingApprovalAllowsAllowAlways: Equatable, Sendable { var value: Bool }
 
         struct ApprovalsSync: Equatable, Sendable {
             var isAppleReviewDemoModeEnabled: SettingsApprovalsDemoModeEnabled
-            var gatewayConnected: Bool
-            var notificationsNeedAttention: Bool
-            var hasPendingApproval: Bool
-            var pendingCommandPreview: String?
-            var activeAgentName: String
-            var isResolvingPendingApproval: Bool
-            var pendingApprovalAllowsAllowAlways: Bool
+            var gatewayConnected: SettingsApprovalsGatewayConnected
+            var notificationsNeedAttention: SettingsApprovalsNotificationsNeedAttention
+            var hasPendingApproval: SettingsApprovalsHasPendingApproval
+            var pendingCommandPreview: SettingsApprovalsPendingCommandPreview
+            var activeAgentName: SettingsApprovalsActiveAgentName
+            var isResolvingPendingApproval: SettingsApprovalsResolvingPendingApproval
+            var pendingApprovalAllowsAllowAlways: SettingsApprovalsPendingApprovalAllowsAllowAlways
         }
 
         case approvalsSynced(ApprovalsSync)
@@ -266,13 +273,13 @@ struct SettingsApprovalsFeature {
             switch action {
             case let .approvalsSynced(sync):
                 state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
-                state.gatewayConnected = sync.gatewayConnected
-                state.notificationsNeedAttention = sync.notificationsNeedAttention
-                state.hasPendingApproval = sync.hasPendingApproval
-                state.pendingCommandPreview = sync.pendingCommandPreview
-                state.activeAgentName = sync.activeAgentName
-                state.isResolvingPendingApproval = sync.isResolvingPendingApproval
-                state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways
+                state.gatewayConnected = sync.gatewayConnected.value
+                state.notificationsNeedAttention = sync.notificationsNeedAttention.value
+                state.hasPendingApproval = sync.hasPendingApproval.value
+                state.pendingCommandPreview = sync.pendingCommandPreview.value
+                state.activeAgentName = sync.activeAgentName.value
+                state.isResolvingPendingApproval = sync.isResolvingPendingApproval.value
+                state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways.value
                 return .none
             }
         }

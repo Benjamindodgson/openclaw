@@ -242,13 +242,13 @@ extension SettingsProTab {
         let pendingApproval = self.appModel.pendingExecApprovalPrompt
         self.approvalsStore.send(.approvalsSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled),
-            gatewayConnected: self.gatewayConnected,
-            notificationsNeedAttention: self.notificationStore.needsAttention,
-            hasPendingApproval: pendingApproval != nil,
-            pendingCommandPreview: pendingApproval?.commandPreview,
-            activeAgentName: self.appModel.activeAgentName,
-            isResolvingPendingApproval: self.appModel.pendingExecApprovalPromptResolving,
-            pendingApprovalAllowsAllowAlways: pendingApproval?.allowsAllowAlways ?? false)))
+            gatewayConnected: .init(value: self.gatewayConnected),
+            notificationsNeedAttention: .init(value: self.notificationStore.needsAttention),
+            hasPendingApproval: .init(value: pendingApproval != nil),
+            pendingCommandPreview: .init(value: pendingApproval?.commandPreview),
+            activeAgentName: .init(value: self.appModel.activeAgentName),
+            isResolvingPendingApproval: .init(value: self.appModel.pendingExecApprovalPromptResolving),
+            pendingApprovalAllowsAllowAlways: .init(value: pendingApproval?.allowsAllowAlways ?? false))))
     }
 
     func syncNotificationRelayState() {
