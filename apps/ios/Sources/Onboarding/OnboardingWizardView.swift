@@ -178,19 +178,19 @@ struct OnboardingWizardView: View {
     private var manualHostBinding: Binding<String> {
         Binding(
             get: { self.connectionFormStore.manualHost },
-            set: { self.connectionFormStore.send(.manualHostChanged(.init(host: $0))) })
+            set: { self.connectionFormStore.send(.manualHostChanged(.init(host: .init(value: $0)))) })
     }
 
     private var manualPortTextBinding: Binding<String> {
         Binding(
             get: { self.connectionFormStore.manualPortText },
-            set: { self.connectionFormStore.send(.manualPortTextChanged(.init(text: $0))) })
+            set: { self.connectionFormStore.send(.manualPortTextChanged(.init(text: .init(value: $0)))) })
     }
 
     private var manualTLSBinding: Binding<Bool> {
         Binding(
             get: { self.connectionFormStore.manualTLS },
-            set: { self.connectionFormStore.send(.manualTLSChanged(.init(useTLS: $0))) })
+            set: { self.connectionFormStore.send(.manualTLSChanged(.init(useTLS: .init(value: $0)))) })
     }
 
     var body: some View {
@@ -792,9 +792,9 @@ extension OnboardingWizardView {
 
     private func applyGatewayLink(_ link: GatewayConnectDeepLink) {
         self.connectionFormStore.send(.gatewayLinkApplied(.init(
-            host: link.host,
-            port: link.port,
-            tls: link.tls)))
+            host: .init(value: link.host),
+            port: .init(value: link.port),
+            tls: .init(value: link.tls))))
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
         if setupAuth.hasBootstrapToken {
             GatewayOnboardingReset.prepareForBootstrapPairing(
@@ -949,9 +949,9 @@ extension OnboardingWizardView {
             ("openclaw.local", 18789, true)
         }
         self.connectionFormStore.send(.initialized(.init(
-            host: initialConnection.host,
-            port: initialConnection.port,
-            tls: initialConnection.tls,
+            host: .init(value: initialConnection.host),
+            port: .init(value: initialConnection.port),
+            tls: .init(value: initialConnection.tls),
             lastMode: OnboardingStateStore.lastMode())))
 
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1015,8 +1015,8 @@ extension OnboardingWizardView {
 
         self.statusStore.send(.connectionStarted(.init(
             id: .init(value: "manual"),
-            message: .init(value: "Connecting to \(request.host)…"),
-            statusLine: .init(value: "Connecting to \(request.host):\(request.port)…"),
+            message: .init(value: "Connecting to \(request.host.value)…"),
+            statusLine: .init(value: "Connecting to \(request.host.value):\(request.port.value)…"),
             clearsIssue: .init(value: true))))
         defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
@@ -1025,9 +1025,9 @@ extension OnboardingWizardView {
             password: self.gatewayPassword)
         self.credentialsStore.send(.pendingManualAuthOverrideConsumed)
         await self.gatewayController.connectManual(
-            host: request.host,
-            port: request.port,
-            useTLS: request.useTLS,
+            host: request.host.value,
+            port: request.port.value,
+            useTLS: request.useTLS.value,
             authOverride: authOverride)
     }
 
