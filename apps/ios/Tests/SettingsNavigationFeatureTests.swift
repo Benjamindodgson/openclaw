@@ -2447,7 +2447,7 @@ struct SettingsNavigationFeatureTests {
             transportLabel: .init(value: "Gateway Relay"))))
         {
             $0.isAppleReviewDemoModeEnabled = true
-            $0.gatewayTalkTransportLabel = "Gateway Relay"
+            $0.gatewayTalkTransportLabel = .init(value: "Gateway Relay")
         }
     }
 
@@ -2461,9 +2461,9 @@ struct SettingsNavigationFeatureTests {
             activeModeSubtitle: .init(value: "Listening starts from this phone"),
             lastIssueText: .init(value: "Fallback active"))))
         {
-            $0.gatewayTalkActiveModeTitle = "Ready"
-            $0.gatewayTalkActiveModeSubtitle = "Listening starts from this phone"
-            $0.gatewayTalkLastIssueText = "Fallback active"
+            $0.gatewayTalkActiveModeTitle = .init(value: "Ready")
+            $0.gatewayTalkActiveModeSubtitle = .init(value: "Listening starts from this phone")
+            $0.gatewayTalkLastIssueText = .init(value: "Fallback active")
         }
     }
 
@@ -2489,7 +2489,7 @@ struct SettingsNavigationFeatureTests {
         #expect(state.gatewayTalkConfigColor == .secondary)
 
         state.gatewayTalkConfigLoaded = true
-        state.gatewayTalkTransportLabel = "Gateway Relay"
+        state.gatewayTalkTransportLabel = .init(value: "Gateway Relay")
         #expect(state.gatewayDiagnosticTalkConfigLoaded)
         #expect(state.gatewayTalkConfigDetail == "Gateway Relay")
         #expect(state.gatewayTalkConfigValue == "loaded")
@@ -2509,18 +2509,18 @@ struct SettingsNavigationFeatureTests {
         #expect(state.gatewayTalkActiveVoiceDetail == "Not active")
         #expect(state.gatewayTalkLastIssueDetail == nil)
 
-        state.gatewayTalkActiveModeTitle = " Ready "
+        state.gatewayTalkActiveModeTitle = .init(value: " Ready ")
         #expect(state.gatewayTalkActiveVoiceDetail == "Ready")
 
-        state.gatewayTalkActiveModeSubtitle = " Listening starts from this phone "
+        state.gatewayTalkActiveModeSubtitle = .init(value: " Listening starts from this phone ")
         #expect(state.gatewayTalkActiveVoiceDetail == "Ready • Listening starts from this phone")
 
-        state.gatewayTalkActiveModeTitle = "   "
+        state.gatewayTalkActiveModeTitle = .init(value: "   ")
         #expect(state.gatewayTalkActiveVoiceDetail == "Not active")
 
-        state.gatewayTalkLastIssueText = "  Fallback active  "
+        state.gatewayTalkLastIssueText = .init(value: "  Fallback active  ")
         #expect(state.gatewayTalkLastIssueDetail == "Fallback active")
-        state.gatewayTalkLastIssueText = "  "
+        state.gatewayTalkLastIssueText = .init(value: "  ")
         #expect(state.gatewayTalkLastIssueDetail == nil)
     }
 
