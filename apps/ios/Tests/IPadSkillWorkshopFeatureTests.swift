@@ -123,11 +123,57 @@ struct IPadSkillWorkshopFeatureTests {
         }
     }
 
+    @Test func `forced refresh failure surfaces error text`() async {
+        let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
+            IPadSkillWorkshopFeature(client: Self.client(
+                list: { _ in throw TestSkillWorkshopFailure.failed }))
+        }
+
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
+            $0.isLoading = true
+        }
+        await store.receive(.refreshResponse(.init(
+            force: true,
+            result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
+        {
+            $0.isLoading = false
+            $0.errorText = "skill boom"
+        }
+    }
+
+    @Test func `proposal mutation failure clears busy state and surfaces error text`() async {
+        let operation = IPadSkillProposalAction(kind: .reject, proposalID: "pending-1")
+        let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
+            IPadSkillWorkshopFeature(client: Self.client(
+                run: { _, _, _ in throw TestSkillWorkshopFailure.failed }))
+        }
+
+        await store.send(.proposalMutationRequested(.init(
+            kind: .reject,
+            proposalID: .init(value: "pending-1"),
+            sceneActive: true,
+            canRead: true,
+            canWrite: true,
+            hasOperatorAdminScope: true)))
+        {
+            $0.busyAction = operation
+        }
+        await store.receive(.proposalMutationResponse(.init(
+            kind: .reject,
+            sceneActive: true,
+            canRead: true,
+            result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
+        {
+            $0.busyAction = nil
+            $0.errorText = "skill boom"
+        }
+    }
+
     private static func client(
         list: @escaping @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam) async throws
             -> IPadSkillProposalManifest = { _ in
-            IPadSkillProposalManifest(proposals: [])
-        },
+                IPadSkillProposalManifest(proposals: [])
+            },
         inspect: @escaping @Sendable @MainActor (IPadSkillWorkshopAgentScopeParam, IPadSkillWorkshopProposalID)
         async throws -> IPadSkillProposalInspectResponse = { _, proposalID in
             Self.inspectResponse(id: proposalID.value, status: "pending", content: "")
@@ -187,5 +233,13 @@ struct IPadSkillWorkshopFeatureTests {
                     skillKey: "sample-skill")),
             content: content,
             supportFiles: [])
+    }
+}
+
+private enum TestSkillWorkshopFailure: LocalizedError {
+    case failed
+
+    var errorDescription: String? {
+        "skill boom"
     }
 }
