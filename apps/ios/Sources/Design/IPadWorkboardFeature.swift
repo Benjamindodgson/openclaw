@@ -120,6 +120,7 @@ struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String
 struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
+struct IPadWorkboardDispatchSummaryText: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
 struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
@@ -173,7 +174,7 @@ struct IPadWorkboardFeature {
         var isDispatching = false
         var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
         var busyCardID: IPadWorkboardBusyCardID?
-        var dispatchSummaryText: String?
+        var dispatchSummaryText: IPadWorkboardDispatchSummaryText?
         var selectedStatus = IPadWorkboardSelectedStatus(value: "active")
         var selectedBoardID = IPadWorkboardSelectedBoardID(value: "")
         var query = IPadWorkboardQuery(value: "")
@@ -616,7 +617,7 @@ struct IPadWorkboardFeature {
                 guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
                 switch response.result {
                 case let .success(snapshot):
-                    state.dispatchSummaryText = snapshot.summary.summaryText
+                    state.dispatchSummaryText = .init(value: snapshot.summary.summaryText)
                     state.applyCardsResponse(snapshot.cardsResponse)
                     return .none
 
