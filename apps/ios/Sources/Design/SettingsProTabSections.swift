@@ -540,7 +540,7 @@ extension SettingsProTab {
                     .controlSize(.small)
                     .disabled(
                         self.notificationStore.status == .checking
-                            || self.notificationStore.isRequestingAuthorization.value)
+                            || self.notificationStore.authorizationRequestPhase == .inFlight)
 
                     Text(self.notificationStatusDetail)
                         .font(.caption)
