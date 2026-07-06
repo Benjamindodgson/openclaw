@@ -388,13 +388,13 @@ struct IPadWorkboardScreen: View {
 
     private var draftNotesBinding: Binding<String> {
         Binding(
-            get: { self.store.draftNotes },
+            get: { self.store.draftNotes.value },
             set: { self.store.send(.draftNotesChanged(.init(notes: .init(value: $0)))) })
     }
 
     private var draftTitleBinding: Binding<String> {
         Binding(
-            get: { self.store.draftTitle },
+            get: { self.store.draftTitle.value },
             set: { self.store.send(.draftTitleChanged(.init(title: .init(value: $0)))) })
     }
 
