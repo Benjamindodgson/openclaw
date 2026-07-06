@@ -1850,11 +1850,17 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource
             .contains("@State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>"))
         #expect(!chatSource.contains("@State private var viewModelTransportModeID"))
+        #expect(chatSource.contains("struct ChatTransportModeID: Equatable, Sendable"))
         #expect(chatSource.contains("struct TransportModeRecord: Equatable, Sendable"))
+        #expect(chatSource.contains(
+            "struct TransportModeRecord: Equatable, Sendable { var transportModeID: ChatTransportModeID }"))
         #expect(chatSource.contains("case transportModeRecorded(TransportModeRecord)"))
-        #expect(chatSource
-            .contains("self.viewModelLifecycleStore.send(.transportModeRecorded(.init(" +
-                "transportModeID: transportModeID)))"))
+        #expect(chatSource.contains("state.transportModeID = record.transportModeID.value"))
+        #expect(chatSource.contains("self.viewModelLifecycleStore.send(.transportModeRecorded(.init("))
+        #expect(chatSource.contains("transportModeID: .init(value: transportModeID))))"))
+        #expect(!chatSource.contains(
+            "struct TransportModeRecord: Equatable, Sendable { var transportModeID: String }"))
+        #expect(!chatSource.contains("state.transportModeID = record.transportModeID\n"))
         #expect(appModelSource.contains("return IOSGatewayChatTransport(gateway: self.operatorSession)"))
         #expect(settingsSectionsSource.contains("Connected services and message routing"))
         #expect(settingsSectionsSource.contains("SettingsChannelsStoreFactory.live(appModel: self.appModel)"))

@@ -3,6 +3,10 @@ import OpenClawChatUI
 import OpenClawProtocol
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct ChatTransportModeID: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 struct ChatProTab: View {
     @Environment(NodeAppModel.self) private var appModel
     @Environment(\.colorScheme) private var colorScheme
@@ -173,7 +177,8 @@ struct ChatProTab: View {
         let sessionKey = self.appModel.chatSessionKey
         let transportModeID = self.appModel.chatTransportModeID
         guard let viewModel else {
-            self.viewModelLifecycleStore.send(.transportModeRecorded(.init(transportModeID: transportModeID)))
+            self.viewModelLifecycleStore.send(.transportModeRecorded(.init(
+                transportModeID: .init(value: transportModeID))))
             self.viewModel = OpenClawChatViewModel(
                 sessionKey: sessionKey,
                 transport: self.appModel.makeChatTransport(),
@@ -186,7 +191,8 @@ struct ChatProTab: View {
             return
         }
         if self.viewModelTransportModeID != transportModeID {
-            self.viewModelLifecycleStore.send(.transportModeRecorded(.init(transportModeID: transportModeID)))
+            self.viewModelLifecycleStore.send(.transportModeRecorded(.init(
+                transportModeID: .init(value: transportModeID))))
             self.viewModel = OpenClawChatViewModel(
                 sessionKey: sessionKey,
                 transport: self.appModel.makeChatTransport(),
@@ -404,7 +410,7 @@ struct ChatViewModelLifecycleFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct TransportModeRecord: Equatable, Sendable { var transportModeID: String }
+        struct TransportModeRecord: Equatable, Sendable { var transportModeID: ChatTransportModeID }
 
         case transportModeRecorded(TransportModeRecord)
     }
@@ -415,7 +421,7 @@ struct ChatViewModelLifecycleFeature {
         Reduce { state, action in
             switch action {
             case let .transportModeRecorded(record):
-                state.transportModeID = record.transportModeID
+                state.transportModeID = record.transportModeID.value
                 return .none
             }
         }
