@@ -957,8 +957,8 @@ extension OnboardingWizardView {
         let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedInstanceId.isEmpty {
             self.credentialsStore.send(.credentialsLoaded(.init(
-                token: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? "",
-                password: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? "")))
+                token: .init(value: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? ""),
+                password: .init(value: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""))))
         }
 
         let hasSavedGateway = GatewaySettingsStore.loadLastGatewayConnection() != nil

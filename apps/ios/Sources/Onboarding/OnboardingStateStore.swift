@@ -81,6 +81,10 @@ struct OnboardingGatewayServerName: Equatable, Sendable { var value: String? }
 
 struct OnboardingHasSavedGatewayConnection: Equatable, Sendable { var value: Bool }
 
+struct OnboardingGatewayToken: Equatable, Sendable { var value: String }
+
+struct OnboardingGatewayPassword: Equatable, Sendable { var value: String }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -464,8 +468,8 @@ struct OnboardingCredentialsFeature {
 
     enum Action: Equatable, Sendable {
         struct LoadedCredentials: Equatable, Sendable {
-            var token: String
-            var password: String
+            var token: OnboardingGatewayToken
+            var password: OnboardingGatewayPassword
         }
 
         struct ManualCredentialChange: Equatable, Sendable { var value: String }
@@ -487,8 +491,8 @@ struct OnboardingCredentialsFeature {
         Reduce { state, action in
             switch action {
             case let .credentialsLoaded(credentials):
-                state.gatewayToken = credentials.token
-                state.gatewayPassword = credentials.password
+                state.gatewayToken = credentials.token.value
+                state.gatewayPassword = credentials.password.value
                 return .none
 
             case let .gatewayPasswordChanged(change):

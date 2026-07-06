@@ -487,7 +487,10 @@ import Testing
         #expect(!store.state.hasGatewayToken)
         #expect(!store.state.hasGatewayPassword)
 
-        await store.send(.credentialsLoaded(.init(token: " token-1 ", password: " password-1 "))) {
+        await store.send(.credentialsLoaded(.init(
+            token: .init(value: " token-1 "),
+            password: .init(value: " password-1 "))))
+        {
             $0.gatewayToken = " token-1 "
             $0.gatewayPassword = " password-1 "
         }
