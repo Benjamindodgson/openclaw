@@ -84,11 +84,15 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String }
-struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable { var value: Bool }
 struct IPadSkillWorkshopNoticeMessage: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopQuery: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopSelectedAgentScopeID: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopStatusFilter: Equatable, Sendable { var value: String }
+
+enum IPadSkillWorkshopLoadingPhase: Equatable, Sendable {
+    case idle
+    case inFlight
+}
 
 enum IPadSkillWorkshopError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }
@@ -129,7 +133,7 @@ struct IPadSkillWorkshopFeature {
         var selectedAgentScopeID = IPadSkillWorkshopSelectedAgentScopeID(value: "")
         var statusFilter = IPadSkillWorkshopStatusFilter(value: "pending")
         var query = IPadSkillWorkshopQuery(value: "")
-        var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)
+        var loadingPhase = IPadSkillWorkshopLoadingPhase.idle
         var inspectingProposalID: IPadSkillWorkshopProposalID?
         var busyAction: IPadSkillProposalAction?
         var errorText: IPadSkillWorkshopFailureMessage?
@@ -408,19 +412,19 @@ struct IPadSkillWorkshopFeature {
 
             case let .refreshRequested(request):
                 guard request.sceneActivity.isActive else {
-                    state.isLoading = .init(value: false)
+                    state.loadingPhase = .idle
                     return .none
                 }
                 guard request.readAccess.canRead else {
                     state.proposals = []
                     state.errorText = nil
-                    state.isLoading = .init(value: false)
+                    state.loadingPhase = .idle
                     state.inspectingProposalID = nil
                     return .none
                 }
-                guard !state.isLoading.value else { return .none }
+                guard state.loadingPhase != .inFlight else { return .none }
 
-                state.isLoading = .init(value: true)
+                state.loadingPhase = .inFlight
                 state.errorText = nil
                 let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
                 return .run { send in
@@ -437,7 +441,7 @@ struct IPadSkillWorkshopFeature {
                 }
 
             case let .refreshResponse(response):
-                state.isLoading = .init(value: false)
+                state.loadingPhase = .idle
                 switch response.result {
                 case let .success(manifest):
                     let previousByID = Dictionary(uniqueKeysWithValues: state.proposals.map { ($0.id, $0) })
@@ -626,9 +630,9 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.isLoading.value)
+                    .disabled(self.store.loadingPhase == .inFlight)
 
-                    if self.store.isLoading.value {
+                    if self.store.loadingPhase == .inFlight {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -659,7 +663,7 @@ struct IPadSkillWorkshopScreen: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 8)
-                    if self.store.isLoading.value {
+                    if self.store.loadingPhase == .inFlight {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -686,7 +690,7 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.isLoading.value)
+                    .disabled(self.store.loadingPhase == .inFlight)
                 }
                 if let noticeText = self.store.noticeText {
                     Text(noticeText.value)
