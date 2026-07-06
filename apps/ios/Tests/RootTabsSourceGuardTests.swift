@@ -2530,6 +2530,10 @@ struct RootTabsSourceGuardTests {
         #expect(setupLinkFeatureSource.contains("await appleReviewDemoClient.enter()"))
         #expect(setupLinkFeatureSource.contains("enum ApplyResult: Equatable, Sendable"))
         #expect(setupLinkFeatureSource.contains("struct AppleReviewDemo: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource
+            .contains("struct SettingsGatewaySetupAppleReviewDemoStatusText: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource
+            .contains("var statusText: SettingsGatewaySetupAppleReviewDemoStatusText"))
         #expect(setupLinkFeatureSource.contains("struct SettingsGatewaySetupLinkFailureMessage: Equatable, Sendable"))
         #expect(setupLinkFeatureSource.contains("struct Failure: Equatable, Sendable"))
         #expect(setupLinkFeatureSource.contains(
@@ -2548,9 +2552,12 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.applyResultHandled)"))
         #expect(actionsSource.contains("case let .appleReviewDemo(demo):"))
         #expect(actionsSource.contains(
-            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText)))"))
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText.value)))"))
         #expect(applyFunction.contains(
             "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message.value)))"))
+        #expect(!setupLinkFeatureSource.contains("var statusText: String"))
+        #expect(!actionsSource.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText)))"))
         #expect(!setupLinkFeatureSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
         #expect(!setupLinkFeatureSource.contains("case failure(String)"))
         #expect(!applyFunction.contains(

@@ -338,7 +338,7 @@ extension SettingsProTab {
         switch result {
         case let .appleReviewDemo(demo):
             self.updateSetupCode("")
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText))))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText.value))))
             return false
 
         case let .failure(failure):
@@ -389,7 +389,7 @@ extension SettingsProTab {
         self.gatewaySetupLinkStore.send(.applyResultHandled)
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
-        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText))))
+        self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: demo.statusText.value))))
     }
 
     func connectAfterScannedGatewayLink() async {
