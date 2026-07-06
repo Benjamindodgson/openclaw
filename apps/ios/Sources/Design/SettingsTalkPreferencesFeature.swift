@@ -118,38 +118,38 @@ struct SettingsTalkPreferencesFeature {
         var talkBackgroundEnabled = SettingsTalkBackgroundEnabled(isEnabled: false)
         var talkSpeakerphoneEnabled = SettingsTalkSpeakerphoneEnabled(
             isEnabled: TalkDefaults.speakerphoneEnabledByDefault)
-        var gatewayTalkConfigLoaded = false
-        var gatewayTalkApiKeyConfigured = false
+        var gatewayTalkConfigLoaded = SettingsGatewayTalkConfigLoaded(value: false)
+        var gatewayTalkApiKeyConfigured = SettingsGatewayTalkApiKeyConfigured(value: false)
         var gatewayTalkTransportLabel = SettingsGatewayTalkTransportLabel(value: "Not loaded")
-        var gatewayTalkUsesRealtime = false
-        var isAppleReviewDemoModeEnabled = false
+        var gatewayTalkUsesRealtime = SettingsGatewayTalkUsesRealtime(value: false)
+        var isAppleReviewDemoModeEnabled = SettingsGatewayTalkAppleReviewDemoModeEnabled(value: false)
         var gatewayTalkActiveModeTitle = SettingsGatewayTalkActiveModeTitle(value: "Not active")
         var gatewayTalkActiveModeSubtitle = SettingsGatewayTalkActiveModeSubtitle(value: nil)
         var gatewayTalkLastIssueText = SettingsGatewayTalkLastIssueText(value: nil)
 
         var talkApiKeyStatus: String {
             Self.talkApiKeyStatus(
-                configLoaded: self.gatewayTalkConfigLoaded,
-                apiKeyConfigured: self.gatewayTalkApiKeyConfigured)
+                configLoaded: self.gatewayTalkConfigLoaded.value,
+                apiKeyConfigured: self.gatewayTalkApiKeyConfigured.value)
         }
 
         var gatewayDiagnosticTalkConfigLoaded: Bool {
-            self.isAppleReviewDemoModeEnabled || self.gatewayTalkConfigLoaded
+            self.isAppleReviewDemoModeEnabled.value || self.gatewayTalkConfigLoaded.value
         }
 
         var gatewayTalkConfigDetail: String {
-            if self.isAppleReviewDemoModeEnabled { return "Demo mode only" }
+            if self.isAppleReviewDemoModeEnabled.value { return "Demo mode only" }
             return self.gatewayTalkTransportLabel.value
         }
 
         var gatewayTalkConfigValue: String {
-            if self.isAppleReviewDemoModeEnabled { return "demo" }
-            return self.gatewayTalkConfigLoaded ? "loaded" : "missing"
+            if self.isAppleReviewDemoModeEnabled.value { return "demo" }
+            return self.gatewayTalkConfigLoaded.value ? "loaded" : "missing"
         }
 
         var gatewayTalkConfigColor: Color {
-            if self.isAppleReviewDemoModeEnabled { return .secondary }
-            return self.gatewayTalkConfigLoaded ? OpenClawBrand.ok : .secondary
+            if self.isAppleReviewDemoModeEnabled.value { return .secondary }
+            return self.gatewayTalkConfigLoaded.value ? OpenClawBrand.ok : .secondary
         }
 
         var gatewayTalkActiveVoiceDetail: String {
@@ -170,9 +170,9 @@ struct SettingsTalkPreferencesFeature {
 
         static func shouldShowRealtimeVoicePicker(
             providerSelection: TalkModeProviderSelection,
-            gatewayTalkUsesRealtime: Bool) -> Bool
+            gatewayTalkUsesRealtime: SettingsGatewayTalkUsesRealtime) -> Bool
         {
-            providerSelection == .openAIRealtime || gatewayTalkUsesRealtime
+            providerSelection == .openAIRealtime || gatewayTalkUsesRealtime.value
         }
 
         static func talkApiKeyStatus(configLoaded: Bool, apiKeyConfigured: Bool) -> String {
@@ -266,13 +266,13 @@ struct SettingsTalkPreferencesFeature {
 
             switch action {
             case let .gatewayTalkConfigSynced(sync):
-                state.gatewayTalkConfigLoaded = sync.configLoaded.value
-                state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured.value
-                state.gatewayTalkUsesRealtime = sync.usesRealtime.value
+                state.gatewayTalkConfigLoaded = sync.configLoaded
+                state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured
+                state.gatewayTalkUsesRealtime = sync.usesRealtime
                 return .none
 
             case let .gatewayTalkDisplayContextSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
                 state.gatewayTalkTransportLabel = sync.transportLabel
                 return .none
 
