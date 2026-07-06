@@ -696,9 +696,9 @@ import Testing
         }
 
         await store.send(.initialized(.init(
-            host: "openclaw.local",
-            port: 18789,
-            tls: true,
+            host: .init(value: "openclaw.local"),
+            port: .init(value: 18789),
+            tls: .init(value: true),
             lastMode: .developerLocal)))
         {
             $0.selectedMode = .developerLocal
@@ -706,12 +706,12 @@ import Testing
             $0.manualTLS = false
         }
 
-        await store.send(.manualPortTextChanged(.init(text: "65abc536"))) {
+        await store.send(.manualPortTextChanged(.init(text: .init(value: "65abc536")))) {
             $0.manualPort = 65535
             $0.manualPortText = "65535"
         }
 
-        await store.send(.manualPortTextChanged(.init(text: "0"))) {
+        await store.send(.manualPortTextChanged(.init(text: .init(value: "0")))) {
             $0.manualPort = 0
             $0.manualPortText = ""
         }
@@ -728,17 +728,21 @@ import Testing
             $0.manualTLS = true
         }
 
-        await store.send(.manualHostChanged(.init(host: "gateway.example.com"))) {
+        await store.send(.manualHostChanged(.init(host: .init(value: "gateway.example.com")))) {
             $0.manualHost = "gateway.example.com"
         }
 
-        await store.send(.manualTLSChanged(.init(useTLS: false))) {
+        await store.send(.manualTLSChanged(.init(useTLS: .init(value: false)))) {
             $0.manualTLS = false
         }
 
         #expect(store.state.canConnectManual)
 
-        await store.send(.gatewayLinkApplied(.init(host: "studio.local", port: 19000, tls: false))) {
+        await store.send(.gatewayLinkApplied(.init(
+            host: .init(value: "studio.local"),
+            port: .init(value: 19000),
+            tls: .init(value: false))))
+        {
             $0.manualHost = "studio.local"
             $0.manualPort = 19000
             $0.manualPortText = "19000"
@@ -747,9 +751,9 @@ import Testing
 
         await store.send(.manualConnectionRequested) {
             $0.manualConnectionRequest = OnboardingConnectionFormFeature.ManualConnectionRequest(
-                host: "studio.local",
-                port: 19000,
-                useTLS: false)
+                host: .init(value: "studio.local"),
+                port: .init(value: 19000),
+                useTLS: .init(value: false))
         }
 
         await store.send(.manualConnectionRequestHandled) {

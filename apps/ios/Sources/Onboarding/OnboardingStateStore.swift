@@ -89,6 +89,14 @@ struct OnboardingQRMessage: Equatable, Sendable { var value: String? }
 
 struct OnboardingSetupCode: Equatable, Sendable { var value: String }
 
+struct OnboardingManualHost: Equatable, Sendable { var value: String }
+
+struct OnboardingManualPort: Equatable, Sendable { var value: Int }
+
+struct OnboardingManualPortText: Equatable, Sendable { var value: String }
+
+struct OnboardingManualTLS: Equatable, Sendable { var value: Bool }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -910,27 +918,27 @@ struct OnboardingConnectionFormFeature {
     }
 
     struct ManualConnectionRequest: Equatable, Sendable {
-        var host: String
-        var port: Int
-        var useTLS: Bool
+        var host: OnboardingManualHost
+        var port: OnboardingManualPort
+        var useTLS: OnboardingManualTLS
     }
 
     enum Action: Equatable, Sendable {
-        struct ManualHostChange: Equatable, Sendable { var host: String }
-        struct ManualPortTextChange: Equatable, Sendable { var text: String }
-        struct ManualTLSChange: Equatable, Sendable { var useTLS: Bool }
+        struct ManualHostChange: Equatable, Sendable { var host: OnboardingManualHost }
+        struct ManualPortTextChange: Equatable, Sendable { var text: OnboardingManualPortText }
+        struct ManualTLSChange: Equatable, Sendable { var useTLS: OnboardingManualTLS }
         struct ModeSelection: Equatable, Sendable { var mode: OnboardingConnectionMode }
         struct SelectedModeChange: Equatable, Sendable { var mode: OnboardingConnectionMode? }
         struct GatewayLinkApplication: Equatable, Sendable {
-            var host: String
-            var port: Int
-            var tls: Bool
+            var host: OnboardingManualHost
+            var port: OnboardingManualPort
+            var tls: OnboardingManualTLS
         }
 
         struct Initialization: Equatable, Sendable {
-            var host: String
-            var port: Int
-            var tls: Bool
+            var host: OnboardingManualHost
+            var port: OnboardingManualPort
+            var tls: OnboardingManualTLS
             var lastMode: OnboardingConnectionMode?
         }
 
@@ -958,20 +966,20 @@ struct OnboardingConnectionFormFeature {
                 return .none
 
             case let .gatewayLinkApplied(application):
-                state.manualHost = application.host
-                state.manualPort = application.port
+                state.manualHost = application.host.value
+                state.manualPort = application.port.value
                 state.syncManualPortText()
-                state.manualTLS = application.tls
+                state.manualTLS = application.tls.value
                 if state.selectedMode == nil {
-                    state.selectedMode = application.tls ? .remoteDomain : .homeNetwork
+                    state.selectedMode = application.tls.value ? .remoteDomain : .homeNetwork
                 }
                 return .none
 
             case let .initialized(initialization):
                 if state.normalizedManualHost.isEmpty {
-                    state.manualHost = initialization.host
-                    state.manualPort = initialization.port
-                    state.manualTLS = initialization.tls
+                    state.manualHost = initialization.host.value
+                    state.manualPort = initialization.port.value
+                    state.manualTLS = initialization.tls.value
                 }
                 state.syncManualPortText()
                 if state.selectedMode == nil {
@@ -990,9 +998,9 @@ struct OnboardingConnectionFormFeature {
                     return .none
                 }
                 state.manualConnectionRequest = ManualConnectionRequest(
-                    host: host,
-                    port: state.manualPort,
-                    useTLS: state.manualTLS)
+                    host: .init(value: host),
+                    port: .init(value: state.manualPort),
+                    useTLS: .init(value: state.manualTLS))
                 return .none
 
             case .manualConnectionRequestHandled:
@@ -1000,11 +1008,11 @@ struct OnboardingConnectionFormFeature {
                 return .none
 
             case let .manualHostChanged(change):
-                state.manualHost = change.host
+                state.manualHost = change.host.value
                 return .none
 
             case let .manualPortTextChanged(change):
-                let digits = change.text.filter(\.isNumber)
+                let digits = change.text.value.filter(\.isNumber)
                 guard let parsed = Int(digits), parsed > 0 else {
                     state.manualPort = 0
                     state.manualPortText = ""
@@ -1015,7 +1023,7 @@ struct OnboardingConnectionFormFeature {
                 return .none
 
             case let .manualTLSChanged(change):
-                state.manualTLS = change.useTLS
+                state.manualTLS = change.useTLS.value
                 return .none
 
             case let .modeSelected(selection):
