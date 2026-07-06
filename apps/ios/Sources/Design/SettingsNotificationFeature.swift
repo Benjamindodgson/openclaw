@@ -8,8 +8,14 @@ struct SettingsNotificationAuthorizationClient {
     var requestAuthorization: @Sendable () async -> SettingsNotificationAuthorizationResult
 }
 
-struct SettingsNotificationAuthorizationResult: Equatable {
-    let granted: Bool
+// swiftformat:disable redundantSendable
+
+struct SettingsNotificationAuthorizationGranted: Equatable, Sendable {
+    let value: Bool
+}
+
+struct SettingsNotificationAuthorizationResult: Equatable, Sendable {
+    let granted: SettingsNotificationAuthorizationGranted
     let status: SettingsNotificationStatus
 }
 
@@ -47,7 +53,7 @@ extension SettingsNotificationAuthorizationClient: DependencyKey {
             ])) ?? false
             let settings = await UNUserNotificationCenter.current().notificationSettings()
             return SettingsNotificationAuthorizationResult(
-                granted: granted,
+                granted: .init(value: granted),
                 status: SettingsNotificationStatus(settings.authorizationStatus))
         })
 
@@ -56,7 +62,7 @@ extension SettingsNotificationAuthorizationClient: DependencyKey {
             .unknown
         },
         requestAuthorization: {
-            SettingsNotificationAuthorizationResult(granted: false, status: .unknown)
+            SettingsNotificationAuthorizationResult(granted: .init(value: false), status: .unknown)
         })
 }
 
@@ -87,7 +93,6 @@ struct SettingsNotificationFeature {
         self.registrationClientOverride = registrationClient
     }
 
-    // swiftformat:disable redundantSendable
     struct HostedRelayHost: Equatable, Sendable { var value: String? }
 
     @ObservableState
