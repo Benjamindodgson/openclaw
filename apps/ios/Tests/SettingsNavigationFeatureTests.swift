@@ -240,7 +240,7 @@ struct SettingsNavigationFeatureTests {
             notificationsAllowed: .init(value: false),
             lastRunText: .init(value: "4:20 PM"))))
         {
-            $0.issueCount = 3
+            $0.issueCount = .init(value: 3)
             $0.lastRunText = .init(value: "4:20 PM")
         }
         await store.send(.diagnosticsCompletionRequested(.init(
@@ -250,7 +250,7 @@ struct SettingsNavigationFeatureTests {
             notificationsAllowed: .init(value: true),
             lastRunText: .init(value: "4:22 PM"))))
         {
-            $0.issueCount = 0
+            $0.issueCount = .init(value: 0)
             $0.lastRunText = .init(value: "4:22 PM")
         }
     }
@@ -294,11 +294,11 @@ struct SettingsNavigationFeatureTests {
         #expect(state.runValue == "pending")
         #expect(state.runColor == .secondary)
 
-        state.issueCount = 0
+        state.issueCount = .init(value: 0)
         #expect(state.runValue == "pass")
         #expect(state.runColor == OpenClawBrand.ok)
 
-        state.issueCount = 3
+        state.issueCount = .init(value: 3)
         #expect(state.runValue == "3")
         #expect(state.runColor == OpenClawBrand.warn)
     }
