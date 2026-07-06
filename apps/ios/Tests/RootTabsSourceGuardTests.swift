@@ -2403,6 +2403,11 @@ struct RootTabsSourceGuardTests {
 
         #expect(settingsSource.contains("enum ManualGatewayPortResolutionResult: Equatable, Sendable"))
         #expect(manualPortFeature.contains("case failure(Failure)"))
+        #expect(manualPortFeature.contains(
+            "struct ManualGatewayPortResolutionFailureMessage: Equatable, Sendable { var value: String }"))
+        #expect(manualPortFeature.contains("var message: ManualGatewayPortResolutionFailureMessage"))
+        #expect(manualPortFeature.contains("static let invalidPortFailureMessage"))
+        #expect(manualPortFeature.contains("value: \"Failed: invalid port\""))
         #expect(settingsSource.contains("struct ManualGatewayPortResolutionHost: Equatable, Sendable"))
         #expect(settingsSource.contains("struct ManualGatewayPortResolutionTLS: Equatable, Sendable"))
         #expect(settingsSource.contains("struct ManualGatewayPortResolutionRequest: Equatable, Sendable"))
@@ -2424,7 +2429,8 @@ struct RootTabsSourceGuardTests {
         #expect(manualPortFeature.contains("state.manualGatewayPort = port"))
         #expect(manualPortFeature.contains("state.manualGatewayPortText = port > 0 ? String(port) : \"\""))
         #expect(settingsSource.contains("let filtered = change.text.value.filter(\\.isNumber)"))
-        #expect(settingsSource.contains("state.manualGatewayPortResolutionResult = .failure(.init(message:"))
+        #expect(settingsSource.contains(
+            "state.manualGatewayPortResolutionResult = .failure(.init(message: Self.invalidPortFailureMessage))"))
         #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionRequested(.init("))
         #expect(resolveManualPortFunction.contains("host: .init(value: host)"))
         #expect(resolveManualPortFunction.contains("useTLS: .init(value: self.manualGatewayTLS)"))
@@ -2443,11 +2449,13 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains(".manualGatewayPortTextChanged(.init(text: $0))"))
         #expect(actionsSource.contains("self.manualGatewayPortStore.send(.manualGatewayPortResolutionResultHandled)"))
         #expect(resolveManualPortFunction.contains(
-            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message)))"))
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message.value)))"))
         #expect(applyFunction.contains("self.resolveManualPortForConnection(host: host)"))
         #expect(scannedConnectFunction.contains("self.resolveManualPortForConnection(host: host)"))
+        #expect(!manualPortFeature.contains("struct Failure: Equatable, Sendable { var message: String }"))
         #expect(!manualPortFeature.contains("case failure(String)"))
         #expect(!actionsSource.contains("func resolvedManualPort(host: String)"))
+        #expect(!resolveManualPortFunction.contains("failure.message)))"))
         #expect(!applyFunction.contains("Failed: invalid port"))
         #expect(!scannedConnectFunction.contains("Failed: invalid port"))
     }
