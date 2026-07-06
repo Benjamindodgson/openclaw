@@ -130,7 +130,7 @@ struct IPadSkillWorkshopFeature {
         var statusFilter = IPadSkillWorkshopStatusFilter(value: "pending")
         var query = IPadSkillWorkshopQuery(value: "")
         var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)
-        var inspectingProposalID: String?
+        var inspectingProposalID: IPadSkillWorkshopProposalID?
         var busyAction: IPadSkillProposalAction?
         var errorText: IPadSkillWorkshopFailureMessage?
         var noticeText: IPadSkillWorkshopNoticeMessage?
@@ -469,7 +469,7 @@ struct IPadSkillWorkshopFeature {
         else { return .none }
         guard state.inspectingProposalID == nil else { return .none }
 
-        state.inspectingProposalID = request.proposalID.value
+        state.inspectingProposalID = request.proposalID
         state.errorText = nil
         let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
         return .run { send in
@@ -786,7 +786,7 @@ struct IPadSkillWorkshopScreen: View {
                         status: status,
                         proposals: self.proposals(forLaneStatus: status),
                         selectedProposalID: self.store.selectedProposalID?.value,
-                        inspectingProposalID: self.store.inspectingProposalID,
+                        inspectingProposalID: self.store.inspectingProposalID?.value,
                         canApplyProposalMutations: self.canApplyProposalMutations,
                         busyAction: self.store.busyAction,
                         select: { proposal in
@@ -836,7 +836,7 @@ struct IPadSkillWorkshopScreen: View {
                         IPadSkillProposalRow(
                             proposal: proposal,
                             isSelected: proposal.id == self.store.selectedProposalID?.value,
-                            isBusy: self.store.inspectingProposalID == proposal.id)
+                            isBusy: self.store.inspectingProposalID?.value == proposal.id)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -919,7 +919,7 @@ struct IPadSkillWorkshopScreen: View {
                     ProValuePill(value: proposal.status, color: proposal.statusColor)
                 }
 
-                if self.store.inspectingProposalID == proposal.id {
+                if self.store.inspectingProposalID?.value == proposal.id {
                     ProgressView().controlSize(.small)
                 }
 
