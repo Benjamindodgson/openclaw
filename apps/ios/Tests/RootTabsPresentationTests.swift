@@ -135,7 +135,7 @@ struct RootTabsPresentationTests {
             onboardingComplete: false,
             hasExistingGatewayConfig: false)))
         {
-            $0.didEvaluateOnboarding = true
+            $0.onboardingEvaluationGate = .init(didEvaluate: true)
             $0.showOnboarding = true
             $0.startupRoute = .onboarding
         }
@@ -160,8 +160,8 @@ struct RootTabsPresentationTests {
         {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
-            $0.didEvaluateOnboarding = true
-            $0.didAutoOpenSettings = true
+            $0.onboardingEvaluationGate = .init(didEvaluate: true)
+            $0.autoOpenSettingsGate = .init(didOpen: true)
             $0.startupRoute = .settings
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
                 Self.localNetworkAccessCommand(reason: "root_appear"))
@@ -186,7 +186,7 @@ struct RootTabsPresentationTests {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
             $0.startupRoute = .settings
-            $0.didAutoOpenSettings = true
+            $0.autoOpenSettingsGate = .init(didOpen: true)
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
                 Self.localNetworkAccessCommand(reason: "auto_open_settings"))
         }
@@ -208,7 +208,7 @@ struct RootTabsPresentationTests {
 
         await store.send(.gatewaySetupRequestChanged(Self.gatewaySetupRequest(requestID: 42))) {
             $0.showOnboarding = false
-            $0.didAutoOpenSettings = true
+            $0.autoOpenSettingsGate = .init(didOpen: true)
             $0.handledGatewaySetupRequestID = .init(value: 42)
             $0.presentedSheet = nil
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
@@ -381,7 +381,7 @@ struct RootTabsPresentationTests {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
             $0.hasExistingGatewayConfig = true
-            $0.didEvaluateOnboarding = true
+            $0.onboardingEvaluationGate = .init(didEvaluate: true)
             $0.startupRoute = .none
             $0.presentationCommand = .requestLocalNetworkAccess(
                 Self.localNetworkAccessCommand(reason: "root_appear"))
