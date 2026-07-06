@@ -952,8 +952,16 @@ struct SettingsDebugOptionsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var canvasDebugStatusEnabled = false
-        var discoveryDebugLogsEnabled = false
+        var canvasDebugStatus = Action.SettingsDebugOptionEnabled(isEnabled: false)
+        var discoveryDebugLogs = Action.SettingsDebugOptionEnabled(isEnabled: false)
+
+        var canvasDebugStatusEnabled: Bool {
+            self.canvasDebugStatus.isEnabled
+        }
+
+        var discoveryDebugLogsEnabled: Bool {
+            self.discoveryDebugLogs.isEnabled
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -980,17 +988,17 @@ struct SettingsDebugOptionsFeature {
 
             switch action {
             case let .canvasDebugStatusChanged(change):
-                state.canvasDebugStatusEnabled = change.enabled.isEnabled
+                state.canvasDebugStatus = change.enabled
                 return .none
 
             case let .debugOptionsSynced(sync):
-                state.discoveryDebugLogsEnabled = sync.discoveryDebugLogsEnabled.isEnabled
-                state.canvasDebugStatusEnabled = sync.canvasDebugStatusEnabled.isEnabled
+                state.discoveryDebugLogs = sync.discoveryDebugLogsEnabled
+                state.canvasDebugStatus = sync.canvasDebugStatusEnabled
                 return .none
 
             case let .discoveryDebugLogsChanged(change):
                 let enabled = change.enabled
-                state.discoveryDebugLogsEnabled = enabled.isEnabled
+                state.discoveryDebugLogs = enabled
                 return .run { _ in
                     await discoveryDebugLoggingClient.setDiscoveryDebugLoggingEnabled(enabled.isEnabled)
                 }
