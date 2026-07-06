@@ -2799,18 +2799,30 @@ struct RootTabsSourceGuardTests {
     @Test func `settings talk toggle apple review decision is reducer owned`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let voiceControlFeature = try Self.extract(
+            settingsSource,
+            from: "struct SettingsVoiceControlFeature",
+            to: "struct SettingsProTab: View")
         let oldTalkToggleGuard = "func updateTalkEnabled(_ enabled: Bool) {\n"
             + "        guard !self.appModel.isAppleReviewDemoModeEnabled else"
 
         #expect(settingsSource.contains("struct TalkEnabledChangeRequest: Equatable, Sendable"))
         #expect(settingsSource.contains("case talkEnabledChangeRequested(TalkEnabledChangeRequest)"))
+        #expect(settingsSource.contains(
+            "struct SettingsVoiceControlDemoModeEnabled: Equatable, Sendable { var value: Bool }"))
+        #expect(settingsSource.contains(
+            "var isAppleReviewDemoModeEnabled: SettingsVoiceControlDemoModeEnabled"))
         #expect(settingsSource.contains("let requested = request.enabled"))
-        #expect(settingsSource.contains("let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : requested.isEnabled"))
+        #expect(settingsSource.contains(
+            "let talkEnabled = request.isAppleReviewDemoModeEnabled.value ? false : requested.isEnabled"))
         #expect(settingsSource.contains("state.talkEnabled = talkEnabled"))
         #expect(actionsSource.contains("self.voiceControlStore.send(.talkEnabledChangeRequested(.init("))
         #expect(actionsSource.contains("enabled: .init(isEnabled: enabled)"))
+        #expect(actionsSource.contains(
+            "isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled)"))
         #expect(actionsSource.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
         #expect(!settingsSource.contains("request.isAppleReviewDemoModeEnabled ? false : request.enabled"))
+        #expect(!voiceControlFeature.contains("var isAppleReviewDemoModeEnabled: Bool"))
         #expect(actionsSource.contains(oldTalkToggleGuard) == false)
     }
 
@@ -2890,8 +2902,11 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("struct SettingsVoiceControlClient: Sendable"))
         #expect(settingsSource.contains("var settingsVoiceControl: SettingsVoiceControlClient"))
         #expect(settingsSource.contains("struct SettingsTalkEnabled: Equatable, Sendable"))
+        #expect(settingsSource.contains(
+            "struct SettingsVoiceControlDemoModeEnabled: Equatable, Sendable { var value: Bool }"))
         #expect(settingsSource.contains("struct TalkEnabledChange: Equatable, Sendable"))
         #expect(settingsSource.contains("var enabled: SettingsTalkEnabled"))
+        #expect(settingsSource.contains("var isAppleReviewDemoModeEnabled: SettingsVoiceControlDemoModeEnabled"))
         #expect(settingsSource.contains("struct VoiceControlSync: Equatable, Sendable"))
         #expect(settingsSource.contains("struct SettingsVoiceWakeEnabled: Equatable, Sendable"))
         #expect(settingsSource.contains("struct VoiceWakeEnabledChange: Equatable, Sendable"))
@@ -2907,6 +2922,8 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("voiceControlClient: .live(appModel: self.appModel)"))
         #expect(updateTalkFunction.contains("self.voiceControlStore.send(.talkEnabledChangeRequested(.init("))
         #expect(updateTalkFunction.contains("enabled: .init(isEnabled: enabled)"))
+        #expect(updateTalkFunction.contains(
+            "isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled)"))
         #expect(updateTalkFunction.contains("self.storedTalkEnabled = self.voiceControlStore.talkEnabled"))
         #expect(!updateTalkFunction.contains("self.appModel.setTalkEnabled"))
         #expect(updateVoiceWakeFunction.contains("enabled: .init(isEnabled: enabled)"))

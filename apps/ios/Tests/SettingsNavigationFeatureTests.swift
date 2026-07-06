@@ -2296,14 +2296,14 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.talkEnabledChangeRequested(.init(
             enabled: .init(isEnabled: true),
-            isAppleReviewDemoModeEnabled: false)))
+            isAppleReviewDemoModeEnabled: .init(value: false))))
         {
             $0.talkEnabled = true
         }
 
         await store.send(.talkEnabledChangeRequested(.init(
             enabled: .init(isEnabled: true),
-            isAppleReviewDemoModeEnabled: true)))
+            isAppleReviewDemoModeEnabled: .init(value: true))))
         {
             $0.talkEnabled = false
         }
