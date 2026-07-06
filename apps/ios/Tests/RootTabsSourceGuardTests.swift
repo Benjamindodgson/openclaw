@@ -261,14 +261,21 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("text: self.skillFilterBinding"))
         #expect(skillsSource.contains("selection: self.skillStatusFilterBinding"))
         #expect(skillsSource.contains("self.skillFilterStore.send(.clearSearchTapped)"))
-        #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationStarted(.init(key: busyKey)))"))
-        #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFinished(.init(key: busyKey)))"))
+        #expect(skillsSource.contains("let mutationKey = AgentSkillPolicyMutationKey(value: busyKey)"))
+        #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationStarted(.init(key: mutationKey)))"))
+        #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFinished(.init(key: mutationKey)))"))
+        #expect(source.contains("struct AgentSkillPolicyMutationKey: Equatable, Sendable"))
         #expect(source.contains("struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable"))
         #expect(source.contains("struct AgentSkillPolicyMutationSuccessMessage: Equatable, Sendable"))
+        #expect(source.contains("var key: AgentSkillPolicyMutationKey"))
         #expect(source.contains("var message: AgentSkillPolicyMutationFailureMessage"))
         #expect(source.contains("var message: AgentSkillPolicyMutationSuccessMessage"))
+        #expect(source.contains("state.busyKeys.insert(mutation.key.value)"))
+        #expect(source.contains("state.busyKeys.remove(mutation.key.value)"))
         #expect(source.contains("state.statusText = result.message.value"))
         #expect(source.contains("state.errorText = failure.message.value"))
+        #expect(!source.contains(
+            "struct MutationKey: Equatable, Sendable {\n            var key: String\n        }\n\n        struct MutationFailure: Equatable, Sendable {\n            var message: AgentSkillPolicyMutationFailureMessage"))
         #expect(!source
             .contains("struct MutationFailure: Equatable, Sendable {\n            var message: String"))
         #expect(!source

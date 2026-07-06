@@ -393,6 +393,7 @@ struct AgentSelectionFeature {
 }
 
 // swiftformat:disable redundantSendable
+struct AgentSkillPolicyMutationKey: Equatable, Sendable { var value: String }
 struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable { var value: String }
 struct AgentSkillPolicyMutationSuccessMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
@@ -409,7 +410,7 @@ struct AgentSkillPolicyMutationFeature {
 
     enum Action: Equatable, Sendable {
         struct MutationKey: Equatable, Sendable {
-            var key: String
+            var key: AgentSkillPolicyMutationKey
         }
 
         struct MutationFailure: Equatable, Sendable {
@@ -432,7 +433,7 @@ struct AgentSkillPolicyMutationFeature {
         Reduce { state, action in
             switch action {
             case let .mutationStarted(mutation):
-                state.busyKeys.insert(mutation.key)
+                state.busyKeys.insert(mutation.key.value)
                 state.errorText = nil
                 state.statusText = nil
                 return .none
@@ -446,7 +447,7 @@ struct AgentSkillPolicyMutationFeature {
                 return .none
 
             case let .mutationFinished(mutation):
-                state.busyKeys.remove(mutation.key)
+                state.busyKeys.remove(mutation.key.value)
                 return .none
             }
         }
