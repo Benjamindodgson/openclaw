@@ -537,7 +537,11 @@ struct SettingsAgentSelectionFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var selectedAgentPickerId = ""
+        var selectedAgent = SelectedAgentID(value: "")
+
+        var selectedAgentPickerId: String {
+            self.selectedAgent.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -558,14 +562,14 @@ struct SettingsAgentSelectionFeature {
 
             switch action {
             case let .pickerSelectionChanged(change):
-                state.selectedAgentPickerId = change.selection.value
+                state.selectedAgent = change.selection
                 let selectedAgentId = change.selection.normalized
                 return .run { _ in
                     await selectedAgentClient.setSelectedAgentId(selectedAgentId)
                 }
 
             case let .selectedAgentSynced(sync):
-                state.selectedAgentPickerId = sync.selectedAgent?.value ?? ""
+                state.selectedAgent = sync.selectedAgent ?? .init(value: "")
                 return .none
             }
         }

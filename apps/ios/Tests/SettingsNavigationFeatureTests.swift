@@ -1791,10 +1791,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.pickerSelectionChanged(.init(selection: .init(value: " agent-1 ")))) {
-            $0.selectedAgentPickerId = " agent-1 "
+            $0.selectedAgent = .init(value: " agent-1 ")
         }
         await store.send(.pickerSelectionChanged(.init(selection: .init(value: "   ")))) {
-            $0.selectedAgentPickerId = "   "
+            $0.selectedAgent = .init(value: "   ")
         }
         await store.finish()
 
@@ -1805,16 +1805,16 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings agent selection syncs external agent selection`() async {
         var initialState = SettingsAgentSelectionFeature.State()
-        initialState.selectedAgentPickerId = "agent-1"
+        initialState.selectedAgent = .init(value: "agent-1")
         let store = TestStore(initialState: initialState) {
             SettingsAgentSelectionFeature()
         }
 
         await store.send(.selectedAgentSynced(.init(selectedAgent: .init(value: "agent-2")))) {
-            $0.selectedAgentPickerId = "agent-2"
+            $0.selectedAgent = .init(value: "agent-2")
         }
         await store.send(.selectedAgentSynced(.init(selectedAgent: nil))) {
-            $0.selectedAgentPickerId = ""
+            $0.selectedAgent = .init(value: "")
         }
     }
 
