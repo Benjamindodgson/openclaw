@@ -239,7 +239,7 @@ struct IPadWorkboardScreen: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)
-        .disabled(self.store.isCreatingCard)
+        .disabled(self.store.isCreatingCard.value)
         .accessibilityHint("Opens card title and notes entry")
     }
 
@@ -532,9 +532,9 @@ struct IPadWorkboardScreen: View {
                         await self.createCard()
                     }
                 } label: {
-                    Text(self.store.isCreatingCard ? "Creating..." : "Create")
+                    Text(self.store.isCreatingCard.value ? "Creating..." : "Create")
                 }
-                .disabled(self.store.isCreatingCard)
+                .disabled(self.store.isCreatingCard.value)
                 .accessibilityHint(self.createUnavailableMessage ?? "Creates a workboard card")
             }
         }
@@ -573,7 +573,7 @@ struct IPadWorkboardScreen: View {
 
     private var createUnavailableMessage: String? {
         IPadWorkboardFeature.State.createUnavailableMessage(
-            isCreatingCard: self.store.isCreatingCard,
+            isCreatingCard: self.store.isCreatingCard.value,
             trimmedDraftTitle: self.store.trimmedDraftTitle,
             canRead: self.canRead,
             canWrite: self.canWrite)
