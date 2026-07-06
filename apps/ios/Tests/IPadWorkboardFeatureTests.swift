@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 import Testing
 @testable import OpenClaw
 
@@ -117,6 +118,26 @@ struct IPadWorkboardFeatureTests {
         }
     }
 
+    @Test func `forced refresh failure surfaces error text`() async {
+        var client = Self.failingClient()
+        client.listCards = { _ in throw TestWorkboardFailure.failed }
+        let store = TestStore(initialState: IPadWorkboardFeature.State()) {
+            IPadWorkboardFeature(client: client)
+        }
+
+        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
+            $0.isRefreshing = true
+        }
+        await store.receive(.refreshResponse(.init(
+            boardScope: .init(boardID: nil),
+            force: true,
+            result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
+        {
+            $0.isRefreshing = false
+            $0.errorText = "workboard boom"
+        }
+    }
+
     @Test func `create request sends trimmed params and inserts returned card`() async {
         let existing = Self.card(id: "existing", status: "ready", position: 1000, boardID: "planning")
         let created = Self.card(id: "created", status: "ready", position: 2000, boardID: "planning")
@@ -152,6 +173,27 @@ struct IPadWorkboardFeatureTests {
             $0.presentedSheet = nil
             $0.cards = [existing, created]
             $0.knownBoardIDs = ["planning"]
+        }
+    }
+
+    @Test func `create failure clears busy state and surfaces error text`() async {
+        var client = Self.failingClient()
+        client.create = { _ in throw TestWorkboardFailure.failed }
+        var initialState = IPadWorkboardFeature.State()
+        initialState.draftTitle = "New card"
+        let store = TestStore(initialState: initialState) {
+            IPadWorkboardFeature(client: client)
+        }
+
+        await store.send(.createRequested(.init(canRead: true, canWrite: true))) {
+            $0.isCreatingCard = true
+            $0.errorText = nil
+        }
+        await store.receive(.createResponse(.init(
+            result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
+        {
+            $0.isCreatingCard = false
+            $0.errorText = "workboard boom"
         }
     }
 
@@ -261,12 +303,12 @@ struct IPadWorkboardFeatureTests {
 
     private static func failingClient() -> IPadWorkboardClient {
         IPadWorkboardClient(
-            listCards: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected listCards")) },
-            listBoards: { throw IPadWorkboardError.failed(.init(message: "unexpected listBoards")) },
-            create: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected create")) },
-            move: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected move")) },
-            archive: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected archive")) },
-            dispatch: { _ in throw IPadWorkboardError.failed(.init(message: "unexpected dispatch")) })
+            listCards: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected listCards"))) },
+            listBoards: { throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected listBoards"))) },
+            create: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected create"))) },
+            move: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected move"))) },
+            archive: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected archive"))) },
+            dispatch: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected dispatch"))) })
     }
 
     private static func card(
@@ -291,5 +333,13 @@ struct IPadWorkboardFeatureTests {
             metadata: IPadWorkboardMetadata(
                 archivedAt: archivedAt,
                 automation: IPadWorkboardAutomationMetadata(boardId: boardID)))
+    }
+}
+
+private enum TestWorkboardFailure: LocalizedError {
+    case failed
+
+    var errorDescription: String? {
+        "workboard boom"
     }
 }
