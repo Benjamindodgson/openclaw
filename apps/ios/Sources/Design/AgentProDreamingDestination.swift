@@ -101,8 +101,10 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct AgentDreamingMaintenanceFailureMessage: Equatable, Sendable { var value: String }
+
 enum AgentDreamingMaintenanceError: Error, Equatable, Sendable {
-    struct Failure: Equatable, Sendable { var message: String }
+    struct Failure: Equatable, Sendable { var message: AgentDreamingMaintenanceFailureMessage }
 
     case failed(Failure)
 }
@@ -162,7 +164,7 @@ struct AgentDreamingDestinationFeature {
                         await send(.dreamActionResponse(.init(result: .success(summary))))
                     } catch {
                         await send(.dreamActionResponse(.init(
-                            result: .failure(.failed(.init(message: error.localizedDescription))))))
+                            result: .failure(.failed(.init(message: .init(value: error.localizedDescription)))))))
                     }
                 }
 
@@ -192,7 +194,7 @@ extension AgentDreamingMaintenanceError {
     var message: String {
         switch self {
         case let .failed(failure):
-            failure.message
+            failure.message.value
         }
     }
 }
