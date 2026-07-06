@@ -10,7 +10,7 @@ struct SettingsChannelsFeatureTests {
         var initialState = SettingsChannelsFeature.State()
         initialState.entries = Self.connectedEntries
         initialState.isLoading = true
-        initialState.errorText = "old error"
+        initialState.errorText = .init(value: "old error")
         let store = TestStore(initialState: initialState) {
             SettingsChannelsFeature(client: Self.client())
         }
@@ -88,7 +88,7 @@ struct SettingsChannelsFeatureTests {
             result: .failure(.failed(.init(message: .init(value: "boom")))))))
         {
             $0.isLoading = false
-            $0.errorText = "boom"
+            $0.errorText = .init(value: "boom")
         }
     }
 
@@ -131,7 +131,7 @@ struct SettingsChannelsFeatureTests {
             result: .failure(.failed(.init(message: .init(value: "boom")))))))
         {
             $0.busyOperation = nil
-            $0.errorText = "boom"
+            $0.errorText = .init(value: "boom")
         }
     }
 
