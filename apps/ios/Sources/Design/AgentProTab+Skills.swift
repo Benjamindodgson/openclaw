@@ -605,8 +605,9 @@ extension AgentProTab {
     @MainActor
     func patchAgentSkills(_ skills: [String]?, busyKey: String) async {
         guard self.liveGatewayConnected else { return }
-        self.skillPolicyMutationStore.send(.mutationStarted(.init(key: busyKey)))
-        defer { self.skillPolicyMutationStore.send(.mutationFinished(.init(key: busyKey))) }
+        let mutationKey = AgentSkillPolicyMutationKey(value: busyKey)
+        self.skillPolicyMutationStore.send(.mutationStarted(.init(key: mutationKey)))
+        defer { self.skillPolicyMutationStore.send(.mutationFinished(.init(key: mutationKey))) }
 
         do {
             let config = try await self.requestConfigSnapshot()
