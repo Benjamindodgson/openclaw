@@ -126,6 +126,7 @@ struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedStatus: Equatable, Sendable { var value: String }
+struct IPadWorkboardStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatusFilter: Equatable, Sendable { var value: String }
 
 enum IPadWorkboardError: Error, Equatable, Sendable {
@@ -168,7 +169,7 @@ struct IPadWorkboardFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var cards: [IPadWorkboardCard] = []
-        var statuses: [String] = IPadWorkboardDefaults.statuses
+        var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
         var knownBoardIDs: [String] = []
         var isRefreshing = false
         var isDispatching = false
@@ -216,20 +217,25 @@ struct IPadWorkboardFeature {
                 cardBoardIDs: self.cards.map { IPadWorkboardScreen.boardID(for: $0) })
         }
 
+        var statusValues: [String] {
+            self.statuses.map(\.value)
+        }
+
         var visibleKanbanStatuses: [String] {
             if self.selectedStatus.value == "active" {
-                return self.statuses.filter { $0 != "done" }
+                return self.statusValues.filter { $0 != "done" }
             }
-            if self.statuses.contains(self.selectedStatus.value) {
+            if self.statusValues.contains(self.selectedStatus.value) {
                 return [self.selectedStatus.value]
             }
-            return self.statuses
+            return self.statusValues
         }
 
         var compactStatuses: [String] {
             let preferred = ["todo", "ready", "running", "review", "blocked", "scheduled", "done"]
-            let known = preferred.filter { self.statuses.contains($0) }
-            let custom = self.statuses.filter { !preferred.contains($0) }
+            let statusValues = self.statusValues
+            let known = preferred.filter { statusValues.contains($0) }
+            let custom = statusValues.filter { !preferred.contains($0) }
             return known + custom
         }
 
@@ -352,16 +358,17 @@ struct IPadWorkboardFeature {
         }
 
         private mutating func validateSelectedStatus() {
-            if !self.statuses.contains(self.selectedStatus.value), self.selectedStatus.value != "active" {
+            if !self.statusValues.contains(self.selectedStatus.value), self.selectedStatus.value != "active" {
                 self.selectedStatus = .init(value: "active")
             }
         }
 
-        private static func normalizedStatuses(_ statuses: [String]?) -> [String] {
+        private static func normalizedStatuses(_ statuses: [String]?) -> [IPadWorkboardStatus] {
             let normalized = (statuses ?? [])
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty }
-            return normalized.isEmpty ? IPadWorkboardDefaults.statuses : normalized
+                .map { IPadWorkboardStatus(value: $0) }
+            return normalized.isEmpty ? IPadWorkboardDefaults.statuses.map { .init(value: $0) } : normalized
         }
     }
 
@@ -554,7 +561,8 @@ struct IPadWorkboardFeature {
 
                 state.isCreatingCard = true
                 state.errorText = nil
-                let status = state.statuses.contains(state.selectedStatus.value) ? state.selectedStatus.value : "todo"
+                let canCreateInSelectedStatus = state.statusValues.contains(state.selectedStatus.value)
+                let status = canCreateInSelectedStatus ? state.selectedStatus.value : "todo"
                 let params = IPadWorkboardCreateParams(
                     title: state.trimmedDraftTitle,
                     notes: state.draftNotes.value.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -686,7 +694,7 @@ struct IPadWorkboardFeature {
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
                 state.activeRefreshBoardID = boardScope.boardID.map { .init(value: $0) }
                 state.errorText = nil
-                if !state.statuses.contains(state.selectedStatus.value), state.selectedStatus.value != "active" {
+                if !state.statusValues.contains(state.selectedStatus.value), state.selectedStatus.value != "active" {
                     state.selectedStatus = .init(value: "active")
                 }
                 return .run { send in
