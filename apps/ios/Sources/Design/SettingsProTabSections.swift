@@ -87,7 +87,7 @@ extension SettingsProTab {
                 title: "Reconnect",
                 icon: "arrow.triangle.2.circlepath",
                 color: OpenClawBrand.warn,
-                isBusy: self.gatewayActivityStore.isReconnectingGateway.value,
+                isBusy: self.gatewayActivityStore.reconnectPhase == .inFlight,
                 isDisabled: self.appModel.isAppleReviewDemoModeEnabled)
             {
                 Task { await self.reconnectGateway() }
@@ -97,7 +97,7 @@ extension SettingsProTab {
                 title: "Diagnose",
                 icon: "cross.case",
                 color: OpenClawBrand.info,
-                isBusy: self.gatewayActivityStore.isRefreshingGateway.value)
+                isBusy: self.gatewayActivityStore.refreshPhase == .inFlight)
             {
                 Task { await self.runDiagnostics() }
             }
@@ -467,7 +467,7 @@ extension SettingsProTab {
                     title: "Run Diagnostics",
                     icon: "cross.case",
                     color: OpenClawBrand.info,
-                    isBusy: self.gatewayActivityStore.isRefreshingGateway.value)
+                    isBusy: self.gatewayActivityStore.refreshPhase == .inFlight)
                 {
                     Task { await self.runDiagnostics() }
                 }
