@@ -101,6 +101,7 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct AgentDreamDiaryDayID: Equatable, Sendable { var value: String }
 struct AgentDreamingMaintenanceFailureMessage: Equatable, Sendable { var value: String }
 
 enum AgentDreamingMaintenanceError: Error, Equatable, Sendable {
@@ -122,14 +123,14 @@ struct AgentDreamingDestinationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var selectedDreamDiaryDayID: String?
+        var selectedDreamDiaryDayID: AgentDreamDiaryDayID?
         var busyAction: AgentDreamAction?
         var statusText: String?
     }
 
     enum Action: Equatable, Sendable {
         struct DreamDiaryDaySelection: Equatable, Sendable {
-            var dayID: String
+            var dayID: AgentDreamDiaryDayID
         }
 
         struct DreamActionTap: Equatable, Sendable {
@@ -473,7 +474,7 @@ struct AgentProDreamingDestination: View {
         Menu {
             ForEach(Array(days.reversed())) { day in
                 Button {
-                    self.store.send(.dreamDiaryDaySelected(.init(dayID: day.id)))
+                    self.store.send(.dreamDiaryDaySelected(.init(dayID: .init(value: day.id))))
                 } label: {
                     Label(
                         day.title,
@@ -520,7 +521,7 @@ struct AgentProDreamingDestination: View {
 
     private func selectedDreamDiaryDay(from days: [DreamDiaryDay]) -> DreamDiaryDay? {
         if let selectedDreamDiaryDayID = self.store.selectedDreamDiaryDayID,
-           let match = days.first(where: { $0.id == selectedDreamDiaryDayID })
+           let match = days.first(where: { $0.id == selectedDreamDiaryDayID.value })
         {
             return match
         }
