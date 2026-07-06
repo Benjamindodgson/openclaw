@@ -255,7 +255,7 @@ struct AgentProTab: View {
     }
 
     var skillMutationBusyKeys: Set<String> {
-        self.skillPolicyMutationStore.busyKeys
+        Set(self.skillPolicyMutationStore.busyKeys.map(\.value))
     }
 
     var skillMutationErrorText: String? {
@@ -393,7 +393,7 @@ struct AgentSelectionFeature {
 }
 
 // swiftformat:disable redundantSendable
-struct AgentSkillPolicyMutationKey: Equatable, Sendable { var value: String }
+struct AgentSkillPolicyMutationKey: Equatable, Hashable, Sendable { var value: String }
 struct AgentSkillPolicyMutationErrorText: Equatable, Sendable { var value: String? }
 struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable { var value: String }
 struct AgentSkillPolicyMutationStatusText: Equatable, Sendable { var value: String? }
@@ -405,7 +405,7 @@ struct AgentSkillPolicyMutationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var busyKeys: Set<String> = []
+        var busyKeys: Set<AgentSkillPolicyMutationKey> = []
         var errorText = AgentSkillPolicyMutationErrorText(value: nil)
         var statusText = AgentSkillPolicyMutationStatusText(value: nil)
     }
@@ -435,7 +435,7 @@ struct AgentSkillPolicyMutationFeature {
         Reduce { state, action in
             switch action {
             case let .mutationStarted(mutation):
-                state.busyKeys.insert(mutation.key.value)
+                state.busyKeys.insert(mutation.key)
                 state.errorText = .init(value: nil)
                 state.statusText = .init(value: nil)
                 return .none
@@ -449,7 +449,7 @@ struct AgentSkillPolicyMutationFeature {
                 return .none
 
             case let .mutationFinished(mutation):
-                state.busyKeys.remove(mutation.key.value)
+                state.busyKeys.remove(mutation.key)
                 return .none
             }
         }
