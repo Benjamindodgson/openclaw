@@ -128,6 +128,7 @@ struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
 struct IPadWorkboardKnownBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
+struct IPadWorkboardRefreshInFlight: Equatable, Sendable { var value: Bool }
 struct IPadWorkboardSelectedBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatus: Equatable, Sendable { var value: String }
@@ -175,7 +176,7 @@ struct IPadWorkboardFeature {
         var cards: [IPadWorkboardCard] = []
         var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
         var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
-        var isRefreshing = false
+        var isRefreshing = IPadWorkboardRefreshInFlight(value: false)
         var isDispatching = IPadWorkboardDispatchInFlight(value: false)
         var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
         var busyCardID: IPadWorkboardBusyCardID?
@@ -195,7 +196,7 @@ struct IPadWorkboardFeature {
         }
 
         var isLoading: Bool {
-            self.isRefreshing || self.isDispatching.value
+            self.isRefreshing.value || self.isDispatching.value
         }
 
         var selectedBoardParam: IPadWorkboardBoardScopeID? {
@@ -688,19 +689,19 @@ struct IPadWorkboardFeature {
 
             case let .refreshRequested(request):
                 guard request.sceneActive else {
-                    state.isRefreshing = false
+                    state.isRefreshing = .init(value: false)
                     state.activeRefreshBoardID = nil
                     return .cancel(id: CancelID.refresh)
                 }
                 guard request.canRead else {
                     state.cards = []
                     state.errorText = nil
-                    state.isRefreshing = false
+                    state.isRefreshing = .init(value: false)
                     state.activeRefreshBoardID = nil
                     return .cancel(id: CancelID.refresh)
                 }
 
-                state.isRefreshing = true
+                state.isRefreshing = .init(value: true)
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
                 state.activeRefreshBoardID = boardScope.boardID.map { .init(value: $0.value) }
                 state.errorText = nil
@@ -727,7 +728,7 @@ struct IPadWorkboardFeature {
                 let activeRefreshBoardID = response.boardScope.boardID
                     .map { IPadWorkboardActiveRefreshBoardID(value: $0.value) }
                 guard state.activeRefreshBoardID == activeRefreshBoardID else { return .none }
-                state.isRefreshing = false
+                state.isRefreshing = .init(value: false)
                 state.activeRefreshBoardID = nil
                 guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
                 switch response.result {

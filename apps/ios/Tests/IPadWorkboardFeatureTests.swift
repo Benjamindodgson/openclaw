@@ -77,7 +77,7 @@ struct IPadWorkboardFeatureTests {
             $0.selectedBoardID = .init(value: "planning")
         }
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
-            $0.isRefreshing = true
+            $0.isRefreshing = .init(value: true)
             $0.activeRefreshBoardID = .init(value: "planning")
             $0.errorText = nil
             $0.selectedStatus = .init(value: "active")
@@ -87,7 +87,7 @@ struct IPadWorkboardFeatureTests {
             force: false,
             result: .success(response))))
         {
-            $0.isRefreshing = false
+            $0.isRefreshing = .init(value: false)
             $0.activeRefreshBoardID = nil
             $0.cards = [card]
             $0.statuses = [.init(value: "todo"), .init(value: "done")]
@@ -105,7 +105,7 @@ struct IPadWorkboardFeatureTests {
         initialState.selectedBoardID = .init(value: "current")
         initialState.activeRefreshBoardID = .init(value: "old")
         initialState.cards = [currentCard]
-        initialState.isRefreshing = true
+        initialState.isRefreshing = .init(value: true)
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: Self.failingClient())
         }
@@ -116,7 +116,7 @@ struct IPadWorkboardFeatureTests {
                 force: true,
                 result: .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"])))))
         {
-            $0.isRefreshing = false
+            $0.isRefreshing = .init(value: false)
             $0.activeRefreshBoardID = nil
         }
     }
@@ -129,14 +129,14 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
-            $0.isRefreshing = true
+            $0.isRefreshing = .init(value: true)
         }
         await store.receive(.refreshResponse(.init(
             boardScope: .init(boardID: nil),
             force: true,
             result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
         {
-            $0.isRefreshing = false
+            $0.isRefreshing = .init(value: false)
             $0.errorText = .init(value: "workboard boom")
         }
     }
@@ -282,7 +282,7 @@ struct IPadWorkboardFeatureTests {
         let refreshed = Self.card(id: "card", status: "todo", position: 10)
         let response = IPadWorkboardCardsResponse(cards: [refreshed], statuses: ["todo"])
         var initialState = IPadWorkboardFeature.State()
-        initialState.isRefreshing = true
+        initialState.isRefreshing = .init(value: true)
         initialState.isDispatching = .init(value: true)
         var client = Self.failingClient()
         client.listBoards = { [] }
@@ -295,7 +295,7 @@ struct IPadWorkboardFeatureTests {
             force: true,
             result: .success(response))))
         {
-            $0.isRefreshing = false
+            $0.isRefreshing = .init(value: false)
             $0.activeRefreshBoardID = nil
             $0.cards = [refreshed]
             $0.statuses = [.init(value: "todo")]
