@@ -2121,7 +2121,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.enabledSynced(.init(enabled: .init(value: true)))) {
-            $0.isEnabled = true
+            $0.enabled = .init(value: true)
         }
     }
 
@@ -2131,22 +2131,22 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.enabledChanged(.init(enabled: .init(value: true)))) {
-            $0.isEnabled = true
+            $0.enabled = .init(value: true)
         }
         await store.send(.enabledChanged(.init(enabled: .init(value: false)))) {
-            $0.isEnabled = false
+            $0.enabled = .init(value: false)
         }
     }
 
     @Test func `settings gateway auto connect disables on onboarding reset`() async {
         var initialState = SettingsGatewayAutoConnectFeature.State()
-        initialState.isEnabled = true
+        initialState.enabled = .init(value: true)
         let store = TestStore(initialState: initialState) {
             SettingsGatewayAutoConnectFeature()
         }
 
         await store.send(.disabledForOnboardingReset) {
-            $0.isEnabled = false
+            $0.enabled = .init(value: false)
         }
     }
 

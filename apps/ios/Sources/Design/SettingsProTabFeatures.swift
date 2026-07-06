@@ -726,7 +726,11 @@ struct SettingsGatewayAutoConnectFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var isEnabled = false
+        var enabled = Action.GatewayAutoConnectEnabled(value: false)
+
+        var isEnabled: Bool {
+            self.enabled.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -745,15 +749,15 @@ struct SettingsGatewayAutoConnectFeature {
         Reduce { state, action in
             switch action {
             case .disabledForOnboardingReset:
-                state.isEnabled = false
+                state.enabled = .init(value: false)
                 return .none
 
             case let .enabledChanged(change):
-                state.isEnabled = change.enabled.value
+                state.enabled = change.enabled
                 return .none
 
             case let .enabledSynced(sync):
-                state.isEnabled = sync.enabled.value
+                state.enabled = sync.enabled
                 return .none
             }
         }
