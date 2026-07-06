@@ -249,7 +249,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.snapshotChanged(RootCanvasDebugStatusFeature.Snapshot(
-            isEnabled: false,
+            enabled: .init(isEnabled: false),
             gatewayDisplayStatusText: "  Offline  ",
             gatewayServerName: "Gateway",
             gatewayRemoteAddress: "100.64.0.2")))
@@ -259,7 +259,7 @@ struct RootTabsPresentationTests {
         #expect(probe.updates.isEmpty)
 
         await store.send(.snapshotChanged(RootCanvasDebugStatusFeature.Snapshot(
-            isEnabled: true,
+            enabled: .init(isEnabled: true),
             gatewayDisplayStatusText: "  Online  ",
             gatewayServerName: "Gateway",
             gatewayRemoteAddress: "100.64.0.2")))

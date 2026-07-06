@@ -904,7 +904,7 @@ struct RootTabs: View {
     private func makeCanvasDebugStatusSnapshot() -> RootCanvasDebugStatusFeature.Snapshot {
         RootCanvasDebugStatusFeature.Snapshot(
             appModel: self.appModel,
-            isEnabled: self.canvasDebugStatusEnabled)
+            enabled: .init(isEnabled: self.canvasDebugStatusEnabled))
     }
 
     private func updateHomeCanvasState() {
