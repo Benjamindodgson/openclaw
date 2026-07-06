@@ -274,6 +274,12 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains(
             "struct InstallFailure: Equatable, Sendable {\n            var slug: String\n            var message: String"))
         #expect(skillsSource.contains("text: self.skillFilterBinding"))
+        #expect(source.contains("set: { self.skillFilterStore.send(.searchTextChanged(.init(text: .init(value: $0)))) }"))
+        #expect(source.contains("struct AgentSkillFilterSearchText: Equatable, Sendable"))
+        #expect(source.contains("var text: AgentSkillFilterSearchText"))
+        #expect(source.contains("state.searchText = change.text.value"))
+        #expect(!source.contains(
+            "struct SearchTextChange: Equatable, Sendable {\n            var text: String\n        }\n\n        case clearSearchTapped"))
         #expect(skillsSource.contains("selection: self.skillStatusFilterBinding"))
         #expect(skillsSource.contains("self.skillFilterStore.send(.clearSearchTapped)"))
         #expect(skillsSource.contains("let mutationKey = AgentSkillPolicyMutationKey(value: busyKey)"))
