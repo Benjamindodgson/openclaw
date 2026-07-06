@@ -267,10 +267,10 @@ struct SettingsNavigationFeatureTests {
             discoveryStatusText: .init(value: "2 gateways found"),
             screenRecordActive: .init(value: true))))
         {
-            $0.gatewayConnected = true
-            $0.discoveredGatewayCount = 2
+            $0.gatewayConnected = .init(value: true)
+            $0.discoveredGatewayCount = .init(value: 2)
             $0.discoveryStatusText = .init(value: "2 gateways found")
-            $0.screenRecordActive = true
+            $0.screenRecordActive = .init(value: true)
         }
         await store.send(.diagnosticsContextSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: true),
@@ -279,11 +279,11 @@ struct SettingsNavigationFeatureTests {
             discoveryStatusText: .init(value: "Discovery paused"),
             screenRecordActive: .init(value: false))))
         {
-            $0.isAppleReviewDemoModeEnabled = true
-            $0.gatewayConnected = false
-            $0.discoveredGatewayCount = 0
+            $0.isAppleReviewDemoModeEnabled = .init(value: true)
+            $0.gatewayConnected = .init(value: false)
+            $0.discoveredGatewayCount = .init(value: 0)
             $0.discoveryStatusText = .init(value: "Discovery paused")
-            $0.screenRecordActive = false
+            $0.screenRecordActive = .init(value: false)
         }
     }
 
@@ -309,16 +309,16 @@ struct SettingsNavigationFeatureTests {
         #expect(state.healthValue == "check")
         #expect(state.healthColor == OpenClawBrand.warn)
 
-        state.discoveredGatewayCount = 1
+        state.discoveredGatewayCount = .init(value: 1)
         #expect(state.healthValue == "partial")
         #expect(state.healthColor == OpenClawBrand.warn)
 
-        state.gatewayConnected = true
+        state.gatewayConnected = .init(value: true)
         #expect(state.healthValue == "ready")
         #expect(state.healthColor == OpenClawBrand.ok)
 
-        state.isAppleReviewDemoModeEnabled = true
-        state.gatewayConnected = false
+        state.isAppleReviewDemoModeEnabled = .init(value: true)
+        state.gatewayConnected = .init(value: false)
         #expect(state.healthValue == "demo")
         #expect(state.healthColor == OpenClawBrand.ok)
     }
@@ -330,7 +330,7 @@ struct SettingsNavigationFeatureTests {
         #expect(state.discoveryColor == .secondary)
         #expect(state.hasDiscoveredGateway == false)
 
-        state.discoveredGatewayCount = 2
+        state.discoveredGatewayCount = .init(value: 2)
         state.discoveryStatusText = .init(value: "2 gateways found")
         #expect(state.discoveryValue == "2")
         #expect(state.discoveryColor == OpenClawBrand.accent)
@@ -344,7 +344,7 @@ struct SettingsNavigationFeatureTests {
         #expect(state.screenCaptureValue == "idle")
         #expect(state.screenCaptureColor == .secondary)
 
-        state.screenRecordActive = true
+        state.screenRecordActive = .init(value: true)
         #expect(state.screenCaptureValue == "live")
         #expect(state.screenCaptureColor == OpenClawBrand.ok)
     }
