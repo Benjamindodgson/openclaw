@@ -17,7 +17,7 @@ struct TalkRuntimeIssueDetailsFeatureTests {
         }
 
         await store.send(.copyDiagnosticsButtonTapped) {
-            $0.copyFeedback = "Copied diagnostics"
+            $0.copyFeedback = .init(value: "Copied diagnostics")
         }
         await store.finish()
 
@@ -40,7 +40,7 @@ struct TalkRuntimeIssueDetailsFeatureTests {
             phase: "fallback")
         let store = TestStore(initialState: TalkRuntimeIssueDetailsFeature.State(
             issue: firstIssue,
-            copyFeedback: "Copied diagnostics"))
+            copyFeedback: .init(value: "Copied diagnostics")))
         {
             TalkRuntimeIssueDetailsFeature(clipboard: probe.client)
         }
@@ -50,7 +50,7 @@ struct TalkRuntimeIssueDetailsFeatureTests {
             $0.copyFeedback = nil
         }
         await store.send(.copyDiagnosticsButtonTapped) {
-            $0.copyFeedback = "Copied diagnostics"
+            $0.copyFeedback = .init(value: "Copied diagnostics")
         }
         await store.finish()
 
