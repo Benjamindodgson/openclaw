@@ -85,6 +85,7 @@ extension DependencyValues {
 // swiftformat:disable redundantSendable
 struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable { var value: Bool }
+struct IPadSkillWorkshopNoticeMessage: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopQuery: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopStatusFilter: Equatable, Sendable { var value: String }
 
@@ -131,7 +132,7 @@ struct IPadSkillWorkshopFeature {
         var inspectingProposalID: String?
         var busyAction: IPadSkillProposalAction?
         var errorText: IPadSkillWorkshopFailureMessage?
-        var noticeText: String?
+        var noticeText: IPadSkillWorkshopNoticeMessage?
         var presentedProposalRoute: IPadSkillProposalSheetRoute?
 
         var selectedAgentParam: String? {
@@ -354,7 +355,8 @@ struct IPadSkillWorkshopFeature {
                 switch response.result {
                 case .success:
                     state.busyAction = nil
-                    state.noticeText = response.kind == .apply ? "Proposal applied." : "Proposal rejected."
+                    state.noticeText = .init(
+                        value: response.kind == .apply ? "Proposal applied." : "Proposal rejected.")
                     return .run { send in
                         await send(.refreshRequested(.init(
                             sceneActive: response.sceneActive,
@@ -617,7 +619,7 @@ struct IPadSkillWorkshopScreen: View {
                     }
                 }
                 if let noticeText = self.store.noticeText {
-                    Text(noticeText)
+                    Text(noticeText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
@@ -673,7 +675,7 @@ struct IPadSkillWorkshopScreen: View {
                     .disabled(self.store.isLoading.value)
                 }
                 if let noticeText = self.store.noticeText {
-                    Text(noticeText)
+                    Text(noticeText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.accent)
                 }
