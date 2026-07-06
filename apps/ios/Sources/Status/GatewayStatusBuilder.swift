@@ -9,15 +9,38 @@ enum GatewayDisplayState: Equatable {
     case disconnected
 }
 
+// swiftformat:disable redundantSendable
+struct GatewayDisplayServerName: Equatable, Sendable {
+    var value: String?
+}
+
+struct GatewayDisplayStatusText: Equatable, Sendable {
+    var value: String
+}
+
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct GatewayStatusFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var gatewayServerName: String?
+        var gatewayServerName: GatewayDisplayServerName
         var lastGatewayProblem: GatewayConnectionProblem?
-        var gatewayStatusText: String
+        var gatewayStatusText: GatewayDisplayStatusText
         var displayState: GatewayDisplayState = .disconnected
+
+        init(
+            gatewayServerName: String? = nil,
+            lastGatewayProblem: GatewayConnectionProblem? = nil,
+            gatewayStatusText: String = "",
+            displayState: GatewayDisplayState = .disconnected)
+        {
+            self.gatewayServerName = .init(value: gatewayServerName)
+            self.lastGatewayProblem = lastGatewayProblem
+            self.gatewayStatusText = .init(value: gatewayStatusText)
+            self.displayState = displayState
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -31,9 +54,9 @@ struct GatewayStatusFeature {
             switch action {
             case .refresh:
                 state.displayState = Self.displayState(
-                    gatewayServerName: state.gatewayServerName,
+                    gatewayServerName: state.gatewayServerName.value,
                     lastGatewayProblem: state.lastGatewayProblem,
-                    gatewayStatusText: state.gatewayStatusText)
+                    gatewayStatusText: state.gatewayStatusText.value)
                 return .none
             }
         }
