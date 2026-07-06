@@ -81,8 +81,7 @@ struct IPadWorkboardFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: false))))
         {
-            $0.isRefreshing = .init(value: true)
-            $0.activeRefreshBoardID = .init(value: "planning")
+            $0.refreshPhase = .inFlight(boardID: .init(value: "planning"))
             $0.errorText = nil
             $0.selectedStatus = .init(value: "active")
         }
@@ -91,8 +90,7 @@ struct IPadWorkboardFeatureTests {
             force: .init(isForced: false),
             result: .success(response))))
         {
-            $0.isRefreshing = .init(value: false)
-            $0.activeRefreshBoardID = nil
+            $0.refreshPhase = .idle
             $0.cards = [card]
             $0.statuses = [.init(value: "todo"), .init(value: "done")]
             $0.knownBoardIDs = [.init(value: "planning")]
@@ -107,9 +105,8 @@ struct IPadWorkboardFeatureTests {
         let staleCard = Self.card(id: "stale", status: "done", position: 20, boardID: "old")
         var initialState = IPadWorkboardFeature.State()
         initialState.selectedBoardID = .init(value: "current")
-        initialState.activeRefreshBoardID = .init(value: "old")
         initialState.cards = [currentCard]
-        initialState.isRefreshing = .init(value: true)
+        initialState.refreshPhase = .inFlight(boardID: .init(value: "old"))
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: Self.failingClient())
         }
@@ -120,9 +117,24 @@ struct IPadWorkboardFeatureTests {
                 force: .init(isForced: true),
                 result: .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"])))))
         {
-            $0.isRefreshing = .init(value: false)
-            $0.activeRefreshBoardID = nil
+            $0.refreshPhase = .idle
         }
+    }
+
+    @Test func `idle all boards refresh response is ignored`() async {
+        let currentCard = Self.card(id: "current", status: "todo", position: 10)
+        let staleCard = Self.card(id: "stale", status: "done", position: 20)
+        var initialState = IPadWorkboardFeature.State()
+        initialState.cards = [currentCard]
+        let store = TestStore(initialState: initialState) {
+            IPadWorkboardFeature(client: Self.failingClient())
+        }
+
+        await store.send(.refreshResponse(
+            .init(
+                boardScope: .init(boardID: nil),
+                force: .init(isForced: true),
+                result: .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"])))))
     }
 
     @Test func `forced refresh failure surfaces error text`() async {
@@ -137,14 +149,14 @@ struct IPadWorkboardFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: true))))
         {
-            $0.isRefreshing = .init(value: true)
+            $0.refreshPhase = .inFlight(boardID: nil)
         }
         await store.receive(.refreshResponse(.init(
             boardScope: .init(boardID: nil),
             force: .init(isForced: true),
             result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
         {
-            $0.isRefreshing = .init(value: false)
+            $0.refreshPhase = .idle
             $0.errorText = .init(value: "workboard boom")
         }
     }
@@ -300,7 +312,7 @@ struct IPadWorkboardFeatureTests {
         let refreshed = Self.card(id: "card", status: "todo", position: 10)
         let response = IPadWorkboardCardsResponse(cards: [refreshed], statuses: ["todo"])
         var initialState = IPadWorkboardFeature.State()
-        initialState.isRefreshing = .init(value: true)
+        initialState.refreshPhase = .inFlight(boardID: nil)
         initialState.dispatchPhase = .inFlight
         var client = Self.failingClient()
         client.listBoards = { [] }
@@ -313,8 +325,7 @@ struct IPadWorkboardFeatureTests {
             force: .init(isForced: true),
             result: .success(response))))
         {
-            $0.isRefreshing = .init(value: false)
-            $0.activeRefreshBoardID = nil
+            $0.refreshPhase = .idle
             $0.cards = [refreshed]
             $0.statuses = [.init(value: "todo")]
             $0.knownBoardIDs = [.init(value: "default")]
