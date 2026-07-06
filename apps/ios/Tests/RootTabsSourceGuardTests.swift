@@ -2250,6 +2250,8 @@ struct RootTabsSourceGuardTests {
         #expect(supportSource.contains("var settingsGatewayProblemTrust: SettingsGatewayProblemTrustClient"))
         #expect(settingsSource.contains(
             "struct SettingsGatewayActivityDemoModeEnabled: Equatable, Sendable { var value: Bool }"))
+        #expect(settingsSource.contains("struct GatewayReconnectInFlight: Equatable, Sendable"))
+        #expect(settingsSource.contains("var isReconnectingGateway = Action.GatewayReconnectInFlight(value: false)"))
         #expect(settingsSource.contains("struct ReconnectRequest: Equatable, Sendable"))
         #expect(settingsSource.contains(
             "var isAppleReviewDemoModeEnabled: SettingsGatewayActivityDemoModeEnabled"))
@@ -2260,8 +2262,10 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("@Dependency(\\.settingsGatewayProblemTrust)"))
         #expect(settingsSource.contains("await reconnectClient.reconnect()"))
         #expect(settingsSource.contains("await send(.reconnectFinished)"))
-        #expect(settingsSource.contains(
-            "guard !request.isAppleReviewDemoModeEnabled.value, !state.isReconnectingGateway else { return .none }"))
+        #expect(settingsSource.contains("!request.isAppleReviewDemoModeEnabled.value"))
+        #expect(settingsSource.contains("!state.isReconnectingGateway.value"))
+        #expect(settingsSource.contains("state.isReconnectingGateway = .init(value: true)"))
+        #expect(settingsSource.contains("state.isReconnectingGateway = .init(value: false)"))
         #expect(settingsSource.contains("await problemTrustClient.trustRotatedCertificate(request.problem)"))
         #expect(reconnectFunction.contains("self.gatewayActivityStore"))
         #expect(reconnectFunction.contains("let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled"))
@@ -2283,6 +2287,11 @@ struct RootTabsSourceGuardTests {
         #expect(!problemReconnectFunction.contains("await self.gatewayController.connectLastKnown()"))
         #expect(actionsSource.contains("self.gatewayActivityStore"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
+        #expect(!settingsSource.contains("var isReconnectingGateway = false"))
+        #expect(!settingsSource.contains(
+            "guard !request.isAppleReviewDemoModeEnabled.value, !state.isReconnectingGateway else { return .none }"))
+        #expect(!settingsSource.contains("state.isReconnectingGateway = true"))
+        #expect(!settingsSource.contains("state.isReconnectingGateway = false"))
         #expect(gatewaySetupFeaturesSource
             .contains("state.preflightResult = .requestLocalNetworkAccess(.init(reason: .settingsPreflight))"))
         #expect(controllerSource.contains("await self.tcpReachabilityProbe("))
@@ -4356,6 +4365,8 @@ struct RootTabsSourceGuardTests {
         #expect(!actionsSource.contains("detail: self.diagnosticsStore.discoveryStatusText,"))
         #expect(supportSource.contains("struct SettingsGatewayDiagnosticsRefreshClient"))
         #expect(supportSource.contains("var settingsGatewayDiagnosticsRefresh: SettingsGatewayDiagnosticsRefreshClient"))
+        #expect(settingsSource.contains("struct GatewayRefreshInFlight: Equatable, Sendable"))
+        #expect(settingsSource.contains("var isRefreshingGateway = Action.GatewayRefreshInFlight(value: false)"))
         #expect(settingsSource.contains("struct DiagnosticsRefreshRequest: Equatable, Sendable"))
         #expect(settingsSource.contains(
             "var isAppleReviewDemoModeEnabled: SettingsGatewayActivityDemoModeEnabled"))
@@ -4363,6 +4374,9 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("@Dependency(\\.settingsGatewayDiagnosticsRefresh)"))
         #expect(settingsSource.contains("await diagnosticsRefreshClient.refreshGateway()"))
         #expect(settingsSource.contains("await send(.refreshFinished)"))
+        #expect(settingsSource.contains("guard !state.isRefreshingGateway.value else { return .none }"))
+        #expect(settingsSource.contains("state.isRefreshingGateway = .init(value: true)"))
+        #expect(settingsSource.contains("state.isRefreshingGateway = .init(value: false)"))
         #expect(settingsSource.contains("if !request.isAppleReviewDemoModeEnabled.value"))
         #expect(diagnosticsSource.contains("state.issueCount = SettingsDiagnostics.issueCount("))
         #expect(runDiagnosticsFunction.contains("self.gatewayActivityStore"))
@@ -4371,6 +4385,7 @@ struct RootTabsSourceGuardTests {
         #expect(runDiagnosticsFunction.contains(".send(.diagnosticsRefreshRequested(.init("))
         #expect(runDiagnosticsFunction.contains(
             "isAppleReviewDemoModeEnabled: .init(value: isAppleReviewDemoModeEnabled)"))
+        #expect(runDiagnosticsFunction.contains("guard !self.gatewayActivityStore.isRefreshingGateway.value else"))
         #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsCompletionRequested(.init("))
         #expect(actionsSource.contains("self.diagnosticsStore.send(.diagnosticsContextSynced(.init("))
         #expect(!diagnosticsSource.contains("case diagnosticsCompletionRequested(\n            gatewayConnected: Bool"))
@@ -4380,6 +4395,11 @@ struct RootTabsSourceGuardTests {
             "struct DiagnosticsRefreshRequest: Equatable, Sendable { var isAppleReviewDemoModeEnabled: Bool }"))
         #expect(!settingsSource.contains(
             "struct ReconnectRequest: Equatable, Sendable { var isAppleReviewDemoModeEnabled: Bool }"))
+        #expect(!settingsSource.contains("var isRefreshingGateway = false"))
+        #expect(!settingsSource.contains("guard !state.isRefreshingGateway else { return .none }"))
+        #expect(!settingsSource.contains("state.isRefreshingGateway = true"))
+        #expect(!settingsSource.contains("state.isRefreshingGateway = false"))
+        #expect(!runDiagnosticsFunction.contains("guard !self.gatewayActivityStore.isRefreshingGateway else"))
         #expect(runDiagnosticsFunction.contains("await self.notificationStore.send(.statusRefreshRequested).finish()"))
         #expect(runDiagnosticsFunction.contains("self.handleNotificationStatusRefreshResult"))
         #expect(rootSource.contains("gatewayActivityStore: self.makeSettingsGatewayActivityStore()"))

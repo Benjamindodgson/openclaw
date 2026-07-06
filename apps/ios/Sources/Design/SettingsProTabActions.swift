@@ -140,7 +140,7 @@ extension SettingsProTab {
 
     @MainActor
     func runDiagnostics() async {
-        guard !self.gatewayActivityStore.isRefreshingGateway else { return }
+        guard !self.gatewayActivityStore.isRefreshingGateway.value else { return }
         let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled
         await self.gatewayActivityStore
             .send(.diagnosticsRefreshRequested(.init(
