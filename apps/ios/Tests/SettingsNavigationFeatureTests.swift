@@ -1608,11 +1608,11 @@ struct SettingsNavigationFeatureTests {
         await store.send(.authorizationRequestRequested) {
             $0.actionRequest = nil
             $0.authorizationRequestResult = nil
-            $0.isRequestingAuthorization = true
+            $0.isRequestingAuthorization = .init(value: true)
         }
         await store.receive(.authorizationRequestFinished(result)) {
             $0.authorizationRequestResult = result
-            $0.isRequestingAuthorization = false
+            $0.isRequestingAuthorization = .init(value: false)
             $0.status = .allowed
         }
         await store.send(.authorizationRequestResultHandled) {
@@ -1629,7 +1629,7 @@ struct SettingsNavigationFeatureTests {
             status: .allowed))
         var initialState = SettingsNotificationFeature.State()
         initialState.status = .notSet
-        initialState.isRequestingAuthorization = true
+        initialState.isRequestingAuthorization = .init(value: true)
         let store = TestStore(initialState: initialState) {
             SettingsNotificationFeature(authorizationClient: probe.client)
         }
@@ -1737,7 +1737,7 @@ struct SettingsNavigationFeatureTests {
 
         var requestingState = SettingsNotificationFeature.State()
         requestingState.status = .notSet
-        requestingState.isRequestingAuthorization = true
+        requestingState.isRequestingAuthorization = .init(value: true)
         let requestingStore = TestStore(initialState: requestingState) {
             SettingsNotificationFeature()
         }
