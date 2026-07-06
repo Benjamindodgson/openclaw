@@ -13,21 +13,20 @@ struct GatewayQuickSetupFeatureTests {
         probe.nextConnectFailure = .init(message: .init(
             value: "Failed to resolve the discovered gateway endpoint."))
         var initialState = GatewayQuickSetupFeature.State()
-        initialState.connectError = "Previous error"
+        initialState.connectPhase = .failed(.init(value: "Previous error"))
         let store = TestStore(initialState: initialState) {
             GatewayQuickSetupFeature(client: probe.client)
         }
 
         await store.send(.connectButtonTapped(.init(candidate: candidate))) {
-            $0.connectError = nil
-            $0.connecting = true
+            $0.connectPhase = .inFlight
         }
         await store.receive(.connectResponse(.init(
             failure: .init(message: .init(
                 value: "Failed to resolve the discovered gateway endpoint.")))))
         {
-            $0.connecting = false
-            $0.connectError = "Failed to resolve the discovered gateway endpoint."
+            $0.connectPhase = .failed(.init(
+                value: "Failed to resolve the discovered gateway endpoint."))
         }
         await store.finish()
 
@@ -56,10 +55,10 @@ struct GatewayQuickSetupFeatureTests {
         }
 
         await store.send(.gatewayProblemPrimaryActionTapped(.init(problem: problem, candidate: candidate))) {
-            $0.connecting = true
+            $0.connectPhase = .inFlight
         }
         await store.receive(.connectResponse(.init(failure: nil))) {
-            $0.connecting = false
+            $0.connectPhase = .idle
         }
         await store.finish()
 

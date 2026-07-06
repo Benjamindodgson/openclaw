@@ -67,9 +67,23 @@ struct GatewayQuickSetupFeature {
             case gatewayProblemDetails
         }
 
-        var connecting = false
-        var connectError: String?
+        enum ConnectPhase: Equatable, Sendable {
+            case idle
+            case inFlight
+            case failed(GatewayQuickSetupConnectFailureMessage)
+        }
+
+        var connectPhase = ConnectPhase.idle
         var destination: Destination?
+
+        var connecting: Bool {
+            self.connectPhase == .inFlight
+        }
+
+        var connectError: String? {
+            guard case let .failed(message) = self.connectPhase else { return nil }
+            return message.value
+        }
 
         var showGatewayProblemDetails: Bool {
             self.destination == .gatewayProblemDetails
@@ -109,8 +123,7 @@ struct GatewayQuickSetupFeature {
                 return self.connect(candidate: request.candidate, state: &state, client: client)
 
             case let .connectResponse(response):
-                state.connecting = false
-                state.connectError = response.failure?.message.value
+                state.connectPhase = response.failure.map { .failed($0.message) } ?? .idle
                 return .none
 
             case .gatewayProblemDetailsButtonTapped:
@@ -146,8 +159,7 @@ struct GatewayQuickSetupFeature {
         state: inout State,
         client: GatewayQuickSetupClient) -> Effect<Action>
     {
-        state.connectError = nil
-        state.connecting = true
+        state.connectPhase = .inFlight
         return .run { send in
             let failure = await client.connect(candidate)
             await send(.connectResponse(.init(failure: failure)))
