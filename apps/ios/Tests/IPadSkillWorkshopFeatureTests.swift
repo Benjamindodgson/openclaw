@@ -111,7 +111,7 @@ struct IPadSkillWorkshopFeatureTests {
             result: .success(.init()))))
         {
             $0.busyAction = nil
-            $0.noticeText = "Proposal applied."
+            $0.noticeText = .init(value: "Proposal applied.")
         }
         await store.receive(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
             $0.isLoading = .init(value: true)
