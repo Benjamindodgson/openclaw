@@ -402,8 +402,8 @@ struct CommandCenterTab: View {
         await self.recentSessionsStore.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: self.scenePhase == .active),
             sessionsAvailability: .init(isAvailable: self.sessionListAvailable),
-            currentSession: .init(key: self.appModel.chatSessionKey),
-            defaultSession: .init(key: self.appModel.defaultChatSessionKey)))).finish()
+            currentSession: .init(key: .init(value: self.appModel.chatSessionKey)),
+            defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))))).finish()
     }
 
     static func sessionWorkItem(
