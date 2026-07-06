@@ -111,7 +111,7 @@ struct SettingsTalkPreferencesFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
+        var providerSelection = TalkModeProviderSelection.gatewayDefault
         var realtimeVoiceSelection = SettingsTalkRealtimeVoiceSelection(rawValue: nil)
         var speechLocale = SettingsTalkSpeechLocale(value: TalkSpeechLocale.automaticID)
         var talkButtonEnabled = true
@@ -125,10 +125,6 @@ struct SettingsTalkPreferencesFeature {
         var gatewayTalkActiveModeTitle = SettingsGatewayTalkActiveModeTitle(value: "Not active")
         var gatewayTalkActiveModeSubtitle = SettingsGatewayTalkActiveModeSubtitle(value: nil)
         var gatewayTalkLastIssueText = SettingsGatewayTalkLastIssueText(value: nil)
-
-        var providerSelection: TalkModeProviderSelection {
-            TalkModeProviderSelection.resolved(self.providerSelectionRaw)
-        }
 
         var talkApiKeyStatus: String {
             Self.talkApiKeyStatus(
@@ -167,16 +163,15 @@ struct SettingsTalkPreferencesFeature {
 
         var shouldShowRealtimeVoicePicker: Bool {
             Self.shouldShowRealtimeVoicePicker(
-                providerSelectionRaw: self.providerSelectionRaw,
+                providerSelection: self.providerSelection,
                 gatewayTalkUsesRealtime: self.gatewayTalkUsesRealtime)
         }
 
         static func shouldShowRealtimeVoicePicker(
-            providerSelectionRaw: String,
+            providerSelection: TalkModeProviderSelection,
             gatewayTalkUsesRealtime: Bool) -> Bool
         {
-            TalkModeProviderSelection.resolved(providerSelectionRaw) == .openAIRealtime
-                || gatewayTalkUsesRealtime
+            providerSelection == .openAIRealtime || gatewayTalkUsesRealtime
         }
 
         static func talkApiKeyStatus(configLoaded: Bool, apiKeyConfigured: Bool) -> String {
@@ -287,7 +282,7 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .preferencesSynced(sync):
-                state.providerSelectionRaw = sync.providerSelection.rawValue
+                state.providerSelection = sync.providerSelection
                 state.realtimeVoiceSelection = sync.realtimeVoiceSelection
                 state.speechLocale = sync.speechLocale
                 state.talkButtonEnabled = sync.talkButtonEnabled.isEnabled
@@ -297,7 +292,7 @@ struct SettingsTalkPreferencesFeature {
 
             case let .providerSelectionChanged(change):
                 let selection = change.selection
-                state.providerSelectionRaw = selection.rawValue
+                state.providerSelection = selection
                 return .run { _ in
                     await preferencesClient.setProviderSelection(selection)
                 }

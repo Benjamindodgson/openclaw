@@ -2363,7 +2363,7 @@ struct SettingsNavigationFeatureTests {
             talkBackgroundEnabled: .init(isEnabled: true),
             talkSpeakerphoneEnabled: .init(isEnabled: false))))
         {
-            $0.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
+            $0.providerSelection = .openAIRealtime
             $0.realtimeVoiceSelection = .init(rawValue: " Cedar ")
             $0.speechLocale = .init(value: "en-US")
             $0.talkButtonEnabled = false
@@ -2375,14 +2375,14 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings talk preferences normalize picker values`() async {
         let preferencesProbe = SettingsTalkPreferencesProbe()
         var initialState = SettingsTalkPreferencesFeature.State()
-        initialState.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
+        initialState.providerSelection = .openAIRealtime
         initialState.realtimeVoiceSelection = .init(rawValue: "cedar")
         let store = TestStore(initialState: initialState) {
             SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
 
         await store.send(.providerSelectionChanged(.init(selection: .gatewayDefault))) {
-            $0.providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
+            $0.providerSelection = .gatewayDefault
         }
         await store.send(.realtimeVoiceSelectionChanged(.init(voice: .init(rawValue: "unknown")))) {
             $0.realtimeVoiceSelection = .init(rawValue: "unknown")
@@ -2532,10 +2532,10 @@ struct SettingsNavigationFeatureTests {
         #expect(state.shouldShowRealtimeVoicePicker == true)
 
         state.gatewayTalkUsesRealtime = false
-        state.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
+        state.providerSelection = .openAIRealtime
         #expect(state.shouldShowRealtimeVoicePicker == true)
         #expect(SettingsTalkPreferencesFeature.State.shouldShowRealtimeVoicePicker(
-            providerSelectionRaw: TalkModeProviderSelection.openAIRealtime.rawValue,
+            providerSelection: .openAIRealtime,
             gatewayTalkUsesRealtime: false) == true)
     }
 }

@@ -867,7 +867,7 @@ extension SettingsProTab {
 
     var talkProviderSelectionBinding: Binding<String> {
         Binding(
-            get: { self.talkPreferencesStore.providerSelectionRaw },
+            get: { self.talkPreferencesStore.providerSelection.rawValue },
             set: { self.updateTalkProviderSelection($0) })
     }
 
