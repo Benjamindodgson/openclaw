@@ -60,7 +60,7 @@ struct IPadWorkboardScreen: View {
                 IPadWorkboardCardDetailSheet(
                     card: card,
                     statuses: self.store.statuses,
-                    isBusy: self.store.busyCardID == card.id,
+                    isBusy: self.store.busyCardID?.value == card.id,
                     canWrite: self.canWrite,
                     openSession: { self.open(card) },
                     move: { status in Task { await self.move(card, to: status) } },
@@ -432,7 +432,7 @@ struct IPadWorkboardScreen: View {
                         status: status,
                         cards: self.cards(forKanbanStatus: status),
                         statuses: self.store.statuses,
-                        busyCardID: self.store.busyCardID,
+                        busyCardID: self.store.busyCardID?.value,
                         openSession: { card in
                             self.open(card)
                         },
@@ -481,7 +481,7 @@ struct IPadWorkboardScreen: View {
                         IPadWorkboardQueueRow(
                             card: card,
                             statuses: self.store.statuses,
-                            isBusy: self.store.busyCardID == card.id,
+                            isBusy: self.store.busyCardID?.value == card.id,
                             inspect: {
                                 self.store.send(.cardSheetPresented(.init(card: card)))
                             },
