@@ -24,6 +24,7 @@ struct RootLocalNetworkAccessReason: Equatable, Sendable {
 struct RootPresentationFeature {
     // swiftformat:disable redundantSendable
     enum PresentedSheet: Int, Identifiable, Equatable, Sendable {
+        case gatewayProblemDetails
         case quickSetup
 
         var id: Int {
@@ -107,7 +108,6 @@ struct RootPresentationFeature {
         var didEvaluateOnboarding: Bool
         var didAutoOpenSettings: Bool
         var handledGatewaySetupRequestID: Int
-        var showGatewayProblemDetails: Bool
         var sidebarGatewayStatus: GatewayDisplayState
         var startupRoute: RootTabs.StartupPresentationRoute
         var shouldPresentQuickSetup: Bool
@@ -138,12 +138,15 @@ struct RootPresentationFeature {
             self.didEvaluateOnboarding = false
             self.didAutoOpenSettings = false
             self.handledGatewaySetupRequestID = 0
-            self.showGatewayProblemDetails = false
             self.sidebarGatewayStatus = .disconnected
             self.startupRoute = .none
             self.shouldPresentQuickSetup = false
             self.presentationCommand = nil
             self.refreshPresentation()
+        }
+
+        var showGatewayProblemDetails: Bool {
+            self.presentedSheet == .gatewayProblemDetails
         }
 
         var sidebarGatewayStatusTitle: String {
@@ -377,11 +380,15 @@ struct RootPresentationFeature {
                 return .none
 
             case .gatewayProblemDetailsButtonTapped:
-                state.showGatewayProblemDetails = true
+                state.presentedSheet = .gatewayProblemDetails
+                state.refreshPresentation()
                 return .none
 
             case .gatewayProblemDetailsDismissed:
-                state.showGatewayProblemDetails = false
+                if state.presentedSheet == .gatewayProblemDetails {
+                    state.presentedSheet = nil
+                    state.refreshPresentation()
+                }
                 return .none
             }
         }
