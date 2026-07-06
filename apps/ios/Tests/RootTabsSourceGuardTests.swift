@@ -2373,15 +2373,21 @@ struct RootTabsSourceGuardTests {
             from: "func applyPendingGatewaySetupLinkIfNeeded()",
             to: "@discardableResult")
 
-        #expect(setupLinkFeatureSource.contains("var setupLinkStatusText: String?"))
+        #expect(setupLinkFeatureSource
+            .contains("struct SettingsGatewaySetupLinkStatusText: Equatable, Sendable { var value: String }"))
+        #expect(setupLinkFeatureSource.contains("var setupLinkStatusText: SettingsGatewaySetupLinkStatusText?"))
         #expect(setupLinkFeatureSource.contains("struct SetupLinkStage: Equatable, Sendable"))
         #expect(setupLinkFeatureSource.contains("case setupLinkStaged(SetupLinkStage)"))
         #expect(setupLinkFeatureSource.contains("case setupLinkStatusHandled"))
-        #expect(setupLinkFeatureSource.contains("Self.setupLinkLoadedStatusText(link)"))
+        #expect(setupLinkFeatureSource
+            .contains("state.setupLinkStatusText = .init(value: Self.setupLinkLoadedStatusText(link))"))
         #expect(setupLinkFeatureSource.contains("Setup link loaded for \\(link.host):\\(link.port)"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStaged(.init(link: link)))"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.setupLinkStatusText"))
+        #expect(stagingFunction.contains("statusText.value"))
         #expect(actionsSource.contains("self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)"))
+        #expect(!setupLinkFeatureSource.contains("var setupLinkStatusText: String?"))
+        #expect(!stagingFunction.contains("value: statusText))"))
         #expect(!stagingFunction.contains("let security = link.tls"))
         #expect(!stagingFunction.contains("Setup link loaded for \\(link.host):\\(link.port)"))
     }
@@ -2635,18 +2641,25 @@ struct RootTabsSourceGuardTests {
 
         #expect(setupLinkFeatureSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
         #expect(setupLinkFeatureSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
-        #expect(setupLinkFeatureSource.contains("var scannedGatewayLinkStatusText: String?"))
+        #expect(setupLinkFeatureSource
+            .contains("struct SettingsScannedGatewayLinkStatusText: Equatable, Sendable { var value: String }"))
+        #expect(setupLinkFeatureSource.contains(
+            "var scannedGatewayLinkStatusText: SettingsScannedGatewayLinkStatusText?"))
         #expect(setupLinkFeatureSource.contains("case scannedGatewayLinkStatusHandled"))
-        #expect(setupLinkFeatureSource.contains("Self.scannedGatewayLinkStatusText(link)"))
+        #expect(setupLinkFeatureSource.contains(
+            "state.scannedGatewayLinkStatusText = .init(value: Self.scannedGatewayLinkStatusText(link))"))
         #expect(setupLinkFeatureSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(settingsActionsSource.contains(
             "self.gatewaySetupLinkStore.send(.scannedGatewayLinkReceived(.init(link: link)))"))
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.scannedGatewayLinkStatusText"))
+        #expect(handleFunction.contains("statusText.value"))
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)"))
         #expect(onboardingStateSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
         #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(scan.link)"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedGatewayLinkReceived(.init(link: link)))"))
+        #expect(!setupLinkFeatureSource.contains("var scannedGatewayLinkStatusText: String?"))
+        #expect(!handleFunction.contains("value: statusText))"))
         #expect(!handleFunction.contains("QR loaded. Connecting to"))
         #expect(!settingsActionsSource.contains("""
         self.presentationStore.send(.qrScannerDismissed)

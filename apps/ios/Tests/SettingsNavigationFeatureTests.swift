@@ -835,7 +835,7 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.setupLinkStaged(.init(link: link))) {
             $0.setupLinkStatusText =
-                "Setup link loaded for gateway.example.com:443 (TLS). Tap Connect to apply."
+                .init(value: "Setup link loaded for gateway.example.com:443 (TLS). Tap Connect to apply.")
             $0.stagedGatewaySetupLink = link
         }
 
@@ -861,7 +861,7 @@ struct SettingsNavigationFeatureTests {
         await store.send(.setupLinkStaged(.init(link: link))) {
             $0.setupCode = ""
             $0.setupLinkStatusText =
-                "Setup link loaded for gateway.example.com:443 (plain). Tap Connect to apply."
+                .init(value: "Setup link loaded for gateway.example.com:443 (plain). Tap Connect to apply.")
             $0.stagedGatewaySetupLink = link
         }
     }
@@ -1053,7 +1053,7 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.scannedGatewayLinkReceived(.init(link: scannedLink))) {
             $0.applyResult = .gatewayLink(scannedLink)
-            $0.scannedGatewayLinkStatusText = "QR loaded. Connecting to gateway.example.com:443..."
+            $0.scannedGatewayLinkStatusText = .init(value: "QR loaded. Connecting to gateway.example.com:443...")
             $0.setupCode = ""
             $0.stagedGatewaySetupLink = nil
         }
