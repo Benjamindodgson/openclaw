@@ -714,7 +714,7 @@ struct SettingsManualGatewayPortFeature {
             var useTLS: ManualGatewayPortResolutionTLS
         }
 
-        struct ManualGatewayPortSync: Equatable, Sendable { var port: Int }
+        struct ManualGatewayPortSync: Equatable, Sendable { var port: SettingsManualGatewayPort }
         struct ManualGatewayPortTextChange: Equatable, Sendable { var text: SettingsManualGatewayPortText }
 
         case manualGatewayPortResolutionRequested(ManualGatewayPortResolutionRequest)
@@ -742,8 +742,9 @@ struct SettingsManualGatewayPortFeature {
                 return .none
 
             case let .manualGatewayPortSynced(sync):
-                state.manualGatewayPort = sync.port
-                state.manualGatewayPortText = sync.port > 0 ? String(sync.port) : ""
+                let port = sync.port.value
+                state.manualGatewayPort = port
+                state.manualGatewayPortText = port > 0 ? String(port) : ""
                 return .none
 
             case let .manualGatewayPortTextChanged(change):

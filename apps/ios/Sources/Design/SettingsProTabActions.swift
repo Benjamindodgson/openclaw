@@ -186,7 +186,8 @@ extension SettingsProTab {
             enabled: .init(value: self.storedManualGatewayEnabled),
             host: .init(value: self.storedManualGatewayHost),
             useTLS: .init(value: self.storedManualGatewayTLS))))
-        self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: self.storedManualGatewayPort)))
+        self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(
+            port: .init(value: self.storedManualGatewayPort))))
         let selectedAgent = self.appModel.selectedAgentId.map { SelectedAgentID(value: $0) }
         self.agentSelectionStore.send(.selectedAgentSynced(.init(selectedAgent: selectedAgent)))
         self.shareInstructionStore.send(.defaultShareInstructionLoadRequested)
@@ -338,7 +339,7 @@ extension SettingsProTab {
 
     func applyGatewayLink(_ link: GatewayConnectDeepLink) async {
         self.applyManualGatewaySetupLink(host: link.host, tls: link.tls)
-        self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: link.port)))
+        self.manualGatewayPortStore.send(.manualGatewayPortSynced(.init(port: .init(value: link.port))))
         self.gatewayCredentialsStore.send(.setupLinkApplied(.init(link: link)))
         guard let request = self.gatewayCredentialsStore.setupAuthPersistenceRequest else { return }
         defer { self.gatewayCredentialsStore.send(.setupAuthPersistenceRequestHandled) }

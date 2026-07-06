@@ -1862,11 +1862,11 @@ struct SettingsNavigationFeatureTests {
             SettingsManualGatewayPortFeature()
         }
 
-        await store.send(.manualGatewayPortSynced(.init(port: 443))) {
+        await store.send(.manualGatewayPortSynced(.init(port: .init(value: 443)))) {
             $0.manualGatewayPortText = "443"
             $0.manualGatewayPort = 443
         }
-        await store.send(.manualGatewayPortSynced(.init(port: 0))) {
+        await store.send(.manualGatewayPortSynced(.init(port: .init(value: 0)))) {
             $0.manualGatewayPortText = ""
             $0.manualGatewayPort = 0
         }
@@ -1910,7 +1910,7 @@ struct SettingsNavigationFeatureTests {
             $0.manualGatewayPortResolutionResult = nil
         }
 
-        await store.send(.manualGatewayPortSynced(.init(port: 0))) {
+        await store.send(.manualGatewayPortSynced(.init(port: .init(value: 0)))) {
             $0.manualGatewayPort = 0
             $0.manualGatewayPortText = ""
         }
