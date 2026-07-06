@@ -77,7 +77,12 @@ struct SettingsLocationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var isChangingLocationMode = LocationModeChangeInFlight(value: false)
+        enum LocationModeChangePhase: Equatable, Sendable {
+            case idle
+            case inFlight
+        }
+
+        var locationModeChangePhase = LocationModeChangePhase.idle
         var locationModeApplyResult: LocationModeApplyResult?
         var locationModeRequest: LocationModeRequest?
         var locationModeRaw = LocationModeRawValue(rawValue: OpenClawLocationMode.off.rawValue)
@@ -104,8 +109,6 @@ struct SettingsLocationFeature {
             self.locationModeRaw.mode ?? .off
         }
     }
-
-    struct LocationModeChangeInFlight: Equatable, Sendable { var value: Bool }
 
     struct LocationModeRequest: Equatable, Sendable {
         let mode: OpenClawLocationMode
@@ -174,7 +177,7 @@ struct SettingsLocationFeature {
 
             switch action {
             case let .locationModeApplyFinished(result):
-                state.isChangingLocationMode = .init(value: false)
+                state.locationModeChangePhase = .idle
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = result
                 switch result {
@@ -194,13 +197,13 @@ struct SettingsLocationFeature {
 
             case let .locationModeApplyRequested(request):
                 state.locationModeRequest = nil
-                guard !state.isChangingLocationMode.value else { return .none }
-                state.isChangingLocationMode = .init(value: true)
+                guard state.locationModeChangePhase != .inFlight else { return .none }
+                state.locationModeChangePhase = .inFlight
                 state.locationModeApplyResult = nil
                 state.statusText = .init(value: nil)
 
                 guard request.mode != .off else {
-                    state.isChangingLocationMode = .init(value: false)
+                    state.locationModeChangePhase = .idle
                     state.locationModeApplyResult = .applied(.init(value: request.value))
                     state.locationModeRaw = request.value
                     state.previousLocationModeRaw = request.value
@@ -230,7 +233,7 @@ struct SettingsLocationFeature {
                 state.locationModeRaw = rawValue
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
-                guard !state.isChangingLocationMode.value else { return .none }
+                guard state.locationModeChangePhase != .inFlight else { return .none }
                 guard rawValue != state.previousLocationModeRaw else { return .none }
                 guard let mode = request.value.mode else { return .none }
                 state.locationModeRequest = LocationModeRequest(
@@ -240,7 +243,7 @@ struct SettingsLocationFeature {
                 return .none
 
             case let .locationModeSynced(sync):
-                guard !state.isChangingLocationMode.value else { return .none }
+                guard state.locationModeChangePhase != .inFlight else { return .none }
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
                 state.locationModeRaw = sync.value
