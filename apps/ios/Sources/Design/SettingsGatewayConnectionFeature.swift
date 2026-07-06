@@ -17,6 +17,15 @@ struct SettingsGatewayConnectionFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct DiscoveredGatewayConnectionFailureMessage: Equatable, Sendable { var value: String }
+
+    enum DiscoveredGatewayConnectionResult: Equatable, Sendable {
+        struct Failure: Equatable, Sendable { var message: DiscoveredGatewayConnectionFailureMessage }
+
+        case connected
+        case failure(Failure)
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var connectingGatewayID: String?
@@ -25,6 +34,7 @@ struct SettingsGatewayConnectionFeature {
         var gatewayRemoteAddress: String?
         var gatewayServerName: String?
         var gatewayStatusConnected = false
+        var discoveredGatewayConnectionResult: DiscoveredGatewayConnectionResult?
         var isAppleReviewDemoModeEnabled = false
 
         var gatewayConnected: Bool {
@@ -115,6 +125,8 @@ struct SettingsGatewayConnectionFeature {
         case connectionFinished
         case connectionStarted(ConnectionStart)
         case disconnectRequested
+        case discoveredGatewayConnectionResultHandled
+        case discoveredGatewayConnectionResultReceived(DiscoveredGatewayConnectionResult)
         case discoveredGatewayPersistenceRequested(DiscoveredGatewayPersistenceRequest)
         case gatewayStatusSynced(GatewayStatusSync)
     }
@@ -142,6 +154,14 @@ struct SettingsGatewayConnectionFeature {
                 return .run { _ in
                     await disconnectClient.disconnect()
                 }
+
+            case .discoveredGatewayConnectionResultHandled:
+                state.discoveredGatewayConnectionResult = nil
+                return .none
+
+            case let .discoveredGatewayConnectionResultReceived(result):
+                state.discoveredGatewayConnectionResult = result
+                return .none
 
             case let .discoveredGatewayPersistenceRequested(request):
                 guard request.stableID.trimmedValue != nil else { return .none }

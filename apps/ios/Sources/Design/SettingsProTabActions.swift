@@ -293,7 +293,18 @@ extension SettingsProTab {
             stableID: .init(value: gateway.stableID))))
         let result = await self.gatewayController.connectWithDiagnostics(gateway)
         if let failure = result.failure {
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message))))
+            self.gatewayConnectionStore.send(.discoveredGatewayConnectionResultReceived(.failure(.init(
+                message: .init(value: failure.message)))))
+        } else {
+            self.gatewayConnectionStore.send(.discoveredGatewayConnectionResultReceived(.connected))
+        }
+        guard let connectionResult = self.gatewayConnectionStore.discoveredGatewayConnectionResult else { return }
+        self.gatewayConnectionStore.send(.discoveredGatewayConnectionResultHandled)
+        switch connectionResult {
+        case let .failure(failure):
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message.value))))
+        case .connected:
+            break
         }
     }
 

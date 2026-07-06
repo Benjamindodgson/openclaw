@@ -554,6 +554,19 @@ struct SettingsNavigationFeatureTests {
         await store.send(.connectionFinished) {
             $0.connectingGatewayID = nil
         }
+
+        await store.send(.discoveredGatewayConnectionResultReceived(.failure(.init(
+            message: .init(value: "Failed to resolve gateway.")))))
+        {
+            $0.discoveredGatewayConnectionResult = .failure(.init(
+                message: .init(value: "Failed to resolve gateway.")))
+        }
+        await store.send(.discoveredGatewayConnectionResultHandled) {
+            $0.discoveredGatewayConnectionResult = nil
+        }
+        await store.send(.discoveredGatewayConnectionResultReceived(.connected)) {
+            $0.discoveredGatewayConnectionResult = .connected
+        }
     }
 
     @Test func `settings gateway connection disconnects through client`() async {
