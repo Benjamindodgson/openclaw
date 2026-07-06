@@ -2364,8 +2364,8 @@ struct SettingsNavigationFeatureTests {
             talkSpeakerphoneEnabled: .init(isEnabled: false))))
         {
             $0.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
-            $0.realtimeVoiceSelectionRaw = "cedar"
-            $0.speechLocale = "en-US"
+            $0.realtimeVoiceSelection = .init(rawValue: " Cedar ")
+            $0.speechLocale = .init(value: "en-US")
             $0.talkButtonEnabled = false
             $0.talkBackgroundEnabled = true
             $0.talkSpeakerphoneEnabled = false
@@ -2376,7 +2376,7 @@ struct SettingsNavigationFeatureTests {
         let preferencesProbe = SettingsTalkPreferencesProbe()
         var initialState = SettingsTalkPreferencesFeature.State()
         initialState.providerSelectionRaw = TalkModeProviderSelection.openAIRealtime.rawValue
-        initialState.realtimeVoiceSelectionRaw = "cedar"
+        initialState.realtimeVoiceSelection = .init(rawValue: "cedar")
         let store = TestStore(initialState: initialState) {
             SettingsTalkPreferencesFeature(preferencesClient: preferencesProbe.client)
         }
@@ -2385,10 +2385,10 @@ struct SettingsNavigationFeatureTests {
             $0.providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
         }
         await store.send(.realtimeVoiceSelectionChanged(.init(voice: .init(rawValue: "unknown")))) {
-            $0.realtimeVoiceSelectionRaw = ""
+            $0.realtimeVoiceSelection = .init(rawValue: "unknown")
         }
         await store.send(.realtimeVoiceSelectionChanged(.init(voice: .init(rawValue: " Cedar ")))) {
-            $0.realtimeVoiceSelectionRaw = "cedar"
+            $0.realtimeVoiceSelection = .init(rawValue: " Cedar ")
         }
         await store.finish()
 
@@ -2403,7 +2403,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.speechLocaleChanged(.init(locale: .init(value: "en-US")))) {
-            $0.speechLocale = "en-US"
+            $0.speechLocale = .init(value: "en-US")
         }
         await store.send(.talkBackgroundEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
             $0.talkBackgroundEnabled = true
