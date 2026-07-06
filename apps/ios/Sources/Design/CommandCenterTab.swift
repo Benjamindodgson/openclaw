@@ -712,7 +712,7 @@ struct CommandSessionsScreen: View {
                     Text("Recent sessions")
                         .font(.subheadline.weight(.bold))
                     Spacer(minLength: 8)
-                    if self.store.isLoading {
+                    if self.store.isLoading.value {
                         ProgressView()
                             .controlSize(.small)
                     }
@@ -758,7 +758,7 @@ struct CommandSessionsScreen: View {
     }
 
     private var headerDetail: String {
-        if self.store.isLoading, self.store.sessions.isEmpty { return "Loading recent sessions" }
+        if self.store.isLoading.value, self.store.sessions.isEmpty { return "Loading recent sessions" }
         let count = self.sessionRows.count
         if count == 0 {
             return self.appModel.isCommandSessionListAvailable ? "No recent sessions" : "Gateway offline"

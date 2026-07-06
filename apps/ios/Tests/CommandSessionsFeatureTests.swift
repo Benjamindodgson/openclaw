@@ -9,14 +9,14 @@ struct CommandSessionsFeatureTests {
         let probe = CommandSessionsProbe()
         var initialState = CommandSessionsFeature.State()
         initialState.sessions = [Self.session(key: "chat-existing")]
-        initialState.isLoading = true
+        initialState.isLoading = .init(value: true)
         initialState.loadErrorText = .init(value: "Previous error")
         let store = TestStore(initialState: initialState) {
             CommandSessionsFeature(client: probe.client)
         }
 
         await store.send(.refreshRequested(.init(sessionsAvailability: .init(isAvailable: false)))) {
-            $0.isLoading = false
+            $0.isLoading = .init(value: false)
             $0.sessions = []
             $0.loadErrorText = nil
         }
@@ -36,11 +36,11 @@ struct CommandSessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(sessionsAvailability: .init(isAvailable: true)))) {
-            $0.isLoading = true
+            $0.isLoading = .init(value: true)
             $0.loadErrorText = nil
         }
         await store.receive(.refreshResponse(.init(result: .success(loadedSessions)))) {
-            $0.isLoading = false
+            $0.isLoading = .init(value: false)
             $0.sessions = loadedSessions
         }
         await store.finish()
@@ -58,11 +58,11 @@ struct CommandSessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(sessionsAvailability: .init(isAvailable: true)))) {
-            $0.isLoading = true
+            $0.isLoading = .init(value: true)
             $0.loadErrorText = nil
         }
         await store.receive(.refreshResponse(.init(result: .failure(.failed)))) {
-            $0.isLoading = false
+            $0.isLoading = .init(value: false)
             $0.sessions = []
             $0.loadErrorText = .init(value: "Try again after the gateway reconnects.")
         }
