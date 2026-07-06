@@ -84,6 +84,7 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String }
+struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable { var value: Bool }
 
 enum IPadSkillWorkshopError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }
@@ -124,7 +125,7 @@ struct IPadSkillWorkshopFeature {
         var selectedAgentScopeID = ""
         var statusFilter = "pending"
         var query = ""
-        var isLoading = false
+        var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)
         var inspectingProposalID: String?
         var busyAction: IPadSkillProposalAction?
         var errorText: String?
@@ -389,19 +390,19 @@ struct IPadSkillWorkshopFeature {
 
             case let .refreshRequested(request):
                 guard request.sceneActive else {
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     return .none
                 }
                 guard request.canRead else {
                     state.proposals = []
                     state.errorText = nil
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.inspectingProposalID = nil
                     return .none
                 }
-                guard !state.isLoading else { return .none }
+                guard !state.isLoading.value else { return .none }
 
-                state.isLoading = true
+                state.isLoading = .init(value: true)
                 state.errorText = nil
                 let agentScope = IPadSkillWorkshopAgentScopeParam(agentID: state.selectedAgentParam)
                 return .run { send in
@@ -418,7 +419,7 @@ struct IPadSkillWorkshopFeature {
                 }
 
             case let .refreshResponse(response):
-                state.isLoading = false
+                state.isLoading = .init(value: false)
                 switch response.result {
                 case let .success(manifest):
                     let previousByID = Dictionary(uniqueKeysWithValues: state.proposals.map { ($0.id, $0) })
@@ -607,9 +608,9 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.isLoading)
+                    .disabled(self.store.isLoading.value)
 
-                    if self.store.isLoading {
+                    if self.store.isLoading.value {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -640,7 +641,7 @@ struct IPadSkillWorkshopScreen: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 8)
-                    if self.store.isLoading {
+                    if self.store.isLoading.value {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -667,7 +668,7 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.isLoading)
+                    .disabled(self.store.isLoading.value)
                 }
                 if let noticeText = self.store.noticeText {
                     Text(noticeText)
