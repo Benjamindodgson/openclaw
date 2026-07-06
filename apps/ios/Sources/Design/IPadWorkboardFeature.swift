@@ -119,6 +119,7 @@ struct IPadWorkboardActiveRefreshBoardID: Equatable, Sendable { var value: Strin
 struct IPadWorkboardBoardScopeID: Equatable, Sendable { var value: String }
 struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
 struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
+struct IPadWorkboardCardCreationInFlight: Equatable, Sendable { var value: Bool }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardDispatchSummaryText: Equatable, Sendable { var value: String }
@@ -183,7 +184,7 @@ struct IPadWorkboardFeature {
         var query = IPadWorkboardQuery(value: "")
         var draftTitle = IPadWorkboardDraftTitle(value: "")
         var draftNotes = IPadWorkboardDraftNotes(value: "")
-        var isCreatingCard = false
+        var isCreatingCard = IPadWorkboardCardCreationInFlight(value: false)
         var errorText: IPadWorkboardFailureMessage?
         var presentedSheet: IPadWorkboardSheet?
 
@@ -207,7 +208,7 @@ struct IPadWorkboardFeature {
 
         func createUnavailableMessage(canRead: Bool, canWrite: Bool) -> String? {
             Self.createUnavailableMessage(
-                isCreatingCard: self.isCreatingCard,
+                isCreatingCard: self.isCreatingCard.value,
                 trimmedDraftTitle: self.trimmedDraftTitle,
                 canRead: canRead,
                 canWrite: canWrite)
@@ -567,7 +568,7 @@ struct IPadWorkboardFeature {
                     return .none
                 }
 
-                state.isCreatingCard = true
+                state.isCreatingCard = .init(value: true)
                 state.errorText = nil
                 let canCreateInSelectedStatus = state.statusValues.contains(state.selectedStatus.value)
                 let status = canCreateInSelectedStatus ? state.selectedStatus.value : "todo"
@@ -593,7 +594,7 @@ struct IPadWorkboardFeature {
             case let .createResponse(response):
                 switch response.result {
                 case let .success(card):
-                    state.isCreatingCard = false
+                    state.isCreatingCard = .init(value: false)
                     state.draftTitle = .init(value: "")
                     state.draftNotes = .init(value: "")
                     state.presentedSheet = nil
@@ -601,7 +602,7 @@ struct IPadWorkboardFeature {
                     return .none
 
                 case let .failure(error):
-                    state.isCreatingCard = false
+                    state.isCreatingCard = .init(value: false)
                     state.errorText = .init(value: error.message)
                     return .none
                 }

@@ -52,7 +52,7 @@ struct IPadWorkboardFeatureTests {
         #expect(state.createUnavailableMessage(canRead: false, canWrite: false) ==
             "Connect from Settings to create, move, and dispatch cards.")
 
-        state.isCreatingCard = true
+        state.isCreatingCard = .init(value: true)
         #expect(state
             .createUnavailableMessage(canRead: true, canWrite: true) == "Card creation is already in progress.")
     }
@@ -166,11 +166,11 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.createRequested(.init(canRead: true, canWrite: true))) {
-            $0.isCreatingCard = true
+            $0.isCreatingCard = .init(value: true)
             $0.errorText = nil
         }
         await store.receive(.createResponse(.init(result: .success(created)))) {
-            $0.isCreatingCard = false
+            $0.isCreatingCard = .init(value: false)
             $0.draftTitle = .init(value: "")
             $0.draftNotes = .init(value: "")
             $0.presentedSheet = nil
@@ -189,13 +189,13 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.createRequested(.init(canRead: true, canWrite: true))) {
-            $0.isCreatingCard = true
+            $0.isCreatingCard = .init(value: true)
             $0.errorText = nil
         }
         await store.receive(.createResponse(.init(
             result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
         {
-            $0.isCreatingCard = false
+            $0.isCreatingCard = .init(value: false)
             $0.errorText = .init(value: "workboard boom")
         }
     }
