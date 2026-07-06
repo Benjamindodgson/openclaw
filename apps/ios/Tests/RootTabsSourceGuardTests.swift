@@ -244,6 +244,7 @@ struct RootTabsSourceGuardTests {
         #expect(gatewayDataSource
             .contains("self.overviewStore.send(.refreshFinished(.init(snapshot: snapshot, requestID: requestID)))"))
         #expect(skillsSource.contains("text: self.clawHubQueryBinding"))
+        #expect(source.contains("set: { self.clawHubStore.send(.queryChanged(.init(query: .init(value: $0)))) }"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchRequested)"))
         #expect(source.contains("case searchFinished(SearchResults)"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchFinished(.init(results: results)))"))
@@ -252,10 +253,13 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("self.clawHubStore.send(.installFinished(.init(slug: installSlug)))"))
         #expect(source.contains("struct AgentClawHubInstallSlug: Equatable, Sendable"))
         #expect(source.contains("struct AgentClawHubInstallFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("struct AgentClawHubSearchQuery: Equatable, Sendable"))
         #expect(source.contains("struct AgentClawHubSearchFailureMessage: Equatable, Sendable"))
         #expect(source.contains("var slug: AgentClawHubInstallSlug"))
+        #expect(source.contains("var query: AgentClawHubSearchQuery"))
         #expect(source.contains("var message: AgentClawHubInstallFailureMessage"))
         #expect(source.contains("var message: AgentClawHubSearchFailureMessage"))
+        #expect(source.contains("state.query = change.query.value"))
         #expect(source.contains("state.installingSlug = install.slug.value"))
         #expect(source.contains("state.installingSlug == install.slug.value"))
         #expect(source.contains("state.installingSlug == failure.slug.value"))
@@ -264,6 +268,8 @@ struct RootTabsSourceGuardTests {
             "self.clawHubStore.send(.searchFailed(.init(message: .init(value: Self.skillMutationMessage(error)))))"))
         #expect(!source.contains(
             "struct InstallSlug: Equatable, Sendable {\n            var slug: String"))
+        #expect(!source.contains(
+            "struct QueryChange: Equatable, Sendable {\n            var query: String"))
         #expect(!source.contains("struct SearchFailure: Equatable, Sendable {\n            var message: String"))
         #expect(!source.contains(
             "struct InstallFailure: Equatable, Sendable {\n            var slug: String\n            var message: String"))

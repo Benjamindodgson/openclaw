@@ -280,7 +280,7 @@ struct AgentClawHubSearchFeatureTests {
             AgentClawHubSearchFeature()
         }
 
-        await store.send(.queryChanged(.init(query: "memory"))) {
+        await store.send(.queryChanged(.init(query: .init(value: "memory")))) {
             $0.query = "memory"
         }
     }
