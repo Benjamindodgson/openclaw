@@ -951,7 +951,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.applyRequested) {
-            $0.applyResult = .failure(.init(message: "Paste a setup code to continue."))
+            $0.applyResult = .failure(.init(message: SettingsGatewaySetupLinkFeature.emptySetupCodeFailureMessage))
         }
 
         await store.send(.applyResultHandled) {
@@ -963,8 +963,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.applyRequested) {
-            $0.applyResult = .failure(.init(
-                message: "Setup code not recognized or uses an insecure ws:// gateway URL."))
+            $0.applyResult = .failure(.init(message: SettingsGatewaySetupLinkFeature.invalidSetupCodeFailureMessage))
         }
     }
 
