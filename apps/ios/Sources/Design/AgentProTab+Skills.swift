@@ -473,7 +473,7 @@ extension AgentProTab {
                 }
 
                 if let message = self.skillConfigMessages[skill.effectiveSkillKey] {
-                    Text(message.text)
+                    Text(message.text.value)
                         .font(.caption2)
                         .foregroundStyle(message.kind == .success ? OpenClawBrand.accent : OpenClawBrand.warn)
                 }
