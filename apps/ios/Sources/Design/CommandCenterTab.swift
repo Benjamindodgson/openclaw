@@ -725,7 +725,7 @@ struct CommandSessionsScreen: View {
                     CommandEmptyStateRow(
                         icon: "exclamationmark.triangle.fill",
                         title: "Sessions unavailable",
-                        detail: loadErrorText)
+                        detail: loadErrorText.value)
                         .padding(.horizontal, 10)
                         .padding(.bottom, 10)
                 } else if self.sessionRows.isEmpty {

@@ -27,6 +27,8 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct CommandSessionsFailureMessage: Equatable, Sendable { var value: String }
+
 enum CommandSessionsError: Error, Equatable, Sendable {
     case failed
 }
@@ -46,7 +48,7 @@ struct CommandSessionsFeature {
     struct State: Equatable, Sendable {
         var sessions: [OpenClawChatSessionEntry] = []
         var isLoading = false
-        var loadErrorText: String?
+        var loadErrorText: CommandSessionsFailureMessage?
     }
 
     enum Action: Equatable, Sendable {
@@ -104,7 +106,7 @@ struct CommandSessionsFeature {
                 case .failure:
                     state.isLoading = false
                     state.sessions = []
-                    state.loadErrorText = "Try again after the gateway reconnects."
+                    state.loadErrorText = .init(value: "Try again after the gateway reconnects.")
                     return .none
                 }
             }
