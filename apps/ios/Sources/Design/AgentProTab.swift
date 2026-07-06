@@ -49,6 +49,15 @@ enum AgentRosterFilter: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum AgentRoute: Hashable, Sendable {
+    case agents
+    case skills
+    case instances
+    case cron
+    case usage
+    case dreaming
+}
+
 // swiftformat:enable redundantSendable
 
 struct AgentProTab: View {
@@ -67,15 +76,6 @@ struct AgentProTab: View {
     @State var clawHubStore: StoreOf<AgentClawHubSearchFeature>
     @State var cronActionStore: StoreOf<AgentCronActionFeature>
     @State var selectionStore: StoreOf<AgentSelectionFeature>
-
-    enum AgentRoute: Hashable {
-        case agents
-        case skills
-        case instances
-        case cron
-        case usage
-        case dreaming
-    }
 
     enum AgentLayout {
         static let cardRadius: CGFloat = OpenClawProMetric.cardRadius
@@ -899,12 +899,12 @@ struct AgentNavigationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var navigationPath: [AgentProTab.AgentRoute] = []
+        var navigationPath: [AgentRoute] = []
     }
 
     enum Action: Equatable, Sendable {
         struct NavigationPathChange: Equatable, Sendable {
-            var path: [AgentProTab.AgentRoute]
+            var path: [AgentRoute]
         }
 
         case navigationPathChanged(NavigationPathChange)
