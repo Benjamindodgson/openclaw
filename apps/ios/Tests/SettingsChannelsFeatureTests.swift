@@ -9,7 +9,7 @@ struct SettingsChannelsFeatureTests {
     @Test func `offline refresh clears channel state`() async {
         var initialState = SettingsChannelsFeature.State()
         initialState.entries = Self.connectedEntries
-        initialState.isLoading = .init(value: true)
+        initialState.loadingPhase = .inFlight
         initialState.errorText = .init(value: "old error")
         let store = TestStore(initialState: initialState) {
             SettingsChannelsFeature(client: Self.client())
@@ -21,7 +21,7 @@ struct SettingsChannelsFeatureTests {
             force: .init(isForced: false))))
         {
             $0.entries = []
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
             $0.errorText = nil
         }
     }
@@ -36,14 +36,14 @@ struct SettingsChannelsFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: false))))
         {
-            $0.isLoading = .init(value: true)
+            $0.loadingPhase = .inFlight
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: false),
             result: .success(Self.connectedEntries))))
         {
             $0.entries = Self.connectedEntries
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
         }
     }
 
@@ -59,13 +59,13 @@ struct SettingsChannelsFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: false))))
         {
-            $0.isLoading = .init(value: true)
+            $0.loadingPhase = .inFlight
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: false),
             result: .failure(.failed(.init(message: .init(value: "boom")))))))
         {
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
         }
     }
 
@@ -81,13 +81,13 @@ struct SettingsChannelsFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: true))))
         {
-            $0.isLoading = .init(value: true)
+            $0.loadingPhase = .inFlight
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: true),
             result: .failure(.failed(.init(message: .init(value: "boom")))))))
         {
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
             $0.errorText = .init(value: "boom")
         }
     }
