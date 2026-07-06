@@ -366,7 +366,7 @@ extension AgentProTab {
     }
 
     func openSkillEditor(_ skill: SkillStatusEntryLite) {
-        self.skillEditorStore.send(.editorOpened(.init(id: skill.effectiveSkillKey)))
+        self.skillEditorStore.send(.editorOpened(.init(id: .init(value: skill.effectiveSkillKey))))
     }
 
     func skillAPIKeyBinding(for skill: SkillStatusEntryLite) -> Binding<String> {

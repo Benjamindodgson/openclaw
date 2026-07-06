@@ -89,7 +89,7 @@ struct AgentSkillEditorFeatureTests {
             AgentSkillEditorFeature()
         }
 
-        await store.send(.editorOpened(.init(id: "skill-a"))) {
+        await store.send(.editorOpened(.init(id: .init(value: "skill-a")))) {
             $0.selection = AgentProTab.SkillEditorSelection(id: "skill-a")
         }
         await store.send(.selectionChanged(.init(selection: AgentProTab.SkillEditorSelection(id: "skill-b")))) {

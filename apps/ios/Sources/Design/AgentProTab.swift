@@ -458,6 +458,7 @@ struct AgentSkillPolicyMutationFeature {
 // swiftformat:disable redundantSendable
 struct AgentSkillEditorAPIKeyDraftKey: Equatable, Sendable { var value: String }
 struct AgentSkillEditorAPIKeyDraftValue: Equatable, Sendable { var value: String }
+struct AgentSkillEditorID: Equatable, Sendable { var value: String }
 struct AgentSkillEditorMutationKey: Equatable, Sendable { var value: String }
 struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
@@ -498,7 +499,7 @@ struct AgentSkillEditorFeature {
         }
 
         struct EditorID: Equatable, Sendable {
-            var id: String
+            var id: AgentSkillEditorID
         }
 
         struct SelectionChange: Equatable, Sendable {
@@ -534,7 +535,7 @@ struct AgentSkillEditorFeature {
                 return .none
 
             case let .editorOpened(editor):
-                state.selection = AgentProTab.SkillEditorSelection(id: editor.id)
+                state.selection = AgentProTab.SkillEditorSelection(id: editor.id.value)
                 return .none
 
             case let .selectionChanged(change):
