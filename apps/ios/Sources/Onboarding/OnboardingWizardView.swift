@@ -767,9 +767,9 @@ extension OnboardingWizardView {
 
         case let .gatewayLink(link):
             self.statusStore.send(.connectionStarted(.init(
-                id: "setup-code",
-                message: "Connecting via setup code...",
-                statusLine: "Setup code loaded. Connecting to \(link.host):\(link.port)...",
+                id: .init(value: "setup-code"),
+                message: .init(value: "Connecting via setup code..."),
+                statusLine: .init(value: "Setup code loaded. Connecting to \(link.host):\(link.port)..."),
                 clearsIssue: false)))
             self.applyGatewayLink(link)
             self.stepStore.send(.stepChanged(.init(step: .connect)))
@@ -784,8 +784,8 @@ extension OnboardingWizardView {
         self.applyGatewayLink(scannedLink)
         self.presentationStore.send(.qrScannerDismissed)
         self.statusStore.send(.connectionStatusUpdated(.init(
-            message: "Connecting via QR code...",
-            statusLine: "QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)...")))
+            message: .init(value: "Connecting via QR code..."),
+            statusLine: .init(value: "QR loaded. Connecting to \(scannedLink.host):\(scannedLink.port)..."))))
         self.stepStore.send(.stepChanged(.init(step: .connect)))
         Task { await self.connectManual() }
     }
@@ -989,9 +989,9 @@ extension OnboardingWizardView {
 
     private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
         self.statusStore.send(.connectionStarted(.init(
-            id: gateway.id,
-            message: "Connecting to \(gateway.name)…",
-            statusLine: "Connecting to \(gateway.name)…",
+            id: .init(value: gateway.id),
+            message: .init(value: "Connecting to \(gateway.name)…"),
+            statusLine: .init(value: "Connecting to \(gateway.name)…"),
             clearsIssue: true)))
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connect(gateway)
@@ -1014,9 +1014,9 @@ extension OnboardingWizardView {
         self.connectionFormStore.send(.manualConnectionRequestHandled)
 
         self.statusStore.send(.connectionStarted(.init(
-            id: "manual",
-            message: "Connecting to \(request.host)…",
-            statusLine: "Connecting to \(request.host):\(request.port)…",
+            id: .init(value: "manual"),
+            message: .init(value: "Connecting to \(request.host)…"),
+            statusLine: .init(value: "Connecting to \(request.host):\(request.port)…"),
             clearsIssue: true)))
         defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
@@ -1036,12 +1036,12 @@ extension OnboardingWizardView {
         // Keep current auth/pairing issue sticky while retrying to avoid Step 3 UI flip-flop.
         if !silent {
             self.statusStore.send(.connectionStarted(.init(
-                id: connectionID,
-                message: "Retrying…",
-                statusLine: "Retrying last connection…",
+                id: .init(value: connectionID),
+                message: .init(value: "Retrying…"),
+                statusLine: .init(value: "Retrying last connection…"),
                 clearsIssue: false)))
         } else {
-            self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))
+            self.statusStore.send(.connectionActivityStarted(.init(id: .init(value: connectionID))))
         }
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connectLastKnown()
@@ -1065,9 +1065,9 @@ extension OnboardingWizardView {
         }
         if problem.canTrustRotatedCertificate {
             self.statusStore.send(.connectionStarted(.init(
-                id: "trust-certificate",
-                message: "Updating gateway certificate…",
-                statusLine: "Updating gateway certificate…",
+                id: .init(value: "trust-certificate"),
+                message: .init(value: "Updating gateway certificate…"),
+                statusLine: .init(value: "Updating gateway certificate…"),
                 clearsIssue: false)))
             defer { self.statusStore.send(.connectionFinished) }
             _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)

@@ -55,6 +55,14 @@ enum OnboardingConnectionMode: String, CaseIterable {
 }
 
 // swiftformat:disable redundantSendable
+struct OnboardingConnectionID: Equatable, Sendable { var value: String }
+
+struct OnboardingConnectionMessage: Equatable, Sendable { var value: String }
+
+struct OnboardingConnectionStatusLine: Equatable, Sendable { var value: String }
+
+struct OnboardingConnectionStatusMessage: Equatable, Sendable { var value: String? }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -221,15 +229,15 @@ struct OnboardingStatusFeature {
         struct AutomaticPairingResumeRequest: Equatable, Sendable { var now: Date }
 
         struct ConnectionStart: Equatable, Sendable {
-            var id: String
-            var message: String
-            var statusLine: String
+            var id: OnboardingConnectionID
+            var message: OnboardingConnectionMessage
+            var statusLine: OnboardingConnectionStatusLine
             var clearsIssue: Bool
         }
 
         struct ConnectionStatusUpdate: Equatable, Sendable {
-            var message: String?
-            var statusLine: String
+            var message: OnboardingConnectionStatusMessage
+            var statusLine: OnboardingConnectionStatusLine
         }
 
         struct GatewayConnectionCompletion: Equatable, Sendable { var markedCompleted: Bool }
@@ -242,7 +250,7 @@ struct OnboardingStatusFeature {
             var statusText: String
         }
 
-        struct ConnectionActivityStart: Equatable, Sendable { var id: String }
+        struct ConnectionActivityStart: Equatable, Sendable { var id: OnboardingConnectionID }
         struct ScannerError: Equatable, Sendable { var message: OnboardingScannerErrorMessage }
 
         case automaticPairingResumeRequested(AutomaticPairingResumeRequest)
@@ -316,22 +324,22 @@ struct OnboardingStatusFeature {
                 return .none
 
             case let .connectionStarted(start):
-                state.connectingGatewayID = start.id
+                state.connectingGatewayID = start.id.value
                 if start.clearsIssue {
                     state.issue = .none
                     state.shouldShowAuthStep = false
                 }
-                state.connectMessage = start.message
-                state.statusLine = start.statusLine
+                state.connectMessage = start.message.value
+                state.statusLine = start.statusLine.value
                 return .none
 
             case let .connectionActivityStarted(start):
-                state.connectingGatewayID = start.id
+                state.connectingGatewayID = start.id.value
                 return .none
 
             case let .connectionStatusUpdated(update):
-                state.connectMessage = update.message
-                state.statusLine = update.statusLine
+                state.connectMessage = update.message.value
+                state.statusLine = update.statusLine.value
                 return .none
 
             case .freshQRScanStarted:

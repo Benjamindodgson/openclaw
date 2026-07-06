@@ -2798,26 +2798,60 @@ struct RootTabsSourceGuardTests {
     @Test func `onboarding connection start action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let connectionStart = try Self.extract(
+            onboardingStateSource,
+            from: "struct ConnectionStart",
+            to: "struct ConnectionStatusUpdate")
+        let connectionActivityStart = try Self.extract(
+            onboardingStateSource,
+            from: "struct ConnectionActivityStart",
+            to: "struct ScannerError")
 
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionID: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionMessage: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionStatusLine: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionStart: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionActivityStart: Equatable, Sendable"))
+        #expect(connectionStart.contains("var id: OnboardingConnectionID"))
+        #expect(connectionStart.contains("var message: OnboardingConnectionMessage"))
+        #expect(connectionStart.contains("var statusLine: OnboardingConnectionStatusLine"))
+        #expect(connectionActivityStart.contains("var id: OnboardingConnectionID"))
         #expect(onboardingStateSource.contains("case connectionStarted(ConnectionStart)"))
         #expect(onboardingStateSource.contains("case connectionActivityStarted(ConnectionActivityStart)"))
-        #expect(onboardingStateSource.contains("state.connectingGatewayID = start.id"))
+        #expect(onboardingStateSource.contains("state.connectingGatewayID = start.id.value"))
+        #expect(onboardingStateSource.contains("state.connectMessage = start.message.value"))
+        #expect(onboardingStateSource.contains("state.statusLine = start.statusLine.value"))
         #expect(onboardingStateSource.contains("if start.clearsIssue"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(.init("))
-        #expect(onboardingSource.contains("self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))"))
+        #expect(onboardingSource.contains("id: .init(value: connectionID)"))
+        #expect(!connectionStart.contains("var id: String"))
+        #expect(!connectionStart.contains("var message: String\n"))
+        #expect(!connectionStart.contains("var statusLine: String\n"))
+        #expect(!connectionActivityStart.contains("var id: String"))
+        #expect(!onboardingSource.contains("self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))"))
     }
 
     @Test func `onboarding connection status action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let connectionStatusUpdate = try Self.extract(
+            onboardingStateSource,
+            from: "struct ConnectionStatusUpdate",
+            to: "struct GatewayConnectionCompletion")
 
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionStatusMessage: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionStatusLine: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionStatusUpdate: Equatable, Sendable"))
+        #expect(connectionStatusUpdate.contains("var message: OnboardingConnectionStatusMessage"))
+        #expect(connectionStatusUpdate.contains("var statusLine: OnboardingConnectionStatusLine"))
         #expect(onboardingStateSource.contains("case connectionStatusUpdated(ConnectionStatusUpdate)"))
-        #expect(onboardingStateSource.contains("state.connectMessage = update.message"))
-        #expect(onboardingStateSource.contains("state.statusLine = update.statusLine"))
+        #expect(onboardingStateSource.contains("state.connectMessage = update.message.value"))
+        #expect(onboardingStateSource.contains("state.statusLine = update.statusLine.value"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStatusUpdated(.init("))
+        #expect(onboardingSource.contains("message: .init(value: \"Connecting via QR code...\")"))
+        #expect(onboardingSource.contains("statusLine: .init(value: \"QR loaded. Connecting to \\(scannedLink.host):"))
+        #expect(!connectionStatusUpdate.contains("var message: String?"))
+        #expect(!connectionStatusUpdate.contains("var statusLine: String\n"))
     }
 
     @Test func `onboarding connection issue action is typed`() throws {

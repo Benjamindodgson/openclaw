@@ -318,9 +318,9 @@ import Testing
         }
 
         await store.send(.connectionStarted(.init(
-            id: "manual",
-            message: "Connecting to gateway…",
-            statusLine: "Connecting to gateway:18789…",
+            id: .init(value: "manual"),
+            message: .init(value: "Connecting to gateway…"),
+            statusLine: .init(value: "Connecting to gateway:18789…"),
             clearsIssue: true)))
         {
             $0.connectingGatewayID = "manual"
@@ -329,14 +329,14 @@ import Testing
         }
 
         await store.send(.connectionStatusUpdated(.init(
-            message: "Connecting via QR code...",
-            statusLine: "QR loaded. Connecting to gateway.local:18789...")))
+            message: .init(value: "Connecting via QR code..."),
+            statusLine: .init(value: "QR loaded. Connecting to gateway.local:18789..."))))
         {
             $0.connectMessage = "Connecting via QR code..."
             $0.statusLine = "QR loaded. Connecting to gateway.local:18789..."
         }
 
-        await store.send(.connectionActivityStarted(.init(id: "retry-auto"))) {
+        await store.send(.connectionActivityStarted(.init(id: .init(value: "retry-auto")))) {
             $0.connectingGatewayID = "retry-auto"
         }
 
@@ -469,7 +469,7 @@ import Testing
             $0.shouldResumePairingAutomatically = true
         }
 
-        await store.send(.connectionActivityStarted(.init(id: "retry-auto"))) {
+        await store.send(.connectionActivityStarted(.init(id: .init(value: "retry-auto")))) {
             $0.connectingGatewayID = "retry-auto"
         }
 
