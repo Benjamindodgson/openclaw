@@ -2,14 +2,22 @@ import ComposableArchitecture
 import OpenClawProtocol
 import SwiftUI
 
+// swiftformat:disable redundantSendable
+struct RootTabsInitialDestinationApplication: Equatable, Sendable { var didApply: Bool }
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct RootTabsPhoneControlHubFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var navigationPath: [RootTabs.SidebarDestination] = []
-        var didApplyInitialDestination = false
+        var initialDestinationApplication = RootTabsInitialDestinationApplication(didApply: false)
         var presentation = RootTabsPhoneControlHubPresentationState()
+
+        var didApplyInitialDestination: Bool {
+            self.initialDestinationApplication.didApply
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -50,8 +58,8 @@ struct RootTabsPhoneControlHubFeature {
                 return .none
 
             case let .initialDestinationAppeared(appearance):
-                guard !state.didApplyInitialDestination else { return .none }
-                state.didApplyInitialDestination = true
+                guard !state.initialDestinationApplication.didApply else { return .none }
+                state.initialDestinationApplication = .init(didApply: true)
 
                 switch appearance {
                 case .none:
