@@ -248,6 +248,16 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("case searchFinished(SearchResults)"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchFinished(.init(results: results)))"))
         #expect(skillsSource.contains("self.clawHubStore.send(.installRequested(.init(slug: result.slug)))"))
+        #expect(source.contains("struct AgentClawHubInstallFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("struct AgentClawHubSearchFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("var message: AgentClawHubInstallFailureMessage"))
+        #expect(source.contains("var message: AgentClawHubSearchFailureMessage"))
+        #expect(source.contains("state.errorText = failure.message.value"))
+        #expect(skillsSource.contains(
+            "self.clawHubStore.send(.searchFailed(.init(message: .init(value: Self.skillMutationMessage(error)))))"))
+        #expect(!source.contains("struct SearchFailure: Equatable, Sendable {\n            var message: String"))
+        #expect(!source.contains(
+            "struct InstallFailure: Equatable, Sendable {\n            var slug: String\n            var message: String"))
         #expect(skillsSource.contains("text: self.skillFilterBinding"))
         #expect(skillsSource.contains("selection: self.skillStatusFilterBinding"))
         #expect(skillsSource.contains("self.skillFilterStore.send(.clearSearchTapped)"))
