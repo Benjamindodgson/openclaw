@@ -57,7 +57,7 @@ struct RootPresentationFeature {
         var showOnboarding: Bool
         var gatewayConnected: Bool
         var hasExistingGatewayConfig: Bool
-        var discoveredGatewayCount: Int
+        var discoveredGatewayCount: DiscoveredGatewayCount
     }
 
     struct QuickSetupSnapshotChange: Equatable, Sendable {
@@ -129,6 +129,18 @@ struct RootPresentationFeature {
         }
     }
 
+    struct DiscoveredGatewayCount: Equatable, Sendable {
+        var value: Int
+
+        init(value: Int = 0) {
+            self.value = value
+        }
+
+        var hasDiscoveredGateway: Bool {
+            self.value > 0
+        }
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected: Bool
@@ -140,7 +152,7 @@ struct RootPresentationFeature {
         var showOnboarding: Bool
         var onboardingAllowSkip: Bool
         var presentedSheet: PresentedSheet?
-        var discoveredGatewayCount: Int
+        var discoveredGatewayCount: DiscoveredGatewayCount
         var onboardingEvaluationGate: OnboardingEvaluationGate
         var autoOpenSettingsGate: AutoOpenSettingsGate
         var handledGatewaySetupRequestID: GatewaySetupRequestID
@@ -159,7 +171,7 @@ struct RootPresentationFeature {
             showOnboarding: Bool = false,
             onboardingAllowSkip: Bool = true,
             presentedSheet: PresentedSheet? = nil,
-            discoveredGatewayCount: Int = 0)
+            discoveredGatewayCount: DiscoveredGatewayCount = .init())
         {
             self.gatewayConnected = gatewayConnected
             self.hasConnectedOnce = hasConnectedOnce
@@ -264,7 +276,7 @@ struct RootPresentationFeature {
             guard !hasPresentedSheet else { return false }
             guard !snapshot.gatewayConnected else { return false }
             guard !snapshot.hasExistingGatewayConfig else { return false }
-            return snapshot.discoveredGatewayCount > 0
+            return snapshot.discoveredGatewayCount.hasDiscoveredGateway
         }
     }
 
