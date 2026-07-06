@@ -34,7 +34,7 @@ extension SettingsProTab {
                 self.diagnosticCheckRow(
                     icon: "stethoscope",
                     title: "Last Run",
-                    detail: self.diagnosticsStore.lastRunText,
+                    detail: self.diagnosticsStore.lastRunText.value,
                     value: self.diagnosticsRunValue,
                     color: self.diagnosticsRunColor)
                 Divider().padding(.leading, 60)
@@ -48,7 +48,7 @@ extension SettingsProTab {
                 self.diagnosticCheckRow(
                     icon: "dot.radiowaves.left.and.right",
                     title: "Discovery",
-                    detail: self.diagnosticsStore.discoveryStatusText,
+                    detail: self.diagnosticsStore.discoveryStatusText.value,
                     value: self.diagnosticsStore.discoveryValue,
                     color: self.diagnosticsStore.discoveryColor)
                 Divider().padding(.leading, 60)
