@@ -123,6 +123,7 @@ struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
 struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
+struct IPadWorkboardSelectedBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatusFilter: Equatable, Sendable { var value: String }
 
 enum IPadWorkboardError: Error, Equatable, Sendable {
@@ -173,7 +174,7 @@ struct IPadWorkboardFeature {
         var busyCardID: IPadWorkboardBusyCardID?
         var dispatchSummaryText: String?
         var selectedStatus = "active"
-        var selectedBoardID = ""
+        var selectedBoardID = IPadWorkboardSelectedBoardID(value: "")
         var query = ""
         var draftTitle = ""
         var draftNotes = ""
@@ -182,7 +183,8 @@ struct IPadWorkboardFeature {
         var presentedSheet: IPadWorkboardSheet?
 
         var boardScopeLabel: String {
-            self.selectedBoardID.isEmpty ? "All boards" : IPadWorkboardScreen.boardScopeLabel(for: self.selectedBoardID)
+            self.selectedBoardID.value.isEmpty ? "All boards" : IPadWorkboardScreen
+                .boardScopeLabel(for: self.selectedBoardID.value)
         }
 
         var isLoading: Bool {
@@ -190,7 +192,7 @@ struct IPadWorkboardFeature {
         }
 
         var selectedBoardParam: String? {
-            let selected = IPadWorkboardScreen.normalizedScopeID(self.selectedBoardID)
+            let selected = IPadWorkboardScreen.normalizedScopeID(self.selectedBoardID.value)
             return selected.isEmpty ? nil : selected
         }
 
@@ -531,7 +533,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .boardScopeChanged(change):
-                state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(change.boardID.value)
+                state.selectedBoardID = .init(value: IPadWorkboardScreen.normalizedScopeID(change.boardID.value))
                 return .none
 
             case let .cardSheetPresented(presentation):
