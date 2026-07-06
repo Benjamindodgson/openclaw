@@ -929,11 +929,11 @@ struct AgentOverviewFilterFeature {
     struct State: Equatable, Sendable {
         var rosterFilter: AgentProTab.AgentRosterFilter = .all
         var searchPresented = false
-        var searchText = ""
+        var searchText = AgentOverviewSearchText(value: "")
 
         var hasActiveFilters: Bool {
             self.rosterFilter != .all
-                || !self.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !self.searchText.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
     }
 
@@ -955,7 +955,7 @@ struct AgentOverviewFilterFeature {
             switch action {
             case .clearFiltersTapped:
                 state.rosterFilter = .all
-                state.searchText = ""
+                state.searchText = .init(value: "")
                 return .none
 
             case let .rosterFilterChanged(filter):
@@ -967,7 +967,7 @@ struct AgentOverviewFilterFeature {
                 return .none
 
             case let .searchTextChanged(change):
-                state.searchText = change.text.value
+                state.searchText = change.text
                 return .none
             }
         }
