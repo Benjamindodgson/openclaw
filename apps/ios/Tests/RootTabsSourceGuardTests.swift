@@ -1004,6 +1004,11 @@ struct RootTabsSourceGuardTests {
         #expect(launchSource.contains("struct InitialChatSessionRequest: Equatable, Sendable"))
         #expect(launchSource.contains("case initialChatSessionRequested(InitialChatSessionRequest)"))
         #expect(rootSource.contains("RootLaunchFeature.InitialChatSessionRequest("))
+        #expect(launchSource.contains("enum OneShotPhase: Equatable, Sendable"))
+        #expect(launchSource.contains("var initialAppearancePhase = OneShotPhase.pending"))
+        #expect(launchSource.contains("var initialChatSessionPhase = OneShotPhase.pending"))
+        #expect(launchSource.contains("state.initialAppearancePhase = .applied"))
+        #expect(launchSource.contains("state.initialChatSessionPhase = .applied"))
         #expect(launchSource.contains("struct ApplyAppearanceCommand: Equatable, Sendable"))
         #expect(launchSource.contains("var preference: AppAppearancePreference"))
         #expect(launchSource.contains("case applyAppearance(ApplyAppearanceCommand)"))
@@ -1031,6 +1036,8 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("struct RootCameraFlashOverlayFeature"))
         #expect(!rootSource.contains("struct RootVoiceWakeToastSleepClient"))
         #expect(!rootSource.contains("struct RootCameraFlashOverlaySleepClient"))
+        #expect(!launchSource.contains("var didApplyInitialAppearance = false"))
+        #expect(!launchSource.contains("var didApplyInitialChatSession = false"))
     }
 
     @Test func `root tca store factories live outside root tabs`() throws {

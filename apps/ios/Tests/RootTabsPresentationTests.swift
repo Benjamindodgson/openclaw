@@ -556,7 +556,7 @@ struct RootTabsPresentationTests {
         await store.send(.initialAppearanceRequested(Self.initialAppearanceRequest(
             .dark)))
         {
-            $0.didApplyInitialAppearance = true
+            $0.initialAppearancePhase = .applied
             $0.command = .applyAppearance(Self.launchApplyAppearanceCommand(
                 .dark))
         }
@@ -575,7 +575,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.initialAppearanceRequested(Self.initialAppearanceRequest(nil))) {
-            $0.didApplyInitialAppearance = true
+            $0.initialAppearancePhase = .applied
         }
     }
 
@@ -585,7 +585,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.initialChatSessionRequested(Self.initialChatSessionRequest("session-1"))) {
-            $0.didApplyInitialChatSession = true
+            $0.initialChatSessionPhase = .applied
             $0.command = .focusChatSession(Self.launchFocusChatSessionCommand("session-1"))
         }
 
