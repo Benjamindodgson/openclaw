@@ -67,8 +67,8 @@ struct IPadSkillWorkshopFeatureTests {
         await store.send(.agentScopeChanged(.init(agentID: " agent-1 "))) {
             $0.selectedAgentScopeID = "agent-1"
         }
-        await store.send(.statusFilterChanged(.init(filter: "pending"))) {
-            $0.statusFilter = "pending"
+        await store.send(.statusFilterChanged(.init(filter: .init(value: "pending")))) {
+            $0.statusFilter = .init(value: "pending")
             $0.selectedProposalID = "pending-1"
         }
         await store.send(.queryChanged(.init(query: .init(value: "missing")))) {

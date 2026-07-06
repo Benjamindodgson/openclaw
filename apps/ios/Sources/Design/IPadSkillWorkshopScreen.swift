@@ -86,6 +86,7 @@ extension DependencyValues {
 struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable { var value: Bool }
 struct IPadSkillWorkshopQuery: Equatable, Sendable { var value: String }
+struct IPadSkillWorkshopStatusFilter: Equatable, Sendable { var value: String }
 
 enum IPadSkillWorkshopError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }
@@ -124,7 +125,7 @@ struct IPadSkillWorkshopFeature {
         var proposals: [IPadSkillProposal] = []
         var selectedProposalID: String?
         var selectedAgentScopeID = ""
-        var statusFilter = "pending"
+        var statusFilter = IPadSkillWorkshopStatusFilter(value: "pending")
         var query = IPadSkillWorkshopQuery(value: "")
         var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)
         var inspectingProposalID: String?
@@ -139,19 +140,19 @@ struct IPadSkillWorkshopFeature {
         }
 
         var statusFilterLabel: String {
-            IPadSkillWorkshopScreen.proposalStatusFilterLabel(self.statusFilter)
+            IPadSkillWorkshopScreen.proposalStatusFilterLabel(self.statusFilter.value)
         }
 
         var filteredProposals: [IPadSkillProposal] {
             Self.filteredProposals(
                 proposals: self.proposals,
-                statusFilter: self.statusFilter,
+                statusFilter: self.statusFilter.value,
                 query: self.query.value)
         }
 
         var visibleProposalLaneStatuses: [String] {
             IPadSkillWorkshopScreen.proposalStatusBoardLanes(
-                filter: self.statusFilter,
+                filter: self.statusFilter.value,
                 proposalStatuses: self.proposals.map(\.status))
         }
 
@@ -276,7 +277,7 @@ struct IPadSkillWorkshopFeature {
         case refreshResponse(RefreshResponse)
 
         struct StatusFilterChange: Equatable, Sendable {
-            var filter: String
+            var filter: IPadSkillWorkshopStatusFilter
         }
 
         case statusFilterChanged(StatusFilterChange)
@@ -1187,8 +1188,8 @@ struct IPadSkillWorkshopScreen: View {
 
     private var statusFilterBinding: Binding<String> {
         Binding(
-            get: { self.store.statusFilter },
-            set: { self.store.send(.statusFilterChanged(.init(filter: $0))) })
+            get: { self.store.statusFilter.value },
+            set: { self.store.send(.statusFilterChanged(.init(filter: .init(value: $0)))) })
     }
 
     private var statusFilterLabel: String {
