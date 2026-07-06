@@ -33,14 +33,14 @@ struct SettingsDeviceCapabilityFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var cameraEnabled = true
+        var cameraEnabled = CameraEnabled(value: true)
         var locationModeRaw = OpenClawLocationMode.off.rawValue
-        var preventSleep = true
+        var preventSleep = PreventSleepEnabled(value: true)
 
         var enabledCount: Int {
             var count = 0
-            if self.cameraEnabled { count += 1 }
-            if self.preventSleep { count += 1 }
+            if self.cameraEnabled.value { count += 1 }
+            if self.preventSleep.value { count += 1 }
             if self.locationModeRaw != OpenClawLocationMode.off.rawValue { count += 1 }
             return count
         }
@@ -79,12 +79,12 @@ struct SettingsDeviceCapabilityFeature {
         Reduce { state, action in
             switch action {
             case let .cameraEnabledChanged(change):
-                state.cameraEnabled = change.enabled.value
+                state.cameraEnabled = change.enabled
                 return .none
 
             case let .capabilitiesSynced(sync):
-                state.cameraEnabled = sync.cameraEnabled.value
-                state.preventSleep = sync.preventSleep.value
+                state.cameraEnabled = sync.cameraEnabled
+                state.preventSleep = sync.preventSleep
                 state.locationModeRaw = sync.locationMode.rawValue
                 return .none
 
@@ -93,7 +93,7 @@ struct SettingsDeviceCapabilityFeature {
                 return .none
 
             case let .preventSleepChanged(change):
-                state.preventSleep = change.enabled.value
+                state.preventSleep = change.enabled
                 return .none
             }
         }

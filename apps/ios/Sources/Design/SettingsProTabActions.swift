@@ -588,11 +588,11 @@ extension SettingsProTab {
     }
 
     var cameraEnabled: Bool {
-        self.deviceCapabilityStore.cameraEnabled
+        self.deviceCapabilityStore.cameraEnabled.value
     }
 
     var preventSleep: Bool {
-        self.deviceCapabilityStore.preventSleep
+        self.deviceCapabilityStore.preventSleep.value
     }
 
     var talkEnabled: Bool {
@@ -605,13 +605,13 @@ extension SettingsProTab {
 
     var cameraEnabledBinding: Binding<Bool> {
         Binding(
-            get: { self.deviceCapabilityStore.cameraEnabled },
+            get: { self.deviceCapabilityStore.cameraEnabled.value },
             set: { self.updateCameraEnabled($0) })
     }
 
     var preventSleepBinding: Binding<Bool> {
         Binding(
-            get: { self.deviceCapabilityStore.preventSleep },
+            get: { self.deviceCapabilityStore.preventSleep.value },
             set: { self.updatePreventSleep($0) })
     }
 
