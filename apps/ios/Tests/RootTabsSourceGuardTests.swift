@@ -4311,6 +4311,8 @@ struct RootTabsSourceGuardTests {
             to: "func handleNotificationAuthorizationResult")
 
         #expect(notificationSource.contains("struct SettingsNotificationAuthorizationClient"))
+        #expect(notificationSource.contains("struct SettingsNotificationAuthorizationGranted: Equatable, Sendable"))
+        #expect(notificationSource.contains("let granted: SettingsNotificationAuthorizationGranted"))
         #expect(notificationSource.contains("struct AuthorizationRequestInFlight: Equatable, Sendable"))
         #expect(notificationSource.contains(
             "var isRequestingAuthorization = Action.AuthorizationRequestInFlight(value: false)"))
@@ -4328,9 +4330,12 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.notificationStore.send(.authorizationRequestResultHandled)"))
         #expect(settingsSource
             .contains("self.handleNotificationAuthorizationResult(result)"))
+        #expect(actionsSource.contains("guard result.granted.value else { return }"))
         #expect(requestFunction.contains("UNUserNotificationCenter.current().requestAuthorization") == false)
         #expect(requestFunction.contains("let granted = await") == false)
         #expect(requestFunction.contains("Task {") == false)
+        #expect(!notificationSource.contains("let granted: Bool"))
+        #expect(!actionsSource.contains("guard result.granted else { return }"))
         #expect(!notificationSource.contains("guard !state.isRequestingAuthorization else { return .none }"))
         #expect(!notificationSource.contains("state.isRequestingAuthorization = true"))
         #expect(!notificationSource.contains("state.isRequestingAuthorization = false"))

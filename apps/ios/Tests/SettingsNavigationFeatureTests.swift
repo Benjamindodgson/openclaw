@@ -1573,7 +1573,7 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings notifications refresh status through client`() async {
         let probe = SettingsNotificationAuthorizationProbe(
-            result: SettingsNotificationAuthorizationResult(granted: false, status: .notAllowed),
+            result: SettingsNotificationAuthorizationResult(granted: .init(value: false), status: .notAllowed),
             status: .allowed)
         let store = TestStore(initialState: SettingsNotificationFeature.State()) {
             SettingsNotificationFeature(authorizationClient: probe.client)
@@ -1594,12 +1594,12 @@ struct SettingsNavigationFeatureTests {
     }
 
     @Test func `settings notifications request authorization through client`() async {
-        let result = SettingsNotificationAuthorizationResult(granted: true, status: .allowed)
+        let result = SettingsNotificationAuthorizationResult(granted: .init(value: true), status: .allowed)
         let probe = SettingsNotificationAuthorizationProbe(result: result)
         var initialState = SettingsNotificationFeature.State()
         initialState.actionRequest = .requestAuthorization
         initialState.authorizationRequestResult = SettingsNotificationAuthorizationResult(
-            granted: false,
+            granted: .init(value: false),
             status: .notAllowed)
         let store = TestStore(initialState: initialState) {
             SettingsNotificationFeature(authorizationClient: probe.client)
@@ -1625,7 +1625,7 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings notifications ignore duplicate authorization requests`() async {
         let probe = SettingsNotificationAuthorizationProbe(result: SettingsNotificationAuthorizationResult(
-            granted: true,
+            granted: .init(value: true),
             status: .allowed))
         var initialState = SettingsNotificationFeature.State()
         initialState.status = .notSet

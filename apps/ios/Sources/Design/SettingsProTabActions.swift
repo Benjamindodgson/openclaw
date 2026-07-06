@@ -558,7 +558,7 @@ extension SettingsProTab {
         guard let result else { return }
         self.notificationStore.send(.authorizationRequestResultHandled)
         self.syncApprovalState()
-        guard result.granted else { return }
+        guard result.granted.value else { return }
         self.registerForRemoteNotificationsIfEnrollmentReady()
     }
 
