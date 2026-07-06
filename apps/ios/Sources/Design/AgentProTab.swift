@@ -267,7 +267,7 @@ struct AgentProTab: View {
     }
 
     var skillConfigBusyKeys: Set<String> {
-        self.skillEditorStore.busyKeys
+        Set(self.skillEditorStore.busyKeys.map(\.value))
     }
 
     var skillConfigMessages: [String: SkillEditorMessage] {
@@ -461,7 +461,7 @@ struct AgentSkillPolicyMutationFeature {
 struct AgentSkillEditorAPIKeyDraftKey: Equatable, Sendable { var value: String }
 struct AgentSkillEditorAPIKeyDraftValue: Equatable, Sendable { var value: String }
 struct AgentSkillEditorID: Equatable, Sendable { var value: String }
-struct AgentSkillEditorMutationKey: Equatable, Sendable { var value: String }
+struct AgentSkillEditorMutationKey: Equatable, Hashable, Sendable { var value: String }
 struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -471,7 +471,7 @@ struct AgentSkillEditorFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var apiKeyDrafts: [String: String] = [:]
-        var busyKeys: Set<String> = []
+        var busyKeys: Set<AgentSkillEditorMutationKey> = []
         var messages: [String: AgentProTab.SkillEditorMessage] = [:]
         var selection: AgentProTab.SkillEditorSelection?
     }
@@ -545,7 +545,7 @@ struct AgentSkillEditorFeature {
                 return .none
 
             case let .mutationStarted(mutation):
-                state.busyKeys.insert(mutation.key.value)
+                state.busyKeys.insert(mutation.key)
                 state.messages[mutation.key.value] = nil
                 return .none
 
@@ -556,11 +556,11 @@ struct AgentSkillEditorFeature {
                 return .none
 
             case let .mutationFinished(mutation):
-                state.busyKeys.remove(mutation.key.value)
+                state.busyKeys.remove(mutation.key)
                 return .none
 
             case let .mutationFailed(failure):
-                state.busyKeys.remove(failure.key.value)
+                state.busyKeys.remove(failure.key)
                 state.messages[failure.key.value] = AgentProTab.SkillEditorMessage(
                     kind: .error,
                     text: failure.message.value)
