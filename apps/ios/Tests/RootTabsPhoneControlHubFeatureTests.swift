@@ -45,7 +45,7 @@ struct RootTabsPhoneControlHubFeatureTests {
         }
 
         await store.send(.initialDestinationAppeared(.detail(.sessions))) {
-            $0.didApplyInitialDestination = true
+            $0.initialDestinationApplication = .init(didApply: true)
             $0.navigationPath = [.sessions]
         }
         await store.send(.initialDestinationAppeared(.detail(.docs)))
@@ -59,7 +59,7 @@ struct RootTabsPhoneControlHubFeatureTests {
         }
 
         await store.send(.initialDestinationAppeared(.rootTab(.gateway))) {
-            $0.didApplyInitialDestination = true
+            $0.initialDestinationApplication = .init(didApply: true)
             $0.navigationPath = []
         }
     }

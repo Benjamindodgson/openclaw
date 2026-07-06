@@ -86,6 +86,21 @@ struct RootTabsSourceGuardTests {
         #expect(agentRange.lowerBound < settingsRange.lowerBound)
     }
 
+    @Test func `phone control hub initial destination application is typed reducer state`() throws {
+        let source = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct RootTabsInitialDestinationApplication: Equatable, Sendable"))
+        #expect(source.contains(
+            "var initialDestinationApplication = RootTabsInitialDestinationApplication(didApply: false)"))
+        #expect(source.contains("var didApplyInitialDestination: Bool"))
+        #expect(source.contains("self.initialDestinationApplication.didApply"))
+        #expect(source.contains("guard !state.initialDestinationApplication.didApply else { return .none }"))
+        #expect(source.contains("state.initialDestinationApplication = .init(didApply: true)"))
+        #expect(!source.contains("var didApplyInitialDestination = false"))
+        #expect(!source.contains("guard !state.didApplyInitialDestination else { return .none }"))
+        #expect(!source.contains("state.didApplyInitialDestination = true"))
+    }
+
     @Test func `sidebar keeps navigation model destination only`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
