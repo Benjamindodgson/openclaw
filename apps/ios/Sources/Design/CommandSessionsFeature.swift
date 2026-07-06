@@ -28,7 +28,12 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct CommandSessionsFailureMessage: Equatable, Sendable { var value: String }
-struct CommandSessionsLoadingInFlight: Equatable, Sendable { var value: Bool }
+
+enum CommandSessionsLoadingPhase: Equatable, Sendable {
+    case idle
+    case inFlight
+}
+
 struct CommandSessionsAvailable: Equatable, Sendable { var value: Bool }
 struct CommandSessionReferenceKey: Equatable, Sendable { var value: String }
 struct CommandSceneActive: Equatable, Sendable { var value: Bool }
@@ -51,7 +56,7 @@ struct CommandSessionsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var sessions: [OpenClawChatSessionEntry] = []
-        var isLoading = CommandSessionsLoadingInFlight(value: false)
+        var loadingPhase = CommandSessionsLoadingPhase.idle
         var loadErrorText: CommandSessionsFailureMessage?
     }
 
@@ -82,13 +87,13 @@ struct CommandSessionsFeature {
             switch action {
             case let .refreshRequested(request):
                 guard request.sessionsAvailability.isAvailable.value else {
-                    state.isLoading = .init(value: false)
+                    state.loadingPhase = .idle
                     state.sessions = []
                     state.loadErrorText = nil
                     return .none
                 }
 
-                state.isLoading = .init(value: true)
+                state.loadingPhase = .inFlight
                 state.loadErrorText = nil
                 return .run { send in
                     do {
@@ -102,13 +107,13 @@ struct CommandSessionsFeature {
             case let .refreshResponse(response):
                 switch response.result {
                 case let .success(sessions):
-                    state.isLoading = .init(value: false)
+                    state.loadingPhase = .idle
                     state.sessions = sessions
                     state.loadErrorText = nil
                     return .none
 
                 case .failure:
-                    state.isLoading = .init(value: false)
+                    state.loadingPhase = .idle
                     state.sessions = []
                     state.loadErrorText = .init(value: "Try again after the gateway reconnects.")
                     return .none
