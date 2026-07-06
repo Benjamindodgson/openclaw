@@ -12,7 +12,7 @@ struct RootTabsPresentationTests {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             snapshot: RootPresentationFeature.QuickSetupSnapshot(
                 quickSetupDismissal: .init(isDismissed: false),
-                showOnboarding: false,
+                onboardingPresentation: .init(isPresented: false),
                 gatewayConnection: .init(isConnected: false),
                 gatewayConfigPresence: .init(hasExistingConfig: true),
                 discoveredGatewayCount: .init(value: 1)),
@@ -25,7 +25,7 @@ struct RootTabsPresentationTests {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             snapshot: RootPresentationFeature.QuickSetupSnapshot(
                 quickSetupDismissal: .init(isDismissed: false),
-                showOnboarding: false,
+                onboardingPresentation: .init(isPresented: false),
                 gatewayConnection: .init(isConnected: false),
                 gatewayConfigPresence: .init(hasExistingConfig: false),
                 discoveredGatewayCount: .init(value: 1)),
@@ -38,7 +38,7 @@ struct RootTabsPresentationTests {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             snapshot: RootPresentationFeature.QuickSetupSnapshot(
                 quickSetupDismissal: .init(isDismissed: false),
-                showOnboarding: false,
+                onboardingPresentation: .init(isPresented: false),
                 gatewayConnection: .init(isConnected: true),
                 gatewayConfigPresence: .init(hasExistingConfig: false),
                 discoveredGatewayCount: .init(value: 1)),
@@ -136,7 +136,7 @@ struct RootTabsPresentationTests {
             hasExistingGatewayConfig: false)))
         {
             $0.onboardingEvaluationGate = .init(didEvaluate: true)
-            $0.showOnboarding = true
+            $0.onboardingPresentation = .init(isPresented: true)
             $0.startupRoute = .onboarding
         }
 
@@ -200,14 +200,14 @@ struct RootTabsPresentationTests {
 
     @Test func `reducer handles gateway setup request once`() async {
         let store = TestStore(initialState: RootPresentationFeature.State(
-            showOnboarding: true,
+            onboardingPresentation: .init(isPresented: true),
             presentedSheet: .quickSetup))
         {
             RootPresentationFeature()
         }
 
         await store.send(.gatewaySetupRequestChanged(Self.gatewaySetupRequest(requestID: 42))) {
-            $0.showOnboarding = false
+            $0.onboardingPresentation = .init(isPresented: false)
             $0.autoOpenSettingsGate = .init(didOpen: true)
             $0.handledGatewaySetupRequestID = .init(value: 42)
             $0.presentedSheet = nil
@@ -356,7 +356,9 @@ struct RootTabsPresentationTests {
     }
 
     @Test func `reducer gates local network access until evaluated active and onboarding hidden`() async {
-        let store = TestStore(initialState: RootPresentationFeature.State(showOnboarding: true)) {
+        let store = TestStore(initialState: RootPresentationFeature.State(
+            onboardingPresentation: .init(isPresented: true)))
+        {
             RootPresentationFeature()
         }
 
@@ -368,7 +370,7 @@ struct RootTabsPresentationTests {
             isPresented: false,
             sceneActive: true)))
         {
-            $0.showOnboarding = false
+            $0.onboardingPresentation = .init(isPresented: false)
         }
 
         await store.send(.startupPresentationEvaluationRequested(Self.startupPresentationEvaluationRequest(
@@ -701,7 +703,7 @@ struct RootTabsPresentationTests {
     @Test func `reducer updates quick setup presentation`() async {
         let store = TestStore(initialState: RootPresentationFeature.State(
             quickSetupDismissal: .init(isDismissed: false),
-            showOnboarding: false,
+            onboardingPresentation: .init(isPresented: false),
             discoveredGatewayCount: .init(value: 0)))
         {
             RootPresentationFeature()
@@ -730,7 +732,7 @@ struct RootTabsPresentationTests {
             hasExistingGatewayConfig: false,
             discoveredGatewayCount: 1)))
         {
-            $0.showOnboarding = true
+            $0.onboardingPresentation = .init(isPresented: true)
             $0.shouldPresentQuickSetup = false
         }
     }
@@ -1526,7 +1528,7 @@ struct RootTabsPresentationTests {
     {
         RootPresentationFeature.QuickSetupSnapshotChange(snapshot: RootPresentationFeature.QuickSetupSnapshot(
             quickSetupDismissal: .init(isDismissed: quickSetupDismissed),
-            showOnboarding: showOnboarding,
+            onboardingPresentation: .init(isPresented: showOnboarding),
             gatewayConnection: .init(isConnected: gatewayConnected),
             gatewayConfigPresence: .init(hasExistingConfig: hasExistingGatewayConfig),
             discoveredGatewayCount: .init(value: discoveredGatewayCount)))

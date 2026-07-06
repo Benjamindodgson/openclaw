@@ -102,7 +102,7 @@ struct RootPresentationFeature {
 
     struct QuickSetupSnapshot: Equatable, Sendable {
         var quickSetupDismissal: QuickSetupDismissal
-        var showOnboarding: Bool
+        var onboardingPresentation: OnboardingPresentation
         var gatewayConnection: GatewayConnection
         var gatewayConfigPresence: GatewayConfigPresence
         var discoveredGatewayCount: DiscoveredGatewayCount
@@ -121,7 +121,14 @@ struct RootPresentationFeature {
     }
 
     struct SceneActivity: Equatable, Sendable { var isActive: Bool }
-    struct OnboardingPresentation: Equatable, Sendable { var isPresented: Bool }
+
+    struct OnboardingPresentation: Equatable, Sendable {
+        var isPresented: Bool
+
+        init(isPresented: Bool = false) {
+            self.isPresented = isPresented
+        }
+    }
 
     struct LocalNetworkAccessRequest: Equatable, Sendable {
         var reason: RootLocalNetworkAccessReason
@@ -197,7 +204,7 @@ struct RootPresentationFeature {
         var gatewayConfigPresence: GatewayConfigPresence
         var launchOnboardingPresentation: LaunchOnboardingPresentation
         var quickSetupDismissal: QuickSetupDismissal
-        var showOnboarding: Bool
+        var onboardingPresentation: OnboardingPresentation
         var onboardingAllowSkip: Bool
         var presentedSheet: PresentedSheet?
         var discoveredGatewayCount: DiscoveredGatewayCount
@@ -216,7 +223,7 @@ struct RootPresentationFeature {
             gatewayConfigPresence: GatewayConfigPresence = .init(),
             launchOnboardingPresentation: LaunchOnboardingPresentation = .init(),
             quickSetupDismissal: QuickSetupDismissal = .init(),
-            showOnboarding: Bool = false,
+            onboardingPresentation: OnboardingPresentation = .init(),
             onboardingAllowSkip: Bool = true,
             presentedSheet: PresentedSheet? = nil,
             discoveredGatewayCount: DiscoveredGatewayCount = .init())
@@ -227,7 +234,7 @@ struct RootPresentationFeature {
             self.gatewayConfigPresence = gatewayConfigPresence
             self.launchOnboardingPresentation = launchOnboardingPresentation
             self.quickSetupDismissal = quickSetupDismissal
-            self.showOnboarding = showOnboarding
+            self.onboardingPresentation = onboardingPresentation
             self.onboardingAllowSkip = onboardingAllowSkip
             self.presentedSheet = presentedSheet
             self.discoveredGatewayCount = discoveredGatewayCount
@@ -282,7 +289,7 @@ struct RootPresentationFeature {
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
                 snapshot: RootPresentationFeature.QuickSetupSnapshot(
                     quickSetupDismissal: self.quickSetupDismissal,
-                    showOnboarding: self.showOnboarding,
+                    onboardingPresentation: self.onboardingPresentation,
                     gatewayConnection: self.gatewayConnection,
                     gatewayConfigPresence: self.gatewayConfigPresence,
                     discoveredGatewayCount: self.discoveredGatewayCount),
@@ -323,7 +330,7 @@ struct RootPresentationFeature {
             -> Bool
         {
             guard !snapshot.quickSetupDismissal.isDismissed else { return false }
-            guard !snapshot.showOnboarding else { return false }
+            guard !snapshot.onboardingPresentation.isPresented else { return false }
             guard !hasPresentedSheet else { return false }
             guard !snapshot.gatewayConnection.isConnected else { return false }
             guard !snapshot.gatewayConfigPresence.hasExistingConfig else { return false }
@@ -391,7 +398,7 @@ struct RootPresentationFeature {
             case let .quickSetupSnapshotChanged(change):
                 let snapshot = change.snapshot
                 state.quickSetupDismissal = snapshot.quickSetupDismissal
-                state.showOnboarding = snapshot.showOnboarding
+                state.onboardingPresentation = snapshot.onboardingPresentation
                 state.gatewayConnection = snapshot.gatewayConnection
                 state.gatewayConfigPresence = snapshot.gatewayConfigPresence
                 state.discoveredGatewayCount = snapshot.discoveredGatewayCount
@@ -418,7 +425,7 @@ struct RootPresentationFeature {
                         LocalNetworkAccessCommand(reason: .rootAppear))
                 case .onboarding:
                     state.onboardingAllowSkip = true
-                    state.showOnboarding = true
+                    state.onboardingPresentation = .init(isPresented: true)
                     state.refreshPresentation()
                 case .settings:
                     state.autoOpenSettingsGate.markOpened()
@@ -429,13 +436,13 @@ struct RootPresentationFeature {
 
             case .forceOnboardingRequested:
                 state.onboardingAllowSkip = true
-                state.showOnboarding = true
+                state.onboardingPresentation = .init(isPresented: true)
                 state.refreshPresentation()
                 return .none
 
             case let .autoOpenSettingsRequested(request):
                 guard !state.autoOpenSettingsGate.didOpen else { return .none }
-                guard !state.showOnboarding else { return .none }
+                guard !state.onboardingPresentation.isPresented else { return .none }
                 state.apply(startupSnapshot: request.snapshot)
                 guard state.startupRoute == .settings else { return .none }
                 state.autoOpenSettingsGate.markOpened()
@@ -448,7 +455,7 @@ struct RootPresentationFeature {
                       request.requestID != state.handledGatewaySetupRequestID
                 else { return .none }
                 state.handledGatewaySetupRequestID = request.requestID
-                state.showOnboarding = false
+                state.onboardingPresentation = .init(isPresented: false)
                 state.autoOpenSettingsGate.markOpened()
                 state.presentedSheet = nil
                 state.refreshPresentation()
@@ -459,14 +466,14 @@ struct RootPresentationFeature {
             case let .localNetworkAccessRequested(request):
                 guard state.onboardingEvaluationGate.didEvaluate else { return .none }
                 guard request.sceneActivity.isActive else { return .none }
-                guard !state.showOnboarding else { return .none }
+                guard !state.onboardingPresentation.isPresented else { return .none }
                 state.presentationCommand = .requestLocalNetworkAccess(
                     LocalNetworkAccessCommand(reason: request.reason))
                 return .none
 
             case let .onboardingVisibilityChanged(change):
-                let wasPresented = state.showOnboarding
-                state.showOnboarding = change.presentation.isPresented
+                let wasPresented = state.onboardingPresentation.isPresented
+                state.onboardingPresentation = change.presentation
                 state.refreshPresentation()
                 guard wasPresented, !change.presentation.isPresented else { return .none }
                 guard state.onboardingEvaluationGate.didEvaluate, change.sceneActivity.isActive else { return .none }
