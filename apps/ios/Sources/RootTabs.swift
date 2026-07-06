@@ -816,18 +816,18 @@ struct RootTabs: View {
 
     private func rootPresentation(_ content: some View) -> some View {
         content
-            .sheet(isPresented: self.gatewayProblemDetailsBinding) {
-                if let gatewayProblem = self.appModel.lastGatewayProblem {
-                    GatewayProblemDetailsSheet(
-                        problem: gatewayProblem,
-                        primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
-                        onPrimaryAction: {
-                            Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }
-                        })
-                }
-            }
             .sheet(item: self.presentedSheetBinding) { sheet in
                 switch sheet {
+                case .gatewayProblemDetails:
+                    if let gatewayProblem = self.appModel.lastGatewayProblem {
+                        GatewayProblemDetailsSheet(
+                            problem: gatewayProblem,
+                            primaryActionTitle: self.gatewayProblemPrimaryActionTitle(gatewayProblem),
+                            onPrimaryAction: {
+                                Task { await self.handleGatewayProblemPrimaryAction(gatewayProblem) }
+                            })
+                    }
+
                 case .quickSetup:
                     GatewayQuickSetupSheet(store: self.makeGatewayQuickSetupStore())
                         .environment(self.appModel)
@@ -1171,18 +1171,6 @@ extension RootTabs {
             set: {
                 self.presentationStore.send(.presentedSheetChanged(
                     RootPresentationFeature.PresentedSheetChange(sheet: $0)))
-            })
-    }
-
-    private var gatewayProblemDetailsBinding: Binding<Bool> {
-        Binding(
-            get: { self.presentationStore.showGatewayProblemDetails },
-            set: { isPresented in
-                if isPresented {
-                    self.presentationStore.send(.gatewayProblemDetailsButtonTapped)
-                } else {
-                    self.presentationStore.send(.gatewayProblemDetailsDismissed)
-                }
             })
     }
 }

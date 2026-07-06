@@ -366,7 +366,8 @@ struct RootTabsPresentationTests {
 
         await store.send(.onboardingVisibilityChanged(Self.onboardingVisibilityChange(
             isPresented: false,
-            sceneActive: true))) {
+            sceneActive: true)))
+        {
             $0.showOnboarding = false
         }
 
@@ -396,7 +397,8 @@ struct RootTabsPresentationTests {
 
         await store.send(.localNetworkAccessRequested(Self.localNetworkAccessRequest(
             reason: "scene_active",
-            sceneActive: true))) {
+            sceneActive: true)))
+        {
             $0.presentationCommand = .requestLocalNetworkAccess(
                 Self.localNetworkAccessCommand(reason: "scene_active"))
         }
@@ -408,10 +410,10 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.gatewayProblemDetailsButtonTapped) {
-            $0.showGatewayProblemDetails = true
+            $0.presentedSheet = .gatewayProblemDetails
         }
         await store.send(.gatewayProblemDetailsDismissed) {
-            $0.showGatewayProblemDetails = false
+            $0.presentedSheet = nil
         }
     }
 
@@ -1474,7 +1476,7 @@ struct RootTabsPresentationTests {
         shouldPresentOnLaunch: Bool = false)
         -> RootPresentationFeature.StartupSnapshotChange
     {
-        RootPresentationFeature.StartupSnapshotChange(snapshot: Self.startupSnapshot(
+        RootPresentationFeature.StartupSnapshotChange(snapshot: self.startupSnapshot(
             gatewayConnected: gatewayConnected,
             hasConnectedOnce: hasConnectedOnce,
             onboardingComplete: onboardingComplete,
@@ -1490,7 +1492,7 @@ struct RootTabsPresentationTests {
         shouldPresentOnLaunch: Bool = false)
         -> RootPresentationFeature.StartupPresentationEvaluationRequest
     {
-        RootPresentationFeature.StartupPresentationEvaluationRequest(snapshot: Self.startupSnapshot(
+        RootPresentationFeature.StartupPresentationEvaluationRequest(snapshot: self.startupSnapshot(
             gatewayConnected: gatewayConnected,
             hasConnectedOnce: hasConnectedOnce,
             onboardingComplete: onboardingComplete,
@@ -1506,7 +1508,7 @@ struct RootTabsPresentationTests {
         shouldPresentOnLaunch: Bool = false)
         -> RootPresentationFeature.AutoOpenSettingsRequest
     {
-        RootPresentationFeature.AutoOpenSettingsRequest(snapshot: Self.startupSnapshot(
+        RootPresentationFeature.AutoOpenSettingsRequest(snapshot: self.startupSnapshot(
             gatewayConnected: gatewayConnected,
             hasConnectedOnce: hasConnectedOnce,
             onboardingComplete: onboardingComplete,
