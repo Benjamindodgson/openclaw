@@ -71,12 +71,12 @@ struct IPadSkillWorkshopFeatureTests {
             $0.statusFilter = "pending"
             $0.selectedProposalID = "pending-1"
         }
-        await store.send(.queryChanged(.init(query: "missing"))) {
-            $0.query = "missing"
+        await store.send(.queryChanged(.init(query: .init(value: "missing")))) {
+            $0.query = .init(value: "missing")
             $0.selectedProposalID = nil
         }
         await store.send(.clearQueryTapped) {
-            $0.query = ""
+            $0.query = .init(value: "")
             $0.selectedProposalID = "pending-1"
         }
     }
