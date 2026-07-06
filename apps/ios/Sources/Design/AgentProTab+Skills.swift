@@ -617,7 +617,7 @@ extension AgentProTab {
                config.agentConfig(id: self.activeAgentID) == nil
             {
                 self.skillPolicyMutationStore.send(.mutationSucceeded(.init(
-                    message: "This agent already inherits the default skill policy.")))
+                    message: .init(value: "This agent already inherits the default skill policy."))))
                 return
             }
 
@@ -635,12 +635,12 @@ extension AgentProTab {
                 paramsJSON: json,
                 timeoutSeconds: 20)
             self.skillPolicyMutationStore.send(.mutationSucceeded(.init(
-                message: skills == nil ? "Skill policy reset." : "Skill policy saved.")))
+                message: .init(value: skills == nil ? "Skill policy reset." : "Skill policy saved."))))
             await self.appModel.refreshGatewayOverviewIfConnected()
             await self.refreshOverview(force: true)
         } catch {
             self.skillPolicyMutationStore.send(.mutationFailed(.init(
-                message: Self.skillMutationMessage(error))))
+                message: .init(value: Self.skillMutationMessage(error)))))
         }
     }
 

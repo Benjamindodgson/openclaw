@@ -253,6 +253,16 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("self.skillFilterStore.send(.clearSearchTapped)"))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationStarted(.init(key: busyKey)))"))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFinished(.init(key: busyKey)))"))
+        #expect(source.contains("struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("struct AgentSkillPolicyMutationSuccessMessage: Equatable, Sendable"))
+        #expect(source.contains("var message: AgentSkillPolicyMutationFailureMessage"))
+        #expect(source.contains("var message: AgentSkillPolicyMutationSuccessMessage"))
+        #expect(source.contains("state.statusText = result.message.value"))
+        #expect(source.contains("state.errorText = failure.message.value"))
+        #expect(!source
+            .contains("struct MutationFailure: Equatable, Sendable {\n            var message: String"))
+        #expect(!source
+            .contains("struct MutationSuccess: Equatable, Sendable {\n            var message: String"))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationSucceeded(.init("))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFailed(.init("))
         #expect(skillsSource.contains("self.skillEditorStore.send(.editorOpened(.init(id: skill.effectiveSkillKey)))"))

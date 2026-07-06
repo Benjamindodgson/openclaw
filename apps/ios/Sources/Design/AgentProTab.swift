@@ -391,6 +391,11 @@ struct AgentSelectionFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable { var value: String }
+struct AgentSkillPolicyMutationSuccessMessage: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct AgentSkillPolicyMutationFeature {
     // swiftformat:disable redundantSendable
@@ -407,11 +412,11 @@ struct AgentSkillPolicyMutationFeature {
         }
 
         struct MutationFailure: Equatable, Sendable {
-            var message: String
+            var message: AgentSkillPolicyMutationFailureMessage
         }
 
         struct MutationSuccess: Equatable, Sendable {
-            var message: String
+            var message: AgentSkillPolicyMutationSuccessMessage
         }
 
         case mutationFailed(MutationFailure)
@@ -432,11 +437,11 @@ struct AgentSkillPolicyMutationFeature {
                 return .none
 
             case let .mutationSucceeded(result):
-                state.statusText = result.message
+                state.statusText = result.message.value
                 return .none
 
             case let .mutationFailed(failure):
-                state.errorText = failure.message
+                state.errorText = failure.message.value
                 return .none
 
             case let .mutationFinished(mutation):
