@@ -9,7 +9,7 @@ struct IPadSkillWorkshopFeatureTests {
         var initialState = IPadSkillWorkshopFeature.State()
         initialState.proposals = [Self.proposal(id: "pending-1", status: "pending")]
         initialState.isLoading = .init(value: true)
-        initialState.inspectingProposalID = "pending-1"
+        initialState.inspectingProposalID = .init(value: "pending-1")
         initialState.errorText = .init(value: "old error")
         let store = TestStore(initialState: initialState) {
             IPadSkillWorkshopFeature(client: Self.client())
@@ -40,7 +40,7 @@ struct IPadSkillWorkshopFeatureTests {
             $0.isLoading = .init(value: false)
             $0.proposals = [IPadSkillProposal(entry: entry, previous: nil)]
             $0.selectedProposalID = .init(value: "pending-1")
-            $0.inspectingProposalID = "pending-1"
+            $0.inspectingProposalID = .init(value: "pending-1")
         }
         await store.receive(.inspectResponse(.init(
             proposalID: .init(value: "pending-1"),
