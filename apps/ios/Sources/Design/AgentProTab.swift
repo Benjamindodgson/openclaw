@@ -271,7 +271,7 @@ struct AgentProTab: View {
     }
 
     var skillConfigMessages: [String: SkillEditorMessage] {
-        self.skillEditorStore.messages
+        Dictionary(uniqueKeysWithValues: self.skillEditorStore.messages.map { ($0.key.value, $0.value) })
     }
 
     var skillAPIKeyDrafts: [String: String] {
@@ -476,7 +476,7 @@ struct AgentSkillEditorFeature {
     struct State: Equatable, Sendable {
         var apiKeyDrafts: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] = [:]
         var busyKeys: Set<AgentSkillEditorMutationKey> = []
-        var messages: [String: AgentProTab.SkillEditorMessage] = [:]
+        var messages: [AgentSkillEditorMutationKey: AgentProTab.SkillEditorMessage] = [:]
         var selection: AgentProTab.SkillEditorSelection?
     }
 
@@ -550,11 +550,11 @@ struct AgentSkillEditorFeature {
 
             case let .mutationStarted(mutation):
                 state.busyKeys.insert(mutation.key)
-                state.messages[mutation.key.value] = nil
+                state.messages[mutation.key] = nil
                 return .none
 
             case let .mutationSucceeded(result):
-                state.messages[result.key.value] = AgentProTab.SkillEditorMessage(
+                state.messages[result.key] = AgentProTab.SkillEditorMessage(
                     kind: .success,
                     text: result.summary.message.value)
                 return .none
@@ -565,7 +565,7 @@ struct AgentSkillEditorFeature {
 
             case let .mutationFailed(failure):
                 state.busyKeys.remove(failure.key)
-                state.messages[failure.key.value] = AgentProTab.SkillEditorMessage(
+                state.messages[failure.key] = AgentProTab.SkillEditorMessage(
                     kind: .error,
                     text: failure.message.value)
                 return .none
