@@ -1090,7 +1090,7 @@ extension RootTabs {
     private func maybeRequestLocalNetworkAccess(reason: RootLocalNetworkAccessReason) {
         self.presentationStore.send(.localNetworkAccessRequested(RootPresentationFeature.LocalNetworkAccessRequest(
             reason: reason,
-            sceneActive: self.scenePhase == .active)))
+            sceneActivity: .init(isActive: self.scenePhase == .active))))
         self.handlePresentationCommand()
     }
 
@@ -1146,8 +1146,8 @@ extension RootTabs {
 
     private func setOnboardingPresented(_ isPresented: Bool) {
         self.presentationStore.send(.onboardingVisibilityChanged(RootPresentationFeature.OnboardingVisibilityChange(
-            isPresented: isPresented,
-            sceneActive: self.scenePhase == .active)))
+            presentation: .init(isPresented: isPresented),
+            sceneActivity: .init(isActive: self.scenePhase == .active))))
         self.handlePresentationCommand()
     }
 

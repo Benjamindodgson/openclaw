@@ -1537,7 +1537,7 @@ struct RootTabsPresentationTests {
     {
         RootPresentationFeature.LocalNetworkAccessRequest(
             reason: RootLocalNetworkAccessReason(rawValue: reason),
-            sceneActive: sceneActive)
+            sceneActivity: .init(isActive: sceneActive))
     }
 
     private static func localNetworkAccessCommand(
@@ -1675,8 +1675,8 @@ struct RootTabsPresentationTests {
         -> RootPresentationFeature.OnboardingVisibilityChange
     {
         RootPresentationFeature.OnboardingVisibilityChange(
-            isPresented: isPresented,
-            sceneActive: sceneActive)
+            presentation: .init(isPresented: isPresented),
+            sceneActivity: .init(isActive: sceneActive))
     }
 }
 
