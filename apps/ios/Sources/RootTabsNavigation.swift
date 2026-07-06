@@ -64,12 +64,20 @@ struct RootPresentationFeature {
         }
     }
 
+    struct LaunchOnboardingPresentation: Equatable, Sendable {
+        var shouldPresent: Bool
+
+        init(shouldPresent: Bool = false) {
+            self.shouldPresent = shouldPresent
+        }
+    }
+
     struct StartupSnapshot: Equatable, Sendable {
         var gatewayConnection: GatewayConnection
         var connectionHistory: ConnectionHistory
         var onboardingCompletion: OnboardingCompletion
         var gatewayConfigPresence: GatewayConfigPresence
-        var shouldPresentOnLaunch: Bool
+        var launchOnboardingPresentation: LaunchOnboardingPresentation
     }
 
     struct StartupSnapshotChange: Equatable, Sendable {
@@ -179,7 +187,7 @@ struct RootPresentationFeature {
         var connectionHistory: ConnectionHistory
         var onboardingCompletion: OnboardingCompletion
         var gatewayConfigPresence: GatewayConfigPresence
-        var shouldPresentOnLaunch: Bool
+        var launchOnboardingPresentation: LaunchOnboardingPresentation
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
         var onboardingAllowSkip: Bool
@@ -198,7 +206,7 @@ struct RootPresentationFeature {
             connectionHistory: ConnectionHistory = .init(),
             onboardingCompletion: OnboardingCompletion = .init(),
             gatewayConfigPresence: GatewayConfigPresence = .init(),
-            shouldPresentOnLaunch: Bool = false,
+            launchOnboardingPresentation: LaunchOnboardingPresentation = .init(),
             quickSetupDismissed: Bool = false,
             showOnboarding: Bool = false,
             onboardingAllowSkip: Bool = true,
@@ -209,7 +217,7 @@ struct RootPresentationFeature {
             self.connectionHistory = connectionHistory
             self.onboardingCompletion = onboardingCompletion
             self.gatewayConfigPresence = gatewayConfigPresence
-            self.shouldPresentOnLaunch = shouldPresentOnLaunch
+            self.launchOnboardingPresentation = launchOnboardingPresentation
             self.quickSetupDismissed = quickSetupDismissed
             self.showOnboarding = showOnboarding
             self.onboardingAllowSkip = onboardingAllowSkip
@@ -262,7 +270,7 @@ struct RootPresentationFeature {
                     connectionHistory: self.connectionHistory,
                     onboardingCompletion: self.onboardingCompletion,
                     gatewayConfigPresence: self.gatewayConfigPresence,
-                    shouldPresentOnLaunch: self.shouldPresentOnLaunch))
+                    launchOnboardingPresentation: self.launchOnboardingPresentation))
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
                 snapshot: RootPresentationFeature.QuickSetupSnapshot(
                     quickSetupDismissed: self.quickSetupDismissed,
@@ -278,7 +286,7 @@ struct RootPresentationFeature {
             self.connectionHistory = snapshot.connectionHistory
             self.onboardingCompletion = snapshot.onboardingCompletion
             self.gatewayConfigPresence = snapshot.gatewayConfigPresence
-            self.shouldPresentOnLaunch = snapshot.shouldPresentOnLaunch
+            self.launchOnboardingPresentation = snapshot.launchOnboardingPresentation
             self.refreshPresentation()
         }
 
@@ -289,7 +297,7 @@ struct RootPresentationFeature {
             if snapshot.gatewayConnection.isConnected {
                 return .none
             }
-            if snapshot.shouldPresentOnLaunch ||
+            if snapshot.launchOnboardingPresentation.shouldPresent ||
                 !snapshot.connectionHistory.hasConnectedOnce ||
                 !snapshot.onboardingCompletion.isComplete
             {
