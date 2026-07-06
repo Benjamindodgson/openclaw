@@ -2088,24 +2088,38 @@ struct RootTabsSourceGuardTests {
     @Test func `onboarding gateway connected action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let gatewayConnectionCompletion = try Self.extract(
+            onboardingStateSource,
+            from: "struct GatewayConnectionCompletion",
+            to: "struct ConnectionIssueDetection")
 
+        #expect(onboardingStateSource.contains("struct OnboardingGatewayMarkedCompleted: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct GatewayConnectionCompletion: Equatable, Sendable"))
+        #expect(gatewayConnectionCompletion.contains("var markedCompleted: OnboardingGatewayMarkedCompleted"))
         #expect(onboardingStateSource.contains("case gatewayConnected(GatewayConnectionCompletion)"))
-        #expect(onboardingStateSource.contains("if completion.markedCompleted"))
+        #expect(onboardingStateSource.contains("if completion.markedCompleted.value"))
         #expect(onboardingSource.contains("self.statusStore.send(.gatewayConnected(.init("))
-        #expect(onboardingSource.contains("markedCompleted: shouldMarkCompleted && selectedMode != nil"))
+        #expect(onboardingSource.contains("markedCompleted: .init(value: shouldMarkCompleted && selectedMode != nil)"))
+        #expect(!gatewayConnectionCompletion.contains("var markedCompleted: Bool"))
     }
 
     @Test func `onboarding automatic pairing resume action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let automaticPairingResumeRequest = try Self.extract(
+            onboardingStateSource,
+            from: "struct AutomaticPairingResumeRequest",
+            to: "struct ConnectionStart")
 
+        #expect(onboardingStateSource.contains("struct OnboardingPairingResumeRequestTime: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct AutomaticPairingResumeRequest: Equatable, Sendable"))
+        #expect(automaticPairingResumeRequest.contains("var now: OnboardingPairingResumeRequestTime"))
         #expect(onboardingStateSource.contains("case automaticPairingResumeRequested(AutomaticPairingResumeRequest)"))
-        #expect(onboardingStateSource.contains("request.now.timeIntervalSince(last)"))
-        #expect(onboardingStateSource.contains("state.lastPairingAutoResumeAttemptAt = request.now"))
+        #expect(onboardingStateSource.contains("request.now.value.timeIntervalSince(last)"))
+        #expect(onboardingStateSource.contains("state.lastPairingAutoResumeAttemptAt = request.now.value"))
         #expect(onboardingSource.contains(
-            "self.statusStore.send(.automaticPairingResumeRequested(.init(now: Date())))"))
+            "self.statusStore.send(.automaticPairingResumeRequested(.init(now: .init(value: Date()))))"))
+        #expect(!automaticPairingResumeRequest.contains("var now: Date"))
     }
 
     @Test func `onboarding step changes are typed`() throws {
@@ -2810,23 +2824,26 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct OnboardingConnectionID: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingConnectionMessage: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingConnectionStatusLine: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionClearsIssue: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionStart: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionActivityStart: Equatable, Sendable"))
         #expect(connectionStart.contains("var id: OnboardingConnectionID"))
         #expect(connectionStart.contains("var message: OnboardingConnectionMessage"))
         #expect(connectionStart.contains("var statusLine: OnboardingConnectionStatusLine"))
+        #expect(connectionStart.contains("var clearsIssue: OnboardingConnectionClearsIssue"))
         #expect(connectionActivityStart.contains("var id: OnboardingConnectionID"))
         #expect(onboardingStateSource.contains("case connectionStarted(ConnectionStart)"))
         #expect(onboardingStateSource.contains("case connectionActivityStarted(ConnectionActivityStart)"))
         #expect(onboardingStateSource.contains("state.connectingGatewayID = start.id.value"))
         #expect(onboardingStateSource.contains("state.connectMessage = start.message.value"))
         #expect(onboardingStateSource.contains("state.statusLine = start.statusLine.value"))
-        #expect(onboardingStateSource.contains("if start.clearsIssue"))
+        #expect(onboardingStateSource.contains("if start.clearsIssue.value"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(.init("))
         #expect(onboardingSource.contains("id: .init(value: connectionID)"))
         #expect(!connectionStart.contains("var id: String"))
         #expect(!connectionStart.contains("var message: String\n"))
         #expect(!connectionStart.contains("var statusLine: String\n"))
+        #expect(!connectionStart.contains("var clearsIssue: Bool"))
         #expect(!connectionActivityStart.contains("var id: String"))
         #expect(!onboardingSource.contains("self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))"))
     }

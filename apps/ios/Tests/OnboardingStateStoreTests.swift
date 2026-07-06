@@ -321,7 +321,7 @@ import Testing
             id: .init(value: "manual"),
             message: .init(value: "Connecting to gateway…"),
             statusLine: .init(value: "Connecting to gateway:18789…"),
-            clearsIssue: true)))
+            clearsIssue: .init(value: true))))
         {
             $0.connectingGatewayID = "manual"
             $0.connectMessage = "Connecting to gateway…"
@@ -344,7 +344,7 @@ import Testing
             $0.connectingGatewayID = nil
         }
 
-        await store.send(.gatewayConnected(.init(markedCompleted: true))) {
+        await store.send(.gatewayConnected(.init(markedCompleted: .init(value: true)))) {
             $0.didMarkCompleted = true
             $0.statusLine = "Connected."
         }
@@ -436,7 +436,7 @@ import Testing
         }
         let firstAttempt = Date(timeIntervalSince1970: 100)
 
-        await store.send(.automaticPairingResumeRequested(.init(now: firstAttempt)))
+        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: firstAttempt))))
         #expect(!store.state.shouldResumePairingAutomatically)
 
         await store.send(.connectionIssueDetected(.init(
@@ -453,18 +453,18 @@ import Testing
             $0.statusLine = "Pairing required"
         }
 
-        await store.send(.automaticPairingResumeRequested(.init(now: firstAttempt))) {
+        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: firstAttempt)))) {
             $0.lastPairingAutoResumeAttemptAt = firstAttempt
             $0.shouldResumePairingAutomatically = true
         }
 
         let throttledAttempt = firstAttempt.addingTimeInterval(3)
-        await store.send(.automaticPairingResumeRequested(.init(now: throttledAttempt))) {
+        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: throttledAttempt)))) {
             $0.shouldResumePairingAutomatically = false
         }
 
         let laterAttempt = firstAttempt.addingTimeInterval(7)
-        await store.send(.automaticPairingResumeRequested(.init(now: laterAttempt))) {
+        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: laterAttempt)))) {
             $0.lastPairingAutoResumeAttemptAt = laterAttempt
             $0.shouldResumePairingAutomatically = true
         }
@@ -474,7 +474,7 @@ import Testing
         }
 
         let blockedAttempt = laterAttempt.addingTimeInterval(7)
-        await store.send(.automaticPairingResumeRequested(.init(now: blockedAttempt))) {
+        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: blockedAttempt)))) {
             $0.shouldResumePairingAutomatically = false
         }
     }
