@@ -2248,9 +2248,9 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.controlsSynced(.init(
-            talkEnabled: true,
-            voiceWakeEnabled: true,
-            voiceWakeStatusText: "Listening")))
+            talkEnabled: .init(isEnabled: true),
+            voiceWakeEnabled: .init(isEnabled: true),
+            voiceWakeStatusText: .init(value: "Listening"))))
         {
             $0.talkEnabled = true
             $0.voiceWakeEnabled = true

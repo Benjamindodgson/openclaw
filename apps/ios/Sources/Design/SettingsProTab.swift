@@ -1111,6 +1111,8 @@ struct SettingsVoiceControlFeature {
     enum Action: Equatable, Sendable {
         struct SettingsTalkEnabled: Equatable, Sendable { var isEnabled: Bool }
         struct SettingsVoiceControlDemoModeEnabled: Equatable, Sendable { var value: Bool }
+        struct SettingsVoiceWakeEnabled: Equatable, Sendable { var isEnabled: Bool }
+        struct SettingsVoiceWakeStatusText: Equatable, Sendable { var value: String }
         struct TalkEnabledChange: Equatable, Sendable { var enabled: SettingsTalkEnabled }
 
         struct TalkEnabledChangeRequest: Equatable, Sendable {
@@ -1119,12 +1121,11 @@ struct SettingsVoiceControlFeature {
         }
 
         struct VoiceControlSync: Equatable, Sendable {
-            var talkEnabled: Bool
-            var voiceWakeEnabled: Bool
-            var voiceWakeStatusText: String
+            var talkEnabled: SettingsTalkEnabled
+            var voiceWakeEnabled: SettingsVoiceWakeEnabled
+            var voiceWakeStatusText: SettingsVoiceWakeStatusText
         }
 
-        struct SettingsVoiceWakeEnabled: Equatable, Sendable { var isEnabled: Bool }
         struct VoiceWakeEnabledChange: Equatable, Sendable { var enabled: SettingsVoiceWakeEnabled }
 
         case controlsSynced(VoiceControlSync)
@@ -1143,9 +1144,9 @@ struct SettingsVoiceControlFeature {
 
             switch action {
             case let .controlsSynced(sync):
-                state.talkEnabled = sync.talkEnabled
-                state.voiceWakeEnabled = sync.voiceWakeEnabled
-                state.voiceWakeStatusText = sync.voiceWakeStatusText
+                state.talkEnabled = sync.talkEnabled.isEnabled
+                state.voiceWakeEnabled = sync.voiceWakeEnabled.isEnabled
+                state.voiceWakeStatusText = sync.voiceWakeStatusText.value
                 return .none
 
             case .talkDisabledForAppleReview:
