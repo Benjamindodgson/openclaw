@@ -191,7 +191,7 @@ struct AgentProTab: View {
     }
 
     var overviewLoading: Bool {
-        self.overviewStore.isLoading
+        self.overviewStore.loadingPhase == .inFlight
     }
 
     var clawHubQuery: String {
@@ -815,9 +815,14 @@ struct AgentOverviewLoadFeature {
 
     @ObservableState
     struct State: Equatable, Sendable {
+        enum LoadingPhase: Equatable, Sendable {
+            case idle
+            case inFlight
+        }
+
         var overview: AgentOverviewSnapshot?
         var errorText = AgentOverviewErrorText(value: nil)
-        var isLoading = false
+        var loadingPhase = LoadingPhase.idle
         var refreshRequest: RefreshRequest?
         var nextRefreshRequestID = 0
     }
@@ -860,12 +865,12 @@ struct AgentOverviewLoadFeature {
                 guard request.gatewayConnection.isConnected else {
                     state.overview = nil
                     state.errorText = .init(value: nil)
-                    state.isLoading = false
+                    state.loadingPhase = .idle
                     state.refreshRequest = nil
                     return .none
                 }
 
-                guard request.force.isForced || !state.isLoading else {
+                guard request.force.isForced || state.loadingPhase != .inFlight else {
                     state.refreshRequest = nil
                     return .none
                 }
@@ -874,7 +879,7 @@ struct AgentOverviewLoadFeature {
                 state.refreshRequest = RefreshRequest(
                     id: .init(value: state.nextRefreshRequestID),
                     activeAgentID: request.activeAgent)
-                state.isLoading = true
+                state.loadingPhase = .inFlight
                 state.errorText = .init(value: nil)
                 return .none
 
@@ -882,7 +887,7 @@ struct AgentOverviewLoadFeature {
                 state.overview = result.snapshot
                 state.errorText = .init(
                     value: result.snapshot.hasAnyLiveData ? nil : "Live overview could not load yet.")
-                state.isLoading = false
+                state.loadingPhase = .idle
                 if state.refreshRequest?.id == result.requestID {
                     state.refreshRequest = nil
                 }

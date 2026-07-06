@@ -370,7 +370,7 @@ struct AgentOverviewLoadFeatureTests {
             force: .init(isForced: false),
             activeAgent: .init(value: "mobile"))))
         {
-            $0.isLoading = true
+            $0.loadingPhase = .inFlight
             $0.nextRefreshRequestID = 1
             $0.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
                 id: .init(value: 1),
@@ -385,7 +385,7 @@ struct AgentOverviewLoadFeatureTests {
         var initialState = AgentOverviewLoadFeature.State()
         initialState.overview = Self.snapshot(hasLiveData: true)
         initialState.errorText = .init(value: "old warning")
-        initialState.isLoading = true
+        initialState.loadingPhase = .inFlight
         initialState.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
             id: .init(value: 1),
             activeAgentID: .init(value: "mobile"))
@@ -400,14 +400,14 @@ struct AgentOverviewLoadFeatureTests {
         {
             $0.overview = nil
             $0.errorText = .init(value: nil)
-            $0.isLoading = false
+            $0.loadingPhase = .idle
             $0.refreshRequest = nil
         }
     }
 
     @Test func `non forced refresh coalesces while loading`() async {
         var initialState = AgentOverviewLoadFeature.State()
-        initialState.isLoading = true
+        initialState.loadingPhase = .inFlight
         let store = TestStore(initialState: initialState) {
             AgentOverviewLoadFeature()
         }
@@ -420,7 +420,7 @@ struct AgentOverviewLoadFeatureTests {
 
     @Test func `finished refresh stores snapshot and clears empty live data warning`() async {
         var initialState = AgentOverviewLoadFeature.State()
-        initialState.isLoading = true
+        initialState.loadingPhase = .inFlight
         let snapshot = Self.snapshot(hasLiveData: true)
         let store = TestStore(initialState: initialState) {
             AgentOverviewLoadFeature()
@@ -428,13 +428,13 @@ struct AgentOverviewLoadFeatureTests {
 
         await store.send(.refreshFinished(.init(snapshot: snapshot, requestID: .init(value: 1)))) {
             $0.overview = snapshot
-            $0.isLoading = false
+            $0.loadingPhase = .idle
         }
     }
 
     @Test func `empty live data snapshot keeps warning`() async {
         var initialState = AgentOverviewLoadFeature.State()
-        initialState.isLoading = true
+        initialState.loadingPhase = .inFlight
         let snapshot = Self.snapshot(hasLiveData: false)
         let store = TestStore(initialState: initialState) {
             AgentOverviewLoadFeature()
@@ -443,7 +443,7 @@ struct AgentOverviewLoadFeatureTests {
         await store.send(.refreshFinished(.init(snapshot: snapshot, requestID: .init(value: 1)))) {
             $0.overview = snapshot
             $0.errorText = .init(value: "Live overview could not load yet.")
-            $0.isLoading = false
+            $0.loadingPhase = .idle
         }
     }
 
