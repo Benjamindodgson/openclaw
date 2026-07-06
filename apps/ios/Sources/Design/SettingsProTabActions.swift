@@ -885,19 +885,19 @@ extension SettingsProTab {
 
     var talkBackgroundEnabledBinding: Binding<Bool> {
         Binding(
-            get: { self.talkPreferencesStore.talkBackgroundEnabled },
+            get: { self.talkPreferencesStore.talkBackgroundEnabled.isEnabled },
             set: { self.updateTalkBackgroundEnabled($0) })
     }
 
     var talkButtonEnabledBinding: Binding<Bool> {
         Binding(
-            get: { self.talkPreferencesStore.talkButtonEnabled },
+            get: { self.talkPreferencesStore.talkButtonEnabled.isEnabled },
             set: { self.updateTalkButtonEnabled($0) })
     }
 
     var talkSpeakerphoneBinding: Binding<Bool> {
         Binding(
-            get: { self.talkPreferencesStore.talkSpeakerphoneEnabled },
+            get: { self.talkPreferencesStore.talkSpeakerphoneEnabled.isEnabled },
             set: { self.updateTalkSpeakerphoneEnabled($0) })
     }
 

@@ -114,9 +114,10 @@ struct SettingsTalkPreferencesFeature {
         var providerSelection = TalkModeProviderSelection.gatewayDefault
         var realtimeVoiceSelection = SettingsTalkRealtimeVoiceSelection(rawValue: nil)
         var speechLocale = SettingsTalkSpeechLocale(value: TalkSpeechLocale.automaticID)
-        var talkButtonEnabled = true
-        var talkBackgroundEnabled = false
-        var talkSpeakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
+        var talkButtonEnabled = SettingsTalkButtonEnabled(isEnabled: true)
+        var talkBackgroundEnabled = SettingsTalkBackgroundEnabled(isEnabled: false)
+        var talkSpeakerphoneEnabled = SettingsTalkSpeakerphoneEnabled(
+            isEnabled: TalkDefaults.speakerphoneEnabledByDefault)
         var gatewayTalkConfigLoaded = false
         var gatewayTalkApiKeyConfigured = false
         var gatewayTalkTransportLabel = SettingsGatewayTalkTransportLabel(value: "Not loaded")
@@ -285,9 +286,9 @@ struct SettingsTalkPreferencesFeature {
                 state.providerSelection = sync.providerSelection
                 state.realtimeVoiceSelection = sync.realtimeVoiceSelection
                 state.speechLocale = sync.speechLocale
-                state.talkButtonEnabled = sync.talkButtonEnabled.isEnabled
-                state.talkBackgroundEnabled = sync.talkBackgroundEnabled.isEnabled
-                state.talkSpeakerphoneEnabled = sync.talkSpeakerphoneEnabled.isEnabled
+                state.talkButtonEnabled = sync.talkButtonEnabled
+                state.talkBackgroundEnabled = sync.talkBackgroundEnabled
+                state.talkSpeakerphoneEnabled = sync.talkSpeakerphoneEnabled
                 return .none
 
             case let .providerSelectionChanged(change):
@@ -309,16 +310,16 @@ struct SettingsTalkPreferencesFeature {
                 return .none
 
             case let .talkBackgroundEnabledChanged(change):
-                state.talkBackgroundEnabled = change.enabled.isEnabled
+                state.talkBackgroundEnabled = change.enabled
                 return .none
 
             case let .talkButtonEnabledChanged(change):
-                state.talkButtonEnabled = change.enabled.isEnabled
+                state.talkButtonEnabled = change.enabled
                 return .none
 
             case let .talkSpeakerphoneEnabledChanged(change):
                 let enabled = change.enabled
-                state.talkSpeakerphoneEnabled = enabled.isEnabled
+                state.talkSpeakerphoneEnabled = enabled
                 return .run { _ in
                     await preferencesClient.setSpeakerphoneEnabled(enabled)
                 }
