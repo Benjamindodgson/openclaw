@@ -2645,6 +2645,17 @@ struct RootTabsSourceGuardTests {
         #expect(connectionSource.contains("struct ConnectionStart: Equatable, Sendable"))
         #expect(connectionSource.contains("var gatewayID: GatewayConnectionID"))
         #expect(connectionSource.contains("state.connectingGatewayID = start.gatewayID.value"))
+        #expect(connectionSource.contains("struct DiscoveredGatewayConnectionFailureMessage: Equatable, Sendable"))
+        #expect(connectionSource.contains("enum DiscoveredGatewayConnectionResult: Equatable, Sendable"))
+        #expect(connectionSource.contains(
+            "struct Failure: Equatable, Sendable { var message: DiscoveredGatewayConnectionFailureMessage }"))
+        #expect(connectionSource.contains(
+            "var discoveredGatewayConnectionResult: DiscoveredGatewayConnectionResult?"))
+        #expect(connectionSource.contains(
+            "case discoveredGatewayConnectionResultReceived(DiscoveredGatewayConnectionResult)"))
+        #expect(connectionSource.contains("case discoveredGatewayConnectionResultHandled"))
+        #expect(connectionSource.contains("state.discoveredGatewayConnectionResult = result"))
+        #expect(connectionSource.contains("state.discoveredGatewayConnectionResult = nil"))
         #expect(connectionSource.contains("struct DiscoveredGatewayPersistenceRequest: Equatable, Sendable"))
         #expect(connectionSource.contains("var stableID: SettingsGatewayStableID"))
         #expect(connectionSource.contains("case discoveredGatewayPersistenceRequested(DiscoveredGatewayPersistenceRequest)"))
@@ -2656,10 +2667,23 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("gatewayID: .init(value: \"manual\")"))
         #expect(actionsSource.contains("self.gatewayConnectionStore.send(.discoveredGatewayPersistenceRequested(.init("))
         #expect(connectFunction.contains("stableID: .init(value: gateway.stableID)"))
+        #expect(connectFunction.contains(
+            "self.gatewayConnectionStore.send(.discoveredGatewayConnectionResultReceived(.failure(.init("))
+        #expect(connectFunction.contains("message: .init(value: failure.message)"))
+        #expect(connectFunction.contains(
+            "self.gatewayConnectionStore.send(.discoveredGatewayConnectionResultReceived(.connected))"))
+        #expect(connectFunction.contains("self.gatewayConnectionStore.discoveredGatewayConnectionResult"))
+        #expect(connectFunction.contains("self.gatewayConnectionStore.send(.discoveredGatewayConnectionResultHandled)"))
+        #expect(connectFunction.contains("case let .failure(failure):"))
+        #expect(connectFunction.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message.value)))"))
         #expect(!connectionSource.contains("var gatewayID: String"))
+        #expect(!connectionSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
         #expect(!connectionSource.contains("state.connectingGatewayID = start.gatewayID\n"))
         #expect(!actionsSource.contains("gatewayID: gateway.id"))
         #expect(!actionsSource.contains("gatewayID: \"manual\""))
+        #expect(!connectFunction.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message)))"))
         #expect(connectFunction.contains("GatewaySettingsStore.savePreferredGatewayStableID") == false)
         #expect(connectFunction.contains("GatewaySettingsStore.saveLastDiscoveredGatewayStableID") == false)
     }
