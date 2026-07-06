@@ -41,6 +41,8 @@ struct AgentDreamingDestinationFeatureTests {
     }
 
     @Test func `maintenance action stores failure summary`() async {
+        let failure = AgentDreamingMaintenanceError.failed(.init(
+            message: .init(value: "dream failed")))
         let store = TestStore(initialState: AgentDreamingDestinationFeature.State()) {
             AgentDreamingDestinationFeature(client: Self.client(run: { _ in throw DreamingFailure.failed }))
         }
@@ -49,7 +51,7 @@ struct AgentDreamingDestinationFeatureTests {
             $0.busyAction = .dedupe
             $0.statusText = nil
         }
-        await store.receive(.dreamActionResponse(.init(result: .failure(.failed(.init(message: "dream failed")))))) {
+        await store.receive(.dreamActionResponse(.init(result: .failure(failure)))) {
             $0.busyAction = nil
             $0.statusText = "dream failed"
         }

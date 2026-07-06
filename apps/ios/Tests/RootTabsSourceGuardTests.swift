@@ -305,16 +305,21 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("var run: @Sendable @MainActor"))
         #expect(source.contains("async throws -> DreamActionSummary"))
         #expect(source.contains("static func summary(action: AgentDreamAction, data: Data) -> DreamActionSummary"))
-        #expect(source.contains("struct Failure: Equatable, Sendable { var message: String }"))
+        #expect(source.contains("struct AgentDreamingMaintenanceFailureMessage: Equatable, Sendable"))
+        #expect(source.contains(
+            "struct Failure: Equatable, Sendable { var message: AgentDreamingMaintenanceFailureMessage }"))
         #expect(feature.contains("case dreamActionResponse(DreamActionResponse)"))
         #expect(feature.contains("var result: Result<DreamActionSummary, AgentDreamingMaintenanceError>"))
         #expect(feature.contains("await send(.dreamActionResponse(.init(result: .success(summary))))"))
         #expect(feature.contains("state.statusText = summary.summary"))
-        #expect(feature.contains("result: .failure(.failed(.init(message: error.localizedDescription)))"))
+        #expect(feature.contains(
+            "result: .failure(.failed(.init(message: .init(value: error.localizedDescription))))"))
         #expect(feature.contains("switch response.result"))
         #expect(!feature.contains("Result<String, AgentDreamingMaintenanceError>"))
         #expect(!source.contains("async throws -> String"))
         #expect(source.contains("case failed(Failure)"))
+        #expect(source.contains("failure.message.value"))
+        #expect(!source.contains("struct Failure: Equatable, Sendable { var message: String }"))
         #expect(!source.contains("case failed(String)"))
     }
 
