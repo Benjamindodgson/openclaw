@@ -563,6 +563,11 @@ struct AgentSkillEditorFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct AgentCronActionFailureMessage: Equatable, Sendable { var value: String }
+struct AgentCronActionSuccessMessage: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct AgentCronActionFeature {
     // swiftformat:disable redundantSendable
@@ -579,11 +584,11 @@ struct AgentCronActionFeature {
 
         struct ActionFailure: Equatable, Sendable {
             var id: String
-            var message: String
+            var message: AgentCronActionFailureMessage
         }
 
         struct ActionSuccess: Equatable, Sendable {
-            var message: String
+            var message: AgentCronActionSuccessMessage
         }
 
         case actionFinished(ActionID)
@@ -603,7 +608,7 @@ struct AgentCronActionFeature {
                 return .none
 
             case let .actionSucceeded(result):
-                state.statusText = result.message
+                state.statusText = result.message.value
                 return .none
 
             case let .actionFinished(action):
@@ -612,7 +617,7 @@ struct AgentCronActionFeature {
 
             case let .actionFailed(failure):
                 state.busyIDs.remove(failure.id)
-                state.statusText = failure.message
+                state.statusText = failure.message.value
                 return .none
             }
         }
