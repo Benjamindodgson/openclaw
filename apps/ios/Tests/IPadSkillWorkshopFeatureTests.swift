@@ -92,6 +92,35 @@ struct IPadSkillWorkshopFeatureTests {
         }
     }
 
+    @Test func `proposal selection opening controls sheet presentation`() async {
+        let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
+            IPadSkillWorkshopFeature(client: Self.client())
+        }
+
+        await store.send(.proposalSelected(.init(
+            proposalID: .init(value: "pending-1"),
+            opening: .inline,
+            readAccess: .init(canRead: false),
+            forceInspect: .init(isForced: false))))
+        {
+            $0.selectedProposalID = .init(value: "pending-1")
+        }
+
+        await store.send(.proposalSelected(.init(
+            proposalID: .init(value: "pending-2"),
+            opening: .sheet,
+            readAccess: .init(canRead: false),
+            forceInspect: .init(isForced: false))))
+        {
+            $0.selectedProposalID = .init(value: "pending-2")
+            $0.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "pending-2")
+        }
+
+        await store.send(.proposalSheetDismissed) {
+            $0.presentedProposalRoute = nil
+        }
+    }
+
     @Test func `apply success clears busy state and refreshes proposals`() async {
         let before = Self.entry(id: "pending-1", status: "pending")
         let after = Self.entry(id: "pending-1", status: "applied")

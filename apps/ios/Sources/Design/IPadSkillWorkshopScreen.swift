@@ -215,7 +215,10 @@ struct IPadSkillWorkshopFeature {
         struct OperatorAdminAccess: Equatable, Sendable { var hasOperatorAdminScope: Bool }
         struct RefreshForce: Equatable, Sendable { var isForced: Bool }
         struct InspectionForce: Equatable, Sendable { var isForced: Bool }
-        struct ProposalSheetOpening: Equatable, Sendable { var opensSheet: Bool }
+        enum ProposalSheetOpening: Equatable, Sendable {
+            case inline
+            case sheet
+        }
 
         struct AgentScopeChange: Equatable, Sendable {
             var agentID: IPadSkillWorkshopSelectedAgentScopeID
@@ -261,7 +264,7 @@ struct IPadSkillWorkshopFeature {
 
         struct ProposalSelectionRequest: Equatable, Sendable {
             var proposalID: IPadSkillWorkshopProposalID
-            var opensSheet: ProposalSheetOpening
+            var opening: ProposalSheetOpening
             var readAccess: GatewayReadAccess
             var forceInspect: InspectionForce
         }
@@ -383,7 +386,7 @@ struct IPadSkillWorkshopFeature {
 
             case let .proposalSelected(request):
                 state.selectedProposalID = request.proposalID
-                if request.opensSheet.opensSheet {
+                if request.opening == .sheet {
                     state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: request.proposalID.value)
                 }
                 return self.inspectEffect(
@@ -800,13 +803,13 @@ struct IPadSkillWorkshopScreen: View {
                         select: { proposal in
                             self.selectProposal(
                                 proposal,
-                                opensSheet: true,
+                                opening: .sheet,
                                 forceInspect: false)
                         },
                         inspect: { proposal in
                             self.selectProposal(
                                 proposal,
-                                opensSheet: true,
+                                opening: .sheet,
                                 forceInspect: true)
                         },
                         apply: { proposal in
@@ -838,7 +841,7 @@ struct IPadSkillWorkshopScreen: View {
                     Button {
                         self.selectProposal(
                             proposal,
-                            opensSheet: self.isCompactWidth,
+                            opening: self.isCompactWidth ? .sheet : .inline,
                             forceInspect: false)
                     } label: {
                         IPadSkillProposalRow(
@@ -851,7 +854,7 @@ struct IPadSkillWorkshopScreen: View {
                         Button("Inspect") {
                             self.selectProposal(
                                 proposal,
-                                opensSheet: true,
+                                opening: .sheet,
                                 forceInspect: true)
                         }
                         if proposal.status == "pending" {
@@ -882,7 +885,7 @@ struct IPadSkillWorkshopScreen: View {
                         Button("Inspect") {
                             self.selectProposal(
                                 proposal,
-                                opensSheet: true,
+                                opening: .sheet,
                                 forceInspect: true)
                         }
                         .tint(OpenClawBrand.accent)
@@ -1246,13 +1249,13 @@ struct IPadSkillWorkshopScreen: View {
 
     private func selectProposal(
         _ proposal: IPadSkillProposal,
-        opensSheet: Bool,
+        opening: IPadSkillWorkshopFeature.Action.ProposalSheetOpening,
         forceInspect: Bool)
     {
         Task {
             await self.store.send(.proposalSelected(.init(
                 proposalID: .init(value: proposal.id),
-                opensSheet: .init(opensSheet: opensSheet),
+                opening: opening,
                 readAccess: .init(canRead: self.canRead),
                 forceInspect: .init(isForced: forceInspect)))).finish()
         }
