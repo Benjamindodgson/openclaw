@@ -63,7 +63,7 @@ struct SettingsChannelsFeatureTests {
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: false),
-            result: .failure(.failed(.init(message: "boom"))))))
+            result: .failure(.failed(.init(message: .init(value: "boom")))))))
         {
             $0.isLoading = false
         }
@@ -85,7 +85,7 @@ struct SettingsChannelsFeatureTests {
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: true),
-            result: .failure(.failed(.init(message: "boom"))))))
+            result: .failure(.failed(.init(message: .init(value: "boom")))))))
         {
             $0.isLoading = false
             $0.errorText = "boom"
@@ -109,6 +109,29 @@ struct SettingsChannelsFeatureTests {
         await store.receive(.operationResponse(.init(result: .success(Self.connectedEntries)))) {
             $0.busyOperation = nil
             $0.entries = Self.connectedEntries
+        }
+    }
+
+    @Test func `operation failure surfaces error text and clears busy state`() async {
+        let operation = SettingsChannelOperation(kind: .start, channelID: "telegram", accountID: "main")
+        let store = TestStore(initialState: SettingsChannelsFeature.State()) {
+            SettingsChannelsFeature(client: Self.client(
+                start: { _ in throw TestChannelsFailure.failed }))
+        }
+
+        await store.send(.operationRequested(.init(
+            kind: .start,
+            target: .init(channelID: "telegram", accountID: "main"),
+            readAccess: .init(canRead: true),
+            adminAccess: .init(canAdmin: true))))
+        {
+            $0.busyOperation = operation
+        }
+        await store.receive(.operationResponse(.init(
+            result: .failure(.failed(.init(message: .init(value: "boom")))))))
+        {
+            $0.busyOperation = nil
+            $0.errorText = "boom"
         }
     }
 
