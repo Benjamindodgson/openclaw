@@ -241,7 +241,7 @@ struct SettingsNavigationFeatureTests {
             lastRunText: .init(value: "4:20 PM"))))
         {
             $0.issueCount = 3
-            $0.lastRunText = "4:20 PM"
+            $0.lastRunText = .init(value: "4:20 PM")
         }
         await store.send(.diagnosticsCompletionRequested(.init(
             gatewayConnected: .init(value: true),
@@ -251,7 +251,7 @@ struct SettingsNavigationFeatureTests {
             lastRunText: .init(value: "4:22 PM"))))
         {
             $0.issueCount = 0
-            $0.lastRunText = "4:22 PM"
+            $0.lastRunText = .init(value: "4:22 PM")
         }
     }
 
@@ -269,7 +269,7 @@ struct SettingsNavigationFeatureTests {
         {
             $0.gatewayConnected = true
             $0.discoveredGatewayCount = 2
-            $0.discoveryStatusText = "2 gateways found"
+            $0.discoveryStatusText = .init(value: "2 gateways found")
             $0.screenRecordActive = true
         }
         await store.send(.diagnosticsContextSynced(.init(
@@ -282,7 +282,7 @@ struct SettingsNavigationFeatureTests {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayConnected = false
             $0.discoveredGatewayCount = 0
-            $0.discoveryStatusText = "Discovery paused"
+            $0.discoveryStatusText = .init(value: "Discovery paused")
             $0.screenRecordActive = false
         }
     }
@@ -331,11 +331,11 @@ struct SettingsNavigationFeatureTests {
         #expect(state.hasDiscoveredGateway == false)
 
         state.discoveredGatewayCount = 2
-        state.discoveryStatusText = "2 gateways found"
+        state.discoveryStatusText = .init(value: "2 gateways found")
         #expect(state.discoveryValue == "2")
         #expect(state.discoveryColor == OpenClawBrand.accent)
         #expect(state.hasDiscoveredGateway)
-        #expect(state.discoveryStatusText == "2 gateways found")
+        #expect(state.discoveryStatusText.value == "2 gateways found")
     }
 
     @Test func `settings diagnostics summarize screen capture state`() {

@@ -5,14 +5,17 @@ import SwiftUI
 @Reducer
 struct SettingsDiagnosticsFeature {
     // swiftformat:disable redundantSendable
+    struct DiscoveryStatusText: Equatable, Sendable { var value: String }
+    struct LastRunText: Equatable, Sendable { var value: String }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var discoveredGatewayCount = 0
-        var discoveryStatusText = "Discovery idle"
+        var discoveryStatusText = DiscoveryStatusText(value: "Discovery idle")
         var gatewayConnected = false
         var issueCount: Int?
         var isAppleReviewDemoModeEnabled = false
-        var lastRunText = "Not run"
+        var lastRunText = LastRunText(value: "Not run")
         var screenRecordActive = false
 
         var detailText: String {
@@ -65,11 +68,9 @@ struct SettingsDiagnosticsFeature {
         struct AppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
         struct DiagnosticsGatewayConnected: Equatable, Sendable { var value: Bool }
         struct DiscoveredGatewayCount: Equatable, Sendable { var value: Int }
-        struct DiscoveryStatusText: Equatable, Sendable { var value: String }
         struct ScreenRecordActive: Equatable, Sendable { var value: Bool }
         struct TalkConfigLoaded: Equatable, Sendable { var value: Bool }
         struct NotificationsAllowed: Equatable, Sendable { var value: Bool }
-        struct LastRunText: Equatable, Sendable { var value: String }
 
         struct DiagnosticsContextSync: Equatable, Sendable {
             var isAppleReviewDemoModeEnabled: AppleReviewDemoModeEnabled
@@ -100,7 +101,7 @@ struct SettingsDiagnosticsFeature {
                 state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
                 state.gatewayConnected = sync.gatewayConnected.value
                 state.discoveredGatewayCount = sync.discoveredGatewayCount.value
-                state.discoveryStatusText = sync.discoveryStatusText.value
+                state.discoveryStatusText = sync.discoveryStatusText
                 state.screenRecordActive = sync.screenRecordActive.value
                 return .none
 
@@ -110,7 +111,7 @@ struct SettingsDiagnosticsFeature {
                     discoveredGatewayCount: request.discoveredGatewayCount.value,
                     talkConfigLoaded: request.talkConfigLoaded.value,
                     notificationsAllowed: request.notificationsAllowed.value)
-                state.lastRunText = request.lastRunText.value
+                state.lastRunText = request.lastRunText
                 return .none
             }
         }
