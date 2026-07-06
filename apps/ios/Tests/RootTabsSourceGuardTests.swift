@@ -2390,12 +2390,22 @@ struct RootTabsSourceGuardTests {
         let appSource = try String(contentsOf: Self.openClawAppSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let modelSource = try String(contentsOf: Self.nodeAppModelSourceURL(), encoding: .utf8)
+        let pushConsentSource = try String(contentsOf: Self.pushEnrollmentConsentSourceURL(), encoding: .utf8)
         let notificationSource = try String(contentsOf: Self.settingsNotificationFeatureSourceURL(), encoding: .utf8)
+        let pushConsentState = try Self.extract(
+            pushConsentSource,
+            from: "struct State: Equatable, Sendable {",
+            to: "enum Action")
 
         #expect(appSource.contains("PushEnrollmentConsent.disclosureAccepted"))
         #expect(appSource.contains("await Self.isNotificationAuthorizationAllowed()"))
+        #expect(pushConsentSource.contains("struct PushEnrollmentDisclosureAccepted: Equatable, Sendable"))
+        #expect(pushConsentState.contains("var disclosureAccepted: PushEnrollmentDisclosureAccepted"))
+        #expect(pushConsentSource.contains("state.disclosureAccepted = .init(value: consent.disclosureAccepted())"))
+        #expect(pushConsentSource.contains("state.disclosureAccepted = .init(value: true)"))
+        #expect(pushConsentSource.contains("state.disclosureAccepted = .init(value: false)"))
         #expect(actionsSource.contains("self.pushEnrollmentConsentStore.send(.acceptDisclosure)"))
-        #expect(actionsSource.contains("self.pushEnrollmentConsentStore.disclosureAccepted"))
+        #expect(actionsSource.contains("self.pushEnrollmentConsentStore.disclosureAccepted.value"))
         #expect(actionsSource.contains("self.registerForRemoteNotificationsIfEnrollmentReady()"))
         #expect(actionsSource.contains("self.notificationStore.send(.remoteRegistrationRequested(.init("))
         #expect(actionsSource.contains("UIApplication.shared.registerForRemoteNotifications()") == false)
@@ -2407,6 +2417,10 @@ struct RootTabsSourceGuardTests {
         #expect(notificationSource.contains("guard request.disclosureAccepted.value"))
         #expect(notificationSource.contains("case remoteRegistrationRequested(RemoteRegistrationRequest)"))
         #expect(notificationSource.contains("await registrationClient.registerForRemoteNotifications()"))
+        #expect(!pushConsentState.contains("var disclosureAccepted: Bool"))
+        #expect(!pushConsentSource.contains("state.disclosureAccepted = true"))
+        #expect(!pushConsentSource.contains("state.disclosureAccepted = false"))
+        #expect(!actionsSource.contains("value: self.pushEnrollmentConsentStore.disclosureAccepted)"))
         #expect(modelSource.contains("PushEnrollmentConsent.disclosureAccepted"))
         #expect(modelSource.contains("notifications_not_authorized"))
         #expect(modelSource.contains("enrollment_disclosure_not_accepted"))
@@ -5688,6 +5702,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Gateway/NotificationPermissionGuidanceDialog.swift")
+    }
+
+    private static func pushEnrollmentConsentSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Push/PushEnrollmentConsent.swift")
     }
 
     private static func settingsProTabActionsSourceURL() -> URL {
