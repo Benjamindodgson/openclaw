@@ -115,6 +115,7 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct IPadWorkboardActiveRefreshBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
 struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
@@ -168,7 +169,7 @@ struct IPadWorkboardFeature {
         var knownBoardIDs: [String] = []
         var isRefreshing = false
         var isDispatching = false
-        var activeRefreshBoardID: String?
+        var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
         var busyCardID: IPadWorkboardBusyCardID?
         var dispatchSummaryText: String?
         var selectedStatus = "active"
@@ -679,7 +680,7 @@ struct IPadWorkboardFeature {
 
                 state.isRefreshing = true
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
-                state.activeRefreshBoardID = boardScope.boardID
+                state.activeRefreshBoardID = boardScope.boardID.map { .init(value: $0) }
                 state.errorText = nil
                 if !state.statuses.contains(state.selectedStatus), state.selectedStatus != "active" {
                     state.selectedStatus = "active"
@@ -701,7 +702,9 @@ struct IPadWorkboardFeature {
                 .cancellable(id: CancelID.refresh, cancelInFlight: true)
 
             case let .refreshResponse(response):
-                guard state.activeRefreshBoardID == response.boardScope.boardID else { return .none }
+                let activeRefreshBoardID = response.boardScope.boardID
+                    .map { IPadWorkboardActiveRefreshBoardID(value: $0) }
+                guard state.activeRefreshBoardID == activeRefreshBoardID else { return .none }
                 state.isRefreshing = false
                 state.activeRefreshBoardID = nil
                 guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
