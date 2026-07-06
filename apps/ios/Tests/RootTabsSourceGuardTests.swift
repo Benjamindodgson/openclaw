@@ -1562,11 +1562,22 @@ struct RootTabsSourceGuardTests {
     @Test func `settings approvals sync action is typed`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let approvalsFeature = try Self.extract(
+            settingsSource,
+            from: "struct SettingsApprovalsFeature",
+            to: "@Reducer\nstruct SettingsGatewayActivityFeature")
 
+        #expect(settingsSource.contains(
+            "struct SettingsApprovalsDemoModeEnabled: Equatable, Sendable { var value: Bool }"))
         #expect(settingsSource.contains("struct ApprovalsSync: Equatable, Sendable"))
+        #expect(settingsSource.contains("var isAppleReviewDemoModeEnabled: SettingsApprovalsDemoModeEnabled"))
+        #expect(settingsSource.contains(
+            "state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
         #expect(settingsSource.contains("case approvalsSynced(ApprovalsSync)"))
         #expect(actionsSource.contains("self.approvalsStore.send(.approvalsSynced(.init("))
-        #expect(!settingsSource.contains("case approvalsSynced(\n            isAppleReviewDemoModeEnabled: Bool"))
+        #expect(actionsSource.contains(
+            "isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled)"))
+        #expect(!approvalsFeature.contains("var isAppleReviewDemoModeEnabled: Bool"))
     }
 
     @Test func `gateway settings keeps pairing trust diagnostics and tailscale actions`() throws {

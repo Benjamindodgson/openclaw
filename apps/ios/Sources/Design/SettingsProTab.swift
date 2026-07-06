@@ -243,8 +243,10 @@ struct SettingsApprovalsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SettingsApprovalsDemoModeEnabled: Equatable, Sendable { var value: Bool }
+
         struct ApprovalsSync: Equatable, Sendable {
-            var isAppleReviewDemoModeEnabled: Bool
+            var isAppleReviewDemoModeEnabled: SettingsApprovalsDemoModeEnabled
             var gatewayConnected: Bool
             var notificationsNeedAttention: Bool
             var hasPendingApproval: Bool
@@ -263,7 +265,7 @@ struct SettingsApprovalsFeature {
         Reduce { state, action in
             switch action {
             case let .approvalsSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
                 state.gatewayConnected = sync.gatewayConnected
                 state.notificationsNeedAttention = sync.notificationsNeedAttention
                 state.hasPendingApproval = sync.hasPendingApproval
