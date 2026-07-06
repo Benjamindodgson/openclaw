@@ -222,7 +222,7 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.moveRequested(.init(card: card, status: "running", canWrite: true))) {
+        await store.send(.moveRequested(.init(card: card, status: .init(value: "running"), canWrite: true))) {
             $0.busyCardID = "card-1"
             $0.errorText = nil
         }

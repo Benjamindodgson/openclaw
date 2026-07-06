@@ -119,6 +119,7 @@ struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
+struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatusFilter: Equatable, Sendable { var value: String }
 
@@ -430,7 +431,7 @@ struct IPadWorkboardFeature {
 
         struct MoveRequest: Equatable, Sendable {
             var card: IPadWorkboardCard
-            var status: String
+            var status: IPadWorkboardMoveStatus
             var canWrite: Bool
         }
 
@@ -633,8 +634,8 @@ struct IPadWorkboardFeature {
                 state.errorText = nil
                 let params = IPadWorkboardMoveParams(
                     id: request.card.id,
-                    status: request.status,
-                    position: state.nextPosition(for: request.status, excluding: request.card.id))
+                    status: request.status.value,
+                    position: state.nextPosition(for: request.status.value, excluding: request.card.id))
                 return .run { send in
                     do {
                         let card = try await client.move(params)
