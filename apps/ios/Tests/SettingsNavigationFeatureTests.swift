@@ -2429,24 +2429,24 @@ struct SettingsNavigationFeatureTests {
             apiKeyConfigured: .init(value: false),
             usesRealtime: .init(value: true))))
         {
-            $0.gatewayTalkConfigLoaded = true
-            $0.gatewayTalkApiKeyConfigured = false
-            $0.gatewayTalkUsesRealtime = true
+            $0.gatewayTalkConfigLoaded = .init(value: true)
+            $0.gatewayTalkApiKeyConfigured = .init(value: false)
+            $0.gatewayTalkUsesRealtime = .init(value: true)
         }
         await store.send(.gatewayTalkConfigSynced(.init(
             configLoaded: .init(value: true),
             apiKeyConfigured: .init(value: true),
             usesRealtime: .init(value: false))))
         {
-            $0.gatewayTalkConfigLoaded = true
-            $0.gatewayTalkApiKeyConfigured = true
-            $0.gatewayTalkUsesRealtime = false
+            $0.gatewayTalkConfigLoaded = .init(value: true)
+            $0.gatewayTalkApiKeyConfigured = .init(value: true)
+            $0.gatewayTalkUsesRealtime = .init(value: false)
         }
         await store.send(.gatewayTalkDisplayContextSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: true),
             transportLabel: .init(value: "Gateway Relay"))))
         {
-            $0.isAppleReviewDemoModeEnabled = true
+            $0.isAppleReviewDemoModeEnabled = .init(value: true)
             $0.gatewayTalkTransportLabel = .init(value: "Gateway Relay")
         }
     }
@@ -2471,9 +2471,9 @@ struct SettingsNavigationFeatureTests {
         var state = SettingsTalkPreferencesFeature.State()
 
         #expect(state.talkApiKeyStatus == "Not loaded")
-        state.gatewayTalkConfigLoaded = true
+        state.gatewayTalkConfigLoaded = .init(value: true)
         #expect(state.talkApiKeyStatus == "Not configured")
-        state.gatewayTalkApiKeyConfigured = true
+        state.gatewayTalkApiKeyConfigured = .init(value: true)
         #expect(state.talkApiKeyStatus == "Configured")
         #expect(SettingsTalkPreferencesFeature.State.talkApiKeyStatus(
             configLoaded: true,
@@ -2488,15 +2488,15 @@ struct SettingsNavigationFeatureTests {
         #expect(state.gatewayTalkConfigValue == "missing")
         #expect(state.gatewayTalkConfigColor == .secondary)
 
-        state.gatewayTalkConfigLoaded = true
+        state.gatewayTalkConfigLoaded = .init(value: true)
         state.gatewayTalkTransportLabel = .init(value: "Gateway Relay")
         #expect(state.gatewayDiagnosticTalkConfigLoaded)
         #expect(state.gatewayTalkConfigDetail == "Gateway Relay")
         #expect(state.gatewayTalkConfigValue == "loaded")
         #expect(state.gatewayTalkConfigColor == OpenClawBrand.ok)
 
-        state.isAppleReviewDemoModeEnabled = true
-        state.gatewayTalkConfigLoaded = false
+        state.isAppleReviewDemoModeEnabled = .init(value: true)
+        state.gatewayTalkConfigLoaded = .init(value: false)
         #expect(state.gatewayDiagnosticTalkConfigLoaded)
         #expect(state.gatewayTalkConfigDetail == "Demo mode only")
         #expect(state.gatewayTalkConfigValue == "demo")
@@ -2528,15 +2528,15 @@ struct SettingsNavigationFeatureTests {
         var state = SettingsTalkPreferencesFeature.State()
 
         #expect(state.shouldShowRealtimeVoicePicker == false)
-        state.gatewayTalkUsesRealtime = true
+        state.gatewayTalkUsesRealtime = .init(value: true)
         #expect(state.shouldShowRealtimeVoicePicker == true)
 
-        state.gatewayTalkUsesRealtime = false
+        state.gatewayTalkUsesRealtime = .init(value: false)
         state.providerSelection = .openAIRealtime
         #expect(state.shouldShowRealtimeVoicePicker == true)
         #expect(SettingsTalkPreferencesFeature.State.shouldShowRealtimeVoicePicker(
             providerSelection: .openAIRealtime,
-            gatewayTalkUsesRealtime: false) == true)
+            gatewayTalkUsesRealtime: .init(value: false)) == true)
     }
 }
 

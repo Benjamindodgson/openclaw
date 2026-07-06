@@ -3974,14 +3974,29 @@ struct RootTabsSourceGuardTests {
         #expect(preferencesSource.contains("var configLoaded: SettingsGatewayTalkConfigLoaded"))
         #expect(preferencesSource.contains("var apiKeyConfigured: SettingsGatewayTalkApiKeyConfigured"))
         #expect(preferencesSource.contains("var usesRealtime: SettingsGatewayTalkUsesRealtime"))
-        #expect(preferencesSource.contains("state.gatewayTalkConfigLoaded = sync.configLoaded.value"))
-        #expect(preferencesSource.contains("state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured.value"))
-        #expect(preferencesSource.contains("state.gatewayTalkUsesRealtime = sync.usesRealtime.value"))
+        #expect(preferencesSource.contains("var gatewayTalkConfigLoaded = SettingsGatewayTalkConfigLoaded(value: false)"))
+        #expect(preferencesSource
+            .contains("var gatewayTalkApiKeyConfigured = SettingsGatewayTalkApiKeyConfigured(value: false)"))
+        #expect(preferencesSource.contains("var gatewayTalkUsesRealtime = SettingsGatewayTalkUsesRealtime(value: false)"))
+        #expect(preferencesSource.contains("state.gatewayTalkConfigLoaded = sync.configLoaded"))
+        #expect(preferencesSource.contains("state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured"))
+        #expect(preferencesSource.contains("state.gatewayTalkUsesRealtime = sync.usesRealtime"))
+        #expect(!preferencesSource.contains("var gatewayTalkConfigLoaded = false"))
+        #expect(!preferencesSource.contains("var gatewayTalkApiKeyConfigured = false"))
+        #expect(!preferencesSource.contains("var gatewayTalkUsesRealtime = false"))
+        #expect(!preferencesSource.contains("state.gatewayTalkConfigLoaded = sync.configLoaded.value"))
+        #expect(!preferencesSource.contains("state.gatewayTalkApiKeyConfigured = sync.apiKeyConfigured.value"))
+        #expect(!preferencesSource.contains("state.gatewayTalkUsesRealtime = sync.usesRealtime.value"))
         #expect(preferencesSource.contains("struct GatewayTalkDisplayContextSync: Equatable, Sendable"))
         #expect(preferencesSource
             .contains("var isAppleReviewDemoModeEnabled: SettingsGatewayTalkAppleReviewDemoModeEnabled"))
         #expect(preferencesSource.contains("var transportLabel: SettingsGatewayTalkTransportLabel"))
         #expect(preferencesSource
+            .contains("var isAppleReviewDemoModeEnabled = SettingsGatewayTalkAppleReviewDemoModeEnabled(value: false)"))
+        #expect(preferencesSource
+            .contains("state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled"))
+        #expect(!preferencesSource.contains("var isAppleReviewDemoModeEnabled = false"))
+        #expect(!preferencesSource
             .contains("state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
         #expect(preferencesSource
             .contains("var gatewayTalkTransportLabel = SettingsGatewayTalkTransportLabel(value: \"Not loaded\")"))
