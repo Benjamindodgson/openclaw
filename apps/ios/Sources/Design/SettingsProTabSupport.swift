@@ -61,6 +61,8 @@ struct SettingsDeviceDisplayName: Equatable, Sendable { var value: String }
 
 struct SettingsManualGatewayPortText: Equatable, Sendable { var value: String }
 
+struct SettingsManualGatewayPort: Equatable, Sendable { var value: Int }
+
 struct SettingsOnboardingRequestID: Equatable, Sendable { var value: Int }
 
 struct SettingsGatewaySetupCode: Equatable, Sendable { var value: String }
