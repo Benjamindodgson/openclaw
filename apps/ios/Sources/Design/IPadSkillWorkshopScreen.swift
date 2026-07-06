@@ -85,6 +85,7 @@ extension DependencyValues {
 // swiftformat:disable redundantSendable
 struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable { var value: Bool }
+struct IPadSkillWorkshopQuery: Equatable, Sendable { var value: String }
 
 enum IPadSkillWorkshopError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }
@@ -124,7 +125,7 @@ struct IPadSkillWorkshopFeature {
         var selectedProposalID: String?
         var selectedAgentScopeID = ""
         var statusFilter = "pending"
-        var query = ""
+        var query = IPadSkillWorkshopQuery(value: "")
         var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)
         var inspectingProposalID: String?
         var busyAction: IPadSkillProposalAction?
@@ -145,7 +146,7 @@ struct IPadSkillWorkshopFeature {
             Self.filteredProposals(
                 proposals: self.proposals,
                 statusFilter: self.statusFilter,
-                query: self.query)
+                query: self.query.value)
         }
 
         var visibleProposalLaneStatuses: [String] {
@@ -158,7 +159,7 @@ struct IPadSkillWorkshopFeature {
             Self.filteredProposals(
                 proposals: self.proposals.filter { $0.status == status },
                 statusFilter: "all",
-                query: self.query)
+                query: self.query.value)
                 .sorted { $0.updatedAtMs > $1.updatedAtMs }
         }
 
@@ -254,7 +255,7 @@ struct IPadSkillWorkshopFeature {
         }
 
         struct QueryChange: Equatable, Sendable {
-            var query: String
+            var query: IPadSkillWorkshopQuery
         }
 
         struct RefreshRequest: Equatable, Sendable {
@@ -294,7 +295,7 @@ struct IPadSkillWorkshopFeature {
                 return .none
 
             case .clearQueryTapped:
-                state.query = ""
+                state.query = .init(value: "")
                 state.syncSelectedProposalIDForVisibleProposals()
                 return .none
 
@@ -694,7 +695,7 @@ struct IPadSkillWorkshopScreen: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.subheadline)
-            if !self.store.query.isEmpty {
+            if !self.store.query.value.isEmpty {
                 Button {
                     self.store.send(.clearQueryTapped)
                 } label: {
@@ -1180,8 +1181,8 @@ struct IPadSkillWorkshopScreen: View {
 
     private var queryBinding: Binding<String> {
         Binding(
-            get: { self.store.query },
-            set: { self.store.send(.queryChanged(.init(query: $0))) })
+            get: { self.store.query.value },
+            set: { self.store.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
     private var statusFilterBinding: Binding<String> {
@@ -1203,7 +1204,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private func proposals(forLaneStatus status: String) -> [IPadSkillProposal] {
-        let trimmedQuery = self.store.query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let trimmedQuery = self.store.query.value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return self.store.proposals
             .filter { $0.status == status }
             .filter { proposal in
