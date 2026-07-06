@@ -126,14 +126,14 @@ struct AgentSkillEditorFeatureTests {
         }
 
         await store.send(.mutationStarted(.init(key: .init(value: "skill-a")))) {
-            $0.busyKeys = ["skill-a"]
+            $0.busyKeys = [.init(value: "skill-a")]
             $0.messages = [:]
         }
     }
 
     @Test func `mutation success stores message while busy key remains active`() async {
         var initialState = AgentSkillEditorFeature.State()
-        initialState.busyKeys = ["skill-a"]
+        initialState.busyKeys = [.init(value: "skill-a")]
         let store = TestStore(initialState: initialState) {
             AgentSkillEditorFeature()
         }
@@ -150,7 +150,7 @@ struct AgentSkillEditorFeatureTests {
 
     @Test func `mutation finish clears busy key`() async {
         var initialState = AgentSkillEditorFeature.State()
-        initialState.busyKeys = ["skill-a", "skill-b"]
+        initialState.busyKeys = [.init(value: "skill-a"), .init(value: "skill-b")]
         initialState.messages = [
             "skill-a": AgentProTab.SkillEditorMessage(kind: .success, text: "Skill enabled."),
         ]
@@ -159,13 +159,13 @@ struct AgentSkillEditorFeatureTests {
         }
 
         await store.send(.mutationFinished(.init(key: .init(value: "skill-a")))) {
-            $0.busyKeys = ["skill-b"]
+            $0.busyKeys = [.init(value: "skill-b")]
         }
     }
 
     @Test func `mutation failure clears busy key and stores error`() async {
         var initialState = AgentSkillEditorFeature.State()
-        initialState.busyKeys = ["skill-a"]
+        initialState.busyKeys = [.init(value: "skill-a")]
         let store = TestStore(initialState: initialState) {
             AgentSkillEditorFeature()
         }
