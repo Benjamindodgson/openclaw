@@ -3,8 +3,10 @@ import OpenClawKit
 import SwiftUI
 
 // swiftformat:disable redundantSendable
+struct AgentSkillEditorMutationSuccessMessage: Equatable, Sendable { var value: String }
+
 struct AgentSkillEditorMutationSummary: Equatable, Sendable {
-    var message: String
+    var message: AgentSkillEditorMutationSuccessMessage
 }
 
 // swiftformat:enable redundantSendable
@@ -543,7 +545,7 @@ struct AgentSkillEditorFeature {
             case let .mutationSucceeded(result):
                 state.messages[result.key] = AgentProTab.SkillEditorMessage(
                     kind: .success,
-                    text: result.summary.message)
+                    text: result.summary.message.value)
                 return .none
 
             case let .mutationFinished(mutation):
