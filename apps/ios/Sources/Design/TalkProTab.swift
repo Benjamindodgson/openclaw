@@ -43,6 +43,13 @@ extension DependencyValues {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct TalkProGatewayConnectionState: Equatable, Sendable { var isConnected: Bool }
+struct TalkProSpeakerphoneState: Equatable, Sendable { var isEnabled: Bool }
+struct TalkProEnabledState: Equatable, Sendable { var isEnabled: Bool }
+
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct TalkProTabFeature {
     private let clientOverride: TalkProTabClient?
@@ -60,9 +67,21 @@ struct TalkProTabFeature {
         }
 
         var destination: Destination?
-        var gatewayConnected = false
-        var speakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
-        var talkEnabled = false
+        var gatewayConnectionState = TalkProGatewayConnectionState(isConnected: false)
+        var speakerphoneState = TalkProSpeakerphoneState(isEnabled: TalkDefaults.speakerphoneEnabledByDefault)
+        var talkEnabledState = TalkProEnabledState(isEnabled: false)
+
+        var gatewayConnected: Bool {
+            self.gatewayConnectionState.isConnected
+        }
+
+        var speakerphoneEnabled: Bool {
+            self.speakerphoneState.isEnabled
+        }
+
+        var talkEnabled: Bool {
+            self.talkEnabledState.isEnabled
+        }
 
         var showPermissionPrompt: Bool {
             self.destination == .permissionPrompt
@@ -108,7 +127,7 @@ struct TalkProTabFeature {
 
             switch action {
             case let .gatewayConnectionChanged(change):
-                state.gatewayConnected = change.status.isConnected
+                state.gatewayConnectionState = .init(isConnected: change.status.isConnected)
                 return .none
 
             case .permissionRequired:
@@ -132,19 +151,19 @@ struct TalkProTabFeature {
                 return .none
 
             case let .speakerphoneEnabledChanged(change):
-                state.speakerphoneEnabled = change.enabled.isEnabled
+                state.speakerphoneState = .init(isEnabled: change.enabled.isEnabled)
                 return .run { _ in
                     await client.setSpeakerphoneEnabled(change.enabled.isEnabled)
                 }
 
             case let .startTalkRequested(request):
-                state.talkEnabled = true
+                state.talkEnabledState = .init(isEnabled: true)
                 return .run { _ in
                     await client.startTalk(request.sessionKey)
                 }
 
             case let .talkEnabledChanged(change):
-                state.talkEnabled = change.enabled.isEnabled
+                state.talkEnabledState = .init(isEnabled: change.enabled.isEnabled)
                 return .run { _ in
                     await client.setTalkEnabled(change.enabled.isEnabled)
                 }

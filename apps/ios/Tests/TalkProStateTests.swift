@@ -10,10 +10,10 @@ import Testing
         }
 
         await store.send(.gatewayConnectionChanged(.init(status: .init(isConnected: true)))) {
-            $0.gatewayConnected = true
+            $0.gatewayConnectionState = .init(isConnected: true)
         }
         await store.send(.gatewayConnectionChanged(.init(status: .init(isConnected: false)))) {
-            $0.gatewayConnected = false
+            $0.gatewayConnectionState = .init(isConnected: false)
         }
     }
 
