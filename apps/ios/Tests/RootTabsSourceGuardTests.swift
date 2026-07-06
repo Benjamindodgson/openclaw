@@ -3302,6 +3302,9 @@ struct RootTabsSourceGuardTests {
         #expect(connectionSource.contains("struct GatewayRemoteAddress: Equatable, Sendable"))
         #expect(connectionSource.contains("struct GatewayServerName: Equatable, Sendable"))
         #expect(connectionSource.contains("struct GatewayStatusSync: Equatable, Sendable"))
+        #expect(connectionSource.contains("var gatewayDisplayStatusText = GatewayDisplayStatusText(value: \"Offline\")"))
+        #expect(connectionSource.contains("var gatewayRemoteAddress = GatewayRemoteAddress(value: nil)"))
+        #expect(connectionSource.contains("var gatewayServerName = GatewayServerName(value: nil)"))
         #expect(connectionSource.contains("var isAppleReviewDemoModeEnabled: GatewayAppleReviewDemoModeEnabled"))
         #expect(connectionSource.contains("var gatewayStatusConnected: GatewayConnectionStatusConnected"))
         #expect(connectionSource.contains("var gatewayDisplayStatusText: GatewayDisplayStatusText"))
@@ -3311,10 +3314,10 @@ struct RootTabsSourceGuardTests {
         #expect(connectionSource.contains(
             "state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value"))
         #expect(connectionSource.contains("state.gatewayStatusConnected = sync.gatewayStatusConnected.value"))
-        #expect(connectionSource.contains("state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText.value"))
+        #expect(connectionSource.contains("state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText"))
         #expect(connectionSource.contains("state.gatewayAgentCount = sync.gatewayAgentCount.value"))
-        #expect(connectionSource.contains("state.gatewayRemoteAddress = sync.gatewayRemoteAddress.value"))
-        #expect(connectionSource.contains("state.gatewayServerName = sync.gatewayServerName.value"))
+        #expect(connectionSource.contains("state.gatewayRemoteAddress = sync.gatewayRemoteAddress"))
+        #expect(connectionSource.contains("state.gatewayServerName = sync.gatewayServerName"))
         #expect(connectionSource.contains("case gatewayStatusSynced(GatewayStatusSync)"))
         #expect(syncGatewayConnectionFunction.contains("self.gatewayConnectionStore.send(.gatewayStatusSynced(.init("))
         #expect(syncGatewayConnectionFunction.contains(
@@ -3330,16 +3333,19 @@ struct RootTabsSourceGuardTests {
         #expect(!connectionSource.contains("case gatewayStatusSynced(\n            isAppleReviewDemoModeEnabled: Bool"))
         #expect(!connectionSource.contains(
             "var isAppleReviewDemoModeEnabled: Bool\n            var gatewayStatusConnected: Bool"))
+        #expect(!connectionSource.contains("var gatewayDisplayStatusText = \"Offline\""))
         #expect(!connectionSource.contains("var gatewayDisplayStatusText: String"))
         #expect(!connectionSource.contains("var gatewayAgentCount: Int"))
+        #expect(!connectionSource.contains("var gatewayRemoteAddress: String?"))
+        #expect(!connectionSource.contains("var gatewayServerName: String?"))
         #expect(!connectionSource.contains(
             "var gatewayRemoteAddress: String?\n            var gatewayServerName: String?"))
         #expect(!connectionSource.contains("state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled\n"))
         #expect(!connectionSource.contains("state.gatewayStatusConnected = sync.gatewayStatusConnected\n"))
-        #expect(!connectionSource.contains("state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText\n"))
+        #expect(!connectionSource.contains("state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText.value"))
         #expect(!connectionSource.contains("state.gatewayAgentCount = sync.gatewayAgentCount\n"))
-        #expect(!connectionSource.contains("state.gatewayRemoteAddress = sync.gatewayRemoteAddress\n"))
-        #expect(!connectionSource.contains("state.gatewayServerName = sync.gatewayServerName\n"))
+        #expect(!connectionSource.contains("state.gatewayRemoteAddress = sync.gatewayRemoteAddress.value"))
+        #expect(!connectionSource.contains("state.gatewayServerName = sync.gatewayServerName.value"))
         #expect(!syncGatewayConnectionFunction.contains(
             "isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled"))
         #expect(!syncGatewayConnectionFunction.contains(

@@ -637,7 +637,7 @@ struct SettingsNavigationFeatureTests {
             gatewayRemoteAddress: .init(value: nil),
             gatewayServerName: .init(value: nil))))
         {
-            $0.gatewayDisplayStatusText = "Pairing required"
+            $0.gatewayDisplayStatusText = .init(value: "Pairing required")
         }
         await store.send(.gatewayStatusSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: false),
@@ -647,11 +647,11 @@ struct SettingsNavigationFeatureTests {
             gatewayRemoteAddress: .init(value: "100.64.1.2:18789"),
             gatewayServerName: .init(value: "openclaw-gateway"))))
         {
-            $0.gatewayDisplayStatusText = "Connected"
+            $0.gatewayDisplayStatusText = .init(value: "Connected")
             $0.gatewayStatusConnected = true
             $0.gatewayAgentCount = 2
-            $0.gatewayRemoteAddress = "100.64.1.2:18789"
-            $0.gatewayServerName = "openclaw-gateway"
+            $0.gatewayRemoteAddress = .init(value: "100.64.1.2:18789")
+            $0.gatewayServerName = .init(value: "openclaw-gateway")
         }
         await store.send(.gatewayStatusSynced(.init(
             isAppleReviewDemoModeEnabled: .init(value: true),
@@ -663,10 +663,10 @@ struct SettingsNavigationFeatureTests {
         {
             $0.isAppleReviewDemoModeEnabled = true
             $0.gatewayStatusConnected = false
-            $0.gatewayDisplayStatusText = "Offline"
+            $0.gatewayDisplayStatusText = .init(value: "Offline")
             $0.gatewayAgentCount = 3
-            $0.gatewayRemoteAddress = nil
-            $0.gatewayServerName = nil
+            $0.gatewayRemoteAddress = .init(value: nil)
+            $0.gatewayServerName = .init(value: nil)
         }
     }
 
@@ -682,8 +682,8 @@ struct SettingsNavigationFeatureTests {
         var connectedState = SettingsGatewayConnectionFeature.State()
         connectedState.gatewayStatusConnected = true
         connectedState.gatewayAgentCount = 1
-        connectedState.gatewayRemoteAddress = "100.64.1.2:18789"
-        connectedState.gatewayServerName = "openclaw-gateway"
+        connectedState.gatewayRemoteAddress = .init(value: "100.64.1.2:18789")
+        connectedState.gatewayServerName = .init(value: "openclaw-gateway")
         #expect(connectedState.gatewayStatusDetail == "Connected")
         #expect(connectedState.gatewayStatusValue == "online")
         #expect(connectedState.gatewayStatusColor == OpenClawBrand.ok)

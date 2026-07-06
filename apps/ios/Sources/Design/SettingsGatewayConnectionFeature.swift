@@ -19,6 +19,9 @@ struct SettingsGatewayConnectionFeature {
     // swiftformat:disable redundantSendable
     struct DiscoveredGatewayConnectionFailureMessage: Equatable, Sendable { var value: String }
     struct GatewayConnectionID: Equatable, Sendable { var value: String }
+    struct GatewayDisplayStatusText: Equatable, Sendable { var value: String }
+    struct GatewayRemoteAddress: Equatable, Sendable { var value: String? }
+    struct GatewayServerName: Equatable, Sendable { var value: String? }
 
     enum DiscoveredGatewayConnectionResult: Equatable, Sendable {
         struct Failure: Equatable, Sendable { var message: DiscoveredGatewayConnectionFailureMessage }
@@ -31,9 +34,9 @@ struct SettingsGatewayConnectionFeature {
     struct State: Equatable, Sendable {
         var connectingGatewayID: GatewayConnectionID?
         var gatewayAgentCount = 0
-        var gatewayDisplayStatusText = "Offline"
-        var gatewayRemoteAddress: String?
-        var gatewayServerName: String?
+        var gatewayDisplayStatusText = GatewayDisplayStatusText(value: "Offline")
+        var gatewayRemoteAddress = GatewayRemoteAddress(value: nil)
+        var gatewayServerName = GatewayServerName(value: nil)
         var gatewayStatusConnected = false
         var discoveredGatewayConnectionResult: DiscoveredGatewayConnectionResult?
         var isAppleReviewDemoModeEnabled = false
@@ -44,7 +47,7 @@ struct SettingsGatewayConnectionFeature {
 
         var gatewayStatusDetail: String {
             if self.isAppleReviewDemoModeEnabled { return "Apple Review demo mode" }
-            return self.gatewayConnected ? "Connected" : self.gatewayDisplayStatusText
+            return self.gatewayConnected ? "Connected" : self.gatewayDisplayStatusText.value
         }
 
         var gatewayStatusValue: String {
@@ -66,11 +69,11 @@ struct SettingsGatewayConnectionFeature {
         }
 
         var gatewayAddress: String {
-            self.gatewayRemoteAddress ?? "Waiting for gateway"
+            self.gatewayRemoteAddress.value ?? "Waiting for gateway"
         }
 
         var gatewayServer: String {
-            self.gatewayServerName ?? "OpenClaw Gateway"
+            self.gatewayServerName.value ?? "OpenClaw Gateway"
         }
 
         static func agentSummary(count: Int) -> String {
@@ -107,10 +110,7 @@ struct SettingsGatewayConnectionFeature {
 
         struct GatewayAppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
         struct GatewayConnectionStatusConnected: Equatable, Sendable { var value: Bool }
-        struct GatewayDisplayStatusText: Equatable, Sendable { var value: String }
         struct GatewayAgentCount: Equatable, Sendable { var value: Int }
-        struct GatewayRemoteAddress: Equatable, Sendable { var value: String? }
-        struct GatewayServerName: Equatable, Sendable { var value: String? }
 
         struct GatewayStatusSync: Equatable, Sendable {
             var isAppleReviewDemoModeEnabled: GatewayAppleReviewDemoModeEnabled
@@ -171,10 +171,10 @@ struct SettingsGatewayConnectionFeature {
             case let .gatewayStatusSynced(sync):
                 state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
                 state.gatewayStatusConnected = sync.gatewayStatusConnected.value
-                state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText.value
+                state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText
                 state.gatewayAgentCount = sync.gatewayAgentCount.value
-                state.gatewayRemoteAddress = sync.gatewayRemoteAddress.value
-                state.gatewayServerName = sync.gatewayServerName.value
+                state.gatewayRemoteAddress = sync.gatewayRemoteAddress
+                state.gatewayServerName = sync.gatewayServerName
                 return .none
             }
         }
