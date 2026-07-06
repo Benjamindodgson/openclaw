@@ -150,24 +150,24 @@ import Testing
         }
 
         await store.send(.qrScannerButtonTapped) {
-            $0.showQRScanner = true
+            $0.destination = .qrScanner
         }
 
         await store.send(.qrScannerErrorReceived(.init(message: .init(value: "Camera unavailable")))) {
-            $0.scannerError = "Camera unavailable"
-            $0.showQRScanner = false
+            $0.destination = .scannerError(.init(value: "Camera unavailable"))
         }
+        await store.send(.qrScannerDismissed)
 
         await store.send(.qrScannerErrorDismissed) {
-            $0.scannerError = nil
+            $0.destination = nil
         }
 
         await store.send(.gatewayProblemDetailsButtonTapped) {
-            $0.showGatewayProblemDetails = true
+            $0.destination = .gatewayProblemDetails
         }
 
         await store.send(.gatewayProblemDetailsDismissed) {
-            $0.showGatewayProblemDetails = false
+            $0.destination = nil
         }
     }
 
