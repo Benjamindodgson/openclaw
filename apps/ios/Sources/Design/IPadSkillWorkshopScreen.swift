@@ -16,12 +16,12 @@ struct IPadSkillWorkshopClient {
 extension IPadSkillWorkshopClient: DependencyKey {
     static let liveValue = IPadSkillWorkshopClient(
         list: { _ in IPadSkillProposalManifest(proposals: []) },
-        inspect: { _, _ in throw IPadSkillWorkshopError.failed(.init(message: "Proposal unavailable.")) },
+        inspect: { _, _ in throw IPadSkillWorkshopError.failed(.init(message: .init(value: "Proposal unavailable."))) },
         run: { _, _, _ in })
 
     static let testValue = IPadSkillWorkshopClient(
         list: { _ in IPadSkillProposalManifest(proposals: []) },
-        inspect: { _, _ in throw IPadSkillWorkshopError.failed(.init(message: "Proposal unavailable.")) },
+        inspect: { _, _ in throw IPadSkillWorkshopError.failed(.init(message: .init(value: "Proposal unavailable."))) },
         run: { _, _, _ in })
 
     @MainActor
@@ -83,15 +83,17 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String }
+
 enum IPadSkillWorkshopError: Error, Equatable, Sendable {
-    struct Failure: Equatable, Sendable { var message: String }
+    struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }
 
     case failed(Failure)
 
     var message: String {
         switch self {
         case let .failed(failure):
-            failure.message
+            failure.message.value
         }
     }
 }
@@ -487,7 +489,7 @@ struct IPadSkillWorkshopFeature {
     }
 
     private static func failure(for error: Error) -> IPadSkillWorkshopError {
-        .failed(.init(message: self.message(for: error)))
+        .failed(.init(message: .init(value: self.message(for: error))))
     }
 }
 
