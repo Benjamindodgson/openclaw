@@ -103,24 +103,24 @@ import Testing
         }
 
         await store.send(.gatewaySnapshotChanged(.init(
-            gatewayServerName: "gateway",
-            hasSavedGatewayConnection: false)))
+            gatewayServerName: .init(value: "gateway"),
+            hasSavedGatewayConnection: .init(value: false))))
         {
             $0.gatewayServerName = "gateway"
             $0.shouldPresentOnLaunch = false
         }
 
         await store.send(.gatewaySnapshotChanged(.init(
-            gatewayServerName: nil,
-            hasSavedGatewayConnection: true)))
+            gatewayServerName: .init(value: nil),
+            hasSavedGatewayConnection: .init(value: true))))
         {
             $0.gatewayServerName = nil
             $0.hasSavedGatewayConnection = true
         }
 
         await store.send(.gatewaySnapshotChanged(.init(
-            gatewayServerName: nil,
-            hasSavedGatewayConnection: false)))
+            gatewayServerName: .init(value: nil),
+            hasSavedGatewayConnection: .init(value: false))))
         {
             $0.hasSavedGatewayConnection = false
             $0.shouldPresentOnLaunch = true
