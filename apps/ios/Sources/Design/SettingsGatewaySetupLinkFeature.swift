@@ -26,12 +26,12 @@ struct SettingsGatewaySetupLinkFeature {
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
         var scannedGatewayLinkStatusText: SettingsScannedGatewayLinkStatusText?
-        var setupCode = ""
+        var setupCode = SettingsGatewaySetupCode(value: "")
         var setupLinkStatusText: SettingsGatewaySetupLinkStatusText?
         var stagedGatewaySetupLink: GatewayConnectDeepLink?
 
         var canApplyGatewaySetup: Bool {
-            !self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            !self.setupCode.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 || self.stagedGatewaySetupLink != nil
         }
     }
@@ -79,7 +79,7 @@ struct SettingsGatewaySetupLinkFeature {
 
             switch action {
             case .applyRequested:
-                let raw = state.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
+                let raw = state.setupCode.value.trimmingCharacters(in: .whitespacesAndNewlines)
                 let stagedLink = state.stagedGatewaySetupLink
                 guard !raw.isEmpty || stagedLink != nil else {
                     state.applyResult = .failure(.init(message: Self.emptySetupCodeFailureMessage))
@@ -87,7 +87,7 @@ struct SettingsGatewaySetupLinkFeature {
                 }
 
                 if AppleReviewDemoMode.isSetupCode(raw) {
-                    state.setupCode = ""
+                    state.setupCode = .init(value: "")
                     state.stagedGatewaySetupLink = nil
                     state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))
                     return .run { _ in
@@ -110,7 +110,7 @@ struct SettingsGatewaySetupLinkFeature {
             case let .scannedGatewayLinkReceived(scan):
                 let link = scan.link
                 state.applyResult = nil
-                state.setupCode = ""
+                state.setupCode = .init(value: "")
                 state.stagedGatewaySetupLink = nil
                 state.scannedGatewayLinkStatusText = .init(value: Self.scannedGatewayLinkStatusText(link))
                 state.applyResult = .gatewayLink(link)
@@ -125,7 +125,7 @@ struct SettingsGatewaySetupLinkFeature {
                 guard AppleReviewDemoMode.isSetupCode(scan.code.value) else {
                     return .none
                 }
-                state.setupCode = ""
+                state.setupCode = .init(value: "")
                 state.stagedGatewaySetupLink = nil
                 state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))
                 return .run { _ in
@@ -133,17 +133,17 @@ struct SettingsGatewaySetupLinkFeature {
                 }
 
             case let .setupCodeChanged(change):
-                let setupCode = change.setupCode.value
+                let setupCode = change.setupCode
                 state.setupCode = setupCode
-                if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if !setupCode.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     state.stagedGatewaySetupLink = nil
                 }
                 return .none
 
             case let .setupCodeSynced(sync):
-                let setupCode = sync.setupCode.value
+                let setupCode = sync.setupCode
                 state.setupCode = setupCode
-                if !setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if !setupCode.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     state.stagedGatewaySetupLink = nil
                 }
                 return .none
@@ -151,7 +151,7 @@ struct SettingsGatewaySetupLinkFeature {
             case let .setupLinkStaged(stage):
                 state.stagedGatewaySetupLink = stage.link
                 if let link = stage.link {
-                    state.setupCode = ""
+                    state.setupCode = .init(value: "")
                     state.setupLinkStatusText = .init(value: Self.setupLinkLoadedStatusText(link))
                 } else {
                     state.setupLinkStatusText = nil

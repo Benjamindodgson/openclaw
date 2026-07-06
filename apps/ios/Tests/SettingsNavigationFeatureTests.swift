@@ -853,13 +853,13 @@ struct SettingsNavigationFeatureTests {
             token: nil,
             password: nil)
         var initialState = SettingsGatewaySetupLinkFeature.State()
-        initialState.setupCode = "previous-code"
+        initialState.setupCode = .init(value: "previous-code")
         let store = TestStore(initialState: initialState) {
             SettingsGatewaySetupLinkFeature()
         }
 
         await store.send(.setupLinkStaged(.init(link: link))) {
-            $0.setupCode = ""
+            $0.setupCode = .init(value: "")
             $0.setupLinkStatusText =
                 .init(value: "Setup link loaded for gateway.example.com:443 (plain). Tap Connect to apply.")
             $0.stagedGatewaySetupLink = link
@@ -881,7 +881,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupCodeChanged(.init(setupCode: .init(value: "setup-code")))) {
-            $0.setupCode = "setup-code"
+            $0.setupCode = .init(value: "setup-code")
             $0.stagedGatewaySetupLink = nil
         }
     }
@@ -892,7 +892,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupCodeSynced(.init(setupCode: .init(value: "persisted-code")))) {
-            $0.setupCode = "persisted-code"
+            $0.setupCode = .init(value: "persisted-code")
         }
     }
 
@@ -907,9 +907,9 @@ struct SettingsNavigationFeatureTests {
         var state = SettingsGatewaySetupLinkFeature.State()
 
         #expect(!state.canApplyGatewaySetup)
-        state.setupCode = "  setup-code  "
+        state.setupCode = .init(value: "  setup-code  ")
         #expect(state.canApplyGatewaySetup)
-        state.setupCode = "   "
+        state.setupCode = .init(value: "   ")
         #expect(!state.canApplyGatewaySetup)
         state.stagedGatewaySetupLink = link
         #expect(state.canApplyGatewaySetup)
@@ -924,7 +924,7 @@ struct SettingsNavigationFeatureTests {
             token: nil,
             password: nil)
         var initialState = SettingsGatewaySetupLinkFeature.State()
-        initialState.setupCode = "  wss://gateway.example.com:443  "
+        initialState.setupCode = .init(value: "  wss://gateway.example.com:443  ")
         let store = TestStore(initialState: initialState) {
             SettingsGatewaySetupLinkFeature()
         }
@@ -972,7 +972,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupCodeChanged(.init(setupCode: .init(value: "not a setup code")))) {
-            $0.setupCode = "not a setup code"
+            $0.setupCode = .init(value: "not a setup code")
         }
 
         await store.send(.applyRequested) {
@@ -983,14 +983,14 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings gateway setup link apply handles apple review demo code`() async {
         let probe = SettingsAppleReviewDemoProbe()
         var initialState = SettingsGatewaySetupLinkFeature.State()
-        initialState.setupCode = "  APPLE-REVIEW-DEMO  "
+        initialState.setupCode = .init(value: "  APPLE-REVIEW-DEMO  ")
         let store = TestStore(initialState: initialState) {
             SettingsGatewaySetupLinkFeature(appleReviewDemoClient: probe.client)
         }
 
         await store.send(.applyRequested) {
             $0.applyResult = .appleReviewDemo(.init(statusText: "Apple Review demo mode enabled."))
-            $0.setupCode = ""
+            $0.setupCode = .init(value: "")
         }
         await store.finish()
 
@@ -1007,7 +1007,7 @@ struct SettingsNavigationFeatureTests {
             token: nil,
             password: nil)
         var initialState = SettingsGatewaySetupLinkFeature.State()
-        initialState.setupCode = "stale code"
+        initialState.setupCode = .init(value: "stale code")
         initialState.stagedGatewaySetupLink = link
         let store = TestStore(initialState: initialState) {
             SettingsGatewaySetupLinkFeature(appleReviewDemoClient: probe.client)
@@ -1017,7 +1017,7 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.scannedSetupCodeReceived(.init(code: .init(value: "  APPLE-REVIEW-DEMO  ")))) {
             $0.applyResult = .appleReviewDemo(.init(statusText: "Apple Review demo mode enabled."))
-            $0.setupCode = ""
+            $0.setupCode = .init(value: "")
             $0.stagedGatewaySetupLink = nil
         }
         await store.finish()
@@ -1045,7 +1045,7 @@ struct SettingsNavigationFeatureTests {
             token: nil,
             password: nil)
         var initialState = SettingsGatewaySetupLinkFeature.State()
-        initialState.setupCode = "stale code"
+        initialState.setupCode = .init(value: "stale code")
         initialState.stagedGatewaySetupLink = stagedLink
         let store = TestStore(initialState: initialState) {
             SettingsGatewaySetupLinkFeature()
@@ -1054,7 +1054,7 @@ struct SettingsNavigationFeatureTests {
         await store.send(.scannedGatewayLinkReceived(.init(link: scannedLink))) {
             $0.applyResult = .gatewayLink(scannedLink)
             $0.scannedGatewayLinkStatusText = .init(value: "QR loaded. Connecting to gateway.example.com:443...")
-            $0.setupCode = ""
+            $0.setupCode = .init(value: "")
             $0.stagedGatewaySetupLink = nil
         }
 
