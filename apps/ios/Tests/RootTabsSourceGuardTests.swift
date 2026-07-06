@@ -502,10 +502,13 @@ struct RootTabsSourceGuardTests {
         #expect(agentSource.contains("var agentSelection: AgentSelectionClient"))
         #expect(agentSource.contains("struct AgentSelectionFeature"))
         #expect(agentSource.contains("struct AgentSelection: Equatable, Sendable"))
+        #expect(agentSource.contains("var agentId: SelectedAgentID"))
         #expect(agentSource.contains("case agentSelected(AgentSelection)"))
-        #expect(agentSource.contains("let selectedAgentId = SelectedAgentID(value: selection.agentId)"))
-        #expect(agentSource.contains("await selectionClient.setSelectedAgentId(selectedAgentId)"))
-        #expect(agentOverviewSource.contains("self.selectionStore.send(.agentSelected(.init(agentId: agent.id)))"))
+        #expect(!agentSource.contains("var agentId: String"))
+        #expect(agentSource.contains("await selectionClient.setSelectedAgentId(selection.agentId)"))
+        #expect(
+            agentOverviewSource.contains(
+                "self.selectionStore.send(.agentSelected(.init(agentId: .init(value: agent.id))))"))
         #expect(!agentOverviewSource.contains("self.appModel.setSelectedAgentId(agent.id)"))
         #expect(storesSource.contains("func makeAgentSelectionStore()"))
         #expect(storesSource.contains("AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))"))
