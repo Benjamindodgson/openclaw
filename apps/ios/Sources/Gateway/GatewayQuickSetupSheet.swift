@@ -63,9 +63,17 @@ struct GatewayQuickSetupFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        enum Destination: Equatable, Sendable {
+            case gatewayProblemDetails
+        }
+
         var connecting = false
         var connectError: String?
-        var showGatewayProblemDetails = false
+        var destination: Destination?
+
+        var showGatewayProblemDetails: Bool {
+            self.destination == .gatewayProblemDetails
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -106,11 +114,13 @@ struct GatewayQuickSetupFeature {
                 return .none
 
             case .gatewayProblemDetailsButtonTapped:
-                state.showGatewayProblemDetails = true
+                state.destination = .gatewayProblemDetails
                 return .none
 
             case .gatewayProblemDetailsDismissed:
-                state.showGatewayProblemDetails = false
+                if state.destination == .gatewayProblemDetails {
+                    state.destination = nil
+                }
                 return .none
 
             case let .gatewayProblemPrimaryActionTapped(action):

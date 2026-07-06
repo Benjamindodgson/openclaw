@@ -40,10 +40,10 @@ struct GatewayQuickSetupFeatureTests {
         }
 
         await store.send(.gatewayProblemDetailsButtonTapped) {
-            $0.showGatewayProblemDetails = true
+            $0.destination = .gatewayProblemDetails
         }
         await store.send(.gatewayProblemDetailsDismissed) {
-            $0.showGatewayProblemDetails = false
+            $0.destination = nil
         }
     }
 
@@ -78,15 +78,16 @@ struct GatewayQuickSetupFeatureTests {
         #expect(probe.connectedGateways.isEmpty)
     }
 
-    @Test func `protocol mismatch opens help instead of connecting`() async {
+    @Test func `protocol mismatch opens help instead of connecting`() async throws {
         let probe = GatewayQuickSetupProbe()
+        let docsURL = try #require(URL(string: "https://docs.openclaw.ai/gateway/protocol"))
         let problem = GatewayConnectionProblem(
             kind: .protocolMismatch,
             owner: .iphone,
             title: "App update required",
             message: "This app is older than the gateway.",
             actionLabel: "Update app",
-            docsURL: URL(string: "https://docs.openclaw.ai/gateway/protocol")!,
+            docsURL: docsURL,
             retryable: false,
             pauseReconnect: true)
         let store = TestStore(initialState: GatewayQuickSetupFeature.State()) {

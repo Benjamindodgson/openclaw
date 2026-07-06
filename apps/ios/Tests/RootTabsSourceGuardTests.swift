@@ -1080,11 +1080,15 @@ struct RootTabsSourceGuardTests {
     @Test func `gateway quick setup problem primary action is typed`() throws {
         let quickSetupSource = try String(contentsOf: Self.gatewayQuickSetupSourceURL(), encoding: .utf8)
 
+        #expect(quickSetupSource.contains("enum Destination: Equatable, Sendable"))
+        #expect(quickSetupSource.contains("var destination: Destination?"))
+        #expect(quickSetupSource.contains("state.destination = .gatewayProblemDetails"))
         #expect(quickSetupSource.contains("struct GatewayProblemPrimaryAction: Equatable, Sendable"))
         #expect(quickSetupSource.contains("case gatewayProblemPrimaryActionTapped(GatewayProblemPrimaryAction)"))
         #expect(quickSetupSource.contains("action.problem.canTrustRotatedCertificate"))
         #expect(quickSetupSource.contains("let candidate = action.candidate"))
         #expect(quickSetupSource.contains("self.store.send(.gatewayProblemPrimaryActionTapped(.init("))
+        #expect(!quickSetupSource.contains("var showGatewayProblemDetails = false"))
     }
 
     @Test func `voice wake trigger word change action is typed`() throws {
