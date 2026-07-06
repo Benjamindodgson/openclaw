@@ -202,7 +202,7 @@ import Testing
 
         await store.send(.qrMessageDetected(.init(message: .init(value: "  APPLE-REVIEW-DEMO  ")))) {
             $0.isImporting = false
-            $0.result = .appleReviewSetupCode(.init(code: "  APPLE-REVIEW-DEMO  "))
+            $0.result = .appleReviewSetupCode(.init(code: .init(value: "  APPLE-REVIEW-DEMO  ")))
         }
     }
 
@@ -552,7 +552,7 @@ import Testing
             OnboardingSetupCodeFeature()
         }
 
-        await store.send(.setupCodeChanged(.init(code: "  oc_setup_123  "))) {
+        await store.send(.setupCodeChanged(.init(code: .init(value: "  oc_setup_123  ")))) {
             $0.setupCode = "  oc_setup_123  "
         }
 
@@ -574,7 +574,7 @@ import Testing
             $0.status = "Setup code applied. Connecting..."
         }
 
-        await store.send(.setupCodeChanged(.init(code: "  "))) {
+        await store.send(.setupCodeChanged(.init(code: .init(value: "  ")))) {
             $0.setupCode = "  "
         }
 
@@ -624,7 +624,7 @@ import Testing
             $0.status = "Paste a setup code to continue."
         }
 
-        await store.send(.setupCodeChanged(.init(code: "not a setup code"))) {
+        await store.send(.setupCodeChanged(.init(code: .init(value: "not a setup code")))) {
             $0.setupCode = "not a setup code"
         }
 
@@ -641,7 +641,7 @@ import Testing
         }
 
         await store.send(.applyRequested) {
-            $0.applyResult = .appleReviewDemoSetupCode(.init(code: "APPLE-REVIEW-DEMO"))
+            $0.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: "APPLE-REVIEW-DEMO")))
             $0.setupCode = ""
             $0.status = "Apple Review demo mode enabled."
         }
@@ -654,10 +654,10 @@ import Testing
             OnboardingSetupCodeFeature()
         }
 
-        await store.send(.scannedSetupCodeReceived(.init(code: "not a demo code")))
+        await store.send(.scannedSetupCodeReceived(.init(code: .init(value: "not a demo code"))))
 
-        await store.send(.scannedSetupCodeReceived(.init(code: "  APPLE-REVIEW-DEMO  "))) {
-            $0.applyResult = .appleReviewDemoSetupCode(.init(code: "APPLE-REVIEW-DEMO"))
+        await store.send(.scannedSetupCodeReceived(.init(code: .init(value: "  APPLE-REVIEW-DEMO  ")))) {
+            $0.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: "APPLE-REVIEW-DEMO")))
         }
 
         await store.send(.applyResultHandled) {
