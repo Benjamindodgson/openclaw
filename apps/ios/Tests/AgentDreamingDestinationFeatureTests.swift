@@ -32,11 +32,11 @@ struct AgentDreamingDestinationFeatureTests {
 
         await store.send(.dreamActionTapped(.init(action: .repair, gatewayConnected: true))) {
             $0.busyAction = .repair
-            $0.statusText = nil
+            $0.statusText = .init(value: nil)
         }
         await store.receive(.dreamActionResponse(.init(result: .success(.init(summary: "Repair complete."))))) {
             $0.busyAction = nil
-            $0.statusText = "Repair complete."
+            $0.statusText = .init(value: "Repair complete.")
         }
     }
 
@@ -49,11 +49,11 @@ struct AgentDreamingDestinationFeatureTests {
 
         await store.send(.dreamActionTapped(.init(action: .dedupe, gatewayConnected: true))) {
             $0.busyAction = .dedupe
-            $0.statusText = nil
+            $0.statusText = .init(value: nil)
         }
         await store.receive(.dreamActionResponse(.init(result: .failure(failure)))) {
             $0.busyAction = nil
-            $0.statusText = "dream failed"
+            $0.statusText = .init(value: "dream failed")
         }
     }
 
