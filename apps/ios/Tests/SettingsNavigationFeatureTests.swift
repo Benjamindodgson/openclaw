@@ -2366,9 +2366,9 @@ struct SettingsNavigationFeatureTests {
             $0.providerSelection = .openAIRealtime
             $0.realtimeVoiceSelection = .init(rawValue: " Cedar ")
             $0.speechLocale = .init(value: "en-US")
-            $0.talkButtonEnabled = false
-            $0.talkBackgroundEnabled = true
-            $0.talkSpeakerphoneEnabled = false
+            $0.talkButtonEnabled = .init(isEnabled: false)
+            $0.talkBackgroundEnabled = .init(isEnabled: true)
+            $0.talkSpeakerphoneEnabled = .init(isEnabled: false)
         }
     }
 
@@ -2406,13 +2406,13 @@ struct SettingsNavigationFeatureTests {
             $0.speechLocale = .init(value: "en-US")
         }
         await store.send(.talkBackgroundEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
-            $0.talkBackgroundEnabled = true
+            $0.talkBackgroundEnabled = .init(isEnabled: true)
         }
         await store.send(.talkButtonEnabledChanged(.init(enabled: .init(isEnabled: false)))) {
-            $0.talkButtonEnabled = false
+            $0.talkButtonEnabled = .init(isEnabled: false)
         }
         await store.send(.talkSpeakerphoneEnabledChanged(.init(enabled: .init(isEnabled: false)))) {
-            $0.talkSpeakerphoneEnabled = false
+            $0.talkSpeakerphoneEnabled = .init(isEnabled: false)
         }
         await store.finish()
 
