@@ -347,10 +347,18 @@ struct SettingsGatewayCredentialsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var gatewayToken = ""
-        var gatewayPassword = ""
+        var gatewayTokenDraft = SettingsGatewayCredentialDraft(value: "")
+        var gatewayPasswordDraft = SettingsGatewayCredentialDraft(value: "")
         var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
         var setupAuthPersistenceRequest: SettingsGatewaySetupAuthPersistenceRequest?
+
+        var gatewayToken: String {
+            self.gatewayTokenDraft.value
+        }
+
+        var gatewayPassword: String {
+            self.gatewayPasswordDraft.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -399,25 +407,25 @@ struct SettingsGatewayCredentialsFeature {
 
             switch action {
             case .credentialsClearedForOnboardingReset:
-                state.gatewayToken = ""
-                state.gatewayPassword = ""
+                state.gatewayTokenDraft = .init(value: "")
+                state.gatewayPasswordDraft = .init(value: "")
                 state.pendingManualAuthOverride = nil
                 return .none
 
             case let .credentialsLoadRequested(request):
                 guard request.instanceId.trimmedValue != nil else { return .none }
                 let credentials = persistenceClient.loadCredentials(request.instanceId)
-                state.gatewayToken = credentials.token
-                state.gatewayPassword = credentials.password
+                state.gatewayTokenDraft = .init(value: credentials.token)
+                state.gatewayPasswordDraft = .init(value: credentials.password)
                 return .none
 
             case let .credentialsLoaded(credentials):
-                state.gatewayToken = credentials.token
-                state.gatewayPassword = credentials.password
+                state.gatewayTokenDraft = .init(value: credentials.token)
+                state.gatewayPasswordDraft = .init(value: credentials.password)
                 return .none
 
             case let .gatewayPasswordChanged(change):
-                state.gatewayPassword = change.draft.value
+                state.gatewayPasswordDraft = change.draft
                 return .none
 
             case let .gatewayPasswordPersistenceRequested(persistence):
@@ -430,7 +438,7 @@ struct SettingsGatewayCredentialsFeature {
                 }
 
             case let .gatewayTokenChanged(change):
-                state.gatewayToken = change.draft.value
+                state.gatewayTokenDraft = change.draft
                 return .none
 
             case let .gatewayTokenPersistenceRequested(persistence):
@@ -480,10 +488,10 @@ struct SettingsGatewayCredentialsFeature {
         to state: inout State)
     {
         if setupAuth.shouldApplyTokenField {
-            state.gatewayToken = setupAuth.token
+            state.gatewayTokenDraft = .init(value: setupAuth.token)
         }
         if setupAuth.shouldApplyPasswordField {
-            state.gatewayPassword = setupAuth.password
+            state.gatewayPasswordDraft = .init(value: setupAuth.password)
         }
         state.pendingManualAuthOverride = setupAuth.manualAuthOverride
     }
