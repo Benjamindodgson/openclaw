@@ -112,8 +112,8 @@ struct SettingsTalkPreferencesFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var providerSelectionRaw = TalkModeProviderSelection.gatewayDefault.rawValue
-        var realtimeVoiceSelectionRaw = ""
-        var speechLocale = TalkSpeechLocale.automaticID
+        var realtimeVoiceSelection = SettingsTalkRealtimeVoiceSelection(rawValue: nil)
+        var speechLocale = SettingsTalkSpeechLocale(value: TalkSpeechLocale.automaticID)
         var talkButtonEnabled = true
         var talkBackgroundEnabled = false
         var talkSpeakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
@@ -288,8 +288,8 @@ struct SettingsTalkPreferencesFeature {
 
             case let .preferencesSynced(sync):
                 state.providerSelectionRaw = sync.providerSelection.rawValue
-                state.realtimeVoiceSelectionRaw = sync.realtimeVoiceSelection.value
-                state.speechLocale = sync.speechLocale.value
+                state.realtimeVoiceSelection = sync.realtimeVoiceSelection
+                state.speechLocale = sync.speechLocale
                 state.talkButtonEnabled = sync.talkButtonEnabled.isEnabled
                 state.talkBackgroundEnabled = sync.talkBackgroundEnabled.isEnabled
                 state.talkSpeakerphoneEnabled = sync.talkSpeakerphoneEnabled.isEnabled
@@ -304,13 +304,13 @@ struct SettingsTalkPreferencesFeature {
 
             case let .realtimeVoiceSelectionChanged(change):
                 let voice = change.voice
-                state.realtimeVoiceSelectionRaw = voice.value
+                state.realtimeVoiceSelection = voice
                 return .run { _ in
                     await preferencesClient.setRealtimeVoiceSelection(voice)
                 }
 
             case let .speechLocaleChanged(change):
-                state.speechLocale = change.locale.value
+                state.speechLocale = change.locale
                 return .none
 
             case let .talkBackgroundEnabledChanged(change):

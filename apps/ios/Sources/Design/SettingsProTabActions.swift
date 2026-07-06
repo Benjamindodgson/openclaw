@@ -873,13 +873,13 @@ extension SettingsProTab {
 
     var talkRealtimeVoiceSelectionBinding: Binding<String> {
         Binding(
-            get: { self.talkPreferencesStore.realtimeVoiceSelectionRaw },
+            get: { self.talkPreferencesStore.realtimeVoiceSelection.value },
             set: { self.updateTalkRealtimeVoiceSelection($0) })
     }
 
     var talkSpeechLocaleBinding: Binding<String> {
         Binding(
-            get: { self.talkPreferencesStore.speechLocale },
+            get: { self.talkPreferencesStore.speechLocale.value },
             set: { self.updateTalkSpeechLocale($0) })
     }
 
