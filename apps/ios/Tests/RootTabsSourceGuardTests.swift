@@ -1553,11 +1553,16 @@ struct RootTabsSourceGuardTests {
 
     @Test func `command sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
+        let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
         let feature = try Self.extract(
             source,
             from: "@Reducer\nstruct CommandSessionsFeature",
             to: "enum CommandSessionsStoreFactory")
 
+        #expect(source.contains("struct CommandSessionsFailureMessage: Equatable, Sendable"))
+        #expect(feature.contains("var loadErrorText: CommandSessionsFailureMessage?"))
+        #expect(feature.contains("state.loadErrorText = .init(value: \"Try again after the gateway reconnects.\")"))
+        #expect(commandCenterSource.contains("detail: loadErrorText.value"))
         #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
         #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
         #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
@@ -1565,6 +1570,9 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
         #expect(feature.contains("switch response.result"))
+        #expect(!feature.contains("var loadErrorText: String?"))
+        #expect(!feature.contains("state.loadErrorText = \"Try again after the gateway reconnects.\""))
+        #expect(!commandCenterSource.contains("detail: loadErrorText)"))
         #expect(!feature.contains("var sessionsAvailable: Bool"))
     }
 
