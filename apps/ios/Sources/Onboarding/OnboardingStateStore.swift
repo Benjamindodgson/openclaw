@@ -71,6 +71,12 @@ struct OnboardingConnectionIssueStatusText: Equatable, Sendable { var value: Str
 
 struct OnboardingConnectionPauseReconnect: Equatable, Sendable { var value: Bool }
 
+struct OnboardingConnectionClearsIssue: Equatable, Sendable { var value: Bool }
+
+struct OnboardingGatewayMarkedCompleted: Equatable, Sendable { var value: Bool }
+
+struct OnboardingPairingResumeRequestTime: Equatable, Sendable { var value: Date }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -234,13 +240,13 @@ struct OnboardingStatusFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct AutomaticPairingResumeRequest: Equatable, Sendable { var now: Date }
+        struct AutomaticPairingResumeRequest: Equatable, Sendable { var now: OnboardingPairingResumeRequestTime }
 
         struct ConnectionStart: Equatable, Sendable {
             var id: OnboardingConnectionID
             var message: OnboardingConnectionMessage
             var statusLine: OnboardingConnectionStatusLine
-            var clearsIssue: Bool
+            var clearsIssue: OnboardingConnectionClearsIssue
         }
 
         struct ConnectionStatusUpdate: Equatable, Sendable {
@@ -248,7 +254,9 @@ struct OnboardingStatusFeature {
             var statusLine: OnboardingConnectionStatusLine
         }
 
-        struct GatewayConnectionCompletion: Equatable, Sendable { var markedCompleted: Bool }
+        struct GatewayConnectionCompletion: Equatable, Sendable {
+            var markedCompleted: OnboardingGatewayMarkedCompleted
+        }
 
         struct ConnectionIssueDetection: Equatable, Sendable {
             var issue: GatewayConnectionIssue
@@ -288,12 +296,12 @@ struct OnboardingStatusFeature {
                 state.shouldResumePairingAutomatically = false
                 guard state.issue.needsPairing, state.connectingGatewayID == nil else { return .none }
                 if let last = state.lastPairingAutoResumeAttemptAt {
-                    let elapsedSinceLastAttempt = request.now.timeIntervalSince(last)
+                    let elapsedSinceLastAttempt = request.now.value.timeIntervalSince(last)
                     if elapsedSinceLastAttempt < 6 {
                         return .none
                     }
                 }
-                state.lastPairingAutoResumeAttemptAt = request.now
+                state.lastPairingAutoResumeAttemptAt = request.now.value
                 state.shouldResumePairingAutomatically = true
                 return .none
 
@@ -333,7 +341,7 @@ struct OnboardingStatusFeature {
 
             case let .connectionStarted(start):
                 state.connectingGatewayID = start.id.value
-                if start.clearsIssue {
+                if start.clearsIssue.value {
                     state.issue = .none
                     state.shouldShowAuthStep = false
                 }
@@ -363,7 +371,7 @@ struct OnboardingStatusFeature {
 
             case let .gatewayConnected(completion):
                 state.statusLine = "Connected."
-                if completion.markedCompleted {
+                if completion.markedCompleted.value {
                     state.didMarkCompleted = true
                 }
                 return .none

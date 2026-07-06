@@ -345,7 +345,7 @@ struct OnboardingWizardView: View {
                     OnboardingStateStore.markCompleted(mode: selectedMode)
                 }
                 self.statusStore.send(.gatewayConnected(.init(
-                    markedCompleted: shouldMarkCompleted && selectedMode != nil)))
+                    markedCompleted: .init(value: shouldMarkCompleted && selectedMode != nil))))
                 self.stepStore.send(.stepChanged(.init(step: .success)))
             }
             .onChange(of: self.scenePhase) { _, newValue in
@@ -770,7 +770,7 @@ extension OnboardingWizardView {
                 id: .init(value: "setup-code"),
                 message: .init(value: "Connecting via setup code..."),
                 statusLine: .init(value: "Setup code loaded. Connecting to \(link.host):\(link.port)..."),
-                clearsIssue: false)))
+                clearsIssue: .init(value: false))))
             self.applyGatewayLink(link)
             self.stepStore.send(.stepChanged(.init(step: .connect)))
             await self.connectManual()
@@ -877,7 +877,7 @@ extension OnboardingWizardView {
     private func attemptAutomaticPairingResumeIfNeeded() {
         guard self.scenePhase == .active else { return }
         guard self.step == .auth else { return }
-        self.statusStore.send(.automaticPairingResumeRequested(.init(now: Date())))
+        self.statusStore.send(.automaticPairingResumeRequested(.init(now: .init(value: Date()))))
         guard self.statusStore.shouldResumePairingAutomatically else { return }
         self.resumeAfterPairingApprovalInBackground()
     }
@@ -992,7 +992,7 @@ extension OnboardingWizardView {
             id: .init(value: gateway.id),
             message: .init(value: "Connecting to \(gateway.name)…"),
             statusLine: .init(value: "Connecting to \(gateway.name)…"),
-            clearsIssue: true)))
+            clearsIssue: .init(value: true))))
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connect(gateway)
     }
@@ -1017,7 +1017,7 @@ extension OnboardingWizardView {
             id: .init(value: "manual"),
             message: .init(value: "Connecting to \(request.host)…"),
             statusLine: .init(value: "Connecting to \(request.host):\(request.port)…"),
-            clearsIssue: true)))
+            clearsIssue: .init(value: true))))
         defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
             token: self.gatewayToken,
@@ -1039,7 +1039,7 @@ extension OnboardingWizardView {
                 id: .init(value: connectionID),
                 message: .init(value: "Retrying…"),
                 statusLine: .init(value: "Retrying last connection…"),
-                clearsIssue: false)))
+                clearsIssue: .init(value: false))))
         } else {
             self.statusStore.send(.connectionActivityStarted(.init(id: .init(value: connectionID))))
         }
@@ -1068,7 +1068,7 @@ extension OnboardingWizardView {
                 id: .init(value: "trust-certificate"),
                 message: .init(value: "Updating gateway certificate…"),
                 statusLine: .init(value: "Updating gateway certificate…"),
-                clearsIssue: false)))
+                clearsIssue: .init(value: false))))
             defer { self.statusStore.send(.connectionFinished) }
             _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)
             return
