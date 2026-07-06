@@ -241,7 +241,7 @@ extension SettingsProTab {
     func syncApprovalState() {
         let pendingApproval = self.appModel.pendingExecApprovalPrompt
         self.approvalsStore.send(.approvalsSynced(.init(
-            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
+            isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled),
             gatewayConnected: self.gatewayConnected,
             notificationsNeedAttention: self.notificationStore.needsAttention,
             hasPendingApproval: pendingApproval != nil,

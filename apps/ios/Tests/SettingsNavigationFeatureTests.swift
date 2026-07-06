@@ -155,7 +155,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.approvalsSynced(.init(
-            isAppleReviewDemoModeEnabled: true,
+            isAppleReviewDemoModeEnabled: .init(value: true),
             gatewayConnected: true,
             notificationsNeedAttention: true,
             hasPendingApproval: true,
