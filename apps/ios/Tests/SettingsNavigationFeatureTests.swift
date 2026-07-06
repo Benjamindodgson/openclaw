@@ -648,8 +648,8 @@ struct SettingsNavigationFeatureTests {
             gatewayServerName: .init(value: "openclaw-gateway"))))
         {
             $0.gatewayDisplayStatusText = .init(value: "Connected")
-            $0.gatewayStatusConnected = true
-            $0.gatewayAgentCount = 2
+            $0.gatewayStatusConnected = .init(value: true)
+            $0.gatewayAgentCount = .init(value: 2)
             $0.gatewayRemoteAddress = .init(value: "100.64.1.2:18789")
             $0.gatewayServerName = .init(value: "openclaw-gateway")
         }
@@ -661,10 +661,10 @@ struct SettingsNavigationFeatureTests {
             gatewayRemoteAddress: .init(value: nil),
             gatewayServerName: .init(value: nil))))
         {
-            $0.isAppleReviewDemoModeEnabled = true
-            $0.gatewayStatusConnected = false
+            $0.isAppleReviewDemoModeEnabled = .init(value: true)
+            $0.gatewayStatusConnected = .init(value: false)
             $0.gatewayDisplayStatusText = .init(value: "Offline")
-            $0.gatewayAgentCount = 3
+            $0.gatewayAgentCount = .init(value: 3)
             $0.gatewayRemoteAddress = .init(value: nil)
             $0.gatewayServerName = .init(value: nil)
         }
@@ -680,8 +680,8 @@ struct SettingsNavigationFeatureTests {
         #expect(SettingsGatewayConnectionFeature.State().gatewayServer == "OpenClaw Gateway")
 
         var connectedState = SettingsGatewayConnectionFeature.State()
-        connectedState.gatewayStatusConnected = true
-        connectedState.gatewayAgentCount = 1
+        connectedState.gatewayStatusConnected = .init(value: true)
+        connectedState.gatewayAgentCount = .init(value: 1)
         connectedState.gatewayRemoteAddress = .init(value: "100.64.1.2:18789")
         connectedState.gatewayServerName = .init(value: "openclaw-gateway")
         #expect(connectedState.gatewayStatusDetail == "Connected")
@@ -693,9 +693,9 @@ struct SettingsNavigationFeatureTests {
         #expect(connectedState.gatewayServer == "openclaw-gateway")
 
         var demoState = SettingsGatewayConnectionFeature.State()
-        demoState.isAppleReviewDemoModeEnabled = true
-        demoState.gatewayStatusConnected = true
-        demoState.gatewayAgentCount = 3
+        demoState.isAppleReviewDemoModeEnabled = .init(value: true)
+        demoState.gatewayStatusConnected = .init(value: true)
+        demoState.gatewayAgentCount = .init(value: 3)
         #expect(demoState.gatewayStatusDetail == "Apple Review demo mode")
         #expect(demoState.gatewayStatusValue == "demo")
         #expect(demoState.gatewayStatusColor == OpenClawBrand.accent)

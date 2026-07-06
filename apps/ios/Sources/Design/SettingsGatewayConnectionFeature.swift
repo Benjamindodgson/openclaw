@@ -33,39 +33,39 @@ struct SettingsGatewayConnectionFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var connectingGatewayID: GatewayConnectionID?
-        var gatewayAgentCount = 0
+        var gatewayAgentCount = Action.GatewayAgentCount(value: 0)
         var gatewayDisplayStatusText = GatewayDisplayStatusText(value: "Offline")
         var gatewayRemoteAddress = GatewayRemoteAddress(value: nil)
         var gatewayServerName = GatewayServerName(value: nil)
-        var gatewayStatusConnected = false
+        var gatewayStatusConnected = Action.GatewayConnectionStatusConnected(value: false)
         var discoveredGatewayConnectionResult: DiscoveredGatewayConnectionResult?
-        var isAppleReviewDemoModeEnabled = false
+        var isAppleReviewDemoModeEnabled = Action.GatewayAppleReviewDemoModeEnabled(value: false)
 
         var gatewayConnected: Bool {
-            !self.isAppleReviewDemoModeEnabled && self.gatewayStatusConnected
+            !self.isAppleReviewDemoModeEnabled.value && self.gatewayStatusConnected.value
         }
 
         var gatewayStatusDetail: String {
-            if self.isAppleReviewDemoModeEnabled { return "Apple Review demo mode" }
+            if self.isAppleReviewDemoModeEnabled.value { return "Apple Review demo mode" }
             return self.gatewayConnected ? "Connected" : self.gatewayDisplayStatusText.value
         }
 
         var gatewayStatusValue: String {
-            if self.isAppleReviewDemoModeEnabled { return "demo" }
+            if self.isAppleReviewDemoModeEnabled.value { return "demo" }
             return self.gatewayConnected ? "online" : "offline"
         }
 
         var gatewayStatusColor: Color {
-            if self.isAppleReviewDemoModeEnabled { return OpenClawBrand.accent }
+            if self.isAppleReviewDemoModeEnabled.value { return OpenClawBrand.accent }
             return self.gatewayConnected ? OpenClawBrand.ok : .secondary
         }
 
         var gatewayDiagnosticConnected: Bool {
-            self.isAppleReviewDemoModeEnabled || self.gatewayConnected
+            self.isAppleReviewDemoModeEnabled.value || self.gatewayConnected
         }
 
         var gatewaySummaryDetail: String {
-            "\(self.gatewayStatusDetail) • \(Self.agentSummary(count: self.gatewayAgentCount))"
+            "\(self.gatewayStatusDetail) • \(Self.agentSummary(count: self.gatewayAgentCount.value))"
         }
 
         var gatewayAddress: String {
@@ -169,10 +169,10 @@ struct SettingsGatewayConnectionFeature {
                 }
 
             case let .gatewayStatusSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
-                state.gatewayStatusConnected = sync.gatewayStatusConnected.value
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
+                state.gatewayStatusConnected = sync.gatewayStatusConnected
                 state.gatewayDisplayStatusText = sync.gatewayDisplayStatusText
-                state.gatewayAgentCount = sync.gatewayAgentCount.value
+                state.gatewayAgentCount = sync.gatewayAgentCount
                 state.gatewayRemoteAddress = sync.gatewayRemoteAddress
                 state.gatewayServerName = sync.gatewayServerName
                 return .none
