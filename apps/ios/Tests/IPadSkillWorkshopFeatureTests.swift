@@ -10,7 +10,7 @@ struct IPadSkillWorkshopFeatureTests {
         initialState.proposals = [Self.proposal(id: "pending-1", status: "pending")]
         initialState.isLoading = .init(value: true)
         initialState.inspectingProposalID = "pending-1"
-        initialState.errorText = "old error"
+        initialState.errorText = .init(value: "old error")
         let store = TestStore(initialState: initialState) {
             IPadSkillWorkshopFeature(client: Self.client())
         }
@@ -137,7 +137,7 @@ struct IPadSkillWorkshopFeatureTests {
             result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
         {
             $0.isLoading = .init(value: false)
-            $0.errorText = "skill boom"
+            $0.errorText = .init(value: "skill boom")
         }
     }
 
@@ -165,7 +165,7 @@ struct IPadSkillWorkshopFeatureTests {
             result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
         {
             $0.busyAction = nil
-            $0.errorText = "skill boom"
+            $0.errorText = .init(value: "skill boom")
         }
     }
 

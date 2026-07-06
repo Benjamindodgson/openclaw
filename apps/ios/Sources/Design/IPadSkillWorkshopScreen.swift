@@ -130,7 +130,7 @@ struct IPadSkillWorkshopFeature {
         var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)
         var inspectingProposalID: String?
         var busyAction: IPadSkillProposalAction?
-        var errorText: String?
+        var errorText: IPadSkillWorkshopFailureMessage?
         var noticeText: String?
         var presentedProposalRoute: IPadSkillProposalSheetRoute?
 
@@ -316,7 +316,7 @@ struct IPadSkillWorkshopFeature {
 
                 case let .failure(error):
                     state.inspectingProposalID = nil
-                    state.errorText = error.message
+                    state.errorText = .init(value: error.message)
                     return .none
                 }
 
@@ -364,7 +364,7 @@ struct IPadSkillWorkshopFeature {
 
                 case let .failure(error):
                     state.busyAction = nil
-                    state.errorText = error.message
+                    state.errorText = .init(value: error.message)
                     return .none
                 }
 
@@ -440,7 +440,7 @@ struct IPadSkillWorkshopFeature {
 
                 case let .failure(error):
                     if response.force || state.proposals.isEmpty {
-                        state.errorText = error.message
+                        state.errorText = .init(value: error.message)
                     }
                     return .none
                 }
@@ -622,7 +622,7 @@ struct IPadSkillWorkshopScreen: View {
                         .foregroundStyle(OpenClawBrand.accent)
                 }
                 if let errorText = self.store.errorText {
-                    Text(errorText)
+                    Text(errorText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
                 }
@@ -678,7 +678,7 @@ struct IPadSkillWorkshopScreen: View {
                         .foregroundStyle(OpenClawBrand.accent)
                 }
                 if let errorText = self.store.errorText {
-                    Text(errorText)
+                    Text(errorText.value)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)
                 }
