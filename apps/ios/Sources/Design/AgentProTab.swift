@@ -453,6 +453,10 @@ struct AgentSkillPolicyMutationFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct AgentSkillEditorFeature {
     // swiftformat:disable redundantSendable
@@ -471,7 +475,7 @@ struct AgentSkillEditorFeature {
 
         struct MutationFailure: Equatable, Sendable {
             var key: String
-            var message: String
+            var message: AgentSkillEditorMutationFailureMessage
         }
 
         struct MutationSuccess: Equatable, Sendable {
@@ -551,7 +555,7 @@ struct AgentSkillEditorFeature {
                 state.busyKeys.remove(failure.key)
                 state.messages[failure.key] = AgentProTab.SkillEditorMessage(
                     kind: .error,
-                    text: failure.message)
+                    text: failure.message.value)
                 return .none
             }
         }
