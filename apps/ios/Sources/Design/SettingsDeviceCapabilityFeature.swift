@@ -34,14 +34,14 @@ struct SettingsDeviceCapabilityFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var cameraEnabled = CameraEnabled(value: true)
-        var locationModeRaw = OpenClawLocationMode.off.rawValue
+        var locationModeRaw = LocationModeRawValue(rawValue: OpenClawLocationMode.off.rawValue)
         var preventSleep = PreventSleepEnabled(value: true)
 
         var enabledCount: Int {
             var count = 0
             if self.cameraEnabled.value { count += 1 }
             if self.preventSleep.value { count += 1 }
-            if self.locationModeRaw != OpenClawLocationMode.off.rawValue { count += 1 }
+            if self.locationModeRaw.rawValue != OpenClawLocationMode.off.rawValue { count += 1 }
             return count
         }
 
@@ -62,6 +62,8 @@ struct SettingsDeviceCapabilityFeature {
     struct LocationModeChange: Equatable, Sendable {
         var mode: SettingsDeviceCapabilityLocationMode
     }
+
+    struct LocationModeRawValue: Equatable, Sendable { var rawValue: String }
 
     struct PreventSleepEnabled: Equatable, Sendable { var value: Bool }
     struct PreventSleepChange: Equatable, Sendable { var enabled: PreventSleepEnabled }
@@ -85,11 +87,11 @@ struct SettingsDeviceCapabilityFeature {
             case let .capabilitiesSynced(sync):
                 state.cameraEnabled = sync.cameraEnabled
                 state.preventSleep = sync.preventSleep
-                state.locationModeRaw = sync.locationMode.rawValue
+                state.locationModeRaw = .init(rawValue: sync.locationMode.rawValue)
                 return .none
 
             case let .locationModeChanged(change):
-                state.locationModeRaw = change.mode.rawValue
+                state.locationModeRaw = .init(rawValue: change.mode.rawValue)
                 return .none
 
             case let .preventSleepChanged(change):
