@@ -232,6 +232,7 @@ struct SettingsManualGatewayEndpointFeature {
     struct ManualConnectionHost: Equatable, Sendable { var value: String }
     struct ManualConnectionResolvedPort: Equatable, Sendable { var value: Int }
     struct ManualConnectionTLS: Equatable, Sendable { var value: Bool }
+    struct GatewayPreflightStatusText: Equatable, Sendable { var value: String? }
 
     struct ManualConnectionRequest: Equatable, Sendable {
         var host: ManualConnectionHost
@@ -248,7 +249,7 @@ struct SettingsManualGatewayEndpointFeature {
 
     enum GatewayPreflightResult: Equatable, Sendable {
         struct Blocked: Equatable, Sendable {
-            var statusText: String?
+            var statusText: GatewayPreflightStatusText
         }
 
         struct LocalNetworkAccess: Equatable, Sendable {
@@ -350,12 +351,12 @@ struct SettingsManualGatewayEndpointFeature {
                 state.preflightResult = nil
                 let trimmed = request.host.value.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else {
-                    state.preflightResult = .blocked(.init(statusText: nil))
+                    state.preflightResult = .blocked(.init(statusText: .init(value: nil)))
                     return .none
                 }
                 if State.isTailnetHostOrIP(trimmed), !request.hasTailnetIPv4.value {
                     state.preflightResult = .blocked(.init(
-                        statusText: "Tailscale is off on this device. Turn it on, then try again."))
+                        statusText: .init(value: "Tailscale is off on this device. Turn it on, then try again.")))
                     return .none
                 }
                 state.preflightResult = .requestLocalNetworkAccess(.init(reason: .settingsPreflight))

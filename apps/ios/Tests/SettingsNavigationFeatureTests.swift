@@ -2027,7 +2027,7 @@ struct SettingsNavigationFeatureTests {
             host: .init(value: "   "),
             hasTailnetIPv4: .init(value: true))))
         {
-            $0.preflightResult = .blocked(.init(statusText: nil))
+            $0.preflightResult = .blocked(.init(statusText: .init(value: nil)))
         }
 
         await store.send(.preflightResultHandled) {
@@ -2039,7 +2039,7 @@ struct SettingsNavigationFeatureTests {
             hasTailnetIPv4: .init(value: false))))
         {
             $0.preflightResult = .blocked(.init(
-                statusText: "Tailscale is off on this device. Turn it on, then try again."))
+                statusText: .init(value: "Tailscale is off on this device. Turn it on, then try again.")))
         }
 
         await store.send(.preflightResultHandled) {
