@@ -1065,7 +1065,7 @@ extension RootTabs {
             gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
             hasConnectedOnce: self.hasConnectedOnce,
             onboardingComplete: self.onboardingComplete,
-            hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
+            gatewayConfigPresence: .init(hasExistingConfig: self.hasExistingGatewayConfig()),
             shouldPresentOnLaunch: shouldPresentOnLaunch)
     }
 
@@ -1122,7 +1122,7 @@ extension RootTabs {
                 quickSetupDismissed: self.quickSetupDismissed,
                 showOnboarding: self.presentationStore.showOnboarding,
                 gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
-                hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
+                gatewayConfigPresence: .init(hasExistingConfig: self.hasExistingGatewayConfig()),
                 discoveredGatewayCount: .init(value: self.gatewayController.gateways.count)))))
     }
 }
