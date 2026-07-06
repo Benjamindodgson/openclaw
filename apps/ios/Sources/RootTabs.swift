@@ -1120,7 +1120,7 @@ extension RootTabs {
         self.presentationStore.send(.quickSetupSnapshotChanged(
             RootPresentationFeature.QuickSetupSnapshotChange(snapshot: RootPresentationFeature.QuickSetupSnapshot(
                 quickSetupDismissal: .init(isDismissed: self.quickSetupDismissed),
-                showOnboarding: self.presentationStore.showOnboarding,
+                onboardingPresentation: self.presentationStore.onboardingPresentation,
                 gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
                 gatewayConfigPresence: .init(hasExistingConfig: self.hasExistingGatewayConfig()),
                 discoveredGatewayCount: .init(value: self.gatewayController.gateways.count)))))
@@ -1143,7 +1143,7 @@ extension RootTabs {
 
     private var onboardingPresentedBinding: Binding<Bool> {
         Binding(
-            get: { self.presentationStore.showOnboarding },
+            get: { self.presentationStore.onboardingPresentation.isPresented },
             set: { self.setOnboardingPresented($0) })
     }
 
