@@ -115,6 +115,8 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
+struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
 
@@ -413,13 +415,13 @@ struct IPadWorkboardFeature {
         case dispatchResponse(DispatchResponse)
 
         struct DraftNotesChange: Equatable, Sendable {
-            var notes: String
+            var notes: IPadWorkboardDraftNotes
         }
 
         case draftNotesChanged(DraftNotesChange)
 
         struct DraftTitleChange: Equatable, Sendable {
-            var title: String
+            var title: IPadWorkboardDraftTitle
         }
 
         case draftTitleChanged(DraftTitleChange)
@@ -616,11 +618,11 @@ struct IPadWorkboardFeature {
                 }
 
             case let .draftNotesChanged(change):
-                state.draftNotes = change.notes
+                state.draftNotes = change.notes.value
                 return .none
 
             case let .draftTitleChanged(change):
-                state.draftTitle = change.title
+                state.draftTitle = change.title.value
                 return .none
 
             case let .moveRequested(request):
