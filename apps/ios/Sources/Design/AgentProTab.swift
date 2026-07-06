@@ -935,6 +935,7 @@ struct AgentNavigationFeature {
 }
 
 // swiftformat:disable redundantSendable
+struct AgentOverviewSearchPresentation: Equatable, Sendable { var isPresented: Bool }
 struct AgentOverviewSearchText: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -944,8 +945,12 @@ struct AgentOverviewFilterFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var rosterFilter: AgentRosterFilter = .all
-        var searchPresented = false
+        var searchPresentation = AgentOverviewSearchPresentation(isPresented: false)
         var searchText = AgentOverviewSearchText(value: "")
+
+        var searchPresented: Bool {
+            self.searchPresentation.isPresented
+        }
 
         var hasActiveFilters: Bool {
             self.rosterFilter != .all
@@ -979,7 +984,7 @@ struct AgentOverviewFilterFeature {
                 return .none
 
             case .searchButtonTapped:
-                state.searchPresented.toggle()
+                state.searchPresentation.isPresented.toggle()
                 return .none
 
             case let .searchTextChanged(change):

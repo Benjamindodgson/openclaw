@@ -477,10 +477,10 @@ struct AgentOverviewFilterFeatureTests {
         }
 
         await store.send(.searchButtonTapped) {
-            $0.searchPresented = true
+            $0.searchPresentation = .init(isPresented: true)
         }
         await store.send(.searchButtonTapped) {
-            $0.searchPresented = false
+            $0.searchPresentation = .init(isPresented: false)
         }
     }
 
