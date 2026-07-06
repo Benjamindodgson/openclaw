@@ -277,8 +277,8 @@ struct OnboardingWizardView: View {
                             self.handleScannedSetupCode(code)
                         },
                         onError: { error in
-                            self.statusStore.send(.scannerErrorReceived(.init(message: error)))
-                            self.presentationStore.send(.qrScannerErrorReceived(.init(message: error)))
+                            self.statusStore.send(.scannerErrorReceived(.init(message: .init(value: error))))
+                            self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: error))))
                         },
                         onDismiss: {
                             self.presentationStore.send(.qrScannerDismissed)
@@ -843,7 +843,7 @@ extension OnboardingWizardView {
         case let .appleReviewSetupCode(setupCode):
             self.handleScannedSetupCode(setupCode.code)
         case let .failure(failure):
-            self.presentationStore.send(.qrScannerErrorReceived(.init(message: failure.message)))
+            self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message))))
         }
     }
 

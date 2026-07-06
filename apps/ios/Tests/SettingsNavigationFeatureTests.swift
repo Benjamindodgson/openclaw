@@ -140,7 +140,7 @@ struct SettingsNavigationFeatureTests {
             SettingsPresentationFeature()
         }
 
-        await store.send(.qrScannerErrorReceived(.init(message: "Camera unavailable"))) {
+        await store.send(.qrScannerErrorReceived(.init(message: .init(value: "Camera unavailable")))) {
             $0.showQRScanner = false
             $0.scannerError = "Camera unavailable"
         }
