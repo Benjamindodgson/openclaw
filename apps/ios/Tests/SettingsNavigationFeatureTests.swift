@@ -2209,7 +2209,7 @@ struct SettingsNavigationFeatureTests {
         {
             $0.cameraEnabled = .init(value: false)
             $0.preventSleep = .init(value: true)
-            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
         }
     }
 
@@ -2231,12 +2231,12 @@ struct SettingsNavigationFeatureTests {
         await store.send(.locationModeChanged(SettingsDeviceCapabilityFeature.LocationModeChange(
             mode: .init(mode: .always))))
         {
-            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
         }
         await store.send(.locationModeChanged(SettingsDeviceCapabilityFeature.LocationModeChange(
             mode: .init(rawValue: "unexpected-location-mode"))))
         {
-            $0.locationModeRaw = "unexpected-location-mode"
+            $0.locationModeRaw = .init(rawValue: "unexpected-location-mode")
         }
     }
 
@@ -2245,7 +2245,7 @@ struct SettingsNavigationFeatureTests {
         #expect(state.enabledCount == 2)
         #expect(state.permissionsDetail == "2 enabled")
 
-        state.locationModeRaw = OpenClawLocationMode.always.rawValue
+        state.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
         #expect(state.enabledCount == 3)
         #expect(state.permissionsDetail == "3 enabled")
 
