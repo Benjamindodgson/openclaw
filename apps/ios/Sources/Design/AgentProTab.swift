@@ -215,7 +215,7 @@ struct AgentProTab: View {
     var clawHubQueryBinding: Binding<String> {
         Binding(
             get: { self.clawHubStore.query },
-            set: { self.clawHubStore.send(.queryChanged(.init(query: $0))) })
+            set: { self.clawHubStore.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
     var clawHubResults: [ClawHubSearchResultLite] {
@@ -675,6 +675,7 @@ struct AgentSkillFilterFeature {
 // swiftformat:disable redundantSendable
 struct AgentClawHubInstallSlug: Equatable, Sendable { var value: String }
 struct AgentClawHubInstallFailureMessage: Equatable, Sendable { var value: String }
+struct AgentClawHubSearchQuery: Equatable, Sendable { var value: String }
 struct AgentClawHubSearchFailureMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -692,7 +693,7 @@ struct AgentClawHubSearchFeature {
 
     enum Action: Equatable, Sendable {
         struct QueryChange: Equatable, Sendable {
-            var query: String
+            var query: AgentClawHubSearchQuery
         }
 
         struct SearchFailure: Equatable, Sendable {
@@ -727,7 +728,7 @@ struct AgentClawHubSearchFeature {
         Reduce { state, action in
             switch action {
             case let .queryChanged(change):
-                state.query = change.query
+                state.query = change.query.value
                 return .none
 
             case .searchRequested:
