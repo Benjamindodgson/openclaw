@@ -63,7 +63,7 @@ struct IPadWorkboardFeatureTests {
         let boards = [IPadWorkboardBoardSummary(id: "ops"), IPadWorkboardBoardSummary(id: "planning")]
         var client = Self.failingClient()
         client.listCards = { boardScope in
-            #expect(boardScope.boardID == "planning")
+            #expect(boardScope.boardID == .init(value: "planning"))
             return response
         }
         client.listBoards = { boards }
@@ -83,7 +83,7 @@ struct IPadWorkboardFeatureTests {
             $0.selectedStatus = .init(value: "active")
         }
         await store.receive(.refreshResponse(.init(
-            boardScope: .init(boardID: "planning"),
+            boardScope: .init(boardID: .init(value: "planning")),
             force: false,
             result: .success(response))))
         {
@@ -112,7 +112,7 @@ struct IPadWorkboardFeatureTests {
 
         await store.send(.refreshResponse(
             .init(
-                boardScope: .init(boardID: "old"),
+                boardScope: .init(boardID: .init(value: "old")),
                 force: true,
                 result: .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"])))))
         {
