@@ -21,6 +21,10 @@ struct SettingsGatewaySetupProblemMessage: Equatable, Sendable {
     var value: String?
 }
 
+struct SettingsManualConnectionFailureMessage: Equatable, Sendable {
+    var value: String
+}
+
 struct SettingsGatewayStatusText: Equatable, Sendable {
     var value: String
 }
@@ -175,6 +179,11 @@ struct SettingsGatewaySetupStatusFeature {
 
 @Reducer
 struct SettingsManualGatewayEndpointFeature {
+    static let hostRequiredFailureMessage = SettingsManualConnectionFailureMessage(
+        value: "Failed: host required")
+    static let invalidPortFailureMessage = SettingsManualConnectionFailureMessage(
+        value: "Failed: invalid port")
+
     private let localNetworkAccessClientOverride: SettingsLocalNetworkAccessClient?
 
     init(localNetworkAccessClient: SettingsLocalNetworkAccessClient? = nil) {
@@ -231,7 +240,7 @@ struct SettingsManualGatewayEndpointFeature {
     }
 
     enum ManualConnectionResult: Equatable, Sendable {
-        struct Failure: Equatable, Sendable { var message: String }
+        struct Failure: Equatable, Sendable { var message: SettingsManualConnectionFailureMessage }
 
         case failure(Failure)
         case request(ManualConnectionRequest)
@@ -320,11 +329,11 @@ struct SettingsManualGatewayEndpointFeature {
                 state.manualConnectionResult = nil
                 let host = state.manualGatewayHost.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !host.isEmpty else {
-                    state.manualConnectionResult = .failure(.init(message: "Failed: host required"))
+                    state.manualConnectionResult = .failure(.init(message: Self.hostRequiredFailureMessage))
                     return .none
                 }
                 guard request.isPortValid.value else {
-                    state.manualConnectionResult = .failure(.init(message: "Failed: invalid port"))
+                    state.manualConnectionResult = .failure(.init(message: Self.invalidPortFailureMessage))
                     return .none
                 }
                 state.manualConnectionResult = .request(ManualConnectionRequest(

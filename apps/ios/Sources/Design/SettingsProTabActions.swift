@@ -414,7 +414,7 @@ extension SettingsProTab {
 
         switch result {
         case let .failure(failure):
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message))))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message.value))))
 
         case let .request(request):
             self.gatewayConnectionStore.send(.connectionStarted(.init(gatewayID: .init(value: "manual"))))
