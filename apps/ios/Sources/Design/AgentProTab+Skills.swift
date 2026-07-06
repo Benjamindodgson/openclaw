@@ -649,7 +649,7 @@ extension AgentProTab {
         await self.runSkillConfigMutation(skill) {
             let params = SkillUpdateParams(skillKey: skill.effectiveSkillKey, enabled: enabled)
             _ = try await self.requestGateway(method: "skills.update", params: params, timeoutSeconds: 20)
-            return .init(message: enabled ? "Skill enabled." : "Skill disabled.")
+            return .init(message: .init(value: enabled ? "Skill enabled." : "Skill disabled."))
         }
     }
 
@@ -661,8 +661,8 @@ extension AgentProTab {
             _ = try await self.requestGateway(method: "skills.update", params: params, timeoutSeconds: 20)
             self.skillEditorStore.send(.apiKeyDraftCleared(.init(key: skill.effectiveSkillKey)))
             return apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ? .init(message: "API key cleared.")
-                : .init(message: "API key saved.")
+                ? .init(message: .init(value: "API key cleared."))
+                : .init(message: .init(value: "API key saved."))
         }
     }
 
@@ -678,7 +678,7 @@ extension AgentProTab {
                 params: params,
                 timeoutSeconds: 125)
             let message = (try? JSONDecoder().decode(SkillInstallResultLite.self, from: data).message) ?? "Installed."
-            return .init(message: message)
+            return .init(message: .init(value: message))
         }
     }
 

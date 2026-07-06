@@ -137,7 +137,7 @@ struct AgentSkillEditorFeatureTests {
 
         await store.send(.mutationSucceeded(.init(
             key: "skill-a",
-            summary: .init(message: "Skill enabled."))))
+            summary: .init(message: .init(value: "Skill enabled.")))))
         {
             $0.messages = [
                 "skill-a": AgentProTab.SkillEditorMessage(kind: .success, text: "Skill enabled."),
