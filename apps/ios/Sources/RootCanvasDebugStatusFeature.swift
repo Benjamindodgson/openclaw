@@ -53,8 +53,10 @@ struct RootCanvasDebugStatusFeature {
     @ObservableState
     struct State: Equatable, Sendable {}
 
+    struct DebugStatusEnabled: Equatable, Sendable { var isEnabled: Bool }
+
     struct Snapshot: Equatable, Sendable {
-        var isEnabled: Bool
+        var enabled: DebugStatusEnabled
         var gatewayDisplayStatusText: String
         var gatewayServerName: String?
         var gatewayRemoteAddress: String?
@@ -74,8 +76,8 @@ struct RootCanvasDebugStatusFeature {
             switch action {
             case let .snapshotChanged(snapshot):
                 return .run { _ in
-                    await client.setDebugStatusEnabled(snapshot.isEnabled)
-                    guard snapshot.isEnabled else { return }
+                    await client.setDebugStatusEnabled(snapshot.enabled.isEnabled)
+                    guard snapshot.enabled.isEnabled else { return }
 
                     let title = snapshot.gatewayDisplayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
                     let subtitle = snapshot.gatewayServerName ?? snapshot.gatewayRemoteAddress
@@ -89,9 +91,9 @@ struct RootCanvasDebugStatusFeature {
 
 extension RootCanvasDebugStatusFeature.Snapshot {
     @MainActor
-    init(appModel: NodeAppModel, isEnabled: Bool) {
+    init(appModel: NodeAppModel, enabled: RootCanvasDebugStatusFeature.DebugStatusEnabled) {
         self.init(
-            isEnabled: isEnabled,
+            enabled: enabled,
             gatewayDisplayStatusText: appModel.gatewayDisplayStatusText,
             gatewayServerName: appModel.gatewayServerName,
             gatewayRemoteAddress: appModel.gatewayRemoteAddress)
