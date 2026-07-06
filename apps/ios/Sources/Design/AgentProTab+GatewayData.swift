@@ -104,7 +104,7 @@ extension AgentProTab {
         guard let refreshRequest = self.overviewStore.refreshRequest else { return }
 
         let requestID = refreshRequest.id
-        let activeAgentID = refreshRequest.activeAgentID
+        let activeAgentID = refreshRequest.activeAgentID.value
         self.overviewStore.send(.refreshLaunched(.init(requestID: requestID)))
         let skillsParams = Self.agentScopedParams(agentId: activeAgentID)
         async let skills = self.requestOptional(

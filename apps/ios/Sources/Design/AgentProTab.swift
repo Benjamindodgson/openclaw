@@ -793,9 +793,13 @@ struct AgentOverviewLoadFeature {
         var value: Int
     }
 
+    struct ActiveAgentID: Equatable, Sendable {
+        var value: String
+    }
+
     struct RefreshRequest: Equatable, Sendable {
         let id: AgentOverviewRefreshRequestID
-        let activeAgentID: String
+        let activeAgentID: ActiveAgentID
     }
 
     @ObservableState
@@ -814,10 +818,6 @@ struct AgentOverviewLoadFeature {
 
         struct RefreshForce: Equatable, Sendable {
             var isForced: Bool
-        }
-
-        struct ActiveAgentID: Equatable, Sendable {
-            var value: String
         }
 
         struct RefreshRequestPayload: Equatable, Sendable {
@@ -862,7 +862,7 @@ struct AgentOverviewLoadFeature {
                 state.nextRefreshRequestID += 1
                 state.refreshRequest = RefreshRequest(
                     id: .init(value: state.nextRefreshRequestID),
-                    activeAgentID: request.activeAgent.value)
+                    activeAgentID: request.activeAgent)
                 state.isLoading = true
                 state.errorText = .init(value: nil)
                 return .none

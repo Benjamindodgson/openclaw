@@ -371,7 +371,7 @@ struct AgentOverviewLoadFeatureTests {
             $0.nextRefreshRequestID = 1
             $0.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
                 id: .init(value: 1),
-                activeAgentID: "mobile")
+                activeAgentID: .init(value: "mobile"))
         }
         await store.send(.refreshLaunched(.init(requestID: .init(value: 1)))) {
             $0.refreshRequest = nil
@@ -385,7 +385,7 @@ struct AgentOverviewLoadFeatureTests {
         initialState.isLoading = true
         initialState.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
             id: .init(value: 1),
-            activeAgentID: "mobile")
+            activeAgentID: .init(value: "mobile"))
         let store = TestStore(initialState: initialState) {
             AgentOverviewLoadFeature()
         }
