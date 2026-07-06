@@ -401,7 +401,7 @@ struct CommandCenterTab: View {
     private func refreshRecentSessionsIfNeeded() async {
         await self.recentSessionsStore.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: self.scenePhase == .active),
-            sessionsAvailability: .init(isAvailable: self.sessionListAvailable),
+            sessionsAvailability: .init(isAvailable: .init(value: self.sessionListAvailable)),
             currentSession: .init(key: .init(value: self.appModel.chatSessionKey)),
             defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))))).finish()
     }
@@ -796,7 +796,8 @@ struct CommandSessionsScreen: View {
 
     private func refreshSessions() async {
         await self.store.send(.refreshRequested(.init(
-            sessionsAvailability: .init(isAvailable: self.appModel.isCommandSessionListAvailable)))).finish()
+            sessionsAvailability: .init(isAvailable: .init(value: self.appModel.isCommandSessionListAvailable)))))
+            .finish()
     }
 }
 
