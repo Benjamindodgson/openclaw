@@ -401,6 +401,8 @@ struct RootSidebarFeature {
     // swiftformat:disable redundantSendable
     struct LayoutResolutionForce: Equatable, Sendable { var isForced: Bool }
     struct SidebarVisibility: Equatable, Sendable { var isVisible: Bool }
+    struct SidebarUserOverride: Equatable, Sendable { var value: Bool }
+    struct LayoutResolutionState: Equatable, Sendable { var didResolve: Bool }
 
     struct LayoutModeResolution: Equatable, Sendable {
         var layoutMode: RootTabs.SidebarLayoutMode
@@ -413,16 +415,16 @@ struct RootSidebarFeature {
 
     @ObservableState
     struct State: Equatable, Sendable {
-        var isVisible: Bool
-        var userOverridden: Bool
+        var visibility: SidebarVisibility
+        var userOverride: SidebarUserOverride
         var layoutMode: RootTabs.SidebarLayoutMode
-        var didResolveLayout: Bool
+        var layoutResolution: LayoutResolutionState
 
         init(initialVisibility: Bool? = nil) {
-            self.isVisible = initialVisibility ?? false
-            self.userOverridden = initialVisibility != nil
+            self.visibility = .init(isVisible: initialVisibility ?? false)
+            self.userOverride = .init(value: initialVisibility != nil)
             self.layoutMode = .split
-            self.didResolveLayout = false
+            self.layoutResolution = .init(didResolve: false)
         }
 
         static func preferredVisibility(layoutMode: RootTabs.SidebarLayoutMode) -> Bool {
@@ -444,30 +446,30 @@ struct RootSidebarFeature {
             switch action {
             case let .layoutModeResolved(resolution):
                 let previousLayoutMode = state.layoutMode
-                let didResolvePreviousLayout = state.didResolveLayout
+                let didResolvePreviousLayout = state.layoutResolution.didResolve
                 let layoutMode = resolution.layoutMode
                 let layoutModeDidChange = layoutMode != previousLayoutMode
-                state.didResolveLayout = true
+                state.layoutResolution = .init(didResolve: true)
                 state.layoutMode = layoutMode
                 if layoutModeDidChange && didResolvePreviousLayout {
-                    state.userOverridden = false
+                    state.userOverride = .init(value: false)
                 }
-                guard resolution.force.isForced || !state.userOverridden else { return .none }
-                state.isVisible = State.preferredVisibility(layoutMode: layoutMode)
+                guard resolution.force.isForced || !state.userOverride.value else { return .none }
+                state.visibility = .init(isVisible: State.preferredVisibility(layoutMode: layoutMode))
                 return .none
 
             case .showRequested:
-                state.userOverridden = true
-                state.isVisible = true
+                state.userOverride = .init(value: true)
+                state.visibility = .init(isVisible: true)
                 return .none
 
             case .hideRequested:
-                state.userOverridden = true
-                state.isVisible = false
+                state.userOverride = .init(value: true)
+                state.visibility = .init(isVisible: false)
                 return .none
 
             case let .visibilityChanged(change):
-                state.isVisible = change.visibility.isVisible
+                state.visibility = change.visibility
                 return .none
             }
         }

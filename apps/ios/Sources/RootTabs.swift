@@ -953,7 +953,7 @@ extension RootTabs {
     }
 
     private var isSidebarVisible: Bool {
-        self.sidebarStore.isVisible
+        self.sidebarStore.visibility.isVisible
     }
 
     private var isSidebarDrawerLayout: Bool {

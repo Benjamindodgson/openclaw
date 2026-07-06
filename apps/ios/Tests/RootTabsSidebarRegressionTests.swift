@@ -37,13 +37,18 @@ struct RootTabsSidebarRegressionTests {
             to: "struct RootNavigationSelectionFeature")
 
         #expect(source.contains("RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility)"))
-        #expect(reducer.contains("var didResolveLayout: Bool"))
-        #expect(reducer.contains("let didResolvePreviousLayout = state.didResolveLayout"))
-        #expect(reducer.contains("state.didResolveLayout = true"))
+        #expect(reducer.contains("struct LayoutResolutionState: Equatable, Sendable"))
+        #expect(reducer.contains("struct SidebarUserOverride: Equatable, Sendable"))
+        #expect(reducer.contains("var layoutResolution: LayoutResolutionState"))
+        #expect(reducer.contains("var userOverride: SidebarUserOverride"))
+        #expect(reducer.contains("let didResolvePreviousLayout = state.layoutResolution.didResolve"))
+        #expect(reducer.contains("state.layoutResolution = .init(didResolve: true)"))
         #expect(reducer.contains("if layoutModeDidChange && didResolvePreviousLayout"))
         #expect(reducer.contains("struct LayoutResolutionForce: Equatable, Sendable"))
         #expect(reducer.contains("var force: LayoutResolutionForce"))
-        #expect(reducer.contains("guard resolution.force.isForced || !state.userOverridden else { return .none }"))
+        #expect(reducer.contains("guard resolution.force.isForced || !state.userOverride.value else { return .none }"))
+        #expect(!reducer.contains("var didResolveLayout: Bool"))
+        #expect(!reducer.contains("var userOverridden: Bool"))
         #expect(!reducer.contains(
             "struct LayoutModeResolution: Equatable, Sendable {\n        var layoutMode: RootTabs.SidebarLayoutMode\n        var force: Bool"))
     }
