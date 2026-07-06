@@ -4120,6 +4120,7 @@ struct RootTabsSourceGuardTests {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let sectionsSource = try String(contentsOf: Self.settingsProTabSectionsSourceURL(), encoding: .utf8)
         let requestFunction = try Self.extract(
             actionsSource,
             from: "func handleLocationModeRequest",
@@ -4139,9 +4140,16 @@ struct RootTabsSourceGuardTests {
         #expect(locationSource.contains("struct Denied: Equatable, Sendable"))
         #expect(locationSource.contains("case applied(Applied)"))
         #expect(locationSource.contains("case denied(Denied)"))
+        #expect(locationSource.contains("struct SettingsLocationStatusText: Equatable, Sendable { var value: String? }"))
+        #expect(locationSource.contains("var statusText = SettingsLocationStatusText(value: nil)"))
+        #expect(locationSource.contains("state.statusText = .init(value: Self.locationPermissionDeniedStatusText)"))
+        #expect(locationSource.contains("state.statusText = .init(value: nil)"))
+        #expect(locationSource.contains(
+            "private static let locationPermissionDeniedStatusText = \"Location permission was not granted.\""))
         #expect(locationSource.contains("await permissionClient.requestPermission(request.mode)"))
         #expect(locationSource.contains("await gatewayRefreshClient.refreshGatewayRegistration()"))
         #expect(locationSource.contains("return .run { send in"))
+        #expect(sectionsSource.contains("if let locationStatusText = self.locationStore.statusText.value"))
         #expect(settingsSource.contains(".onChange(of: self.locationStore.locationModeApplyResult)"))
         #expect(rootSource.contains("locationStore: self.makeSettingsLocationStore()"))
         #expect(storesSource.contains("func makeSettingsLocationStore()"))
@@ -4152,6 +4160,10 @@ struct RootTabsSourceGuardTests {
         #expect(requestFunction.contains("Task {") == false)
         #expect(requestFunction.contains("requestLocationPermissions") == false)
         #expect(resultFunction.contains("requestLocationPermissions") == false)
+        #expect(!locationSource.contains("var statusText: String?"))
+        #expect(!locationSource.contains("state.statusText = \"Location permission was not granted.\""))
+        #expect(!locationSource.contains("state.statusText = nil"))
+        #expect(!sectionsSource.contains("if let locationStatusText = self.locationStore.statusText {"))
         #expect(!resultFunction.contains("self.gatewayController.refreshActiveGatewayRegistrationFromSettings()"))
         #expect(actionsSource.contains("func applyLocationMode") == false)
     }
