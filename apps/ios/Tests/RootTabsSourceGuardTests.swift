@@ -193,6 +193,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "@Reducer\nstruct AgentSkillPolicyMutationFeature",
             to: "// swiftformat:disable redundantSendable\nstruct AgentSkillEditorAPIKeyDraftKey")
+        let skillEditorFeature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentSkillEditorFeature",
+            to: "// swiftformat:disable redundantSendable\nstruct AgentCronActionID")
         let cronActionFeature = try Self.extract(
             source,
             from: "@Reducer\nstruct AgentCronActionFeature",
@@ -375,14 +379,24 @@ struct RootTabsSourceGuardTests {
             "struct EditorID: Equatable, Sendable {\n            var id: String"))
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftChanged(.init("))
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftCleared(.init("))
+        #expect(skillsSource.contains("get: { self.skillAPIKeyDrafts[skill.effectiveSkillKey] ?? \"\" }"))
+        #expect(skillsSource.contains("let apiKey = self.skillAPIKeyDrafts[skill.effectiveSkillKey] ?? \"\""))
         #expect(skillsSource.contains("key: .init(value: skill.effectiveSkillKey)"))
         #expect(skillsSource.contains("value: .init(value: $0)"))
-        #expect(source.contains("struct AgentSkillEditorAPIKeyDraftKey: Equatable, Sendable"))
+        #expect(source.contains("struct AgentSkillEditorAPIKeyDraftKey: Equatable, Hashable, Sendable"))
         #expect(source.contains("struct AgentSkillEditorAPIKeyDraftValue: Equatable, Sendable"))
+        #expect(source.contains(
+            "Dictionary(uniqueKeysWithValues: self.skillEditorStore.apiKeyDrafts.map { ($0.key.value, $0.value.value) })"))
+        #expect(skillEditorFeature.contains(
+            "var apiKeyDrafts: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] = [:]"))
         #expect(source.contains("var key: AgentSkillEditorAPIKeyDraftKey"))
         #expect(source.contains("var value: AgentSkillEditorAPIKeyDraftValue"))
-        #expect(source.contains("state.apiKeyDrafts[draft.key.value] = draft.value.value"))
-        #expect(source.contains("state.apiKeyDrafts[draft.key.value] = nil"))
+        #expect(skillEditorFeature.contains("state.apiKeyDrafts[draft.key] = draft.value"))
+        #expect(skillEditorFeature.contains("state.apiKeyDrafts[draft.key] = nil"))
+        #expect(!skillsSource.contains("self.skillEditorStore.apiKeyDrafts[skill.effectiveSkillKey]"))
+        #expect(!skillEditorFeature.contains("var apiKeyDrafts: [String: String]"))
+        #expect(!skillEditorFeature.contains("state.apiKeyDrafts[draft.key.value] = draft.value.value"))
+        #expect(!skillEditorFeature.contains("state.apiKeyDrafts[draft.key.value] = nil"))
         #expect(!source.contains(
             "struct APIKeyDraftChange: Equatable, Sendable {\n            var key: String\n            var value: String"))
         #expect(!source.contains(

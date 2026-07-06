@@ -371,7 +371,7 @@ extension AgentProTab {
 
     func skillAPIKeyBinding(for skill: SkillStatusEntryLite) -> Binding<String> {
         Binding(
-            get: { self.skillEditorStore.apiKeyDrafts[skill.effectiveSkillKey] ?? "" },
+            get: { self.skillAPIKeyDrafts[skill.effectiveSkillKey] ?? "" },
             set: { self.skillEditorStore.send(.apiKeyDraftChanged(.init(
                 key: .init(value: skill.effectiveSkillKey),
                 value: .init(value: $0)))) })
@@ -657,7 +657,7 @@ extension AgentProTab {
     @MainActor
     func saveSkillAPIKey(_ skill: SkillStatusEntryLite) async {
         await self.runSkillConfigMutation(skill) {
-            let apiKey = self.skillEditorStore.apiKeyDrafts[skill.effectiveSkillKey] ?? ""
+            let apiKey = self.skillAPIKeyDrafts[skill.effectiveSkillKey] ?? ""
             let params = SkillUpdateParams(skillKey: skill.effectiveSkillKey, apiKey: apiKey)
             _ = try await self.requestGateway(method: "skills.update", params: params, timeoutSeconds: 20)
             self.skillEditorStore.send(.apiKeyDraftCleared(.init(key: .init(value: skill.effectiveSkillKey))))
