@@ -116,6 +116,7 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
+struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
 
 enum IPadWorkboardError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: IPadWorkboardFailureMessage }
@@ -437,7 +438,7 @@ struct IPadWorkboardFeature {
         case moveResponse(MoveResponse)
 
         struct QueryChange: Equatable, Sendable {
-            var query: String
+            var query: IPadWorkboardQuery
         }
 
         case queryChanged(QueryChange)
@@ -653,7 +654,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .queryChanged(change):
-                state.query = change.query
+                state.query = change.query.value
                 return .none
 
             case let .refreshRequested(request):
