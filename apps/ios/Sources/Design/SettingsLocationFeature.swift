@@ -77,7 +77,7 @@ struct SettingsLocationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var isChangingLocationMode = false
+        var isChangingLocationMode = LocationModeChangeInFlight(value: false)
         var locationModeApplyResult: LocationModeApplyResult?
         var locationModeRequest: LocationModeRequest?
         var locationModeRaw = OpenClawLocationMode.off.rawValue
@@ -104,6 +104,8 @@ struct SettingsLocationFeature {
             OpenClawLocationMode(rawValue: self.locationModeRaw) ?? .off
         }
     }
+
+    struct LocationModeChangeInFlight: Equatable, Sendable { var value: Bool }
 
     struct LocationModeRequest: Equatable, Sendable {
         let mode: OpenClawLocationMode
@@ -172,7 +174,7 @@ struct SettingsLocationFeature {
 
             switch action {
             case let .locationModeApplyFinished(result):
-                state.isChangingLocationMode = false
+                state.isChangingLocationMode = .init(value: false)
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = result
                 switch result {
@@ -192,13 +194,13 @@ struct SettingsLocationFeature {
 
             case let .locationModeApplyRequested(request):
                 state.locationModeRequest = nil
-                guard !state.isChangingLocationMode else { return .none }
-                state.isChangingLocationMode = true
+                guard !state.isChangingLocationMode.value else { return .none }
+                state.isChangingLocationMode = .init(value: true)
                 state.locationModeApplyResult = nil
                 state.statusText = .init(value: nil)
 
                 guard request.mode != .off else {
-                    state.isChangingLocationMode = false
+                    state.isChangingLocationMode = .init(value: false)
                     state.locationModeApplyResult = .applied(.init(value: request.value))
                     state.locationModeRaw = request.value.rawValue
                     state.previousLocationModeRaw = request.value.rawValue
@@ -228,7 +230,7 @@ struct SettingsLocationFeature {
                 state.locationModeRaw = rawValue
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
-                guard !state.isChangingLocationMode else { return .none }
+                guard !state.isChangingLocationMode.value else { return .none }
                 guard rawValue != state.previousLocationModeRaw else { return .none }
                 guard let mode = request.value.mode else { return .none }
                 state.locationModeRequest = LocationModeRequest(
@@ -238,7 +240,7 @@ struct SettingsLocationFeature {
                 return .none
 
             case let .locationModeSynced(sync):
-                guard !state.isChangingLocationMode else { return .none }
+                guard !state.isChangingLocationMode.value else { return .none }
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
                 state.locationModeRaw = sync.value.rawValue

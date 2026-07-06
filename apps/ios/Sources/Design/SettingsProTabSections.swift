@@ -654,7 +654,7 @@ extension SettingsProTab {
                             .lineLimit(2)
                     }
                     Spacer(minLength: 8)
-                    if self.locationStore.isChangingLocationMode {
+                    if self.locationStore.isChangingLocationMode.value {
                         ProgressView()
                             .controlSize(.small)
                     }
@@ -666,7 +666,7 @@ extension SettingsProTab {
                     Text("Always").tag(OpenClawLocationMode.always.rawValue)
                 }
                 .pickerStyle(.segmented)
-                .disabled(self.locationStore.isChangingLocationMode)
+                .disabled(self.locationStore.isChangingLocationMode.value)
 
                 if let locationStatusText = self.locationStore.statusText.value {
                     Text(locationStatusText)
