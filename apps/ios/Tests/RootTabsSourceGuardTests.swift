@@ -2070,11 +2070,21 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding gateway snapshot action is typed`() throws {
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let gatewaySnapshotChange = try Self.extract(
+            onboardingStateSource,
+            from: "struct GatewaySnapshotChange",
+            to: "struct CompletionMark")
 
+        #expect(onboardingStateSource.contains("struct OnboardingGatewayServerName: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingHasSavedGatewayConnection: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct GatewaySnapshotChange: Equatable, Sendable"))
+        #expect(gatewaySnapshotChange.contains("var gatewayServerName: OnboardingGatewayServerName"))
+        #expect(gatewaySnapshotChange.contains("var hasSavedGatewayConnection: OnboardingHasSavedGatewayConnection"))
         #expect(onboardingStateSource.contains("case gatewaySnapshotChanged(GatewaySnapshotChange)"))
-        #expect(onboardingStateSource.contains("state.gatewayServerName = snapshot.gatewayServerName"))
-        #expect(onboardingStateSource.contains("state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection"))
+        #expect(onboardingStateSource.contains("state.gatewayServerName = snapshot.gatewayServerName.value"))
+        #expect(onboardingStateSource.contains("state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection.value"))
+        #expect(!gatewaySnapshotChange.contains("var gatewayServerName: String?"))
+        #expect(!gatewaySnapshotChange.contains("var hasSavedGatewayConnection: Bool"))
     }
 
     @Test func `onboarding completion mark action is typed`() throws {

@@ -77,6 +77,10 @@ struct OnboardingGatewayMarkedCompleted: Equatable, Sendable { var value: Bool }
 
 struct OnboardingPairingResumeRequestTime: Equatable, Sendable { var value: Date }
 
+struct OnboardingGatewayServerName: Equatable, Sendable { var value: String? }
+
+struct OnboardingHasSavedGatewayConnection: Equatable, Sendable { var value: Bool }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -121,8 +125,8 @@ struct OnboardingStateFeature {
 
     enum Action: Equatable, Sendable {
         struct GatewaySnapshotChange: Equatable, Sendable {
-            var gatewayServerName: String?
-            var hasSavedGatewayConnection: Bool
+            var gatewayServerName: OnboardingGatewayServerName
+            var hasSavedGatewayConnection: OnboardingHasSavedGatewayConnection
         }
 
         struct CompletionMark: Equatable, Sendable { var mode: OnboardingConnectionMode? }
@@ -144,8 +148,8 @@ struct OnboardingStateFeature {
                 return .none
 
             case let .gatewaySnapshotChanged(snapshot):
-                state.gatewayServerName = snapshot.gatewayServerName
-                state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection
+                state.gatewayServerName = snapshot.gatewayServerName.value
+                state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection.value
                 state.refreshPresentation()
                 return .none
 
