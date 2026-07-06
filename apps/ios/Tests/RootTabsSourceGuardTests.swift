@@ -3239,9 +3239,10 @@ struct RootTabsSourceGuardTests {
         #expect(supportSource.contains("GatewaySettingsStore.savePreferredGatewayStableID(stableID)"))
         #expect(supportSource.contains("GatewaySettingsStore.saveLastDiscoveredGatewayStableID(stableID)"))
         #expect(connectionSource.contains("struct GatewayConnectionID: Equatable, Sendable"))
+        #expect(connectionSource.contains("var connectingGatewayID: GatewayConnectionID?"))
         #expect(connectionSource.contains("struct ConnectionStart: Equatable, Sendable"))
         #expect(connectionSource.contains("var gatewayID: GatewayConnectionID"))
-        #expect(connectionSource.contains("state.connectingGatewayID = start.gatewayID.value"))
+        #expect(connectionSource.contains("state.connectingGatewayID = start.gatewayID"))
         #expect(connectionSource.contains("struct DiscoveredGatewayConnectionFailureMessage: Equatable, Sendable"))
         #expect(connectionSource.contains("enum DiscoveredGatewayConnectionResult: Equatable, Sendable"))
         #expect(connectionSource.contains(
@@ -3275,8 +3276,9 @@ struct RootTabsSourceGuardTests {
         #expect(connectFunction.contains(
             "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message.value)))"))
         #expect(!connectionSource.contains("var gatewayID: String"))
+        #expect(!connectionSource.contains("var connectingGatewayID: String?"))
         #expect(!connectionSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
-        #expect(!connectionSource.contains("state.connectingGatewayID = start.gatewayID\n"))
+        #expect(!connectionSource.contains("state.connectingGatewayID = start.gatewayID.value"))
         #expect(!actionsSource.contains("gatewayID: gateway.id"))
         #expect(!actionsSource.contains("gatewayID: \"manual\""))
         #expect(!connectFunction.contains(

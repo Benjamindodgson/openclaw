@@ -1826,7 +1826,7 @@ struct SettingsProTab: View {
 
 extension SettingsProTab {
     var connectingGatewayID: String? {
-        self.gatewayConnectionStore.connectingGatewayID
+        self.gatewayConnectionStore.connectingGatewayID?.value
     }
 
     var setupStatusText: String? {

@@ -18,6 +18,7 @@ struct SettingsGatewayConnectionFeature {
 
     // swiftformat:disable redundantSendable
     struct DiscoveredGatewayConnectionFailureMessage: Equatable, Sendable { var value: String }
+    struct GatewayConnectionID: Equatable, Sendable { var value: String }
 
     enum DiscoveredGatewayConnectionResult: Equatable, Sendable {
         struct Failure: Equatable, Sendable { var message: DiscoveredGatewayConnectionFailureMessage }
@@ -28,7 +29,7 @@ struct SettingsGatewayConnectionFeature {
 
     @ObservableState
     struct State: Equatable, Sendable {
-        var connectingGatewayID: String?
+        var connectingGatewayID: GatewayConnectionID?
         var gatewayAgentCount = 0
         var gatewayDisplayStatusText = "Offline"
         var gatewayRemoteAddress: String?
@@ -96,8 +97,6 @@ struct SettingsGatewayConnectionFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct GatewayConnectionID: Equatable, Sendable { var value: String }
-
         struct ConnectionStart: Equatable, Sendable {
             var gatewayID: GatewayConnectionID
         }
@@ -146,7 +145,7 @@ struct SettingsGatewayConnectionFeature {
                 return .none
 
             case let .connectionStarted(start):
-                state.connectingGatewayID = start.gatewayID.value
+                state.connectingGatewayID = start.gatewayID
                 return .none
 
             case .disconnectRequested:
