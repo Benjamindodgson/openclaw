@@ -498,11 +498,11 @@ import Testing
         #expect(store.state.hasGatewayToken)
         #expect(store.state.hasGatewayPassword)
 
-        await store.send(.gatewayTokenChanged(.init(value: "token-2"))) {
+        await store.send(.gatewayTokenChanged(.init(token: .init(value: "token-2")))) {
             $0.gatewayToken = "token-2"
         }
 
-        await store.send(.gatewayPasswordChanged(.init(value: "   "))) {
+        await store.send(.gatewayPasswordChanged(.init(password: .init(value: "   ")))) {
             $0.gatewayPassword = "   "
         }
 
