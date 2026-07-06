@@ -126,7 +126,7 @@ struct SettingsChannelsFeature {
     struct State: Equatable, Sendable {
         var entries: [SettingsChannelEntry] = []
         var isLoading = false
-        var errorText: String?
+        var errorText: SettingsChannelsFailureMessage?
         var busyOperation: SettingsChannelOperation?
     }
 
@@ -218,9 +218,9 @@ struct SettingsChannelsFeature {
                     state.entries = entries
                     state.errorText = nil
 
-                case let .failure(error):
+                case let .failure(.failed(failure)):
                     if response.force.isForced || state.entries.isEmpty {
-                        state.errorText = error.message
+                        state.errorText = failure.message
                     }
                 }
                 return .none
@@ -265,9 +265,9 @@ struct SettingsChannelsFeature {
                     state.errorText = nil
                     return .none
 
-                case let .failure(error):
+                case let .failure(.failed(failure)):
                     state.busyOperation = nil
-                    state.errorText = error.message
+                    state.errorText = failure.message
                     return .none
                 }
             }
@@ -444,7 +444,7 @@ struct SettingsChannelsDestination: View {
                     ProStatusRow(
                         icon: "exclamationmark.triangle",
                         title: "Channel status unavailable",
-                        detail: errorText,
+                        detail: errorText.value,
                         value: "error",
                         color: OpenClawBrand.warn)
                 } else if !self.canRead {
@@ -523,7 +523,7 @@ struct SettingsChannelsDestination: View {
             return "Connect to load channel integrations."
         }
         if let errorText = self.store.errorText {
-            return errorText
+            return errorText.value
         }
         return "Installed channel clients, account state, and message-routing readiness."
     }
