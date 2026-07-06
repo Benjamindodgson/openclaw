@@ -90,7 +90,19 @@ struct RootPresentationFeature {
     }
 
     struct GatewaySetupRequest: Equatable, Sendable {
-        var requestID: Int
+        var requestID: GatewaySetupRequestID
+    }
+
+    struct GatewaySetupRequestID: Equatable, Sendable {
+        var value: Int
+
+        init(value: Int = 0) {
+            self.value = value
+        }
+
+        var isUnset: Bool {
+            self.value == 0
+        }
     }
 
     @ObservableState
@@ -107,7 +119,7 @@ struct RootPresentationFeature {
         var discoveredGatewayCount: Int
         var didEvaluateOnboarding: Bool
         var didAutoOpenSettings: Bool
-        var handledGatewaySetupRequestID: Int
+        var handledGatewaySetupRequestID: GatewaySetupRequestID
         var sidebarGatewayStatus: GatewayDisplayState
         var startupRoute: RootTabs.StartupPresentationRoute
         var shouldPresentQuickSetup: Bool
@@ -137,7 +149,7 @@ struct RootPresentationFeature {
             self.discoveredGatewayCount = discoveredGatewayCount
             self.didEvaluateOnboarding = false
             self.didAutoOpenSettings = false
-            self.handledGatewaySetupRequestID = 0
+            self.handledGatewaySetupRequestID = .init()
             self.sidebarGatewayStatus = .disconnected
             self.startupRoute = .none
             self.shouldPresentQuickSetup = false
@@ -345,7 +357,7 @@ struct RootPresentationFeature {
                 return .none
 
             case let .gatewaySetupRequestChanged(request):
-                guard request.requestID != 0,
+                guard !request.requestID.isUnset,
                       request.requestID != state.handledGatewaySetupRequestID
                 else { return .none }
                 state.handledGatewaySetupRequestID = request.requestID

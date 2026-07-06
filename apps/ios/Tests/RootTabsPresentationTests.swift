@@ -209,7 +209,7 @@ struct RootTabsPresentationTests {
         await store.send(.gatewaySetupRequestChanged(Self.gatewaySetupRequest(requestID: 42))) {
             $0.showOnboarding = false
             $0.didAutoOpenSettings = true
-            $0.handledGatewaySetupRequestID = 42
+            $0.handledGatewaySetupRequestID = .init(value: 42)
             $0.presentedSheet = nil
             $0.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
                 Self.localNetworkAccessCommand(reason: "gateway_setup_deeplink"))
@@ -1551,7 +1551,7 @@ struct RootTabsPresentationTests {
     }
 
     private static func gatewaySetupRequest(requestID: Int) -> RootPresentationFeature.GatewaySetupRequest {
-        RootPresentationFeature.GatewaySetupRequest(requestID: requestID)
+        RootPresentationFeature.GatewaySetupRequest(requestID: .init(value: requestID))
     }
 
     private static func sidebarGatewayStatusChange(
