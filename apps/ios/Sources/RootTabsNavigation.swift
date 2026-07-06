@@ -56,10 +56,18 @@ struct RootPresentationFeature {
         }
     }
 
+    struct OnboardingCompletion: Equatable, Sendable {
+        var isComplete: Bool
+
+        init(isComplete: Bool = false) {
+            self.isComplete = isComplete
+        }
+    }
+
     struct StartupSnapshot: Equatable, Sendable {
         var gatewayConnection: GatewayConnection
         var connectionHistory: ConnectionHistory
-        var onboardingComplete: Bool
+        var onboardingCompletion: OnboardingCompletion
         var gatewayConfigPresence: GatewayConfigPresence
         var shouldPresentOnLaunch: Bool
     }
@@ -169,7 +177,7 @@ struct RootPresentationFeature {
     struct State: Equatable, Sendable {
         var gatewayConnection: GatewayConnection
         var connectionHistory: ConnectionHistory
-        var onboardingComplete: Bool
+        var onboardingCompletion: OnboardingCompletion
         var gatewayConfigPresence: GatewayConfigPresence
         var shouldPresentOnLaunch: Bool
         var quickSetupDismissed: Bool
@@ -188,7 +196,7 @@ struct RootPresentationFeature {
         init(
             gatewayConnection: GatewayConnection = .init(),
             connectionHistory: ConnectionHistory = .init(),
-            onboardingComplete: Bool = false,
+            onboardingCompletion: OnboardingCompletion = .init(),
             gatewayConfigPresence: GatewayConfigPresence = .init(),
             shouldPresentOnLaunch: Bool = false,
             quickSetupDismissed: Bool = false,
@@ -199,7 +207,7 @@ struct RootPresentationFeature {
         {
             self.gatewayConnection = gatewayConnection
             self.connectionHistory = connectionHistory
-            self.onboardingComplete = onboardingComplete
+            self.onboardingCompletion = onboardingCompletion
             self.gatewayConfigPresence = gatewayConfigPresence
             self.shouldPresentOnLaunch = shouldPresentOnLaunch
             self.quickSetupDismissed = quickSetupDismissed
@@ -252,7 +260,7 @@ struct RootPresentationFeature {
                 snapshot: RootPresentationFeature.StartupSnapshot(
                     gatewayConnection: self.gatewayConnection,
                     connectionHistory: self.connectionHistory,
-                    onboardingComplete: self.onboardingComplete,
+                    onboardingCompletion: self.onboardingCompletion,
                     gatewayConfigPresence: self.gatewayConfigPresence,
                     shouldPresentOnLaunch: self.shouldPresentOnLaunch))
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
@@ -268,7 +276,7 @@ struct RootPresentationFeature {
         mutating func apply(startupSnapshot snapshot: RootPresentationFeature.StartupSnapshot) {
             self.gatewayConnection = snapshot.gatewayConnection
             self.connectionHistory = snapshot.connectionHistory
-            self.onboardingComplete = snapshot.onboardingComplete
+            self.onboardingCompletion = snapshot.onboardingCompletion
             self.gatewayConfigPresence = snapshot.gatewayConfigPresence
             self.shouldPresentOnLaunch = snapshot.shouldPresentOnLaunch
             self.refreshPresentation()
@@ -283,7 +291,7 @@ struct RootPresentationFeature {
             }
             if snapshot.shouldPresentOnLaunch ||
                 !snapshot.connectionHistory.hasConnectedOnce ||
-                !snapshot.onboardingComplete
+                !snapshot.onboardingCompletion.isComplete
             {
                 return .onboarding
             }

@@ -1064,7 +1064,7 @@ extension RootTabs {
         RootPresentationFeature.StartupSnapshot(
             gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
             connectionHistory: .init(hasConnectedOnce: self.hasConnectedOnce),
-            onboardingComplete: self.onboardingComplete,
+            onboardingCompletion: .init(isComplete: self.onboardingComplete),
             gatewayConfigPresence: .init(hasExistingConfig: self.hasExistingGatewayConfig()),
             shouldPresentOnLaunch: shouldPresentOnLaunch)
     }
