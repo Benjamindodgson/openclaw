@@ -279,16 +279,27 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftChanged(.init("))
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftCleared(.init("))
         #expect(skillsSource.contains("self.skillEditorStore.send(.mutationStarted(.init(key: key)))"))
+        #expect(skillsSource.contains("let key = AgentSkillEditorMutationKey(value: skill.effectiveSkillKey)"))
+        #expect(source.contains("struct AgentSkillEditorMutationKey: Equatable, Sendable"))
         #expect(source.contains("struct AgentSkillEditorMutationSummary: Equatable, Sendable"))
         #expect(source.contains("struct AgentSkillEditorMutationSuccessMessage: Equatable, Sendable"))
         #expect(source.contains("struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("var key: AgentSkillEditorMutationKey"))
         #expect(source.contains("var message: AgentSkillEditorMutationSuccessMessage"))
         #expect(source.contains("var summary: AgentSkillEditorMutationSummary"))
         #expect(source.contains("var message: AgentSkillEditorMutationFailureMessage"))
+        #expect(source.contains("state.busyKeys.insert(mutation.key.value)"))
+        #expect(source.contains("state.messages[mutation.key.value] = nil"))
+        #expect(source.contains("state.messages[result.key.value]"))
+        #expect(source.contains("state.busyKeys.remove(failure.key.value)"))
         #expect(source.contains("text: result.summary.message.value"))
         #expect(source.contains("text: failure.message.value"))
         #expect(!source.contains(
             "struct AgentSkillEditorMutationSummary: Equatable, Sendable {\n    var message: String"))
+        #expect(!source.contains(
+            "struct MutationFailure: Equatable, Sendable {\n            var key: String\n            var message: AgentSkillEditorMutationFailureMessage"))
+        #expect(!source.contains(
+            "struct MutationSuccess: Equatable, Sendable {\n            var key: String\n            var summary: AgentSkillEditorMutationSummary"))
         #expect(
             skillsSource.contains(
                 "self.skillEditorStore.send(.mutationSucceeded(.init(key: key, summary: summary)))"))
