@@ -120,6 +120,7 @@ struct IPadWorkboardBoardScopeID: Equatable, Sendable { var value: String }
 struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
 struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardCardCreationInFlight: Equatable, Sendable { var value: Bool }
+struct IPadWorkboardDispatchInFlight: Equatable, Sendable { var value: Bool }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardDispatchSummaryText: Equatable, Sendable { var value: String }
@@ -175,7 +176,7 @@ struct IPadWorkboardFeature {
         var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
         var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
         var isRefreshing = false
-        var isDispatching = false
+        var isDispatching = IPadWorkboardDispatchInFlight(value: false)
         var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
         var busyCardID: IPadWorkboardBusyCardID?
         var dispatchSummaryText: IPadWorkboardDispatchSummaryText?
@@ -194,7 +195,7 @@ struct IPadWorkboardFeature {
         }
 
         var isLoading: Bool {
-            self.isRefreshing || self.isDispatching
+            self.isRefreshing || self.isDispatching.value
         }
 
         var selectedBoardParam: IPadWorkboardBoardScopeID? {
@@ -609,7 +610,7 @@ struct IPadWorkboardFeature {
 
             case let .dispatchRequested(request):
                 guard request.canWrite, !state.isLoading else { return .none }
-                state.isDispatching = true
+                state.isDispatching = .init(value: true)
                 state.errorText = nil
                 state.dispatchSummaryText = nil
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
@@ -630,7 +631,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .dispatchResponse(response):
-                state.isDispatching = false
+                state.isDispatching = .init(value: false)
                 guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
                 switch response.result {
                 case let .success(snapshot):

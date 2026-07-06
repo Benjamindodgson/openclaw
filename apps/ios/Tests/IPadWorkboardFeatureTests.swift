@@ -260,7 +260,7 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.dispatchRequested(.init(canWrite: true))) {
-            $0.isDispatching = true
+            $0.isDispatching = .init(value: true)
             $0.errorText = nil
             $0.dispatchSummaryText = nil
         }
@@ -270,7 +270,7 @@ struct IPadWorkboardFeatureTests {
                 summary: summary,
                 cardsResponse: response)))))
         {
-            $0.isDispatching = false
+            $0.isDispatching = .init(value: false)
             $0.dispatchSummaryText = .init(value: "1 dispatched: 1 started.")
             $0.cards = [refreshed]
             $0.statuses = [.init(value: "running")]
@@ -283,7 +283,7 @@ struct IPadWorkboardFeatureTests {
         let response = IPadWorkboardCardsResponse(cards: [refreshed], statuses: ["todo"])
         var initialState = IPadWorkboardFeature.State()
         initialState.isRefreshing = true
-        initialState.isDispatching = true
+        initialState.isDispatching = .init(value: true)
         var client = Self.failingClient()
         client.listBoards = { [] }
         let store = TestStore(initialState: initialState) {
