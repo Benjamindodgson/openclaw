@@ -2763,6 +2763,7 @@ struct RootTabsSourceGuardTests {
         #expect(setupLinkFeatureSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
         #expect(supportSource.contains("struct SettingsGatewaySetupCode: Equatable, Sendable { var value: String }"))
         #expect(setupLinkFeatureSource.contains("struct SetupCodeChange: Equatable, Sendable"))
+        #expect(setupLinkFeatureSource.contains("var setupCode = SettingsGatewaySetupCode(value: \"\")"))
         #expect(setupLinkFeatureSource.contains("var code: SettingsGatewaySetupCode"))
         #expect(setupLinkFeatureSource.contains("var setupCode: SettingsGatewaySetupCode"))
         #expect(setupLinkFeatureSource.contains("struct SetupCodeSync: Equatable, Sendable"))
@@ -2770,8 +2771,10 @@ struct RootTabsSourceGuardTests {
         #expect(setupLinkFeatureSource.contains("case setupCodeChanged(SetupCodeChange)"))
         #expect(setupLinkFeatureSource.contains("case setupCodeSynced(SetupCodeSync)"))
         #expect(setupLinkFeatureSource.contains("AppleReviewDemoMode.isSetupCode(scan.code.value)"))
-        #expect(setupLinkFeatureSource.contains("let setupCode = change.setupCode.value"))
-        #expect(setupLinkFeatureSource.contains("let setupCode = sync.setupCode.value"))
+        #expect(setupLinkFeatureSource.contains("let setupCode = change.setupCode"))
+        #expect(setupLinkFeatureSource.contains("let setupCode = sync.setupCode"))
+        #expect(setupLinkFeatureSource.contains("state.setupCode = setupCode"))
+        #expect(setupLinkFeatureSource.contains("setupCode.value.trimmingCharacters(in: .whitespacesAndNewlines)"))
         #expect(setupLinkFeatureSource
             .contains("state.applyResult = .appleReviewDemo(.init(statusText: Self.appleReviewDemoStatusText))"))
         #expect(settingsActionsSource.contains(
@@ -2780,6 +2783,11 @@ struct RootTabsSourceGuardTests {
             "self.gatewaySetupLinkStore.send(.setupCodeSynced(.init(setupCode: .init(value: self.storedSetupCode))))"))
         #expect(settingsActionsSource.contains(
             "self.gatewaySetupLinkStore.send(.setupCodeChanged(.init(setupCode: .init(value: setupCode))))"))
+        #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.setupCode.value"))
+        #expect(!setupLinkFeatureSource.contains("var setupCode = \"\""))
+        #expect(!setupLinkFeatureSource.contains("let setupCode = change.setupCode.value"))
+        #expect(!setupLinkFeatureSource.contains("let setupCode = sync.setupCode.value"))
+        #expect(!setupLinkFeatureSource.contains("state.setupCode = setupCode.value"))
         #expect(!setupLinkFeatureSource.contains("struct ScannedSetupCode: Equatable, Sendable { var code: String }"))
         #expect(!setupLinkFeatureSource.contains("struct SetupCodeSync: Equatable, Sendable { var setupCode: String }"))
         #expect(!setupLinkFeatureSource.contains("struct SetupCodeChange: Equatable, Sendable { var setupCode: String }"))

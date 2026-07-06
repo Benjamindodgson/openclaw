@@ -837,12 +837,12 @@ extension SettingsProTab {
     }
 
     var setupCode: String {
-        self.gatewaySetupLinkStore.setupCode
+        self.gatewaySetupLinkStore.setupCode.value
     }
 
     var setupCodeBinding: Binding<String> {
         Binding(
-            get: { self.gatewaySetupLinkStore.setupCode },
+            get: { self.gatewaySetupLinkStore.setupCode.value },
             set: { self.updateSetupCode($0) })
     }
 
