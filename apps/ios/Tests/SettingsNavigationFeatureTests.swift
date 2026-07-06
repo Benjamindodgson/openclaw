@@ -437,10 +437,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.reconnectStarted) {
-            $0.isReconnectingGateway = true
+            $0.isReconnectingGateway = .init(value: true)
         }
         await store.send(.reconnectFinished) {
-            $0.isReconnectingGateway = false
+            $0.isReconnectingGateway = .init(value: false)
         }
     }
 
@@ -451,10 +451,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.reconnectRequested(.init(isAppleReviewDemoModeEnabled: .init(value: false)))) {
-            $0.isReconnectingGateway = true
+            $0.isReconnectingGateway = .init(value: true)
         }
         await store.receive(.reconnectFinished) {
-            $0.isReconnectingGateway = false
+            $0.isReconnectingGateway = .init(value: false)
         }
 
         #expect(probe.reconnectCount == 1)
@@ -463,7 +463,7 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings gateway activity skips reconnect in demo mode and while reconnecting`() async {
         let probe = SettingsGatewayReconnectProbe()
         var reconnectingState = SettingsGatewayActivityFeature.State()
-        reconnectingState.isReconnectingGateway = true
+        reconnectingState.isReconnectingGateway = .init(value: true)
         let store = TestStore(initialState: reconnectingState) {
             SettingsGatewayActivityFeature(reconnectClient: probe.client)
         }
@@ -504,10 +504,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.refreshStarted) {
-            $0.isRefreshingGateway = true
+            $0.isRefreshingGateway = .init(value: true)
         }
         await store.send(.refreshFinished) {
-            $0.isRefreshingGateway = false
+            $0.isRefreshingGateway = .init(value: false)
         }
     }
 
@@ -518,10 +518,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.diagnosticsRefreshRequested(.init(isAppleReviewDemoModeEnabled: .init(value: false)))) {
-            $0.isRefreshingGateway = true
+            $0.isRefreshingGateway = .init(value: true)
         }
         await store.receive(.refreshFinished) {
-            $0.isRefreshingGateway = false
+            $0.isRefreshingGateway = .init(value: false)
         }
 
         #expect(probe.refreshCount == 1)
@@ -534,10 +534,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.diagnosticsRefreshRequested(.init(isAppleReviewDemoModeEnabled: .init(value: true)))) {
-            $0.isRefreshingGateway = true
+            $0.isRefreshingGateway = .init(value: true)
         }
         await store.receive(.refreshFinished) {
-            $0.isRefreshingGateway = false
+            $0.isRefreshingGateway = .init(value: false)
         }
 
         #expect(probe.refreshCount == 0)

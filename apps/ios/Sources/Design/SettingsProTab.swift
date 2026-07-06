@@ -310,11 +310,13 @@ struct SettingsGatewayActivityFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var isReconnectingGateway = false
-        var isRefreshingGateway = false
+        var isReconnectingGateway = Action.GatewayReconnectInFlight(value: false)
+        var isRefreshingGateway = Action.GatewayRefreshInFlight(value: false)
     }
 
     enum Action: Equatable, Sendable {
+        struct GatewayReconnectInFlight: Equatable, Sendable { var value: Bool }
+        struct GatewayRefreshInFlight: Equatable, Sendable { var value: Bool }
         struct SettingsGatewayActivityDemoModeEnabled: Equatable, Sendable { var value: Bool }
 
         struct DiagnosticsRefreshRequest: Equatable, Sendable {
@@ -349,8 +351,8 @@ struct SettingsGatewayActivityFeature {
 
             switch action {
             case let .diagnosticsRefreshRequested(request):
-                guard !state.isRefreshingGateway else { return .none }
-                state.isRefreshingGateway = true
+                guard !state.isRefreshingGateway.value else { return .none }
+                state.isRefreshingGateway = .init(value: true)
                 return .run { send in
                     if !request.isAppleReviewDemoModeEnabled.value {
                         await diagnosticsRefreshClient.refreshGateway()
@@ -359,27 +361,30 @@ struct SettingsGatewayActivityFeature {
                 }
 
             case .reconnectFinished:
-                state.isReconnectingGateway = false
+                state.isReconnectingGateway = .init(value: false)
                 return .none
 
             case let .reconnectRequested(request):
-                guard !request.isAppleReviewDemoModeEnabled.value, !state.isReconnectingGateway else { return .none }
-                state.isReconnectingGateway = true
+                guard
+                    !request.isAppleReviewDemoModeEnabled.value,
+                    !state.isReconnectingGateway.value
+                else { return .none }
+                state.isReconnectingGateway = .init(value: true)
                 return .run { send in
                     await reconnectClient.reconnect()
                     await send(.reconnectFinished)
                 }
 
             case .reconnectStarted:
-                state.isReconnectingGateway = true
+                state.isReconnectingGateway = .init(value: true)
                 return .none
 
             case .refreshFinished:
-                state.isRefreshingGateway = false
+                state.isRefreshingGateway = .init(value: false)
                 return .none
 
             case .refreshStarted:
-                state.isRefreshingGateway = true
+                state.isRefreshingGateway = .init(value: true)
                 return .none
 
             case let .rotatedCertificateTrustRequested(request):
