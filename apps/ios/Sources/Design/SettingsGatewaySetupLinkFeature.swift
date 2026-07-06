@@ -4,6 +4,8 @@ import OpenClawKit
 
 // swiftformat:disable redundantSendable
 struct SettingsGatewaySetupLinkFailureMessage: Equatable, Sendable { var value: String }
+struct SettingsGatewaySetupLinkStatusText: Equatable, Sendable { var value: String }
+struct SettingsScannedGatewayLinkStatusText: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -23,9 +25,9 @@ struct SettingsGatewaySetupLinkFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
-        var scannedGatewayLinkStatusText: String?
+        var scannedGatewayLinkStatusText: SettingsScannedGatewayLinkStatusText?
         var setupCode = ""
-        var setupLinkStatusText: String?
+        var setupLinkStatusText: SettingsGatewaySetupLinkStatusText?
         var stagedGatewaySetupLink: GatewayConnectDeepLink?
 
         var canApplyGatewaySetup: Bool {
@@ -110,7 +112,7 @@ struct SettingsGatewaySetupLinkFeature {
                 state.applyResult = nil
                 state.setupCode = ""
                 state.stagedGatewaySetupLink = nil
-                state.scannedGatewayLinkStatusText = Self.scannedGatewayLinkStatusText(link)
+                state.scannedGatewayLinkStatusText = .init(value: Self.scannedGatewayLinkStatusText(link))
                 state.applyResult = .gatewayLink(link)
                 return .none
 
@@ -150,7 +152,7 @@ struct SettingsGatewaySetupLinkFeature {
                 state.stagedGatewaySetupLink = stage.link
                 if let link = stage.link {
                     state.setupCode = ""
-                    state.setupLinkStatusText = Self.setupLinkLoadedStatusText(link)
+                    state.setupLinkStatusText = .init(value: Self.setupLinkLoadedStatusText(link))
                 } else {
                     state.setupLinkStatusText = nil
                 }

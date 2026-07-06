@@ -324,7 +324,7 @@ extension SettingsProTab {
         self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: nil))))
         self.gatewaySetupLinkStore.send(.setupLinkStaged(.init(link: link)))
         if let statusText = self.gatewaySetupLinkStore.setupLinkStatusText {
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText))))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText.value))))
             self.gatewaySetupLinkStore.send(.setupLinkStatusHandled)
         }
     }
@@ -374,7 +374,7 @@ extension SettingsProTab {
         self.presentationStore.send(.qrScannerDismissed)
         self.updateSetupCode("")
         if let statusText = self.gatewaySetupLinkStore.scannedGatewayLinkStatusText {
-            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText))))
+            self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText.value))))
             self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)
         }
         Task {
