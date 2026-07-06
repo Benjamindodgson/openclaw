@@ -714,8 +714,10 @@ struct SettingsManualGatewayPortFeature {
         }
     }
 
+    struct ManualGatewayPortResolutionFailureMessage: Equatable, Sendable { var value: String }
+
     enum ManualGatewayPortResolutionResult: Equatable, Sendable {
-        struct Failure: Equatable, Sendable { var message: String }
+        struct Failure: Equatable, Sendable { var message: ManualGatewayPortResolutionFailureMessage }
 
         case failure(Failure)
         case resolved
@@ -740,13 +742,16 @@ struct SettingsManualGatewayPortFeature {
 
     // swiftformat:enable redundantSendable
 
+    static let invalidPortFailureMessage = ManualGatewayPortResolutionFailureMessage(
+        value: "Failed: invalid port")
+
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .manualGatewayPortResolutionRequested(request):
                 state.manualGatewayPortResolutionResult = nil
                 guard state.resolvedManualPort(host: request.host.value, useTLS: request.useTLS.value) != nil else {
-                    state.manualGatewayPortResolutionResult = .failure(.init(message: "Failed: invalid port"))
+                    state.manualGatewayPortResolutionResult = .failure(.init(message: Self.invalidPortFailureMessage))
                     return .none
                 }
                 state.manualGatewayPortResolutionResult = .resolved

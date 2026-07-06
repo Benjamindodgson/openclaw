@@ -1903,7 +1903,8 @@ struct SettingsNavigationFeatureTests {
                 host: .init(value: "gateway.example.com"),
                 useTLS: .init(value: true))))
         {
-            $0.manualGatewayPortResolutionResult = .failure(.init(message: "Failed: invalid port"))
+            $0.manualGatewayPortResolutionResult = .failure(.init(
+                message: SettingsManualGatewayPortFeature.invalidPortFailureMessage))
         }
 
         await store.send(.manualGatewayPortResolutionResultHandled) {
