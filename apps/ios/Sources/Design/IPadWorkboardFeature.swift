@@ -126,7 +126,6 @@ struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
 struct IPadWorkboardKnownBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
-struct IPadWorkboardRefreshInFlight: Equatable, Sendable { var value: Bool }
 struct IPadWorkboardSelectedBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatus: Equatable, Sendable { var value: String }
@@ -176,6 +175,29 @@ struct IPadWorkboardFeature {
             case inFlight
         }
 
+        enum RefreshPhase: Equatable, Sendable {
+            case idle
+            case inFlight(boardID: IPadWorkboardActiveRefreshBoardID?)
+
+            func matchesActiveBoardID(_ boardID: IPadWorkboardActiveRefreshBoardID?) -> Bool {
+                switch self {
+                case .idle:
+                    false
+                case let .inFlight(activeBoardID):
+                    activeBoardID == boardID
+                }
+            }
+
+            var isInFlight: Bool {
+                switch self {
+                case .idle:
+                    false
+                case .inFlight:
+                    true
+                }
+            }
+        }
+
         enum DispatchPhase: Equatable, Sendable {
             case idle
             case inFlight
@@ -184,9 +206,8 @@ struct IPadWorkboardFeature {
         var cards: [IPadWorkboardCard] = []
         var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
         var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
-        var isRefreshing = IPadWorkboardRefreshInFlight(value: false)
+        var refreshPhase = RefreshPhase.idle
         var dispatchPhase = DispatchPhase.idle
-        var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
         var busyCardID: IPadWorkboardBusyCardID?
         var dispatchSummaryText: IPadWorkboardDispatchSummaryText?
         var selectedStatus = IPadWorkboardSelectedStatus(value: "active")
@@ -204,7 +225,7 @@ struct IPadWorkboardFeature {
         }
 
         var isLoading: Bool {
-            self.isRefreshing.value || self.dispatchPhase == .inFlight
+            self.refreshPhase.isInFlight || self.dispatchPhase == .inFlight
         }
 
         var selectedBoardParam: IPadWorkboardBoardScopeID? {
@@ -705,21 +726,19 @@ struct IPadWorkboardFeature {
 
             case let .refreshRequested(request):
                 guard request.sceneActivity.isActive else {
-                    state.isRefreshing = .init(value: false)
-                    state.activeRefreshBoardID = nil
+                    state.refreshPhase = .idle
                     return .cancel(id: CancelID.refresh)
                 }
                 guard request.readAccess.canRead else {
                     state.cards = []
                     state.errorText = nil
-                    state.isRefreshing = .init(value: false)
-                    state.activeRefreshBoardID = nil
+                    state.refreshPhase = .idle
                     return .cancel(id: CancelID.refresh)
                 }
 
-                state.isRefreshing = .init(value: true)
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
-                state.activeRefreshBoardID = boardScope.boardID.map { .init(value: $0.value) }
+                state.refreshPhase = .inFlight(
+                    boardID: boardScope.boardID.map { .init(value: $0.value) })
                 state.errorText = nil
                 if !state.statusValues.contains(state.selectedStatus.value), state.selectedStatus.value != "active" {
                     state.selectedStatus = .init(value: "active")
@@ -743,9 +762,8 @@ struct IPadWorkboardFeature {
             case let .refreshResponse(response):
                 let activeRefreshBoardID = response.boardScope.boardID
                     .map { IPadWorkboardActiveRefreshBoardID(value: $0.value) }
-                guard state.activeRefreshBoardID == activeRefreshBoardID else { return .none }
-                state.isRefreshing = .init(value: false)
-                state.activeRefreshBoardID = nil
+                guard state.refreshPhase.matchesActiveBoardID(activeRefreshBoardID) else { return .none }
+                state.refreshPhase = .idle
                 guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
                 switch response.result {
                 case let .success(cardsResponse):
