@@ -9,6 +9,28 @@ struct AgentSkillEditorMutationSummary: Equatable, Sendable {
     var message: AgentSkillEditorMutationSuccessMessage
 }
 
+enum AgentSkillStatusFilter: String, CaseIterable, Identifiable, Sendable {
+    case all
+    case enabled
+    case off
+    case setup
+    case blocked
+
+    var id: Self {
+        self
+    }
+
+    var title: String {
+        switch self {
+        case .all: "All"
+        case .enabled: "Enabled"
+        case .off: "Off"
+        case .setup: "Setup"
+        case .blocked: "Blocked"
+        }
+    }
+}
+
 // swiftformat:enable redundantSendable
 
 struct AgentProTab: View {
@@ -35,28 +57,6 @@ struct AgentProTab: View {
         case cron
         case usage
         case dreaming
-    }
-
-    enum SkillStatusFilter: String, CaseIterable, Identifiable {
-        case all
-        case enabled
-        case off
-        case setup
-        case blocked
-
-        var id: Self {
-            self
-        }
-
-        var title: String {
-            switch self {
-            case .all: "All"
-            case .enabled: "Enabled"
-            case .off: "Off"
-            case .setup: "Setup"
-            case .blocked: "Blocked"
-            }
-        }
     }
 
     enum AgentRosterFilter: String, CaseIterable, Identifiable {
@@ -230,11 +230,11 @@ struct AgentProTab: View {
             set: { self.skillFilterStore.send(.searchTextChanged(.init(text: .init(value: $0)))) })
     }
 
-    var skillStatusFilter: SkillStatusFilter {
+    var skillStatusFilter: AgentSkillStatusFilter {
         self.skillFilterStore.statusFilter
     }
 
-    var skillStatusFilterBinding: Binding<SkillStatusFilter> {
+    var skillStatusFilterBinding: Binding<AgentSkillStatusFilter> {
         Binding(
             get: { self.skillFilterStore.statusFilter },
             set: { self.skillFilterStore.send(.statusFilterChanged($0)) })
@@ -655,7 +655,7 @@ struct AgentSkillFilterFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var searchText = AgentSkillFilterSearchText(value: "")
-        var statusFilter: AgentProTab.SkillStatusFilter = .all
+        var statusFilter: AgentSkillStatusFilter = .all
     }
 
     enum Action: Equatable, Sendable {
@@ -665,7 +665,7 @@ struct AgentSkillFilterFeature {
 
         case clearSearchTapped
         case searchTextChanged(SearchTextChange)
-        case statusFilterChanged(AgentProTab.SkillStatusFilter)
+        case statusFilterChanged(AgentSkillStatusFilter)
     }
 
     // swiftformat:enable redundantSendable
