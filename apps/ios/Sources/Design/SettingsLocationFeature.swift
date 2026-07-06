@@ -80,8 +80,8 @@ struct SettingsLocationFeature {
         var isChangingLocationMode = LocationModeChangeInFlight(value: false)
         var locationModeApplyResult: LocationModeApplyResult?
         var locationModeRequest: LocationModeRequest?
-        var locationModeRaw = OpenClawLocationMode.off.rawValue
-        var previousLocationModeRaw = OpenClawLocationMode.off.rawValue
+        var locationModeRaw = LocationModeRawValue(rawValue: OpenClawLocationMode.off.rawValue)
+        var previousLocationModeRaw = LocationModeRawValue(rawValue: OpenClawLocationMode.off.rawValue)
         var statusText = SettingsLocationStatusText(value: nil)
 
         var locationLabel: String {
@@ -101,7 +101,7 @@ struct SettingsLocationFeature {
         }
 
         private var locationMode: OpenClawLocationMode {
-            OpenClawLocationMode(rawValue: self.locationModeRaw) ?? .off
+            self.locationModeRaw.mode ?? .off
         }
     }
 
@@ -179,15 +179,15 @@ struct SettingsLocationFeature {
                 state.locationModeApplyResult = result
                 switch result {
                 case let .applied(applied):
-                    state.locationModeRaw = applied.value.rawValue
-                    state.previousLocationModeRaw = applied.value.rawValue
+                    state.locationModeRaw = applied.value
+                    state.previousLocationModeRaw = applied.value
                     return .run { _ in
                         await gatewayRefreshClient.refreshGatewayRegistration()
                     }
 
                 case let .denied(denied):
-                    state.locationModeRaw = denied.previousValue.rawValue
-                    state.previousLocationModeRaw = denied.previousValue.rawValue
+                    state.locationModeRaw = denied.previousValue
+                    state.previousLocationModeRaw = denied.previousValue
                     state.statusText = .init(value: Self.locationPermissionDeniedStatusText)
                     return .none
                 }
@@ -202,8 +202,8 @@ struct SettingsLocationFeature {
                 guard request.mode != .off else {
                     state.isChangingLocationMode = .init(value: false)
                     state.locationModeApplyResult = .applied(.init(value: request.value))
-                    state.locationModeRaw = request.value.rawValue
-                    state.previousLocationModeRaw = request.value.rawValue
+                    state.locationModeRaw = request.value
+                    state.previousLocationModeRaw = request.value
                     return .run { _ in
                         await gatewayRefreshClient.refreshGatewayRegistration()
                     }
@@ -222,11 +222,11 @@ struct SettingsLocationFeature {
                 return .none
 
             case let .locationModeChanged(change):
-                state.locationModeRaw = change.mode.rawValue
+                state.locationModeRaw = .init(rawValue: change.mode.rawValue)
                 return .none
 
             case let .locationModeChangeRequested(request):
-                let rawValue = request.value.rawValue
+                let rawValue = request.value
                 state.locationModeRaw = rawValue
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
@@ -235,7 +235,7 @@ struct SettingsLocationFeature {
                 guard let mode = request.value.mode else { return .none }
                 state.locationModeRequest = LocationModeRequest(
                     mode: mode,
-                    previousValue: .init(rawValue: state.previousLocationModeRaw),
+                    previousValue: state.previousLocationModeRaw,
                     value: request.value)
                 return .none
 
@@ -243,8 +243,8 @@ struct SettingsLocationFeature {
                 guard !state.isChangingLocationMode.value else { return .none }
                 state.locationModeRequest = nil
                 state.locationModeApplyResult = nil
-                state.locationModeRaw = sync.value.rawValue
-                state.previousLocationModeRaw = sync.value.rawValue
+                state.locationModeRaw = sync.value
+                state.previousLocationModeRaw = sync.value
                 return .none
             }
         }

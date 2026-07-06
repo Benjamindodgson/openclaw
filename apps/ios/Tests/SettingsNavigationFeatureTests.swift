@@ -1312,7 +1312,7 @@ struct SettingsNavigationFeatureTests {
         let probe = SettingsLocationPermissionProbe(granted: false)
         let gatewayRefreshProbe = SettingsLocationGatewayRefreshProbe()
         var initialState = SettingsLocationFeature.State()
-        initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        initialState.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.whileUsing.rawValue)
         let store = TestStore(initialState: initialState) {
             SettingsLocationFeature(
                 gatewayRefreshClient: gatewayRefreshProbe.client,
@@ -1327,8 +1327,8 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.locationModeApplyRequested(request)) {
             $0.locationModeApplyResult = appliedResult
-            $0.locationModeRaw = OpenClawLocationMode.off.rawValue
-            $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.off.rawValue)
+            $0.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.off.rawValue)
         }
         await store.send(.locationModeApplyResultHandled) {
             $0.locationModeApplyResult = nil
@@ -1372,8 +1372,8 @@ struct SettingsNavigationFeatureTests {
         await store.receive(.locationModeApplyFinished(appliedResult)) {
             $0.isChangingLocationMode = .init(value: false)
             $0.locationModeApplyResult = appliedResult
-            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
-            $0.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
+            $0.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
         }
         await store.send(.locationModeApplyResultHandled) {
             $0.locationModeApplyResult = nil
@@ -1391,16 +1391,16 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.locationModeSynced(.init(rawValue: OpenClawLocationMode.whileUsing.rawValue))) {
-            $0.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
-            $0.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.whileUsing.rawValue)
+            $0.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.whileUsing.rawValue)
         }
     }
 
     @Test func `settings location ignores persisted sync while changing mode`() async {
         var initialState = SettingsLocationFeature.State()
         initialState.isChangingLocationMode = .init(value: true)
-        initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
-        initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        initialState.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
+        initialState.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.whileUsing.rawValue)
         let store = TestStore(initialState: initialState) {
             SettingsLocationFeature()
         }
@@ -1414,7 +1414,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.locationModeChanged(.init(mode: .always))) {
-            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
         }
     }
 
@@ -1424,7 +1424,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.locationModeChangeRequested(.init(rawValue: OpenClawLocationMode.always.rawValue))) {
-            $0.locationModeRaw = OpenClawLocationMode.always.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
             $0.locationModeRequest = SettingsLocationFeature.LocationModeRequest(
                 mode: .always,
                 previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue),
@@ -1434,8 +1434,8 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings location ignores duplicate in flight and invalid mode change requests`() async {
         var duplicateState = SettingsLocationFeature.State()
-        duplicateState.locationModeRaw = OpenClawLocationMode.always.rawValue
-        duplicateState.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
+        duplicateState.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
+        duplicateState.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
         let duplicateStore = TestStore(initialState: duplicateState) {
             SettingsLocationFeature()
         }
@@ -1452,7 +1452,7 @@ struct SettingsNavigationFeatureTests {
         await changingStore.send(.locationModeChangeRequested(.init(
             rawValue: OpenClawLocationMode.whileUsing.rawValue)))
         {
-            $0.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.whileUsing.rawValue)
         }
 
         let invalidStore = TestStore(initialState: SettingsLocationFeature.State()) {
@@ -1460,7 +1460,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await invalidStore.send(.locationModeChangeRequested(.init(rawValue: "invalid-location-mode"))) {
-            $0.locationModeRaw = "invalid-location-mode"
+            $0.locationModeRaw = .init(rawValue: "invalid-location-mode")
         }
     }
 
@@ -1471,17 +1471,17 @@ struct SettingsNavigationFeatureTests {
         #expect(state.privacyDetail == "Location off")
         #expect(state.locationColor == .secondary)
 
-        state.locationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        state.locationModeRaw = .init(rawValue: OpenClawLocationMode.whileUsing.rawValue)
         #expect(state.locationLabel == "While Using")
         #expect(state.privacyDetail == "Location While Using")
         #expect(state.locationColor == OpenClawBrand.accent)
 
-        state.locationModeRaw = OpenClawLocationMode.always.rawValue
+        state.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
         #expect(state.locationLabel == "Always")
         #expect(state.privacyDetail == "Location Always")
         #expect(state.locationColor == OpenClawBrand.accent)
 
-        state.locationModeRaw = "unexpected"
+        state.locationModeRaw = .init(rawValue: "unexpected")
         #expect(state.locationLabel == "Off")
         #expect(state.privacyDetail == "Location off")
         #expect(state.locationColor == .secondary)
@@ -1491,8 +1491,8 @@ struct SettingsNavigationFeatureTests {
         let probe = SettingsLocationPermissionProbe(granted: false)
         let gatewayRefreshProbe = SettingsLocationGatewayRefreshProbe()
         var initialState = SettingsLocationFeature.State()
-        initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
-        initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
+        initialState.locationModeRaw = .init(rawValue: OpenClawLocationMode.always.rawValue)
+        initialState.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.whileUsing.rawValue)
         let store = TestStore(initialState: initialState) {
             SettingsLocationFeature(
                 gatewayRefreshClient: gatewayRefreshProbe.client,
@@ -1511,8 +1511,8 @@ struct SettingsNavigationFeatureTests {
         await store.receive(.locationModeApplyFinished(deniedResult)) {
             $0.isChangingLocationMode = .init(value: false)
             $0.locationModeApplyResult = deniedResult
-            $0.locationModeRaw = OpenClawLocationMode.off.rawValue
-            $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
+            $0.locationModeRaw = .init(rawValue: OpenClawLocationMode.off.rawValue)
+            $0.previousLocationModeRaw = .init(rawValue: OpenClawLocationMode.off.rawValue)
             $0.statusText = .init(value: "Location permission was not granted.")
         }
         await store.finish()
