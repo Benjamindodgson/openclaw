@@ -103,6 +103,7 @@ extension DependencyValues {
 // swiftformat:disable redundantSendable
 struct AgentDreamDiaryDayID: Equatable, Sendable { var value: String }
 struct AgentDreamingMaintenanceFailureMessage: Equatable, Sendable { var value: String }
+struct AgentDreamingMaintenanceStatusText: Equatable, Sendable { var value: String? }
 
 enum AgentDreamingMaintenanceError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: AgentDreamingMaintenanceFailureMessage }
@@ -125,7 +126,7 @@ struct AgentDreamingDestinationFeature {
     struct State: Equatable, Sendable {
         var selectedDreamDiaryDayID: AgentDreamDiaryDayID?
         var busyAction: AgentDreamAction?
-        var statusText: String?
+        var statusText = AgentDreamingMaintenanceStatusText(value: nil)
     }
 
     enum Action: Equatable, Sendable {
@@ -158,7 +159,7 @@ struct AgentDreamingDestinationFeature {
             case let .dreamActionTapped(tap):
                 guard tap.gatewayConnected, state.busyAction == nil else { return .none }
                 state.busyAction = tap.action
-                state.statusText = nil
+                state.statusText = .init(value: nil)
                 return .run { send in
                     do {
                         let summary = try await client.run(tap.action)
@@ -173,12 +174,12 @@ struct AgentDreamingDestinationFeature {
                 switch response.result {
                 case let .success(summary):
                     state.busyAction = nil
-                    state.statusText = summary.summary
+                    state.statusText = .init(value: summary.summary)
                     return .none
 
                 case let .failure(error):
                     state.busyAction = nil
-                    state.statusText = error.message
+                    state.statusText = .init(value: error.message)
                     return .none
                 }
 
@@ -402,7 +403,7 @@ struct AgentProDreamingDestination: View {
                     }
                 }
 
-                if let dreamActionStatusText = self.store.statusText {
+                if let dreamActionStatusText = self.store.statusText.value {
                     Text(dreamActionStatusText)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
