@@ -166,8 +166,8 @@ extension SettingsProTab {
         self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: .init(value: self.storedDisplayName))))
         self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: .init(value: self.storedInstanceId))))
         self.debugOptionsStore.send(.debugOptionsSynced(.init(
-            discoveryDebugLogsEnabled: self.storedDiscoveryDebugLogsEnabled,
-            canvasDebugStatusEnabled: self.storedCanvasDebugStatusEnabled)))
+            discoveryDebugLogsEnabled: .init(isEnabled: self.storedDiscoveryDebugLogsEnabled),
+            canvasDebugStatusEnabled: .init(isEnabled: self.storedCanvasDebugStatusEnabled))))
         self.syncGatewaySetupStatusContext()
         self.syncGatewayConnectionStatusState()
         self.syncDiagnosticsContextState()

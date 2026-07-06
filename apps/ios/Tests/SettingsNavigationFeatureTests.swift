@@ -406,8 +406,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.debugOptionsSynced(.init(
-            discoveryDebugLogsEnabled: true,
-            canvasDebugStatusEnabled: true)))
+            discoveryDebugLogsEnabled: .init(isEnabled: true),
+            canvasDebugStatusEnabled: .init(isEnabled: true))))
         {
             $0.discoveryDebugLogsEnabled = true
             $0.canvasDebugStatusEnabled = true
