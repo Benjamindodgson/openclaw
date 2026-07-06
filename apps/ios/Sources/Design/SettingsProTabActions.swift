@@ -76,7 +76,7 @@ extension SettingsProTab {
                 self.diagnosticCheckRow(
                     icon: "mic",
                     title: "Voice Wake",
-                    detail: self.voiceControlStore.voiceWakeStatusText,
+                    detail: self.voiceControlStore.voiceWakeStatusText.value,
                     value: self.voiceControlStore.voiceWakeValue,
                     color: self.voiceControlStore.voiceWakeColor)
             }
@@ -596,11 +596,11 @@ extension SettingsProTab {
     }
 
     var talkEnabled: Bool {
-        self.voiceControlStore.talkEnabled
+        self.voiceControlStore.talkEnabled.isEnabled
     }
 
     var voiceWakeEnabled: Bool {
-        self.voiceControlStore.voiceWakeEnabled
+        self.voiceControlStore.voiceWakeEnabled.isEnabled
     }
 
     var cameraEnabledBinding: Binding<Bool> {
@@ -629,13 +629,13 @@ extension SettingsProTab {
 
     var talkEnabledBinding: Binding<Bool> {
         Binding(
-            get: { self.voiceControlStore.talkEnabled },
+            get: { self.voiceControlStore.talkEnabled.isEnabled },
             set: { self.updateTalkEnabled($0) })
     }
 
     var voiceWakeEnabledBinding: Binding<Bool> {
         Binding(
-            get: { self.voiceControlStore.voiceWakeEnabled },
+            get: { self.voiceControlStore.voiceWakeEnabled.isEnabled },
             set: { self.updateVoiceWakeEnabled($0) })
     }
 
@@ -643,7 +643,7 @@ extension SettingsProTab {
         self.voiceControlStore.send(.talkEnabledChangeRequested(.init(
             enabled: .init(isEnabled: enabled),
             isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled))))
-        self.storedTalkEnabled = self.voiceControlStore.talkEnabled
+        self.storedTalkEnabled = self.voiceControlStore.talkEnabled.isEnabled
     }
 
     func updateVoiceWakeEnabled(_ enabled: Bool) {

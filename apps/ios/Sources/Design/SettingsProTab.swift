@@ -1099,27 +1099,27 @@ struct SettingsVoiceControlFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var talkEnabled = false
-        var voiceWakeEnabled = false
-        var voiceWakeStatusText = "Off"
+        var talkEnabled = Action.SettingsTalkEnabled(isEnabled: false)
+        var voiceWakeEnabled = Action.SettingsVoiceWakeEnabled(isEnabled: false)
+        var voiceWakeStatusText = Action.SettingsVoiceWakeStatusText(value: "Off")
 
         var detailText: String {
-            if self.talkEnabled, self.voiceWakeEnabled { return "Talk + Wake" }
-            if self.talkEnabled { return "Talk on" }
-            if self.voiceWakeEnabled { return "Wake on" }
+            if self.talkEnabled.isEnabled, self.voiceWakeEnabled.isEnabled { return "Talk + Wake" }
+            if self.talkEnabled.isEnabled { return "Talk on" }
+            if self.voiceWakeEnabled.isEnabled { return "Wake on" }
             return "Off"
         }
 
         var detailColor: Color {
-            self.talkEnabled || self.voiceWakeEnabled ? OpenClawBrand.accent : .secondary
+            self.talkEnabled.isEnabled || self.voiceWakeEnabled.isEnabled ? OpenClawBrand.accent : .secondary
         }
 
         var voiceWakeValue: String {
-            self.voiceWakeEnabled ? "on" : "off"
+            self.voiceWakeEnabled.isEnabled ? "on" : "off"
         }
 
         var voiceWakeColor: Color {
-            self.voiceWakeEnabled ? OpenClawBrand.ok : .secondary
+            self.voiceWakeEnabled.isEnabled ? OpenClawBrand.ok : .secondary
         }
     }
 
@@ -1159,30 +1159,35 @@ struct SettingsVoiceControlFeature {
 
             switch action {
             case let .controlsSynced(sync):
-                state.talkEnabled = sync.talkEnabled.isEnabled
-                state.voiceWakeEnabled = sync.voiceWakeEnabled.isEnabled
-                state.voiceWakeStatusText = sync.voiceWakeStatusText.value
+                state.talkEnabled = sync.talkEnabled
+                state.voiceWakeEnabled = sync.voiceWakeEnabled
+                state.voiceWakeStatusText = sync.voiceWakeStatusText
                 return .none
 
             case .talkDisabledForAppleReview:
-                state.talkEnabled = false
+                state.talkEnabled = .init(isEnabled: false)
                 return .none
 
             case let .talkEnabledChanged(change):
-                state.talkEnabled = change.enabled.isEnabled
+                state.talkEnabled = change.enabled
                 return .none
 
             case let .talkEnabledChangeRequested(request):
                 let requested = request.enabled
-                let talkEnabled = request.isAppleReviewDemoModeEnabled.value ? false : requested.isEnabled
+                let talkEnabled =
+                    if request.isAppleReviewDemoModeEnabled.value {
+                        Action.SettingsTalkEnabled(isEnabled: false)
+                    } else {
+                        requested
+                    }
                 state.talkEnabled = talkEnabled
                 return .run { _ in
-                    await voiceControlClient.setTalkEnabled(talkEnabled)
+                    await voiceControlClient.setTalkEnabled(talkEnabled.isEnabled)
                 }
 
             case let .voiceWakeEnabledChanged(change):
                 let enabled = change.enabled
-                state.voiceWakeEnabled = enabled.isEnabled
+                state.voiceWakeEnabled = enabled
                 return .run { _ in
                     await voiceControlClient.setVoiceWakeEnabled(enabled.isEnabled)
                 }

@@ -2268,9 +2268,9 @@ struct SettingsNavigationFeatureTests {
             voiceWakeEnabled: .init(isEnabled: true),
             voiceWakeStatusText: .init(value: "Listening"))))
         {
-            $0.talkEnabled = true
-            $0.voiceWakeEnabled = true
-            $0.voiceWakeStatusText = "Listening"
+            $0.talkEnabled = .init(isEnabled: true)
+            $0.voiceWakeEnabled = .init(isEnabled: true)
+            $0.voiceWakeStatusText = .init(value: "Listening")
         }
     }
 
@@ -2281,10 +2281,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.talkEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
-            $0.talkEnabled = true
+            $0.talkEnabled = .init(isEnabled: true)
         }
         await store.send(.voiceWakeEnabledChanged(.init(enabled: .init(isEnabled: true)))) {
-            $0.voiceWakeEnabled = true
+            $0.voiceWakeEnabled = .init(isEnabled: true)
         }
         await store.finish()
 
@@ -2293,14 +2293,14 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings voice controls disable talk for apple review`() async {
         var initialState = SettingsVoiceControlFeature.State()
-        initialState.talkEnabled = true
-        initialState.voiceWakeEnabled = true
+        initialState.talkEnabled = .init(isEnabled: true)
+        initialState.voiceWakeEnabled = .init(isEnabled: true)
         let store = TestStore(initialState: initialState) {
             SettingsVoiceControlFeature()
         }
 
         await store.send(.talkDisabledForAppleReview) {
-            $0.talkEnabled = false
+            $0.talkEnabled = .init(isEnabled: false)
         }
     }
 
@@ -2314,14 +2314,14 @@ struct SettingsNavigationFeatureTests {
             enabled: .init(isEnabled: true),
             isAppleReviewDemoModeEnabled: .init(value: false))))
         {
-            $0.talkEnabled = true
+            $0.talkEnabled = .init(isEnabled: true)
         }
 
         await store.send(.talkEnabledChangeRequested(.init(
             enabled: .init(isEnabled: true),
             isAppleReviewDemoModeEnabled: .init(value: true))))
         {
-            $0.talkEnabled = false
+            $0.talkEnabled = .init(isEnabled: false)
         }
         await store.finish()
 
@@ -2335,17 +2335,17 @@ struct SettingsNavigationFeatureTests {
         #expect(state.voiceWakeValue == "off")
         #expect(state.voiceWakeColor == .secondary)
 
-        state.voiceWakeEnabled = true
+        state.voiceWakeEnabled = .init(isEnabled: true)
         #expect(state.detailText == "Wake on")
         #expect(state.detailColor == OpenClawBrand.accent)
         #expect(state.voiceWakeValue == "on")
         #expect(state.voiceWakeColor == OpenClawBrand.ok)
 
-        state.talkEnabled = true
+        state.talkEnabled = .init(isEnabled: true)
         #expect(state.detailText == "Talk + Wake")
         #expect(state.detailColor == OpenClawBrand.accent)
 
-        state.voiceWakeEnabled = false
+        state.voiceWakeEnabled = .init(isEnabled: false)
         #expect(state.detailText == "Talk on")
         #expect(state.detailColor == OpenClawBrand.accent)
     }
