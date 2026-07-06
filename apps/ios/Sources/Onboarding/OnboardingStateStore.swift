@@ -484,14 +484,15 @@ struct OnboardingCredentialsFeature {
             var password: OnboardingGatewayPassword
         }
 
-        struct ManualCredentialChange: Equatable, Sendable { var value: String }
+        struct GatewayPasswordChange: Equatable, Sendable { var password: OnboardingGatewayPassword }
+        struct GatewayTokenChange: Equatable, Sendable { var token: OnboardingGatewayToken }
         struct SetupAuthApplication: Equatable, Sendable {
             var setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth
         }
 
         case credentialsLoaded(LoadedCredentials)
-        case gatewayPasswordChanged(ManualCredentialChange)
-        case gatewayTokenChanged(ManualCredentialChange)
+        case gatewayPasswordChanged(GatewayPasswordChange)
+        case gatewayTokenChanged(GatewayTokenChange)
         case pendingManualAuthOverrideConsumed
         case reset
         case setupAuthApplied(SetupAuthApplication)
@@ -508,11 +509,11 @@ struct OnboardingCredentialsFeature {
                 return .none
 
             case let .gatewayPasswordChanged(change):
-                state.gatewayPassword = change.value
+                state.gatewayPassword = change.password.value
                 return .none
 
             case let .gatewayTokenChanged(change):
-                state.gatewayToken = change.value
+                state.gatewayToken = change.token.value
                 return .none
 
             case .pendingManualAuthOverrideConsumed:
