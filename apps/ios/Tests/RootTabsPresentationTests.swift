@@ -125,7 +125,9 @@ struct RootTabsPresentationTests {
     }
 
     @Test func `reducer opens onboarding on first startup presentation evaluation`() async {
-        let store = TestStore(initialState: RootPresentationFeature.State()) {
+        let store = TestStore(initialState: RootPresentationFeature.State(
+            onboardingSkipAvailability: .init(allowsSkip: false)))
+        {
             RootPresentationFeature()
         }
 
@@ -136,6 +138,7 @@ struct RootTabsPresentationTests {
             hasExistingGatewayConfig: false)))
         {
             $0.onboardingEvaluationGate = .init(didEvaluate: true)
+            $0.onboardingSkipAvailability = .init(allowsSkip: true)
             $0.onboardingPresentation = .init(isPresented: true)
             $0.startupRoute = .onboarding
         }

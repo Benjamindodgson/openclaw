@@ -130,6 +130,14 @@ struct RootPresentationFeature {
         }
     }
 
+    struct OnboardingSkipAvailability: Equatable, Sendable {
+        var allowsSkip: Bool
+
+        init(allowsSkip: Bool = true) {
+            self.allowsSkip = allowsSkip
+        }
+    }
+
     struct LocalNetworkAccessRequest: Equatable, Sendable {
         var reason: RootLocalNetworkAccessReason
         var sceneActivity: SceneActivity
@@ -205,7 +213,7 @@ struct RootPresentationFeature {
         var launchOnboardingPresentation: LaunchOnboardingPresentation
         var quickSetupDismissal: QuickSetupDismissal
         var onboardingPresentation: OnboardingPresentation
-        var onboardingAllowSkip: Bool
+        var onboardingSkipAvailability: OnboardingSkipAvailability
         var presentedSheet: PresentedSheet?
         var discoveredGatewayCount: DiscoveredGatewayCount
         var onboardingEvaluationGate: OnboardingEvaluationGate
@@ -224,7 +232,7 @@ struct RootPresentationFeature {
             launchOnboardingPresentation: LaunchOnboardingPresentation = .init(),
             quickSetupDismissal: QuickSetupDismissal = .init(),
             onboardingPresentation: OnboardingPresentation = .init(),
-            onboardingAllowSkip: Bool = true,
+            onboardingSkipAvailability: OnboardingSkipAvailability = .init(),
             presentedSheet: PresentedSheet? = nil,
             discoveredGatewayCount: DiscoveredGatewayCount = .init())
         {
@@ -235,7 +243,7 @@ struct RootPresentationFeature {
             self.launchOnboardingPresentation = launchOnboardingPresentation
             self.quickSetupDismissal = quickSetupDismissal
             self.onboardingPresentation = onboardingPresentation
-            self.onboardingAllowSkip = onboardingAllowSkip
+            self.onboardingSkipAvailability = onboardingSkipAvailability
             self.presentedSheet = presentedSheet
             self.discoveredGatewayCount = discoveredGatewayCount
             self.onboardingEvaluationGate = .init()
@@ -424,7 +432,7 @@ struct RootPresentationFeature {
                     state.presentationCommand = .requestLocalNetworkAccess(
                         LocalNetworkAccessCommand(reason: .rootAppear))
                 case .onboarding:
-                    state.onboardingAllowSkip = true
+                    state.onboardingSkipAvailability = .init(allowsSkip: true)
                     state.onboardingPresentation = .init(isPresented: true)
                     state.refreshPresentation()
                 case .settings:
@@ -435,7 +443,7 @@ struct RootPresentationFeature {
                 return .none
 
             case .forceOnboardingRequested:
-                state.onboardingAllowSkip = true
+                state.onboardingSkipAvailability = .init(allowsSkip: true)
                 state.onboardingPresentation = .init(isPresented: true)
                 state.refreshPresentation()
                 return .none

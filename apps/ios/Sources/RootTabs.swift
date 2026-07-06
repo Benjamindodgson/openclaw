@@ -841,7 +841,7 @@ struct RootTabs: View {
             }
             .fullScreenCover(isPresented: self.onboardingPresentedBinding) {
                 OnboardingWizardView(
-                    allowSkip: self.presentationStore.onboardingAllowSkip,
+                    allowSkip: self.presentationStore.onboardingSkipAvailability.allowsSkip,
                     onRequestLocalNetworkAccess: { reason in
                         self.requestLocalNetworkAccess(reason: .init(rawValue: reason))
                     },
