@@ -704,12 +704,12 @@ extension SettingsProTab {
     }
 
     var locationModeRaw: String {
-        self.locationStore.locationModeRaw
+        self.locationStore.locationModeRaw.rawValue
     }
 
     var locationModeBinding: Binding<String> {
         Binding(
-            get: { self.locationStore.locationModeRaw },
+            get: { self.locationStore.locationModeRaw.rawValue },
             set: { self.updateLocationModeRaw($0) })
     }
 
