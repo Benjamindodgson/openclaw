@@ -159,7 +159,8 @@ extension SettingsProTab {
 
     func syncSettingsState() {
         self.pushEnrollmentConsentStore.send(.refresh)
-        self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: self.storedAppearancePreferenceRaw)))
+        self.appearanceStore.send(.appearancePreferenceSynced(.init(
+            rawValue: .init(value: self.storedAppearancePreferenceRaw))))
         self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: .init(value: self.storedDisplayName))))
         self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: .init(value: self.storedInstanceId))))
         self.debugOptionsStore.send(.debugOptionsSynced(.init(

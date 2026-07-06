@@ -876,7 +876,7 @@ struct SettingsAppearanceFeature {
     enum Action: Equatable, Sendable {
         struct AppearancePreferenceChange: Equatable, Sendable { var preference: AppAppearancePreference }
 
-        struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: String }
+        struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: SettingsAppearancePreferenceRawValue }
 
         case appearancePreferenceChanged(AppearancePreferenceChange)
         case appearancePreferenceSynced(AppearancePreferenceSync)
@@ -892,7 +892,7 @@ struct SettingsAppearanceFeature {
                 return .none
 
             case let .appearancePreferenceSynced(sync):
-                state.appearancePreferenceRaw = sync.rawValue
+                state.appearancePreferenceRaw = sync.rawValue.value
                 return .none
             }
         }
@@ -1501,7 +1501,7 @@ struct SettingsProTab: View {
                 }
             }
             .onChange(of: self.storedAppearancePreferenceRaw) { _, newValue in
-                self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: newValue)))
+                self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: .init(value: newValue))))
             }
             .onChange(of: self.storedDisplayName) { _, newValue in
                 self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: .init(value: newValue))))
