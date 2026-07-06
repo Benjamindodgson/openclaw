@@ -776,9 +776,21 @@ struct SettingsOnboardingStateFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var hasConnectedOnce = false
-        var onboardingComplete = false
-        var onboardingRequestID = 0
+        var hasConnectedOnceState = Action.SettingsOnboardingHasConnectedOnce(value: false)
+        var onboardingCompletion = Action.SettingsOnboardingComplete(value: false)
+        var requestID = SettingsOnboardingRequestID(value: 0)
+
+        var hasConnectedOnce: Bool {
+            self.hasConnectedOnceState.value
+        }
+
+        var onboardingComplete: Bool {
+            self.onboardingCompletion.value
+        }
+
+        var onboardingRequestID: Int {
+            self.requestID.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -809,21 +821,21 @@ struct SettingsOnboardingStateFeature {
 
             switch action {
             case let .onboardingRequestIDChanged(change):
-                state.onboardingRequestID = change.requestID.value
+                state.requestID = change.requestID
                 return .none
 
             case let .onboardingResetRequested(request):
-                state.hasConnectedOnce = false
-                state.onboardingComplete = false
-                state.onboardingRequestID += 1
+                state.hasConnectedOnceState = .init(value: false)
+                state.onboardingCompletion = .init(value: false)
+                state.requestID = .init(value: state.requestID.value + 1)
                 return .run { _ in
                     await resetClient.reset(request.instanceId)
                 }
 
             case let .onboardingStateSynced(sync):
-                state.hasConnectedOnce = sync.hasConnectedOnce.value
-                state.onboardingComplete = sync.onboardingComplete.value
-                state.onboardingRequestID = sync.onboardingRequestID.value
+                state.hasConnectedOnceState = sync.hasConnectedOnce
+                state.onboardingCompletion = sync.onboardingComplete
+                state.requestID = sync.onboardingRequestID
                 return .none
             }
         }
