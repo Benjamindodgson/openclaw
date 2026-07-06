@@ -107,7 +107,7 @@ struct CommandCenterRecentSessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: false),
+            sceneActivity: .init(isActive: .init(value: false)),
             sessionsAvailability: .init(isAvailable: .init(value: true)),
             currentSession: .init(key: .init(value: "chat-existing")),
             defaultSession: .init(key: .init(value: "main")))))
@@ -126,7 +126,7 @@ struct CommandCenterRecentSessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: true),
+            sceneActivity: .init(isActive: .init(value: true)),
             sessionsAvailability: .init(isAvailable: .init(value: false)),
             currentSession: .init(key: .init(value: "chat-existing")),
             defaultSession: .init(key: .init(value: "main")))))
@@ -164,7 +164,7 @@ struct CommandCenterRecentSessionsFeatureTests {
             ])
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: true),
+            sceneActivity: .init(isActive: .init(value: true)),
             sessionsAvailability: .init(isAvailable: .init(value: true)),
             currentSession: .init(key: .init(value: currentSession.key)),
             defaultSession: .init(key: .init(value: defaultSession.key)))))
@@ -192,7 +192,7 @@ struct CommandCenterRecentSessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: true),
+            sceneActivity: .init(isActive: .init(value: true)),
             sessionsAvailability: .init(isAvailable: .init(value: true)),
             currentSession: .init(key: .init(value: "chat-existing")),
             defaultSession: .init(key: .init(value: "main")))))
