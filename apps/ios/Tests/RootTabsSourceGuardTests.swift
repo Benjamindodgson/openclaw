@@ -2261,6 +2261,10 @@ struct RootTabsSourceGuardTests {
             gatewaySetupFeaturesSource,
             from: "struct SetupLinkApplication",
             to: "struct ManualConnectionAttempt")
+        let connectManualFunction = try Self.extract(
+            actionsSource,
+            from: "func connectManual() async",
+            to: "func preflightGateway")
 
         #expect(gatewaySetupFeaturesSource.contains("enum ManualConnectionResult: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct Failure: Equatable, Sendable"))
@@ -2298,6 +2302,9 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("var port: ManualConnectionPort"))
         #expect(gatewaySetupFeaturesSource.contains("var isPortValid: ManualConnectionPortValidity"))
         #expect(gatewaySetupFeaturesSource.contains("guard request.isPortValid.value else"))
+        #expect(gatewaySetupFeaturesSource.contains("struct SettingsManualConnectionFailureMessage: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource.contains(
+            "struct Failure: Equatable, Sendable { var message: SettingsManualConnectionFailureMessage }"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayTailnetIPv4Availability: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct GatewayPreflightRequest: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("var hasTailnetIPv4: ManualGatewayTailnetIPv4Availability"))
@@ -2314,7 +2321,10 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("case manualGatewayTLSChanged(ManualGatewayTLSChange)"))
         #expect(gatewaySetupFeaturesSource.contains("case setupLinkApplied(SetupLinkApplication)"))
         #expect(gatewaySetupFeaturesSource.contains("case manualConnectionRequested(ManualConnectionAttempt)"))
-        #expect(gatewaySetupFeaturesSource.contains("state.manualConnectionResult = .failure(.init(message:"))
+        #expect(gatewaySetupFeaturesSource.contains(
+            "state.manualConnectionResult = .failure(.init(message: Self.hostRequiredFailureMessage))"))
+        #expect(gatewaySetupFeaturesSource.contains(
+            "state.manualConnectionResult = .failure(.init(message: Self.invalidPortFailureMessage))"))
         #expect(gatewaySetupFeaturesSource.contains("state.manualConnectionResult = .request(ManualConnectionRequest("))
         #expect(gatewaySetupFeaturesSource.contains("host: .init(value: host)"))
         #expect(gatewaySetupFeaturesSource.contains("port: .init(value: request.port.value)"))
@@ -2342,9 +2352,12 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("host: request.host.value"))
         #expect(actionsSource.contains("port: request.port.value"))
         #expect(actionsSource.contains("useTLS: request.useTLS.value"))
-        #expect(actionsSource.contains(
-            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message)))"))
+        #expect(connectManualFunction.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message.value)))"))
         #expect(!gatewaySetupFeaturesSource.contains("case failure(String)"))
+        #expect(!gatewaySetupFeaturesSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
+        #expect(!connectManualFunction.contains(
+            "self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: failure.message)))"))
         #expect(!gatewaySetupFeaturesSource.contains("var host: String\n        var port: Int\n        var useTLS: Bool"))
         #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayEnabled = change.isEnabled"))
         #expect(!gatewaySetupFeaturesSource.contains("state.manualGatewayHost = change.host"))
