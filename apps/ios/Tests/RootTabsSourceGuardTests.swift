@@ -185,6 +185,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "@Reducer\nstruct AgentOverviewLoadFeature",
             to: "@Reducer\nstruct AgentNavigationFeature")
+        let overviewFilterFeature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentOverviewFilterFeature",
+            to: ".autoLogActions()")
         let clawHubSearchFeature = try Self.extract(
             source,
             from: "@Reducer\nstruct AgentClawHubSearchFeature",
@@ -215,7 +219,7 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("@Reducer\nstruct AgentOverviewFilterFeature"))
         #expect(source.contains("struct AgentOverviewSearchText: Equatable, Sendable"))
         #expect(source.contains("var text: AgentOverviewSearchText"))
-        #expect(source.contains("state.searchText = change.text.value"))
+        #expect(overviewFilterFeature.contains("state.searchText = change.text"))
         #expect(source.contains("@Reducer\nstruct AgentOverviewLoadFeature"))
         #expect(!source.contains("@State var agentRosterFilter"))
         #expect(!source.contains("@State var agentSearchText"))
@@ -490,8 +494,19 @@ struct RootTabsSourceGuardTests {
         #expect(cronSource.contains("self.cronActionStore.send(.actionFailed(.init("))
         #expect(overviewSource.contains("selection: self.agentRosterFilterBinding"))
         #expect(overviewSource.contains("text: self.agentSearchTextBinding"))
+        #expect(overviewSource.contains("private var agentSearchText: String"))
+        #expect(overviewSource.contains("self.filterStore.searchText.value"))
+        #expect(overviewSource.contains("let query = self.agentSearchText.trimmingCharacters"))
         #expect(overviewSource.contains("set: { self.filterStore.send(.searchTextChanged(.init(text: .init(value: $0)))) }"))
         #expect(overviewSource.contains("self.filterStore.send(.clearFiltersTapped)"))
+        #expect(overviewFilterFeature.contains("var searchText = AgentOverviewSearchText(value: \"\")"))
+        #expect(overviewFilterFeature.contains("self.searchText.value.trimmingCharacters"))
+        #expect(overviewFilterFeature.contains("state.searchText = change.text"))
+        #expect(overviewFilterFeature.contains("state.searchText = .init(value: \"\")"))
+        #expect(!overviewSource.contains("get: { self.filterStore.searchText }"))
+        #expect(!overviewSource.contains("self.filterStore.searchText.trimmingCharacters"))
+        #expect(!overviewFilterFeature.contains("var searchText = \"\""))
+        #expect(!overviewFilterFeature.contains("state.searchText = change.text.value"))
         #expect(!source.contains(
             "struct SearchTextChange: Equatable, Sendable {\n            var text: String\n        }\n\n        case clearFiltersTapped"))
         #expect(source.contains("NavigationStack(path: self.navigationPathBinding)"))

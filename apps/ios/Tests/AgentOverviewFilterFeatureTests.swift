@@ -490,21 +490,21 @@ struct AgentOverviewFilterFeatureTests {
             $0.rosterFilter = .online
         }
         await store.send(.searchTextChanged(.init(text: .init(value: "main")))) {
-            $0.searchText = "main"
+            $0.searchText = .init(value: "main")
         }
     }
 
     @Test func `clear filters resets roster filter and search text`() async {
         var initialState = AgentOverviewFilterFeature.State()
         initialState.rosterFilter = .ready
-        initialState.searchText = "worker"
+        initialState.searchText = .init(value: "worker")
         let store = TestStore(initialState: initialState) {
             AgentOverviewFilterFeature()
         }
 
         await store.send(.clearFiltersTapped) {
             $0.rosterFilter = .all
-            $0.searchText = ""
+            $0.searchText = .init(value: "")
         }
     }
 
@@ -512,10 +512,10 @@ struct AgentOverviewFilterFeatureTests {
         var state = AgentOverviewFilterFeature.State()
         #expect(!state.hasActiveFilters)
 
-        state.searchText = "  main  "
+        state.searchText = .init(value: "  main  ")
         #expect(state.hasActiveFilters)
 
-        state.searchText = "   "
+        state.searchText = .init(value: "   ")
         state.rosterFilter = .online
         #expect(state.hasActiveFilters)
     }
