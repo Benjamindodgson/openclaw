@@ -223,7 +223,7 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.moveRequested(.init(card: card, status: .init(value: "running"), canWrite: true))) {
-            $0.busyCardID = "card-1"
+            $0.busyCardID = .init(value: "card-1")
             $0.errorText = nil
         }
         await store.receive(.moveResponse(.init(result: .success(moved)))) {
@@ -232,7 +232,7 @@ struct IPadWorkboardFeatureTests {
             $0.knownBoardIDs = ["default"]
         }
         await store.send(.archiveRequested(.init(card: moved, canWrite: true))) {
-            $0.busyCardID = "card-1"
+            $0.busyCardID = .init(value: "card-1")
             $0.errorText = nil
         }
         await store.receive(.archiveResponse(.init(result: .success(archived)))) {

@@ -116,6 +116,7 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
+struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
@@ -168,7 +169,7 @@ struct IPadWorkboardFeature {
         var isRefreshing = false
         var isDispatching = false
         var activeRefreshBoardID: String?
-        var busyCardID: String?
+        var busyCardID: IPadWorkboardBusyCardID?
         var dispatchSummaryText: String?
         var selectedStatus = "active"
         var selectedBoardID = ""
@@ -481,7 +482,7 @@ struct IPadWorkboardFeature {
             switch action {
             case let .archiveRequested(request):
                 guard request.canWrite, state.busyCardID == nil else { return .none }
-                state.busyCardID = request.card.id
+                state.busyCardID = .init(value: request.card.id)
                 state.errorText = nil
                 let params = IPadWorkboardArchiveParams(
                     id: request.card.id,
@@ -630,7 +631,7 @@ struct IPadWorkboardFeature {
 
             case let .moveRequested(request):
                 guard request.canWrite, state.busyCardID == nil else { return .none }
-                state.busyCardID = request.card.id
+                state.busyCardID = .init(value: request.card.id)
                 state.errorText = nil
                 let params = IPadWorkboardMoveParams(
                     id: request.card.id,
