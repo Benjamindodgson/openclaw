@@ -900,6 +900,10 @@ struct AgentNavigationFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct AgentOverviewSearchText: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct AgentOverviewFilterFeature {
     // swiftformat:disable redundantSendable
@@ -917,7 +921,7 @@ struct AgentOverviewFilterFeature {
 
     enum Action: Equatable, Sendable {
         struct SearchTextChange: Equatable, Sendable {
-            var text: String
+            var text: AgentOverviewSearchText
         }
 
         case clearFiltersTapped
@@ -945,7 +949,7 @@ struct AgentOverviewFilterFeature {
                 return .none
 
             case let .searchTextChanged(change):
-                state.searchText = change.text
+                state.searchText = change.text.value
                 return .none
             }
         }

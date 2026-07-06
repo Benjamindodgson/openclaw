@@ -482,7 +482,7 @@ struct AgentOverviewFilterFeatureTests {
         await store.send(.rosterFilterChanged(.online)) {
             $0.rosterFilter = .online
         }
-        await store.send(.searchTextChanged(.init(text: "main"))) {
+        await store.send(.searchTextChanged(.init(text: .init(value: "main")))) {
             $0.searchText = "main"
         }
     }
