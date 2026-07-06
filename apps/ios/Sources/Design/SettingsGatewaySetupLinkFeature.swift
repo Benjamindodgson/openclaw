@@ -2,8 +2,17 @@ import ComposableArchitecture
 import Foundation
 import OpenClawKit
 
+// swiftformat:disable redundantSendable
+struct SettingsGatewaySetupLinkFailureMessage: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct SettingsGatewaySetupLinkFeature {
+    static let emptySetupCodeFailureMessage = SettingsGatewaySetupLinkFailureMessage(
+        value: "Paste a setup code to continue.")
+    static let invalidSetupCodeFailureMessage = SettingsGatewaySetupLinkFailureMessage(
+        value: "Setup code not recognized or uses an insecure ws:// gateway URL.")
+
     private let appleReviewDemoClientOverride: SettingsAppleReviewDemoClient?
 
     init(appleReviewDemoClient: SettingsAppleReviewDemoClient? = nil) {
@@ -30,7 +39,7 @@ struct SettingsGatewaySetupLinkFeature {
             var statusText: String
         }
 
-        struct Failure: Equatable, Sendable { var message: String }
+        struct Failure: Equatable, Sendable { var message: SettingsGatewaySetupLinkFailureMessage }
 
         case appleReviewDemo(AppleReviewDemo)
         case failure(Failure)
@@ -71,7 +80,7 @@ struct SettingsGatewaySetupLinkFeature {
                 let raw = state.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
                 let stagedLink = state.stagedGatewaySetupLink
                 guard !raw.isEmpty || stagedLink != nil else {
-                    state.applyResult = .failure(.init(message: "Paste a setup code to continue."))
+                    state.applyResult = .failure(.init(message: Self.emptySetupCodeFailureMessage))
                     return .none
                 }
 
@@ -85,8 +94,7 @@ struct SettingsGatewaySetupLinkFeature {
                 }
 
                 guard let link = raw.isEmpty ? stagedLink : GatewayConnectDeepLink.fromSetupInput(raw) else {
-                    state.applyResult = .failure(.init(
-                        message: "Setup code not recognized or uses an insecure ws:// gateway URL."))
+                    state.applyResult = .failure(.init(message: Self.invalidSetupCodeFailureMessage))
                     return .none
                 }
                 state.stagedGatewaySetupLink = nil
