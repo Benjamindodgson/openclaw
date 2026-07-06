@@ -695,7 +695,7 @@ extension AgentProTab {
         } catch {
             self.clawHubStore.send(.installFailed(.init(
                 slug: result.slug,
-                message: Self.skillMutationMessage(error))))
+                message: .init(value: Self.skillMutationMessage(error)))))
         }
     }
 
@@ -710,7 +710,7 @@ extension AgentProTab {
             let results = try JSONDecoder().decode(ClawHubSearchResponseLite.self, from: data).results
             self.clawHubStore.send(.searchFinished(.init(results: results)))
         } catch {
-            self.clawHubStore.send(.searchFailed(.init(message: Self.skillMutationMessage(error))))
+            self.clawHubStore.send(.searchFailed(.init(message: .init(value: Self.skillMutationMessage(error)))))
         }
     }
 
