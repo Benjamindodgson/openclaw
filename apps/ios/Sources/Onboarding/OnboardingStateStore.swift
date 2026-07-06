@@ -85,6 +85,8 @@ struct OnboardingGatewayToken: Equatable, Sendable { var value: String }
 
 struct OnboardingGatewayPassword: Equatable, Sendable { var value: String }
 
+struct OnboardingQRMessage: Equatable, Sendable { var value: String? }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -676,7 +678,7 @@ struct OnboardingQRPhotoImportFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct QRMessageDetection: Equatable, Sendable { var message: String? }
+        struct QRMessageDetection: Equatable, Sendable { var message: OnboardingQRMessage }
 
         case imageLoadFailed
         case importStarted
@@ -701,7 +703,7 @@ struct OnboardingQRPhotoImportFeature {
 
             case let .qrMessageDetected(detection):
                 state.isImporting = false
-                state.result = Self.importResult(message: detection.message)
+                state.result = Self.importResult(message: detection.message.value)
                 return .none
 
             case .resultHandled:

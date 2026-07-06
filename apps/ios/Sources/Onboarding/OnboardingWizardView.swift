@@ -828,7 +828,7 @@ extension OnboardingWizardView {
                 self.handlePhotoImportResult()
                 return
             }
-            self.photoImportStore.send(.qrMessageDetected(.init(message: self.detectQRCode(from: data))))
+            self.photoImportStore.send(.qrMessageDetected(.init(message: .init(value: self.detectQRCode(from: data)))))
             self.handlePhotoImportResult()
         }
     }
