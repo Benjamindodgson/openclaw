@@ -285,7 +285,7 @@ struct AgentProTab: View {
     }
 
     var cronActionStatusText: String? {
-        self.cronActionStore.statusText
+        self.cronActionStore.statusText.value
     }
 
     private var overviewNavigation: some View {
@@ -574,6 +574,7 @@ struct AgentSkillEditorFeature {
 // swiftformat:disable redundantSendable
 struct AgentCronActionID: Equatable, Sendable { var value: String }
 struct AgentCronActionFailureMessage: Equatable, Sendable { var value: String }
+struct AgentCronActionStatusText: Equatable, Sendable { var value: String? }
 struct AgentCronActionSuccessMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -583,7 +584,7 @@ struct AgentCronActionFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var busyIDs: Set<String> = []
-        var statusText: String?
+        var statusText = AgentCronActionStatusText(value: nil)
     }
 
     enum Action: Equatable, Sendable {
@@ -613,11 +614,11 @@ struct AgentCronActionFeature {
             switch action {
             case let .actionStarted(action):
                 state.busyIDs.insert(action.id.value)
-                state.statusText = nil
+                state.statusText = .init(value: nil)
                 return .none
 
             case let .actionSucceeded(result):
-                state.statusText = result.message.value
+                state.statusText = .init(value: result.message.value)
                 return .none
 
             case let .actionFinished(action):
@@ -626,7 +627,7 @@ struct AgentCronActionFeature {
 
             case let .actionFailed(failure):
                 state.busyIDs.remove(failure.id.value)
-                state.statusText = failure.message.value
+                state.statusText = .init(value: failure.message.value)
                 return .none
             }
         }
