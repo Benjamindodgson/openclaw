@@ -119,7 +119,6 @@ struct IPadWorkboardActiveRefreshBoardID: Equatable, Sendable { var value: Strin
 struct IPadWorkboardBoardScopeID: Equatable, Sendable { var value: String }
 struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
 struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
-struct IPadWorkboardCardCreationInFlight: Equatable, Sendable { var value: Bool }
 struct IPadWorkboardDispatchInFlight: Equatable, Sendable { var value: Bool }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
@@ -173,6 +172,11 @@ struct IPadWorkboardFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        enum CardCreationPhase: Equatable, Sendable {
+            case idle
+            case inFlight
+        }
+
         var cards: [IPadWorkboardCard] = []
         var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
         var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
@@ -186,7 +190,7 @@ struct IPadWorkboardFeature {
         var query = IPadWorkboardQuery(value: "")
         var draftTitle = IPadWorkboardDraftTitle(value: "")
         var draftNotes = IPadWorkboardDraftNotes(value: "")
-        var isCreatingCard = IPadWorkboardCardCreationInFlight(value: false)
+        var cardCreationPhase = CardCreationPhase.idle
         var errorText: IPadWorkboardFailureMessage?
         var presentedSheet: IPadWorkboardSheet?
 
@@ -210,7 +214,7 @@ struct IPadWorkboardFeature {
 
         func createUnavailableMessage(canRead: Bool, canWrite: Bool) -> String? {
             Self.createUnavailableMessage(
-                isCreatingCard: self.isCreatingCard.value,
+                cardCreationPhase: self.cardCreationPhase,
                 trimmedDraftTitle: self.trimmedDraftTitle,
                 canRead: canRead,
                 canWrite: canWrite)
@@ -294,12 +298,12 @@ struct IPadWorkboardFeature {
         }
 
         static func createUnavailableMessage(
-            isCreatingCard: Bool,
+            cardCreationPhase: CardCreationPhase,
             trimmedDraftTitle: String,
             canRead: Bool,
             canWrite: Bool) -> String?
         {
-            if isCreatingCard {
+            if cardCreationPhase == .inFlight {
                 return "Card creation is already in progress."
             }
             if !canWrite {
@@ -578,7 +582,7 @@ struct IPadWorkboardFeature {
                     return .none
                 }
 
-                state.isCreatingCard = .init(value: true)
+                state.cardCreationPhase = .inFlight
                 state.errorText = nil
                 let canCreateInSelectedStatus = state.statusValues.contains(state.selectedStatus.value)
                 let status = canCreateInSelectedStatus ? state.selectedStatus.value : "todo"
@@ -604,7 +608,7 @@ struct IPadWorkboardFeature {
             case let .createResponse(response):
                 switch response.result {
                 case let .success(card):
-                    state.isCreatingCard = .init(value: false)
+                    state.cardCreationPhase = .idle
                     state.draftTitle = .init(value: "")
                     state.draftNotes = .init(value: "")
                     state.presentedSheet = nil
@@ -612,7 +616,7 @@ struct IPadWorkboardFeature {
                     return .none
 
                 case let .failure(error):
-                    state.isCreatingCard = .init(value: false)
+                    state.cardCreationPhase = .idle
                     state.errorText = .init(value: error.message)
                     return .none
                 }
