@@ -1759,6 +1759,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `command center recent sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
+        let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
         let feature = try Self.extract(
             source,
             from: "@Reducer\nstruct CommandCenterRecentSessionsFeature",
@@ -1767,22 +1768,30 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
         #expect(feature.contains("struct SceneActivity: Equatable, Sendable"))
         #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
+        #expect(source.contains("struct CommandSessionReferenceKey: Equatable, Sendable"))
         #expect(feature.contains("struct SessionReference: Equatable, Sendable"))
+        #expect(feature.contains("var key: CommandSessionReferenceKey"))
         #expect(feature.contains("var sceneActivity: SceneActivity"))
         #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
         #expect(feature.contains("var currentSession: SessionReference"))
         #expect(feature.contains("var defaultSession: SessionReference"))
         #expect(feature.contains("guard request.sceneActivity.isActive"))
         #expect(feature.contains("guard request.sessionsAvailability.isAvailable"))
-        #expect(feature.contains("currentSessionKey: request.currentSession.key"))
-        #expect(feature.contains("defaultSessionKey: request.defaultSession.key"))
+        #expect(feature.contains("currentSessionKey: request.currentSession.key.value"))
+        #expect(feature.contains("defaultSessionKey: request.defaultSession.key.value"))
+        #expect(commandCenterSource.contains("currentSession: .init(key: .init(value: self.appModel.chatSessionKey))"))
+        #expect(commandCenterSource.contains(
+            "defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))"))
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(snapshot))))"))
         #expect(feature.contains("switch response.result"))
         #expect(!feature.contains("var sceneActive: Bool"))
         #expect(!feature.contains("var sessionsAvailable: Bool"))
+        #expect(!feature.contains("var key: String"))
         #expect(!feature.contains("var currentSessionKey: String"))
         #expect(!feature.contains("var defaultSessionKey: String"))
+        #expect(!commandCenterSource.contains("currentSession: .init(key: self.appModel.chatSessionKey)"))
+        #expect(!commandCenterSource.contains("defaultSession: .init(key: self.appModel.defaultChatSessionKey)"))
     }
 
     @Test func `command center chat routes use typed payload`() throws {

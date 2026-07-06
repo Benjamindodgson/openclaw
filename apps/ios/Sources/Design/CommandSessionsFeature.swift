@@ -29,6 +29,7 @@ extension DependencyValues {
 // swiftformat:disable redundantSendable
 struct CommandSessionsFailureMessage: Equatable, Sendable { var value: String }
 struct CommandSessionsLoadingInFlight: Equatable, Sendable { var value: Bool }
+struct CommandSessionReferenceKey: Equatable, Sendable { var value: String }
 
 enum CommandSessionsError: Error, Equatable, Sendable {
     case failed
@@ -155,7 +156,7 @@ struct CommandCenterRecentSessionsFeature {
         }
 
         struct SessionReference: Equatable, Sendable {
-            var key: String
+            var key: CommandSessionReferenceKey
         }
 
         struct RefreshRequest: Equatable, Sendable {
@@ -194,8 +195,8 @@ struct CommandCenterRecentSessionsFeature {
                         let sessions = try await client.listSessions(CommandCenterTab.recentSessionsFetchLimit)
                         let snapshot = Self.snapshot(
                             from: sessions,
-                            currentSessionKey: request.currentSession.key,
-                            defaultSessionKey: request.defaultSession.key)
+                            currentSessionKey: request.currentSession.key.value,
+                            defaultSessionKey: request.defaultSession.key.value)
                         await send(.refreshResponse(.init(result: .success(snapshot))))
                     } catch {
                         await send(.refreshResponse(.init(result: .failure(.failed))))
