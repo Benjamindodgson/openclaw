@@ -384,9 +384,14 @@ struct IPadWorkboardFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SceneActivity: Equatable, Sendable { var isActive: Bool }
+        struct GatewayReadAccess: Equatable, Sendable { var canRead: Bool }
+        struct GatewayWriteAccess: Equatable, Sendable { var canWrite: Bool }
+        struct RefreshForce: Equatable, Sendable { var isForced: Bool }
+
         struct ArchiveRequest: Equatable, Sendable {
             var card: IPadWorkboardCard
-            var canWrite: Bool
+            var writeAccess: GatewayWriteAccess
         }
 
         struct ArchiveResponse: Equatable, Sendable {
@@ -398,7 +403,7 @@ struct IPadWorkboardFeature {
         case beginCreateCardTapped
 
         struct BoardScopesResponse: Equatable, Sendable {
-            var force: Bool
+            var force: RefreshForce
             var result: Result<[IPadWorkboardBoardSummary], IPadWorkboardError>
         }
 
@@ -418,8 +423,8 @@ struct IPadWorkboardFeature {
         case clearQueryTapped
 
         struct CreateRequest: Equatable, Sendable {
-            var canRead: Bool
-            var canWrite: Bool
+            var readAccess: GatewayReadAccess
+            var writeAccess: GatewayWriteAccess
         }
 
         struct CreateResponse: Equatable, Sendable {
@@ -430,7 +435,7 @@ struct IPadWorkboardFeature {
         case createResponse(CreateResponse)
 
         struct DispatchRequest: Equatable, Sendable {
-            var canWrite: Bool
+            var writeAccess: GatewayWriteAccess
         }
 
         struct DispatchResponse: Equatable, Sendable {
@@ -456,7 +461,7 @@ struct IPadWorkboardFeature {
         struct MoveRequest: Equatable, Sendable {
             var card: IPadWorkboardCard
             var status: IPadWorkboardMoveStatus
-            var canWrite: Bool
+            var writeAccess: GatewayWriteAccess
         }
 
         struct MoveResponse: Equatable, Sendable {
@@ -473,14 +478,14 @@ struct IPadWorkboardFeature {
         case queryChanged(QueryChange)
 
         struct RefreshRequest: Equatable, Sendable {
-            var sceneActive: Bool
-            var canRead: Bool
-            var force: Bool
+            var sceneActivity: SceneActivity
+            var readAccess: GatewayReadAccess
+            var force: RefreshForce
         }
 
         struct RefreshResponse: Equatable, Sendable {
             var boardScope: IPadWorkboardBoardScope
-            var force: Bool
+            var force: RefreshForce
             var result: Result<IPadWorkboardCardsResponse, IPadWorkboardError>
         }
 
@@ -504,7 +509,7 @@ struct IPadWorkboardFeature {
 
             switch action {
             case let .archiveRequested(request):
-                guard request.canWrite, state.busyCardID == nil else { return .none }
+                guard request.writeAccess.canWrite, state.busyCardID == nil else { return .none }
                 state.busyCardID = .init(value: request.card.id)
                 state.errorText = nil
                 let params = IPadWorkboardArchiveParams(
@@ -546,7 +551,7 @@ struct IPadWorkboardFeature {
                     return .none
 
                 case let .failure(error):
-                    if response.force, state.knownBoardIDs.isEmpty {
+                    if response.force.isForced, state.knownBoardIDs.isEmpty {
                         state.errorText = .init(value: error.message)
                     }
                     return .none
@@ -565,7 +570,10 @@ struct IPadWorkboardFeature {
                 return .none
 
             case let .createRequested(request):
-                if let message = state.createUnavailableMessage(canRead: request.canRead, canWrite: request.canWrite) {
+                if let message = state.createUnavailableMessage(
+                    canRead: request.readAccess.canRead,
+                    canWrite: request.writeAccess.canWrite)
+                {
                     state.errorText = .init(value: message)
                     return .none
                 }
@@ -610,7 +618,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .dispatchRequested(request):
-                guard request.canWrite, !state.isLoading else { return .none }
+                guard request.writeAccess.canWrite, !state.isLoading else { return .none }
                 state.isDispatching = .init(value: true)
                 state.errorText = nil
                 state.dispatchSummaryText = nil
@@ -654,7 +662,7 @@ struct IPadWorkboardFeature {
                 return .none
 
             case let .moveRequested(request):
-                guard request.canWrite, state.busyCardID == nil else { return .none }
+                guard request.writeAccess.canWrite, state.busyCardID == nil else { return .none }
                 state.busyCardID = .init(value: request.card.id)
                 state.errorText = nil
                 let params = IPadWorkboardMoveParams(
@@ -688,12 +696,12 @@ struct IPadWorkboardFeature {
                 return .none
 
             case let .refreshRequested(request):
-                guard request.sceneActive else {
+                guard request.sceneActivity.isActive else {
                     state.isRefreshing = .init(value: false)
                     state.activeRefreshBoardID = nil
                     return .cancel(id: CancelID.refresh)
                 }
-                guard request.canRead else {
+                guard request.readAccess.canRead else {
                     state.cards = []
                     state.errorText = nil
                     state.isRefreshing = .init(value: false)
@@ -746,7 +754,7 @@ struct IPadWorkboardFeature {
                     }
 
                 case let .failure(error):
-                    if response.force || state.cards.isEmpty {
+                    if response.force.isForced || state.cards.isEmpty {
                         state.errorText = .init(value: error.message)
                     }
                     return .none
