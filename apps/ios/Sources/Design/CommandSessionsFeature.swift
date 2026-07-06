@@ -29,6 +29,7 @@ extension DependencyValues {
 // swiftformat:disable redundantSendable
 struct CommandSessionsFailureMessage: Equatable, Sendable { var value: String }
 struct CommandSessionsLoadingInFlight: Equatable, Sendable { var value: Bool }
+struct CommandSessionsAvailable: Equatable, Sendable { var value: Bool }
 struct CommandSessionReferenceKey: Equatable, Sendable { var value: String }
 
 enum CommandSessionsError: Error, Equatable, Sendable {
@@ -55,7 +56,7 @@ struct CommandSessionsFeature {
 
     enum Action: Equatable, Sendable {
         struct SessionsAvailability: Equatable, Sendable {
-            var isAvailable: Bool
+            var isAvailable: CommandSessionsAvailable
         }
 
         struct RefreshRequest: Equatable, Sendable {
@@ -79,7 +80,7 @@ struct CommandSessionsFeature {
 
             switch action {
             case let .refreshRequested(request):
-                guard request.sessionsAvailability.isAvailable else {
+                guard request.sessionsAvailability.isAvailable.value else {
                     state.isLoading = .init(value: false)
                     state.sessions = []
                     state.loadErrorText = nil
@@ -152,7 +153,7 @@ struct CommandCenterRecentSessionsFeature {
         }
 
         struct SessionsAvailability: Equatable, Sendable {
-            var isAvailable: Bool
+            var isAvailable: CommandSessionsAvailable
         }
 
         struct SessionReference: Equatable, Sendable {
@@ -184,7 +185,7 @@ struct CommandCenterRecentSessionsFeature {
             switch action {
             case let .refreshRequested(request):
                 guard request.sceneActivity.isActive else { return .none }
-                guard request.sessionsAvailability.isAvailable else {
+                guard request.sessionsAvailability.isAvailable.value else {
                     state.defaultChatSessionEntry = nil
                     state.recentChatSessions = []
                     return .none

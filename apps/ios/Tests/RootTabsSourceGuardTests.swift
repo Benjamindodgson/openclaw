@@ -1731,6 +1731,7 @@ struct RootTabsSourceGuardTests {
 
         #expect(source.contains("struct CommandSessionsFailureMessage: Equatable, Sendable"))
         #expect(source.contains("struct CommandSessionsLoadingInFlight: Equatable, Sendable"))
+        #expect(source.contains("struct CommandSessionsAvailable: Equatable, Sendable"))
         #expect(feature.contains("var isLoading = CommandSessionsLoadingInFlight(value: false)"))
         #expect(feature.contains("var loadErrorText: CommandSessionsFailureMessage?"))
         #expect(feature.contains("state.isLoading = .init(value: true)"))
@@ -1741,8 +1742,11 @@ struct RootTabsSourceGuardTests {
         #expect(commandCenterSource.contains("detail: loadErrorText.value"))
         #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
         #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
+        #expect(feature.contains("var isAvailable: CommandSessionsAvailable"))
         #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
-        #expect(feature.contains("guard request.sessionsAvailability.isAvailable"))
+        #expect(feature.contains("guard request.sessionsAvailability.isAvailable.value"))
+        #expect(commandCenterSource.contains(
+            "sessionsAvailability: .init(isAvailable: .init(value: self.appModel.isCommandSessionListAvailable))"))
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
         #expect(feature.contains("switch response.result"))
@@ -1754,7 +1758,11 @@ struct RootTabsSourceGuardTests {
         #expect(!feature.contains("var loadErrorText: String?"))
         #expect(!feature.contains("state.loadErrorText = \"Try again after the gateway reconnects.\""))
         #expect(!commandCenterSource.contains("detail: loadErrorText)"))
+        #expect(!feature.contains("var isAvailable: Bool"))
+        #expect(!feature.contains("guard request.sessionsAvailability.isAvailable else"))
         #expect(!feature.contains("var sessionsAvailable: Bool"))
+        #expect(!commandCenterSource.contains(
+            "sessionsAvailability: .init(isAvailable: self.appModel.isCommandSessionListAvailable)"))
     }
 
     @Test func `command center recent sessions refresh response action is typed`() throws {
@@ -1769,16 +1777,20 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("struct SceneActivity: Equatable, Sendable"))
         #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
         #expect(source.contains("struct CommandSessionReferenceKey: Equatable, Sendable"))
+        #expect(source.contains("struct CommandSessionsAvailable: Equatable, Sendable"))
         #expect(feature.contains("struct SessionReference: Equatable, Sendable"))
+        #expect(feature.contains("var isAvailable: CommandSessionsAvailable"))
         #expect(feature.contains("var key: CommandSessionReferenceKey"))
         #expect(feature.contains("var sceneActivity: SceneActivity"))
         #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
         #expect(feature.contains("var currentSession: SessionReference"))
         #expect(feature.contains("var defaultSession: SessionReference"))
         #expect(feature.contains("guard request.sceneActivity.isActive"))
-        #expect(feature.contains("guard request.sessionsAvailability.isAvailable"))
+        #expect(feature.contains("guard request.sessionsAvailability.isAvailable.value"))
         #expect(feature.contains("currentSessionKey: request.currentSession.key.value"))
         #expect(feature.contains("defaultSessionKey: request.defaultSession.key.value"))
+        #expect(commandCenterSource.contains(
+            "sessionsAvailability: .init(isAvailable: .init(value: self.sessionListAvailable))"))
         #expect(commandCenterSource.contains("currentSession: .init(key: .init(value: self.appModel.chatSessionKey))"))
         #expect(commandCenterSource.contains(
             "defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))"))
@@ -1787,9 +1799,12 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("switch response.result"))
         #expect(!feature.contains("var sceneActive: Bool"))
         #expect(!feature.contains("var sessionsAvailable: Bool"))
+        #expect(!feature.contains("var isAvailable: Bool"))
+        #expect(!feature.contains("guard request.sessionsAvailability.isAvailable else"))
         #expect(!feature.contains("var key: String"))
         #expect(!feature.contains("var currentSessionKey: String"))
         #expect(!feature.contains("var defaultSessionKey: String"))
+        #expect(!commandCenterSource.contains("sessionsAvailability: .init(isAvailable: self.sessionListAvailable)"))
         #expect(!commandCenterSource.contains("currentSession: .init(key: self.appModel.chatSessionKey)"))
         #expect(!commandCenterSource.contains("defaultSession: .init(key: self.appModel.defaultChatSessionKey)"))
     }
