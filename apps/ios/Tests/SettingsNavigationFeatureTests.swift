@@ -1862,12 +1862,12 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualGatewayPortTextChanged(.init(text: .init(value: "44a3")))) {
-            $0.manualGatewayPortText = "443"
-            $0.manualGatewayPort = 443
+            $0.manualGatewayPortTextValue = .init(value: "443")
+            $0.manualGatewayPortValue = .init(value: 443)
         }
         await store.send(.manualGatewayPortTextChanged(.init(text: .init(value: "")))) {
-            $0.manualGatewayPortText = ""
-            $0.manualGatewayPort = 0
+            $0.manualGatewayPortTextValue = .init(value: "")
+            $0.manualGatewayPortValue = .init(value: 0)
         }
     }
 
@@ -1877,25 +1877,25 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualGatewayPortSynced(.init(port: .init(value: 443)))) {
-            $0.manualGatewayPortText = "443"
-            $0.manualGatewayPort = 443
+            $0.manualGatewayPortTextValue = .init(value: "443")
+            $0.manualGatewayPortValue = .init(value: 443)
         }
         await store.send(.manualGatewayPortSynced(.init(port: .init(value: 0)))) {
-            $0.manualGatewayPortText = ""
-            $0.manualGatewayPort = 0
+            $0.manualGatewayPortTextValue = .init(value: "")
+            $0.manualGatewayPortValue = .init(value: 0)
         }
     }
 
     @Test func `settings manual gateway port validates and resolves defaults`() {
         var state = SettingsManualGatewayPortFeature.State()
-        state.manualGatewayPort = 65_536
-        state.manualGatewayPortText = "65536"
+        state.manualGatewayPortValue = .init(value: 65_536)
+        state.manualGatewayPortTextValue = .init(value: "65536")
 
         #expect(!state.isManualPortValid)
         #expect(state.resolvedManualPort(host: "gateway.example.com", useTLS: true) == nil)
 
-        state.manualGatewayPort = 0
-        state.manualGatewayPortText = ""
+        state.manualGatewayPortValue = .init(value: 0)
+        state.manualGatewayPortTextValue = .init(value: "")
 
         #expect(state.isManualPortValid)
         #expect(state.resolvedManualPort(host: "", useTLS: true) == nil)
@@ -1906,8 +1906,8 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings manual gateway port reports resolution results`() async {
         var initialState = SettingsManualGatewayPortFeature.State()
-        initialState.manualGatewayPort = 65_536
-        initialState.manualGatewayPortText = "65536"
+        initialState.manualGatewayPortValue = .init(value: 65_536)
+        initialState.manualGatewayPortTextValue = .init(value: "65536")
         let store = TestStore(initialState: initialState) {
             SettingsManualGatewayPortFeature()
         }
@@ -1926,8 +1926,8 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.manualGatewayPortSynced(.init(port: .init(value: 0)))) {
-            $0.manualGatewayPort = 0
-            $0.manualGatewayPortText = ""
+            $0.manualGatewayPortValue = .init(value: 0)
+            $0.manualGatewayPortTextValue = .init(value: "")
         }
 
         await store.send(

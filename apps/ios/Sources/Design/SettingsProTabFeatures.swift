@@ -637,8 +637,16 @@ struct SettingsManualGatewayPortFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var manualGatewayPortResolutionResult: ManualGatewayPortResolutionResult?
-        var manualGatewayPort = 18789
-        var manualGatewayPortText = "18789"
+        var manualGatewayPortValue = SettingsManualGatewayPort(value: 18789)
+        var manualGatewayPortTextValue = SettingsManualGatewayPortText(value: "18789")
+
+        var manualGatewayPort: Int {
+            self.manualGatewayPortValue.value
+        }
+
+        var manualGatewayPortText: String {
+            self.manualGatewayPortTextValue.value
+        }
 
         var isManualPortValid: Bool {
             if self.manualGatewayPortText.isEmpty { return true }
@@ -714,14 +722,14 @@ struct SettingsManualGatewayPortFeature {
 
             case let .manualGatewayPortSynced(sync):
                 let port = sync.port.value
-                state.manualGatewayPort = port
-                state.manualGatewayPortText = port > 0 ? String(port) : ""
+                state.manualGatewayPortValue = sync.port
+                state.manualGatewayPortTextValue = .init(value: port > 0 ? String(port) : "")
                 return .none
 
             case let .manualGatewayPortTextChanged(change):
                 let filtered = change.text.value.filter(\.isNumber)
-                state.manualGatewayPortText = filtered
-                state.manualGatewayPort = Int(filtered) ?? 0
+                state.manualGatewayPortTextValue = .init(value: filtered)
+                state.manualGatewayPortValue = .init(value: Int(filtered) ?? 0)
                 return .none
             }
         }
