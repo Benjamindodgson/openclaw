@@ -200,9 +200,9 @@ extension SettingsProTab {
 
     func syncVoiceControlState() {
         self.voiceControlStore.send(.controlsSynced(.init(
-            talkEnabled: self.storedTalkEnabled,
-            voiceWakeEnabled: self.storedVoiceWakeEnabled,
-            voiceWakeStatusText: self.appModel.voiceWake.statusText)))
+            talkEnabled: .init(isEnabled: self.storedTalkEnabled),
+            voiceWakeEnabled: .init(isEnabled: self.storedVoiceWakeEnabled),
+            voiceWakeStatusText: .init(value: self.appModel.voiceWake.statusText))))
     }
 
     func syncTalkPreferencesState() {
