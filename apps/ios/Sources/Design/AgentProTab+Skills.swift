@@ -76,7 +76,7 @@ extension AgentProTab {
                     }
                 }
                 Picker("Status", selection: self.skillStatusFilterBinding) {
-                    ForEach(SkillStatusFilter.allCases) { filter in
+                    ForEach(AgentSkillStatusFilter.allCases) { filter in
                         Text(filter.title).tag(filter)
                     }
                 }
