@@ -71,6 +71,8 @@ struct SettingsGatewaySetupCode: Equatable, Sendable { var value: String }
 
 struct SettingsDefaultShareInstruction: Equatable, Sendable { var value: String }
 
+struct SettingsPresentationScannerErrorMessage: Equatable, Sendable { var value: String }
+
 // swiftformat:enable redundantSendable
 
 struct SettingsGatewayCredentialsPersistenceClient {

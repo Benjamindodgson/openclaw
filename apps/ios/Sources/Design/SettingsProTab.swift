@@ -88,7 +88,7 @@ struct SettingsPresentationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct QRScannerError: Equatable, Sendable { var message: String }
+        struct QRScannerError: Equatable, Sendable { var message: SettingsPresentationScannerErrorMessage }
 
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
@@ -139,7 +139,7 @@ struct SettingsPresentationFeature {
 
             case let .qrScannerErrorReceived(error):
                 state.showQRScanner = false
-                state.scannerError = error.message
+                state.scannerError = error.message.value
                 return .none
 
             case .resetOnboardingButtonTapped:
@@ -1756,7 +1756,7 @@ struct SettingsProTab: View {
                             self.handleScannedSetupCode(code)
                         },
                         onError: { error in
-                            self.presentationStore.send(.qrScannerErrorReceived(.init(message: error)))
+                            self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: error))))
                             self.gatewaySetupStatusStore.send(.qrScannerErrorReceived(.init(
                                 message: .init(value: error))))
                         },

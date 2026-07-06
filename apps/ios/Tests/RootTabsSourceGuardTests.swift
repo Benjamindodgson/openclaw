@@ -2008,6 +2008,7 @@ struct RootTabsSourceGuardTests {
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
             encoding: .utf8)
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let qrScannerSheet = try Self.extract(
             settingsSource,
             from: ".sheet(isPresented: self.qrScannerBinding)",
@@ -2033,10 +2034,15 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("case statusChanged(SetupStatusChange)"))
         #expect(gatewaySetupFeaturesSource.contains("private static func qrScannerErrorStatusText(_ error: String)"))
         #expect(settingsSource.contains("struct QRScannerError: Equatable, Sendable"))
+        #expect(supportSource.contains("struct SettingsPresentationScannerErrorMessage: Equatable, Sendable"))
+        #expect(settingsSource.contains("var message: SettingsPresentationScannerErrorMessage"))
         #expect(settingsSource.contains("case qrScannerErrorReceived(QRScannerError)"))
-        #expect(settingsSource.contains("state.scannerError = error.message"))
-        #expect(qrScannerSheet.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: error)))"))
+        #expect(settingsSource.contains("state.scannerError = error.message.value"))
+        #expect(qrScannerSheet.contains(
+            "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: error))))"))
         #expect(qrScannerSheet.contains("message: .init(value: error)"))
+        #expect(!settingsSource.contains("struct QRScannerError: Equatable, Sendable { var message: String }"))
+        #expect(!settingsSource.contains("state.scannerError = error.message\n"))
         #expect(!qrScannerSheet.contains("Scanner error: \\(error)"))
     }
 
@@ -2046,13 +2052,20 @@ struct RootTabsSourceGuardTests {
 
         #expect(onboardingStateSource.contains("struct ScannerError: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct QRScannerError: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingScannerErrorMessage: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("var message: OnboardingScannerErrorMessage"))
         #expect(onboardingStateSource.contains("case scannerErrorReceived(ScannerError)"))
         #expect(onboardingStateSource.contains("case qrScannerErrorReceived(QRScannerError)"))
-        #expect(onboardingStateSource.contains("state.statusLine = \"Scanner error: \\(error.message)\""))
-        #expect(onboardingStateSource.contains("state.scannerError = error.message"))
-        #expect(onboardingSource.contains("self.statusStore.send(.scannerErrorReceived(.init(message: error)))"))
-        #expect(onboardingSource.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: error)))"))
-        #expect(onboardingSource.contains("self.presentationStore.send(.qrScannerErrorReceived(.init(message: failure.message)))"))
+        #expect(onboardingStateSource.contains("state.statusLine = \"Scanner error: \\(error.message.value)\""))
+        #expect(onboardingStateSource.contains("state.scannerError = error.message.value"))
+        #expect(onboardingSource.contains(
+            "self.statusStore.send(.scannerErrorReceived(.init(message: .init(value: error))))"))
+        #expect(onboardingSource.contains(
+            "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: error))))"))
+        #expect(onboardingSource.contains(
+            "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message))))"))
+        #expect(!onboardingStateSource.contains("struct ScannerError: Equatable, Sendable { var message: String }"))
+        #expect(!onboardingStateSource.contains("struct QRScannerError: Equatable, Sendable { var message: String }"))
     }
 
     @Test func `onboarding gateway snapshot action is typed`() throws {

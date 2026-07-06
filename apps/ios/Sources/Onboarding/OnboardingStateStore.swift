@@ -54,6 +54,10 @@ enum OnboardingConnectionMode: String, CaseIterable {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 @Reducer
 struct OnboardingStateFeature {
     // swiftformat:disable redundantSendable
@@ -239,7 +243,7 @@ struct OnboardingStatusFeature {
         }
 
         struct ConnectionActivityStart: Equatable, Sendable { var id: String }
-        struct ScannerError: Equatable, Sendable { var message: String }
+        struct ScannerError: Equatable, Sendable { var message: OnboardingScannerErrorMessage }
 
         case automaticPairingResumeRequested(AutomaticPairingResumeRequest)
         case appleReviewDemoModeEnabled
@@ -385,7 +389,7 @@ struct OnboardingStatusFeature {
                 return .none
 
             case let .scannerErrorReceived(error):
-                state.statusLine = "Scanner error: \(error.message)"
+                state.statusLine = "Scanner error: \(error.message.value)"
                 return .none
             }
         }
@@ -503,7 +507,7 @@ struct OnboardingPresentationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct QRScannerError: Equatable, Sendable { var message: String }
+        struct QRScannerError: Equatable, Sendable { var message: OnboardingScannerErrorMessage }
 
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
@@ -540,7 +544,7 @@ struct OnboardingPresentationFeature {
 
             case let .qrScannerErrorReceived(error):
                 state.showQRScanner = false
-                state.scannerError = error.message
+                state.scannerError = error.message.value
                 return .none
             }
         }
