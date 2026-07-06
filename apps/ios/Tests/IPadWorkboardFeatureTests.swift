@@ -278,7 +278,7 @@ struct IPadWorkboardFeatureTests {
         }
 
         await store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: true)))) {
-            $0.isDispatching = .init(value: true)
+            $0.dispatchPhase = .inFlight
             $0.errorText = nil
             $0.dispatchSummaryText = nil
         }
@@ -288,7 +288,7 @@ struct IPadWorkboardFeatureTests {
                 summary: summary,
                 cardsResponse: response)))))
         {
-            $0.isDispatching = .init(value: false)
+            $0.dispatchPhase = .idle
             $0.dispatchSummaryText = .init(value: "1 dispatched: 1 started.")
             $0.cards = [refreshed]
             $0.statuses = [.init(value: "running")]
@@ -301,7 +301,7 @@ struct IPadWorkboardFeatureTests {
         let response = IPadWorkboardCardsResponse(cards: [refreshed], statuses: ["todo"])
         var initialState = IPadWorkboardFeature.State()
         initialState.isRefreshing = .init(value: true)
-        initialState.isDispatching = .init(value: true)
+        initialState.dispatchPhase = .inFlight
         var client = Self.failingClient()
         client.listBoards = { [] }
         let store = TestStore(initialState: initialState) {

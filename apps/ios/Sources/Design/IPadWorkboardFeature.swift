@@ -119,7 +119,6 @@ struct IPadWorkboardActiveRefreshBoardID: Equatable, Sendable { var value: Strin
 struct IPadWorkboardBoardScopeID: Equatable, Sendable { var value: String }
 struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
 struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
-struct IPadWorkboardDispatchInFlight: Equatable, Sendable { var value: Bool }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardDispatchSummaryText: Equatable, Sendable { var value: String }
@@ -177,11 +176,16 @@ struct IPadWorkboardFeature {
             case inFlight
         }
 
+        enum DispatchPhase: Equatable, Sendable {
+            case idle
+            case inFlight
+        }
+
         var cards: [IPadWorkboardCard] = []
         var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
         var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
         var isRefreshing = IPadWorkboardRefreshInFlight(value: false)
-        var isDispatching = IPadWorkboardDispatchInFlight(value: false)
+        var dispatchPhase = DispatchPhase.idle
         var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
         var busyCardID: IPadWorkboardBusyCardID?
         var dispatchSummaryText: IPadWorkboardDispatchSummaryText?
@@ -200,7 +204,7 @@ struct IPadWorkboardFeature {
         }
 
         var isLoading: Bool {
-            self.isRefreshing.value || self.isDispatching.value
+            self.isRefreshing.value || self.dispatchPhase == .inFlight
         }
 
         var selectedBoardParam: IPadWorkboardBoardScopeID? {
@@ -623,7 +627,7 @@ struct IPadWorkboardFeature {
 
             case let .dispatchRequested(request):
                 guard request.writeAccess.canWrite, !state.isLoading else { return .none }
-                state.isDispatching = .init(value: true)
+                state.dispatchPhase = .inFlight
                 state.errorText = nil
                 state.dispatchSummaryText = nil
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
@@ -644,7 +648,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .dispatchResponse(response):
-                state.isDispatching = .init(value: false)
+                state.dispatchPhase = .idle
                 guard state.selectedBoardParam == response.boardScope.boardID else { return .none }
                 switch response.result {
                 case let .success(snapshot):
