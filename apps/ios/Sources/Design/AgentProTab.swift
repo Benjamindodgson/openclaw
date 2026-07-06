@@ -366,7 +366,7 @@ struct AgentSelectionFeature {
 
     enum Action: Equatable, Sendable {
         struct AgentSelection: Equatable, Sendable {
-            var agentId: String
+            var agentId: SelectedAgentID
         }
 
         case agentSelected(AgentSelection)
@@ -381,9 +381,8 @@ struct AgentSelectionFeature {
 
             switch action {
             case let .agentSelected(selection):
-                let selectedAgentId = SelectedAgentID(value: selection.agentId)
                 return .run { [selectionClient] _ in
-                    await selectionClient.setSelectedAgentId(selectedAgentId)
+                    await selectionClient.setSelectedAgentId(selection.agentId)
                 }
             }
         }
