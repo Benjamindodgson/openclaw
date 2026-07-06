@@ -104,6 +104,7 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct SettingsChannelsFailureMessage: Equatable, Sendable { var value: String }
+struct SettingsChannelsLoadingInFlight: Equatable, Sendable { var value: Bool }
 
 enum SettingsChannelsError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: SettingsChannelsFailureMessage }
@@ -125,7 +126,7 @@ struct SettingsChannelsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var entries: [SettingsChannelEntry] = []
-        var isLoading = false
+        var isLoading = SettingsChannelsLoadingInFlight(value: false)
         var errorText: SettingsChannelsFailureMessage?
         var busyOperation: SettingsChannelOperation?
     }
@@ -185,18 +186,18 @@ struct SettingsChannelsFeature {
             switch action {
             case let .refreshRequested(request):
                 guard request.sceneActivity.isActive else {
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     return .none
                 }
                 guard request.readAccess.canRead else {
                     state.entries = []
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.errorText = nil
                     return .none
                 }
-                guard !state.isLoading else { return .none }
+                guard !state.isLoading.value else { return .none }
 
-                state.isLoading = true
+                state.isLoading = .init(value: true)
                 state.errorText = nil
                 return .run { send in
                     do {
@@ -212,7 +213,7 @@ struct SettingsChannelsFeature {
                 }
 
             case let .refreshResponse(response):
-                state.isLoading = false
+                state.isLoading = .init(value: false)
                 switch response.result {
                 case let .success(entries):
                     state.entries = entries
@@ -433,9 +434,9 @@ struct SettingsChannelsDestination: View {
                 ProPanelHeader(
                     title: "Message Routing",
                     value: self.headerValue,
-                    actionIcon: self.store.isLoading ? "hourglass" : "arrow.clockwise",
+                    actionIcon: self.store.isLoading.value ? "hourglass" : "arrow.clockwise",
                     actionAccessibilityLabel: "Refresh Channels",
-                    isActionDisabled: self.store.isLoading,
+                    isActionDisabled: self.store.isLoading.value,
                     action: {
                         Task { await self.refreshChannels(force: true) }
                     })
@@ -454,7 +455,7 @@ struct SettingsChannelsDestination: View {
                         detail: "Connect to the gateway to load installed channels, accounts, and routing status.",
                         value: "offline",
                         color: .secondary)
-                } else if self.store.isLoading, self.store.entries.isEmpty {
+                } else if self.store.isLoading.value, self.store.entries.isEmpty {
                     ProStatusRow(
                         icon: "hourglass",
                         title: "Loading channels",
@@ -513,7 +514,7 @@ struct SettingsChannelsDestination: View {
     }
 
     private var headerValue: String? {
-        if self.store.isLoading { return "Loading" }
+        if self.store.isLoading.value { return "Loading" }
         guard self.canRead else { return "Offline" }
         return "\(self.channelEntries.count)"
     }
@@ -530,7 +531,7 @@ struct SettingsChannelsDestination: View {
 
     private var summaryValue: String {
         guard self.canRead else { return "offline" }
-        if self.store.isLoading { return "loading" }
+        if self.store.isLoading.value { return "loading" }
         if self.store.errorText != nil { return "error" }
         let configured = self.channelEntries.count(where: { $0.configured })
         return "\(configured)/\(self.channelEntries.count)"
