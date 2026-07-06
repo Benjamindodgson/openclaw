@@ -2160,27 +2160,27 @@ struct SettingsNavigationFeatureTests {
             onboardingComplete: .init(value: true),
             onboardingRequestID: .init(value: 4))))
         {
-            $0.hasConnectedOnce = true
-            $0.onboardingComplete = true
-            $0.onboardingRequestID = 4
+            $0.hasConnectedOnceState = .init(value: true)
+            $0.onboardingCompletion = .init(value: true)
+            $0.requestID = .init(value: 4)
         }
     }
 
     @Test func `settings onboarding state resets through client`() async {
         let resetProbe = SettingsOnboardingResetProbe()
         var initialState = SettingsOnboardingStateFeature.State()
-        initialState.hasConnectedOnce = true
-        initialState.onboardingComplete = true
-        initialState.onboardingRequestID = 4
+        initialState.hasConnectedOnceState = .init(value: true)
+        initialState.onboardingCompletion = .init(value: true)
+        initialState.requestID = .init(value: 4)
         let store = TestStore(initialState: initialState) {
             SettingsOnboardingStateFeature(resetClient: resetProbe.client)
         }
 
         await store.send(.onboardingResetRequested(.init(
             instanceId: .init(value: "instance-reset")))) {
-            $0.hasConnectedOnce = false
-            $0.onboardingComplete = false
-            $0.onboardingRequestID = 5
+            $0.hasConnectedOnceState = .init(value: false)
+            $0.onboardingCompletion = .init(value: false)
+            $0.requestID = .init(value: 5)
         }
         await store.finish()
 
@@ -2193,7 +2193,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.onboardingRequestIDChanged(.init(requestID: .init(value: 5)))) {
-            $0.onboardingRequestID = 5
+            $0.requestID = .init(value: 5)
         }
     }
 
