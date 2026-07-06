@@ -294,7 +294,7 @@ struct OnboardingWizardView: View {
                                 PhotosPicker(selection: self.$selectedPhoto, matching: .images) {
                                     Label("Photos", systemImage: "photo")
                                 }
-                                .disabled(self.photoImportStore.isImporting)
+                                .disabled(self.photoImportStore.importPhase == .inFlight)
                             }
                         }
                 }

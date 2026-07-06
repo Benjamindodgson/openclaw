@@ -184,11 +184,11 @@ import Testing
         }
 
         await store.send(.importStarted) {
-            $0.isImporting = true
+            $0.importPhase = .inFlight
         }
 
         await store.send(.qrMessageDetected(.init(message: .init(value: "wss://gateway.example.com:443")))) {
-            $0.isImporting = false
+            $0.importPhase = .idle
             $0.result = .gatewayLink(link)
         }
 
@@ -197,11 +197,11 @@ import Testing
         }
 
         await store.send(.importStarted) {
-            $0.isImporting = true
+            $0.importPhase = .inFlight
         }
 
         await store.send(.qrMessageDetected(.init(message: .init(value: "  APPLE-REVIEW-DEMO  ")))) {
-            $0.isImporting = false
+            $0.importPhase = .idle
             $0.result = .appleReviewSetupCode(.init(code: .init(value: "  APPLE-REVIEW-DEMO  ")))
         }
     }
@@ -212,11 +212,11 @@ import Testing
         }
 
         await store.send(.importStarted) {
-            $0.isImporting = true
+            $0.importPhase = .inFlight
         }
 
         await store.send(.imageLoadFailed) {
-            $0.isImporting = false
+            $0.importPhase = .idle
             $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.imageLoadFailureMessage))
         }
 
@@ -225,21 +225,21 @@ import Testing
         }
 
         await store.send(.importStarted) {
-            $0.isImporting = true
+            $0.importPhase = .inFlight
         }
 
         await store.send(.qrMessageDetected(.init(message: .init(value: nil)))) {
-            $0.isImporting = false
+            $0.importPhase = .idle
             $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage))
         }
 
         await store.send(.importStarted) {
-            $0.isImporting = true
+            $0.importPhase = .inFlight
             $0.result = nil
         }
 
         await store.send(.qrMessageDetected(.init(message: .init(value: "not a setup code")))) {
-            $0.isImporting = false
+            $0.importPhase = .idle
             $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage))
         }
     }
