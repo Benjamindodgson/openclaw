@@ -71,9 +71,12 @@ struct RootPresentationFeature {
         var sheet: PresentedSheet?
     }
 
+    struct SceneActivity: Equatable, Sendable { var isActive: Bool }
+    struct OnboardingPresentation: Equatable, Sendable { var isPresented: Bool }
+
     struct LocalNetworkAccessRequest: Equatable, Sendable {
         var reason: RootLocalNetworkAccessReason
-        var sceneActive: Bool
+        var sceneActivity: SceneActivity
     }
 
     struct LocalNetworkAccessCommand: Equatable, Sendable {
@@ -81,8 +84,8 @@ struct RootPresentationFeature {
     }
 
     struct OnboardingVisibilityChange: Equatable, Sendable {
-        var isPresented: Bool
-        var sceneActive: Bool
+        var presentation: OnboardingPresentation
+        var sceneActivity: SceneActivity
     }
 
     struct GatewaySetupRequest: Equatable, Sendable {
@@ -353,7 +356,7 @@ struct RootPresentationFeature {
 
             case let .localNetworkAccessRequested(request):
                 guard state.didEvaluateOnboarding else { return .none }
-                guard request.sceneActive else { return .none }
+                guard request.sceneActivity.isActive else { return .none }
                 guard !state.showOnboarding else { return .none }
                 state.presentationCommand = .requestLocalNetworkAccess(
                     LocalNetworkAccessCommand(reason: request.reason))
@@ -361,10 +364,10 @@ struct RootPresentationFeature {
 
             case let .onboardingVisibilityChanged(change):
                 let wasPresented = state.showOnboarding
-                state.showOnboarding = change.isPresented
+                state.showOnboarding = change.presentation.isPresented
                 state.refreshPresentation()
-                guard wasPresented, !change.isPresented else { return .none }
-                guard state.didEvaluateOnboarding, change.sceneActive else { return .none }
+                guard wasPresented, !change.presentation.isPresented else { return .none }
+                guard state.didEvaluateOnboarding, change.sceneActivity.isActive else { return .none }
                 state.presentationCommand = .requestLocalNetworkAccess(
                     LocalNetworkAccessCommand(reason: .onboardingDismissed))
                 return .none
