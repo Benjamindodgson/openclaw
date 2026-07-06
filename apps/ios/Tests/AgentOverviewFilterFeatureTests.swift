@@ -198,7 +198,7 @@ struct AgentCronActionFeatureTests {
             AgentCronActionFeature()
         }
 
-        await store.send(.actionSucceeded(.init(message: "Queued job."))) {
+        await store.send(.actionSucceeded(.init(message: .init(value: "Queued job.")))) {
             $0.busyIDs = ["job-1", "job-2"]
             $0.statusText = "Queued job."
         }
@@ -224,7 +224,7 @@ struct AgentCronActionFeatureTests {
             AgentCronActionFeature()
         }
 
-        await store.send(.actionFailed(.init(id: "job-1", message: "Cron failed."))) {
+        await store.send(.actionFailed(.init(id: "job-1", message: .init(value: "Cron failed.")))) {
             $0.busyIDs = []
             $0.statusText = "Cron failed."
         }
