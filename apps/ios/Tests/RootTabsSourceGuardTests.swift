@@ -185,6 +185,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "@Reducer\nstruct AgentOverviewLoadFeature",
             to: "@Reducer\nstruct AgentNavigationFeature")
+        let skillPolicyMutationFeature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentSkillPolicyMutationFeature",
+            to: "// swiftformat:disable redundantSendable\nstruct AgentSkillEditorAPIKeyDraftKey")
 
         #expect(!source.contains("ToolbarItem"))
         #expect(source.contains("@Reducer\nstruct AgentSkillPolicyMutationFeature"))
@@ -295,15 +299,25 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationStarted(.init(key: mutationKey)))"))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFinished(.init(key: mutationKey)))"))
         #expect(source.contains("struct AgentSkillPolicyMutationKey: Equatable, Sendable"))
+        #expect(source.contains("struct AgentSkillPolicyMutationErrorText: Equatable, Sendable"))
         #expect(source.contains("struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("struct AgentSkillPolicyMutationStatusText: Equatable, Sendable"))
         #expect(source.contains("struct AgentSkillPolicyMutationSuccessMessage: Equatable, Sendable"))
+        #expect(skillPolicyMutationFeature.contains("var errorText = AgentSkillPolicyMutationErrorText(value: nil)"))
+        #expect(skillPolicyMutationFeature.contains("var statusText = AgentSkillPolicyMutationStatusText(value: nil)"))
         #expect(source.contains("var key: AgentSkillPolicyMutationKey"))
         #expect(source.contains("var message: AgentSkillPolicyMutationFailureMessage"))
         #expect(source.contains("var message: AgentSkillPolicyMutationSuccessMessage"))
         #expect(source.contains("state.busyKeys.insert(mutation.key.value)"))
         #expect(source.contains("state.busyKeys.remove(mutation.key.value)"))
-        #expect(source.contains("state.statusText = result.message.value"))
-        #expect(source.contains("state.errorText = failure.message.value"))
+        #expect(source.contains("self.skillPolicyMutationStore.errorText.value"))
+        #expect(source.contains("self.skillPolicyMutationStore.statusText.value"))
+        #expect(skillPolicyMutationFeature.contains("state.statusText = .init(value: result.message.value)"))
+        #expect(skillPolicyMutationFeature.contains("state.errorText = .init(value: failure.message.value)"))
+        #expect(!skillPolicyMutationFeature.contains("var errorText: String?"))
+        #expect(!skillPolicyMutationFeature.contains("var statusText: String?"))
+        #expect(!skillPolicyMutationFeature.contains("state.statusText = result.message.value"))
+        #expect(!skillPolicyMutationFeature.contains("state.errorText = failure.message.value"))
         #expect(!source.contains(
             "struct MutationKey: Equatable, Sendable {\n            var key: String\n        }\n\n        struct MutationFailure: Equatable, Sendable {\n            var message: AgentSkillPolicyMutationFailureMessage"))
         #expect(!source
