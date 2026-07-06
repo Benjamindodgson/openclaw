@@ -28,6 +28,7 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct CommandSessionsFailureMessage: Equatable, Sendable { var value: String }
+struct CommandSessionsLoadingInFlight: Equatable, Sendable { var value: Bool }
 
 enum CommandSessionsError: Error, Equatable, Sendable {
     case failed
@@ -47,7 +48,7 @@ struct CommandSessionsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var sessions: [OpenClawChatSessionEntry] = []
-        var isLoading = false
+        var isLoading = CommandSessionsLoadingInFlight(value: false)
         var loadErrorText: CommandSessionsFailureMessage?
     }
 
@@ -78,13 +79,13 @@ struct CommandSessionsFeature {
             switch action {
             case let .refreshRequested(request):
                 guard request.sessionsAvailability.isAvailable else {
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.sessions = []
                     state.loadErrorText = nil
                     return .none
                 }
 
-                state.isLoading = true
+                state.isLoading = .init(value: true)
                 state.loadErrorText = nil
                 return .run { send in
                     do {
@@ -98,13 +99,13 @@ struct CommandSessionsFeature {
             case let .refreshResponse(response):
                 switch response.result {
                 case let .success(sessions):
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.sessions = sessions
                     state.loadErrorText = nil
                     return .none
 
                 case .failure:
-                    state.isLoading = false
+                    state.isLoading = .init(value: false)
                     state.sessions = []
                     state.loadErrorText = .init(value: "Try again after the gateway reconnects.")
                     return .none
