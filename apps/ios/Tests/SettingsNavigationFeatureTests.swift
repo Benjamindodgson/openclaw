@@ -356,7 +356,7 @@ struct SettingsNavigationFeatureTests {
 
         await store.send(.appearancePreferenceSynced(.init(
             rawValue: .init(value: AppAppearancePreference.dark.rawValue)))) {
-            $0.appearancePreferenceRaw = AppAppearancePreference.dark.rawValue
+            $0.appearancePreferenceValue = .init(value: AppAppearancePreference.dark.rawValue)
         }
     }
 
@@ -366,13 +366,13 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.appearancePreferenceChanged(.init(preference: .light))) {
-            $0.appearancePreferenceRaw = AppAppearancePreference.light.rawValue
+            $0.appearancePreferenceValue = .init(value: AppAppearancePreference.light.rawValue)
         }
     }
 
     @Test func `settings appearance falls back to system for invalid stored values`() {
         var state = SettingsAppearanceFeature.State()
-        state.appearancePreferenceRaw = "sepia"
+        state.appearancePreferenceValue = .init(value: "sepia")
 
         #expect(state.appearancePreference == .system)
     }

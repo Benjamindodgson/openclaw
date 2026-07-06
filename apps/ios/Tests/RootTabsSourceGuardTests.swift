@@ -4214,14 +4214,21 @@ struct RootTabsSourceGuardTests {
             "struct SettingsAppearancePreferenceRawValue: Equatable, Sendable { var value: String }"))
         #expect(settingsSource.contains(
             "struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: SettingsAppearancePreferenceRawValue }"))
-        #expect(settingsSource.contains("state.appearancePreferenceRaw = change.preference.rawValue"))
-        #expect(settingsSource.contains("state.appearancePreferenceRaw = sync.rawValue.value"))
+        #expect(settingsSource.contains("var appearancePreferenceValue = SettingsAppearancePreferenceRawValue("))
+        #expect(settingsSource.contains("value: AppAppearancePreference.system.rawValue)"))
+        #expect(settingsSource.contains("var appearancePreferenceRaw: String"))
+        #expect(settingsSource.contains("self.appearancePreferenceValue.value"))
+        #expect(settingsSource.contains("state.appearancePreferenceValue = .init(value: change.preference.rawValue)"))
+        #expect(settingsSource.contains("state.appearancePreferenceValue = sync.rawValue"))
         #expect(actionsSource.contains("guard let preference = AppAppearancePreference(rawValue: rawValue) else { return }"))
         #expect(actionsSource.contains("self.appearanceStore.send(.appearancePreferenceChanged(.init(preference: preference)))"))
         #expect(actionsSource.contains("rawValue: .init(value: self.storedAppearancePreferenceRaw)"))
         #expect(settingsSource.contains(
             "self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: .init(value: newValue))))"))
         #expect(actionsSource.contains("self.storedAppearancePreferenceRaw = preference.rawValue"))
+        #expect(!settingsSource.contains("var appearancePreferenceRaw = AppAppearancePreference.system.rawValue"))
+        #expect(!settingsSource.contains("state.appearancePreferenceRaw = change.preference.rawValue"))
+        #expect(!settingsSource.contains("state.appearancePreferenceRaw = sync.rawValue.value"))
         #expect(!settingsSource.contains("struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: String }"))
         #expect(!actionsSource.contains(
             "self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: self.storedAppearancePreferenceRaw)))"))

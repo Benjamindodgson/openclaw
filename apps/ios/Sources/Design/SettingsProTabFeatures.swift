@@ -848,7 +848,12 @@ struct SettingsAppearanceFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var appearancePreferenceRaw = AppAppearancePreference.system.rawValue
+        var appearancePreferenceValue = SettingsAppearancePreferenceRawValue(
+            value: AppAppearancePreference.system.rawValue)
+
+        var appearancePreferenceRaw: String {
+            self.appearancePreferenceValue.value
+        }
 
         var appearancePreference: AppAppearancePreference {
             AppAppearancePreference(rawValue: self.appearancePreferenceRaw) ?? .system
@@ -870,11 +875,11 @@ struct SettingsAppearanceFeature {
         Reduce { state, action in
             switch action {
             case let .appearancePreferenceChanged(change):
-                state.appearancePreferenceRaw = change.preference.rawValue
+                state.appearancePreferenceValue = .init(value: change.preference.rawValue)
                 return .none
 
             case let .appearancePreferenceSynced(sync):
-                state.appearancePreferenceRaw = sync.rawValue.value
+                state.appearancePreferenceValue = sync.rawValue
                 return .none
             }
         }
