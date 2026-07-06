@@ -187,7 +187,7 @@ import Testing
             $0.isImporting = true
         }
 
-        await store.send(.qrMessageDetected(.init(message: "wss://gateway.example.com:443"))) {
+        await store.send(.qrMessageDetected(.init(message: .init(value: "wss://gateway.example.com:443")))) {
             $0.isImporting = false
             $0.result = .gatewayLink(link)
         }
@@ -200,7 +200,7 @@ import Testing
             $0.isImporting = true
         }
 
-        await store.send(.qrMessageDetected(.init(message: "  APPLE-REVIEW-DEMO  "))) {
+        await store.send(.qrMessageDetected(.init(message: .init(value: "  APPLE-REVIEW-DEMO  ")))) {
             $0.isImporting = false
             $0.result = .appleReviewSetupCode(.init(code: "  APPLE-REVIEW-DEMO  "))
         }
@@ -228,7 +228,7 @@ import Testing
             $0.isImporting = true
         }
 
-        await store.send(.qrMessageDetected(.init(message: nil))) {
+        await store.send(.qrMessageDetected(.init(message: .init(value: nil)))) {
             $0.isImporting = false
             $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage))
         }
@@ -238,7 +238,7 @@ import Testing
             $0.result = nil
         }
 
-        await store.send(.qrMessageDetected(.init(message: "not a setup code"))) {
+        await store.send(.qrMessageDetected(.init(message: .init(value: "not a setup code")))) {
             $0.isImporting = false
             $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage))
         }
