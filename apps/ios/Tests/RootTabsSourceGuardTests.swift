@@ -285,6 +285,18 @@ struct RootTabsSourceGuardTests {
         #expect(skillsSource.contains("self.skillEditorStore.send(.editorOpened(.init(id: skill.effectiveSkillKey)))"))
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftChanged(.init("))
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftCleared(.init("))
+        #expect(skillsSource.contains("key: .init(value: skill.effectiveSkillKey)"))
+        #expect(skillsSource.contains("value: .init(value: $0)"))
+        #expect(source.contains("struct AgentSkillEditorAPIKeyDraftKey: Equatable, Sendable"))
+        #expect(source.contains("struct AgentSkillEditorAPIKeyDraftValue: Equatable, Sendable"))
+        #expect(source.contains("var key: AgentSkillEditorAPIKeyDraftKey"))
+        #expect(source.contains("var value: AgentSkillEditorAPIKeyDraftValue"))
+        #expect(source.contains("state.apiKeyDrafts[draft.key.value] = draft.value.value"))
+        #expect(source.contains("state.apiKeyDrafts[draft.key.value] = nil"))
+        #expect(!source.contains(
+            "struct APIKeyDraftChange: Equatable, Sendable {\n            var key: String\n            var value: String"))
+        #expect(!source.contains(
+            "struct APIKeyDraftKey: Equatable, Sendable {\n            var key: String"))
         #expect(skillsSource.contains("self.skillEditorStore.send(.mutationStarted(.init(key: key)))"))
         #expect(skillsSource.contains("let key = AgentSkillEditorMutationKey(value: skill.effectiveSkillKey)"))
         #expect(source.contains("struct AgentSkillEditorMutationKey: Equatable, Sendable"))

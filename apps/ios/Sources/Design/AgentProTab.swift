@@ -456,6 +456,8 @@ struct AgentSkillPolicyMutationFeature {
 }
 
 // swiftformat:disable redundantSendable
+struct AgentSkillEditorAPIKeyDraftKey: Equatable, Sendable { var value: String }
+struct AgentSkillEditorAPIKeyDraftValue: Equatable, Sendable { var value: String }
 struct AgentSkillEditorMutationKey: Equatable, Sendable { var value: String }
 struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
@@ -487,12 +489,12 @@ struct AgentSkillEditorFeature {
         }
 
         struct APIKeyDraftChange: Equatable, Sendable {
-            var key: String
-            var value: String
+            var key: AgentSkillEditorAPIKeyDraftKey
+            var value: AgentSkillEditorAPIKeyDraftValue
         }
 
         struct APIKeyDraftKey: Equatable, Sendable {
-            var key: String
+            var key: AgentSkillEditorAPIKeyDraftKey
         }
 
         struct EditorID: Equatable, Sendable {
@@ -520,11 +522,11 @@ struct AgentSkillEditorFeature {
         Reduce { state, action in
             switch action {
             case let .apiKeyDraftChanged(draft):
-                state.apiKeyDrafts[draft.key] = draft.value
+                state.apiKeyDrafts[draft.key.value] = draft.value.value
                 return .none
 
             case let .apiKeyDraftCleared(draft):
-                state.apiKeyDrafts[draft.key] = nil
+                state.apiKeyDrafts[draft.key.value] = nil
                 return .none
 
             case .editorDismissed:
