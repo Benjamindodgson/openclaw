@@ -101,7 +101,7 @@ struct IPadWorkboardScreen: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .font(.subheadline)
-                    if !self.store.query.isEmpty {
+                    if !self.store.query.value.isEmpty {
                         Button {
                             self.store.send(.clearQueryTapped)
                         } label: {
@@ -410,7 +410,7 @@ struct IPadWorkboardScreen: View {
 
     private var queryBinding: Binding<String> {
         Binding(
-            get: { self.store.query },
+            get: { self.store.query.value },
             set: { self.store.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
@@ -610,7 +610,7 @@ struct IPadWorkboardScreen: View {
             cards: self.store.cards,
             status: status,
             selectedStatus: self.store.selectedStatus.value,
-            query: self.store.query)
+            query: self.store.query.value)
     }
 
     private func loadCards(force: Bool) async {

@@ -176,7 +176,7 @@ struct IPadWorkboardFeature {
         var dispatchSummaryText: String?
         var selectedStatus = IPadWorkboardSelectedStatus(value: "active")
         var selectedBoardID = IPadWorkboardSelectedBoardID(value: "")
-        var query = ""
+        var query = IPadWorkboardQuery(value: "")
         var draftTitle = ""
         var draftNotes = ""
         var isCreatingCard = false
@@ -236,7 +236,7 @@ struct IPadWorkboardFeature {
             Self.filteredCards(
                 cards: self.cards,
                 selectedStatus: self.selectedStatus.value,
-                query: self.query)
+                query: self.query.value)
         }
 
         func cards(forKanbanStatus status: String) -> [IPadWorkboardCard] {
@@ -244,7 +244,7 @@ struct IPadWorkboardFeature {
                 cards: self.cards,
                 status: status,
                 selectedStatus: self.selectedStatus.value,
-                query: self.query)
+                query: self.query.value)
         }
 
         mutating func applyCardsResponse(_ response: IPadWorkboardCardsResponse) {
@@ -542,7 +542,7 @@ struct IPadWorkboardFeature {
                 return .none
 
             case .clearQueryTapped:
-                state.query = ""
+                state.query = .init(value: "")
                 return .none
 
             case let .createRequested(request):
@@ -664,7 +664,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .queryChanged(change):
-                state.query = change.query.value
+                state.query = change.query
                 return .none
 
             case let .refreshRequested(request):
