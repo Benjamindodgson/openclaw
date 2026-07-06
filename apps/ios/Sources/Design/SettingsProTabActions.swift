@@ -263,9 +263,9 @@ extension SettingsProTab {
 
     func syncOnboardingState() {
         self.onboardingStateStore.send(.onboardingStateSynced(.init(
-            hasConnectedOnce: self.storedHasConnectedOnce,
-            onboardingComplete: self.storedOnboardingComplete,
-            onboardingRequestID: self.storedOnboardingRequestID)))
+            hasConnectedOnce: .init(value: self.storedHasConnectedOnce),
+            onboardingComplete: .init(value: self.storedOnboardingComplete),
+            onboardingRequestID: .init(value: self.storedOnboardingRequestID))))
     }
 
     func syncGatewaySetupStatusContext() {

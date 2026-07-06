@@ -2140,9 +2140,9 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.onboardingStateSynced(.init(
-            hasConnectedOnce: true,
-            onboardingComplete: true,
-            onboardingRequestID: 4)))
+            hasConnectedOnce: .init(value: true),
+            onboardingComplete: .init(value: true),
+            onboardingRequestID: .init(value: 4))))
         {
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
