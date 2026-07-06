@@ -5,6 +5,7 @@ import OpenClawKit
 // swiftformat:disable redundantSendable
 struct SettingsGatewaySetupLinkFailureMessage: Equatable, Sendable { var value: String }
 struct SettingsGatewaySetupLinkStatusText: Equatable, Sendable { var value: String }
+struct SettingsGatewaySetupAppleReviewDemoStatusText: Equatable, Sendable { var value: String }
 struct SettingsScannedGatewayLinkStatusText: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -38,7 +39,7 @@ struct SettingsGatewaySetupLinkFeature {
 
     enum ApplyResult: Equatable, Sendable {
         struct AppleReviewDemo: Equatable, Sendable {
-            var statusText: String
+            var statusText: SettingsGatewaySetupAppleReviewDemoStatusText
         }
 
         struct Failure: Equatable, Sendable { var message: SettingsGatewaySetupLinkFailureMessage }
@@ -175,5 +176,6 @@ struct SettingsGatewaySetupLinkFeature {
         "QR loaded. Connecting to \(link.host):\(link.port)..."
     }
 
-    private static let appleReviewDemoStatusText = "Apple Review demo mode enabled."
+    private static let appleReviewDemoStatusText = SettingsGatewaySetupAppleReviewDemoStatusText(
+        value: "Apple Review demo mode enabled.")
 }

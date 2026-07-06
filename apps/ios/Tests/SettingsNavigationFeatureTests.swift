@@ -989,7 +989,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.applyRequested) {
-            $0.applyResult = .appleReviewDemo(.init(statusText: "Apple Review demo mode enabled."))
+            $0.applyResult = .appleReviewDemo(.init(statusText: .init(value: "Apple Review demo mode enabled.")))
             $0.setupCode = .init(value: "")
         }
         await store.finish()
@@ -1016,7 +1016,7 @@ struct SettingsNavigationFeatureTests {
         await store.send(.scannedSetupCodeReceived(.init(code: .init(value: "not a demo code"))))
 
         await store.send(.scannedSetupCodeReceived(.init(code: .init(value: "  APPLE-REVIEW-DEMO  ")))) {
-            $0.applyResult = .appleReviewDemo(.init(statusText: "Apple Review demo mode enabled."))
+            $0.applyResult = .appleReviewDemo(.init(statusText: .init(value: "Apple Review demo mode enabled.")))
             $0.setupCode = .init(value: "")
             $0.stagedGatewaySetupLink = nil
         }
