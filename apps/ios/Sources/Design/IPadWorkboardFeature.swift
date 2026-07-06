@@ -16,12 +16,20 @@ extension IPadWorkboardClient: DependencyKey {
     static let testValue = IPadWorkboardClient.unavailable
 
     private static let unavailable = IPadWorkboardClient(
-        listCards: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
-        listBoards: { throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
-        create: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
-        move: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
-        archive: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) },
-        dispatch: { _ in throw IPadWorkboardError.failed(.init(message: "Workboard gateway unavailable.")) })
+        listCards: { _ in
+            throw IPadWorkboardError.failed(.init(message: .init(value: "Workboard gateway unavailable.")))
+        },
+        listBoards: { throw IPadWorkboardError.failed(.init(message: .init(value: "Workboard gateway unavailable."))) },
+        create: { _ in
+            throw IPadWorkboardError.failed(.init(message: .init(value: "Workboard gateway unavailable.")))
+        },
+        move: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "Workboard gateway unavailable."))) },
+        archive: { _ in
+            throw IPadWorkboardError.failed(.init(message: .init(value: "Workboard gateway unavailable.")))
+        },
+        dispatch: { _ in
+            throw IPadWorkboardError.failed(.init(message: .init(value: "Workboard gateway unavailable.")))
+        })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
@@ -107,15 +115,17 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
+
 enum IPadWorkboardError: Error, Equatable, Sendable {
-    struct Failure: Equatable, Sendable { var message: String }
+    struct Failure: Equatable, Sendable { var message: IPadWorkboardFailureMessage }
 
     case failed(Failure)
 
     var message: String {
         switch self {
         case let .failed(failure):
-            failure.message
+            failure.message.value
         }
     }
 }
@@ -732,7 +742,7 @@ struct IPadWorkboardFeature {
     }
 
     private static func failure(for error: Error) -> IPadWorkboardError {
-        .failed(.init(message: self.message(for: error)))
+        .failed(.init(message: .init(value: self.message(for: error))))
     }
 }
 
