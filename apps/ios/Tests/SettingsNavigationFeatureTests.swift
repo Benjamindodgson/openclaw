@@ -736,7 +736,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.statusChanged(.init(statusText: .init(value: "Failed: host required")))) {
-            $0.statusText = "Failed: host required"
+            $0.statusText = .init(value: "Failed: host required")
         }
     }
 
@@ -746,7 +746,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.setupConnectionStarted) {
-            $0.statusText = "Setup code applied. Connecting..."
+            $0.statusText = .init(value: "Setup code applied. Connecting...")
         }
     }
 
@@ -756,7 +756,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.qrScannerOpeningStarted) {
-            $0.statusText = "Opening QR scanner..."
+            $0.statusText = .init(value: "Opening QR scanner...")
         }
     }
 
@@ -766,19 +766,19 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.qrScannerErrorReceived(.init(message: .init(value: "Camera unavailable")))) {
-            $0.statusText = "Scanner error: Camera unavailable"
+            $0.statusText = .init(value: "Scanner error: Camera unavailable")
         }
     }
 
     @Test func `settings gateway setup status clears messages`() async {
         var initialState = SettingsGatewaySetupStatusFeature.State()
-        initialState.statusText = "Setup code applied. Connecting..."
+        initialState.statusText = .init(value: "Setup code applied. Connecting...")
         let store = TestStore(initialState: initialState) {
             SettingsGatewaySetupStatusFeature()
         }
 
         await store.send(.statusChanged(.init(statusText: .init(value: nil)))) {
-            $0.statusText = nil
+            $0.statusText = .init(value: nil)
         }
     }
 
@@ -791,8 +791,8 @@ struct SettingsNavigationFeatureTests {
             problemMessage: .init(value: "Pairing required"),
             gatewayStatusText: .init(value: "Offline"))))
         {
-            $0.gatewayProblemMessage = "Pairing required"
-            $0.gatewayStatusText = "Offline"
+            $0.gatewayProblemMessage = .init(value: "Pairing required")
+            $0.gatewayStatusText = .init(value: "Offline")
         }
     }
 

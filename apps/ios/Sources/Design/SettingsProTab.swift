@@ -1830,7 +1830,7 @@ extension SettingsProTab {
     }
 
     var setupStatusText: String? {
-        self.gatewaySetupStatusStore.statusText
+        self.gatewaySetupStatusStore.statusText.value
     }
 
     var stagedGatewaySetupLink: GatewayConnectDeepLink? {
