@@ -383,10 +383,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.displayNameSynced(.init(displayName: .init(value: "Kitchen iPad")))) {
-            $0.displayName = "Kitchen iPad"
+            $0.deviceDisplayName = .init(value: "Kitchen iPad")
         }
         await store.send(.instanceIdSynced(.init(instanceId: .init(value: "ios-node-123")))) {
-            $0.instanceId = "ios-node-123"
+            $0.currentInstanceID = .init(value: "ios-node-123")
         }
     }
 
@@ -396,7 +396,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.displayNameChanged(.init(displayName: .init(value: "Field Node")))) {
-            $0.displayName = "Field Node"
+            $0.deviceDisplayName = .init(value: "Field Node")
         }
     }
 

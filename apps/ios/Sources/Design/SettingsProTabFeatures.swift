@@ -887,8 +887,16 @@ struct SettingsDeviceIdentityFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var displayName = "iOS Node"
-        var instanceId = ""
+        var deviceDisplayName = SettingsDeviceDisplayName(value: "iOS Node")
+        var currentInstanceID = SettingsGatewayCurrentInstanceID(value: "")
+
+        var displayName: String {
+            self.deviceDisplayName.value
+        }
+
+        var instanceId: String {
+            self.currentInstanceID.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -909,15 +917,15 @@ struct SettingsDeviceIdentityFeature {
         Reduce { state, action in
             switch action {
             case let .displayNameChanged(change):
-                state.displayName = change.displayName.value
+                state.deviceDisplayName = change.displayName
                 return .none
 
             case let .displayNameSynced(sync):
-                state.displayName = sync.displayName.value
+                state.deviceDisplayName = sync.displayName
                 return .none
 
             case let .instanceIdSynced(sync):
-                state.instanceId = sync.instanceId.value
+                state.currentInstanceID = sync.instanceId
                 return .none
             }
         }
