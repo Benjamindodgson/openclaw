@@ -827,10 +827,13 @@ struct SettingsOnboardingStateFeature {
 
         struct OnboardingResetRequest: Equatable, Sendable { var instanceId: SettingsGatewayCurrentInstanceID }
 
+        struct SettingsOnboardingHasConnectedOnce: Equatable, Sendable { var value: Bool }
+        struct SettingsOnboardingComplete: Equatable, Sendable { var value: Bool }
+
         struct OnboardingStateSync: Equatable, Sendable {
-            var hasConnectedOnce: Bool
-            var onboardingComplete: Bool
-            var onboardingRequestID: Int
+            var hasConnectedOnce: SettingsOnboardingHasConnectedOnce
+            var onboardingComplete: SettingsOnboardingComplete
+            var onboardingRequestID: SettingsOnboardingRequestID
         }
 
         case onboardingRequestIDChanged(OnboardingRequestIDChange)
@@ -859,9 +862,9 @@ struct SettingsOnboardingStateFeature {
                 }
 
             case let .onboardingStateSynced(sync):
-                state.hasConnectedOnce = sync.hasConnectedOnce
-                state.onboardingComplete = sync.onboardingComplete
-                state.onboardingRequestID = sync.onboardingRequestID
+                state.hasConnectedOnce = sync.hasConnectedOnce.value
+                state.onboardingComplete = sync.onboardingComplete.value
+                state.onboardingRequestID = sync.onboardingRequestID.value
                 return .none
             }
         }
