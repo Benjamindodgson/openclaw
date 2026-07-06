@@ -411,7 +411,7 @@ struct IPadWorkboardScreen: View {
     private var queryBinding: Binding<String> {
         Binding(
             get: { self.store.query },
-            set: { self.store.send(.queryChanged(.init(query: $0))) })
+            set: { self.store.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
     private var selectedStatusBinding: Binding<String> {
