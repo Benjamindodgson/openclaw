@@ -122,6 +122,7 @@ struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardDispatchSummaryText: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
+struct IPadWorkboardKnownBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedBoardID: Equatable, Sendable { var value: String }
@@ -170,7 +171,7 @@ struct IPadWorkboardFeature {
     struct State: Equatable, Sendable {
         var cards: [IPadWorkboardCard] = []
         var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
-        var knownBoardIDs: [String] = []
+        var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
         var isRefreshing = false
         var isDispatching = false
         var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
@@ -213,8 +214,12 @@ struct IPadWorkboardFeature {
 
         var boardScopeOptions: [String] {
             IPadWorkboardScreen.boardScopeOptions(
-                knownBoardIDs: self.knownBoardIDs,
+                knownBoardIDs: self.knownBoardIDValues,
                 cardBoardIDs: self.cards.map { IPadWorkboardScreen.boardID(for: $0) })
+        }
+
+        var knownBoardIDValues: [String] {
+            self.knownBoardIDs.map(\.value)
         }
 
         var statusValues: [String] {
@@ -263,9 +268,10 @@ struct IPadWorkboardFeature {
 
         mutating func applyBoardScopes(_ boards: [IPadWorkboardBoardSummary]) {
             let discovered = boards.map(\.id)
-            self.knownBoardIDs = IPadWorkboardScreen.boardScopeOptions(
-                knownBoardIDs: self.knownBoardIDs,
+            let boardIDs = IPadWorkboardScreen.boardScopeOptions(
+                knownBoardIDs: self.knownBoardIDValues,
                 cardBoardIDs: discovered)
+            self.knownBoardIDs = boardIDs.map { .init(value: $0) }
         }
 
         mutating func replace(_ card: IPadWorkboardCard) {
@@ -354,7 +360,8 @@ struct IPadWorkboardFeature {
 
         private mutating func rememberBoardIDs(from cards: [IPadWorkboardCard]) {
             let discovered = cards.map { IPadWorkboardScreen.boardID(for: $0) }
-            self.knownBoardIDs = Array(Set(self.knownBoardIDs + discovered)).sorted()
+            let boardIDs = Array(Set(self.knownBoardIDValues + discovered)).sorted()
+            self.knownBoardIDs = boardIDs.map { .init(value: $0) }
         }
 
         private mutating func validateSelectedStatus() {
