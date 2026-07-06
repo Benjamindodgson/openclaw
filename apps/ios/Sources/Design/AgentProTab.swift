@@ -227,11 +227,11 @@ struct AgentProTab: View {
     }
 
     var clawHubErrorText: String? {
-        self.clawHubStore.errorText
+        self.clawHubStore.errorText.value
     }
 
     var clawHubInstallSlug: String? {
-        self.clawHubStore.installingSlug
+        self.clawHubStore.installingSlug?.value
     }
 
     var skillFilter: String {
@@ -682,6 +682,7 @@ struct AgentSkillFilterFeature {
 
 // swiftformat:disable redundantSendable
 struct AgentClawHubInstallSlug: Equatable, Sendable { var value: String }
+struct AgentClawHubErrorText: Equatable, Sendable { var value: String? }
 struct AgentClawHubInstallFailureMessage: Equatable, Sendable { var value: String }
 struct AgentClawHubSearchQuery: Equatable, Sendable { var value: String }
 struct AgentClawHubSearchFailureMessage: Equatable, Sendable { var value: String }
@@ -695,8 +696,8 @@ struct AgentClawHubSearchFeature {
         var query = AgentClawHubSearchQuery(value: "")
         var results: [ClawHubSearchResultLite] = []
         var isLoading = false
-        var errorText: String?
-        var installingSlug: String?
+        var errorText = AgentClawHubErrorText(value: nil)
+        var installingSlug: AgentClawHubInstallSlug?
     }
 
     enum Action: Equatable, Sendable {
@@ -741,7 +742,7 @@ struct AgentClawHubSearchFeature {
 
             case .searchRequested:
                 state.isLoading = true
-                state.errorText = nil
+                state.errorText = .init(value: nil)
                 return .none
 
             case let .searchFinished(response):
@@ -750,24 +751,24 @@ struct AgentClawHubSearchFeature {
                 return .none
 
             case let .searchFailed(failure):
-                state.errorText = failure.message.value
+                state.errorText = .init(value: failure.message.value)
                 state.isLoading = false
                 return .none
 
             case let .installRequested(install):
-                state.installingSlug = install.slug.value
-                state.errorText = nil
+                state.installingSlug = install.slug
+                state.errorText = .init(value: nil)
                 return .none
 
             case let .installFinished(install):
-                if state.installingSlug == install.slug.value {
+                if state.installingSlug == install.slug {
                     state.installingSlug = nil
                 }
                 return .none
 
             case let .installFailed(failure):
-                state.errorText = failure.message.value
-                if state.installingSlug == failure.slug.value {
+                state.errorText = .init(value: failure.message.value)
+                if state.installingSlug == failure.slug {
                     state.installingSlug = nil
                 }
                 return .none

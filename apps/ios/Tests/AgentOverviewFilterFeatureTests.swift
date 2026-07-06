@@ -312,7 +312,7 @@ struct AgentClawHubSearchFeatureTests {
         }
 
         await store.send(.searchFailed(.init(message: .init(value: "Search failed.")))) {
-            $0.errorText = "Search failed."
+            $0.errorText = .init(value: "Search failed.")
             $0.isLoading = false
         }
     }
@@ -323,7 +323,7 @@ struct AgentClawHubSearchFeatureTests {
         }
 
         await store.send(.installRequested(.init(slug: .init(value: "memory-plus")))) {
-            $0.installingSlug = "memory-plus"
+            $0.installingSlug = .init(value: "memory-plus")
         }
         await store.send(.installFinished(.init(slug: .init(value: "memory-plus")))) {
             $0.installingSlug = nil
@@ -332,7 +332,7 @@ struct AgentClawHubSearchFeatureTests {
 
     @Test func `install failure clears matching slug and records error`() async {
         var initialState = AgentClawHubSearchFeature.State()
-        initialState.installingSlug = "memory-plus"
+        initialState.installingSlug = .init(value: "memory-plus")
         let store = TestStore(initialState: initialState) {
             AgentClawHubSearchFeature()
         }
@@ -341,7 +341,7 @@ struct AgentClawHubSearchFeatureTests {
             slug: .init(value: "memory-plus"),
             message: .init(value: "Install failed."))))
         {
-            $0.errorText = "Install failed."
+            $0.errorText = .init(value: "Install failed.")
             $0.installingSlug = nil
         }
     }
