@@ -244,7 +244,7 @@ struct AgentSkillFilterFeatureTests {
             AgentSkillFilterFeature()
         }
 
-        await store.send(.searchTextChanged(.init(text: "gateway"))) {
+        await store.send(.searchTextChanged(.init(text: .init(value: "gateway")))) {
             $0.searchText = "gateway"
         }
     }
