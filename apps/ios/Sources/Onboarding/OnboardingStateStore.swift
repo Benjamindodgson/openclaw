@@ -548,9 +548,26 @@ struct OnboardingPresentationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var scannerError: String?
-        var showGatewayProblemDetails = false
-        var showQRScanner = false
+        enum Destination: Equatable, Sendable {
+            case gatewayProblemDetails
+            case qrScanner
+            case scannerError(OnboardingScannerErrorMessage)
+        }
+
+        var destination: Destination?
+
+        var scannerError: String? {
+            guard case let .scannerError(message) = self.destination else { return nil }
+            return message.value
+        }
+
+        var showGatewayProblemDetails: Bool {
+            self.destination == .gatewayProblemDetails
+        }
+
+        var showQRScanner: Bool {
+            self.destination == .qrScanner
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -570,28 +587,33 @@ struct OnboardingPresentationFeature {
         Reduce { state, action in
             switch action {
             case .gatewayProblemDetailsButtonTapped:
-                state.showGatewayProblemDetails = true
+                state.destination = .gatewayProblemDetails
                 return .none
 
             case .gatewayProblemDetailsDismissed:
-                state.showGatewayProblemDetails = false
+                if state.destination == .gatewayProblemDetails {
+                    state.destination = nil
+                }
                 return .none
 
             case .qrScannerButtonTapped:
-                state.showQRScanner = true
+                state.destination = .qrScanner
                 return .none
 
             case .qrScannerDismissed:
-                state.showQRScanner = false
+                if state.destination == .qrScanner {
+                    state.destination = nil
+                }
                 return .none
 
             case .qrScannerErrorDismissed:
-                state.scannerError = nil
+                if case .scannerError = state.destination {
+                    state.destination = nil
+                }
                 return .none
 
             case let .qrScannerErrorReceived(error):
-                state.showQRScanner = false
-                state.scannerError = error.message.value
+                state.destination = .scannerError(error.message)
                 return .none
             }
         }
