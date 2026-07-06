@@ -615,9 +615,9 @@ struct IPadWorkboardScreen: View {
 
     private func loadCards(force: Bool) async {
         await self.store.send(.refreshRequested(.init(
-            sceneActive: self.scenePhase == .active,
-            canRead: self.canRead,
-            force: force))).finish()
+            sceneActivity: .init(isActive: self.scenePhase == .active),
+            readAccess: .init(canRead: self.canRead),
+            force: .init(isForced: force)))).finish()
     }
 
     private func beginCreateCard() {
@@ -625,22 +625,26 @@ struct IPadWorkboardScreen: View {
     }
 
     private func createCard() async {
-        await self.store.send(.createRequested(.init(canRead: self.canRead, canWrite: self.canWrite))).finish()
+        await self.store.send(.createRequested(.init(
+            readAccess: .init(canRead: self.canRead),
+            writeAccess: .init(canWrite: self.canWrite)))).finish()
     }
 
     private func move(_ card: IPadWorkboardCard, to status: String) async {
         await self.store.send(.moveRequested(.init(
             card: card,
             status: .init(value: status),
-            canWrite: self.canWrite))).finish()
+            writeAccess: .init(canWrite: self.canWrite)))).finish()
     }
 
     private func archive(_ card: IPadWorkboardCard) async {
-        await self.store.send(.archiveRequested(.init(card: card, canWrite: self.canWrite))).finish()
+        await self.store.send(.archiveRequested(.init(
+            card: card,
+            writeAccess: .init(canWrite: self.canWrite)))).finish()
     }
 
     private func dispatchCards() async {
-        await self.store.send(.dispatchRequested(.init(canWrite: self.canWrite))).finish()
+        await self.store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: self.canWrite)))).finish()
     }
 
     private func open(_ card: IPadWorkboardCard) {

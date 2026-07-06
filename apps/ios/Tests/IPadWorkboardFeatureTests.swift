@@ -76,7 +76,11 @@ struct IPadWorkboardFeatureTests {
         await store.send(.boardScopeChanged(.init(boardID: .init(value: " planning ")))) {
             $0.selectedBoardID = .init(value: "planning")
         }
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: false))))
+        {
             $0.isRefreshing = .init(value: true)
             $0.activeRefreshBoardID = .init(value: "planning")
             $0.errorText = nil
@@ -84,7 +88,7 @@ struct IPadWorkboardFeatureTests {
         }
         await store.receive(.refreshResponse(.init(
             boardScope: .init(boardID: .init(value: "planning")),
-            force: false,
+            force: .init(isForced: false),
             result: .success(response))))
         {
             $0.isRefreshing = .init(value: false)
@@ -93,7 +97,7 @@ struct IPadWorkboardFeatureTests {
             $0.statuses = [.init(value: "todo"), .init(value: "done")]
             $0.knownBoardIDs = [.init(value: "planning")]
         }
-        await store.receive(.boardScopesResponse(.init(force: false, result: .success(boards)))) {
+        await store.receive(.boardScopesResponse(.init(force: .init(isForced: false), result: .success(boards)))) {
             $0.knownBoardIDs = [.init(value: "ops"), .init(value: "planning")]
         }
     }
@@ -113,7 +117,7 @@ struct IPadWorkboardFeatureTests {
         await store.send(.refreshResponse(
             .init(
                 boardScope: .init(boardID: .init(value: "old")),
-                force: true,
+                force: .init(isForced: true),
                 result: .success(IPadWorkboardCardsResponse(cards: [staleCard], statuses: ["done"])))))
         {
             $0.isRefreshing = .init(value: false)
@@ -128,12 +132,16 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: true))))
+        {
             $0.isRefreshing = .init(value: true)
         }
         await store.receive(.refreshResponse(.init(
             boardScope: .init(boardID: nil),
-            force: true,
+            force: .init(isForced: true),
             result: .failure(.failed(.init(message: .init(value: "workboard boom")))))))
         {
             $0.isRefreshing = .init(value: false)
@@ -165,7 +173,10 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.createRequested(.init(canRead: true, canWrite: true))) {
+        await store.send(.createRequested(.init(
+            readAccess: .init(canRead: true),
+            writeAccess: .init(canWrite: true))))
+        {
             $0.isCreatingCard = .init(value: true)
             $0.errorText = nil
         }
@@ -188,7 +199,10 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.createRequested(.init(canRead: true, canWrite: true))) {
+        await store.send(.createRequested(.init(
+            readAccess: .init(canRead: true),
+            writeAccess: .init(canWrite: true))))
+        {
             $0.isCreatingCard = .init(value: true)
             $0.errorText = nil
         }
@@ -222,7 +236,11 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.moveRequested(.init(card: card, status: .init(value: "running"), canWrite: true))) {
+        await store.send(.moveRequested(.init(
+            card: card,
+            status: .init(value: "running"),
+            writeAccess: .init(canWrite: true))))
+        {
             $0.busyCardID = .init(value: "card-1")
             $0.errorText = nil
         }
@@ -231,7 +249,7 @@ struct IPadWorkboardFeatureTests {
             $0.cards = [moved]
             $0.knownBoardIDs = [.init(value: "default")]
         }
-        await store.send(.archiveRequested(.init(card: moved, canWrite: true))) {
+        await store.send(.archiveRequested(.init(card: moved, writeAccess: .init(canWrite: true)))) {
             $0.busyCardID = .init(value: "card-1")
             $0.errorText = nil
         }
@@ -259,7 +277,7 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.dispatchRequested(.init(canWrite: true))) {
+        await store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: true)))) {
             $0.isDispatching = .init(value: true)
             $0.errorText = nil
             $0.dispatchSummaryText = nil
@@ -292,7 +310,7 @@ struct IPadWorkboardFeatureTests {
 
         await store.send(.refreshResponse(.init(
             boardScope: .init(boardID: nil),
-            force: true,
+            force: .init(isForced: true),
             result: .success(response))))
         {
             $0.isRefreshing = .init(value: false)
@@ -301,7 +319,7 @@ struct IPadWorkboardFeatureTests {
             $0.statuses = [.init(value: "todo")]
             $0.knownBoardIDs = [.init(value: "default")]
         }
-        await store.receive(.boardScopesResponse(.init(force: true, result: .success([]))))
+        await store.receive(.boardScopesResponse(.init(force: .init(isForced: true), result: .success([]))))
     }
 
     private static func failingClient() -> IPadWorkboardClient {
