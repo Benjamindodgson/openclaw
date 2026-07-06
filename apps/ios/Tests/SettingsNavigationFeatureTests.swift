@@ -1364,13 +1364,13 @@ struct SettingsNavigationFeatureTests {
             value: .init(rawValue: OpenClawLocationMode.always.rawValue))
 
         await store.send(.locationModeApplyRequested(request)) {
-            $0.isChangingLocationMode = true
+            $0.isChangingLocationMode = .init(value: true)
             $0.locationModeApplyResult = nil
             $0.locationModeRequest = nil
             $0.statusText = .init(value: nil)
         }
         await store.receive(.locationModeApplyFinished(appliedResult)) {
-            $0.isChangingLocationMode = false
+            $0.isChangingLocationMode = .init(value: false)
             $0.locationModeApplyResult = appliedResult
             $0.locationModeRaw = OpenClawLocationMode.always.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.always.rawValue
@@ -1398,7 +1398,7 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `settings location ignores persisted sync while changing mode`() async {
         var initialState = SettingsLocationFeature.State()
-        initialState.isChangingLocationMode = true
+        initialState.isChangingLocationMode = .init(value: true)
         initialState.locationModeRaw = OpenClawLocationMode.always.rawValue
         initialState.previousLocationModeRaw = OpenClawLocationMode.whileUsing.rawValue
         let store = TestStore(initialState: initialState) {
@@ -1444,7 +1444,7 @@ struct SettingsNavigationFeatureTests {
             rawValue: OpenClawLocationMode.always.rawValue)))
 
         var changingState = SettingsLocationFeature.State()
-        changingState.isChangingLocationMode = true
+        changingState.isChangingLocationMode = .init(value: true)
         let changingStore = TestStore(initialState: changingState) {
             SettingsLocationFeature()
         }
@@ -1506,10 +1506,10 @@ struct SettingsNavigationFeatureTests {
             .init(previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue)))
 
         await store.send(.locationModeApplyRequested(request)) {
-            $0.isChangingLocationMode = true
+            $0.isChangingLocationMode = .init(value: true)
         }
         await store.receive(.locationModeApplyFinished(deniedResult)) {
-            $0.isChangingLocationMode = false
+            $0.isChangingLocationMode = .init(value: false)
             $0.locationModeApplyResult = deniedResult
             $0.locationModeRaw = OpenClawLocationMode.off.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
