@@ -631,7 +631,7 @@ extension SettingsProTab {
     func updateTalkEnabled(_ enabled: Bool) {
         self.voiceControlStore.send(.talkEnabledChangeRequested(.init(
             enabled: .init(isEnabled: enabled),
-            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled)))
+            isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled))))
         self.storedTalkEnabled = self.voiceControlStore.talkEnabled
     }
 

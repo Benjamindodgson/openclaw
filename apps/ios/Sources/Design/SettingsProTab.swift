@@ -1108,11 +1108,12 @@ struct SettingsVoiceControlFeature {
 
     enum Action: Equatable, Sendable {
         struct SettingsTalkEnabled: Equatable, Sendable { var isEnabled: Bool }
+        struct SettingsVoiceControlDemoModeEnabled: Equatable, Sendable { var value: Bool }
         struct TalkEnabledChange: Equatable, Sendable { var enabled: SettingsTalkEnabled }
 
         struct TalkEnabledChangeRequest: Equatable, Sendable {
             var enabled: SettingsTalkEnabled
-            var isAppleReviewDemoModeEnabled: Bool
+            var isAppleReviewDemoModeEnabled: SettingsVoiceControlDemoModeEnabled
         }
 
         struct VoiceControlSync: Equatable, Sendable {
@@ -1155,7 +1156,7 @@ struct SettingsVoiceControlFeature {
 
             case let .talkEnabledChangeRequested(request):
                 let requested = request.enabled
-                let talkEnabled = request.isAppleReviewDemoModeEnabled ? false : requested.isEnabled
+                let talkEnabled = request.isAppleReviewDemoModeEnabled.value ? false : requested.isEnabled
                 state.talkEnabled = talkEnabled
                 return .run { _ in
                     await voiceControlClient.setTalkEnabled(talkEnabled)
