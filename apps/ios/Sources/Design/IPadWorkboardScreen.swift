@@ -59,7 +59,7 @@ struct IPadWorkboardScreen: View {
             case let .card(card):
                 IPadWorkboardCardDetailSheet(
                     card: card,
-                    statuses: self.store.statuses,
+                    statuses: self.store.statusValues,
                     isBusy: self.store.busyCardID?.value == card.id,
                     canWrite: self.canWrite,
                     openSession: { self.open(card) },
@@ -116,7 +116,7 @@ struct IPadWorkboardScreen: View {
                 } else {
                     Picker("Scope", selection: self.selectedStatusBinding) {
                         Text("Active").tag("active")
-                        ForEach(self.store.statuses, id: \.self) { status in
+                        ForEach(self.store.statusValues, id: \.self) { status in
                             Text(IPadWorkboardDefaults.label(for: status)).tag(status)
                         }
                     }
@@ -366,7 +366,7 @@ struct IPadWorkboardScreen: View {
                 Button("Active") {
                     self.store.send(.statusChanged(.init(status: .init(value: "active"))))
                 }
-                ForEach(self.store.statuses, id: \.self) { status in
+                ForEach(self.store.statusValues, id: \.self) { status in
                     Button(IPadWorkboardDefaults.label(for: status)) {
                         self.store.send(.statusChanged(.init(status: .init(value: status))))
                     }
@@ -431,7 +431,7 @@ struct IPadWorkboardScreen: View {
                     IPadWorkboardKanbanColumn(
                         status: status,
                         cards: self.cards(forKanbanStatus: status),
-                        statuses: self.store.statuses,
+                        statuses: self.store.statusValues,
                         busyCardID: self.store.busyCardID?.value,
                         openSession: { card in
                             self.open(card)
@@ -480,7 +480,7 @@ struct IPadWorkboardScreen: View {
                         }
                         IPadWorkboardQueueRow(
                             card: card,
-                            statuses: self.store.statuses,
+                            statuses: self.store.statusValues,
                             isBusy: self.store.busyCardID?.value == card.id,
                             inspect: {
                                 self.store.send(.cardSheetPresented(.init(card: card)))
