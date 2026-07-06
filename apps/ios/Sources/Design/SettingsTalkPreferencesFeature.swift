@@ -119,12 +119,12 @@ struct SettingsTalkPreferencesFeature {
         var talkSpeakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
         var gatewayTalkConfigLoaded = false
         var gatewayTalkApiKeyConfigured = false
-        var gatewayTalkTransportLabel = "Not loaded"
+        var gatewayTalkTransportLabel = SettingsGatewayTalkTransportLabel(value: "Not loaded")
         var gatewayTalkUsesRealtime = false
         var isAppleReviewDemoModeEnabled = false
-        var gatewayTalkActiveModeTitle = "Not active"
-        var gatewayTalkActiveModeSubtitle: String?
-        var gatewayTalkLastIssueText: String?
+        var gatewayTalkActiveModeTitle = SettingsGatewayTalkActiveModeTitle(value: "Not active")
+        var gatewayTalkActiveModeSubtitle = SettingsGatewayTalkActiveModeSubtitle(value: nil)
+        var gatewayTalkLastIssueText = SettingsGatewayTalkLastIssueText(value: nil)
 
         var providerSelection: TalkModeProviderSelection {
             TalkModeProviderSelection.resolved(self.providerSelectionRaw)
@@ -142,7 +142,7 @@ struct SettingsTalkPreferencesFeature {
 
         var gatewayTalkConfigDetail: String {
             if self.isAppleReviewDemoModeEnabled { return "Demo mode only" }
-            return self.gatewayTalkTransportLabel
+            return self.gatewayTalkTransportLabel.value
         }
 
         var gatewayTalkConfigValue: String {
@@ -157,12 +157,12 @@ struct SettingsTalkPreferencesFeature {
 
         var gatewayTalkActiveVoiceDetail: String {
             Self.gatewayTalkActiveVoiceDetail(
-                title: self.gatewayTalkActiveModeTitle,
-                subtitle: self.gatewayTalkActiveModeSubtitle)
+                title: self.gatewayTalkActiveModeTitle.value,
+                subtitle: self.gatewayTalkActiveModeSubtitle.value)
         }
 
         var gatewayTalkLastIssueDetail: String? {
-            Self.gatewayTalkLastIssueDetail(self.gatewayTalkLastIssueText)
+            Self.gatewayTalkLastIssueDetail(self.gatewayTalkLastIssueText.value)
         }
 
         var shouldShowRealtimeVoicePicker: Bool {
@@ -277,13 +277,13 @@ struct SettingsTalkPreferencesFeature {
 
             case let .gatewayTalkDisplayContextSynced(sync):
                 state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
-                state.gatewayTalkTransportLabel = sync.transportLabel.value
+                state.gatewayTalkTransportLabel = sync.transportLabel
                 return .none
 
             case let .gatewayTalkRuntimeSynced(sync):
-                state.gatewayTalkActiveModeTitle = sync.activeModeTitle.value
-                state.gatewayTalkActiveModeSubtitle = sync.activeModeSubtitle.value
-                state.gatewayTalkLastIssueText = sync.lastIssueText.value
+                state.gatewayTalkActiveModeTitle = sync.activeModeTitle
+                state.gatewayTalkActiveModeSubtitle = sync.activeModeSubtitle
+                state.gatewayTalkLastIssueText = sync.lastIssueText
                 return .none
 
             case let .preferencesSynced(sync):
