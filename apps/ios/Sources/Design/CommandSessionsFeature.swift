@@ -31,6 +31,7 @@ struct CommandSessionsFailureMessage: Equatable, Sendable { var value: String }
 struct CommandSessionsLoadingInFlight: Equatable, Sendable { var value: Bool }
 struct CommandSessionsAvailable: Equatable, Sendable { var value: Bool }
 struct CommandSessionReferenceKey: Equatable, Sendable { var value: String }
+struct CommandSceneActive: Equatable, Sendable { var value: Bool }
 
 enum CommandSessionsError: Error, Equatable, Sendable {
     case failed
@@ -149,7 +150,7 @@ struct CommandCenterRecentSessionsFeature {
 
     enum Action: Equatable, Sendable {
         struct SceneActivity: Equatable, Sendable {
-            var isActive: Bool
+            var isActive: CommandSceneActive
         }
 
         struct SessionsAvailability: Equatable, Sendable {
@@ -184,7 +185,7 @@ struct CommandCenterRecentSessionsFeature {
 
             switch action {
             case let .refreshRequested(request):
-                guard request.sceneActivity.isActive else { return .none }
+                guard request.sceneActivity.isActive.value else { return .none }
                 guard request.sessionsAvailability.isAvailable.value else {
                     state.defaultChatSessionEntry = nil
                     state.recentChatSessions = []
