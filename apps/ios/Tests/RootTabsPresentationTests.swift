@@ -15,7 +15,7 @@ struct RootTabsPresentationTests {
                 showOnboarding: false,
                 gatewayConnected: false,
                 hasExistingGatewayConfig: true,
-                discoveredGatewayCount: 1),
+                discoveredGatewayCount: .init(value: 1)),
             hasPresentedSheet: false)
 
         #expect(!shouldPresent)
@@ -28,7 +28,7 @@ struct RootTabsPresentationTests {
                 showOnboarding: false,
                 gatewayConnected: false,
                 hasExistingGatewayConfig: false,
-                discoveredGatewayCount: 1),
+                discoveredGatewayCount: .init(value: 1)),
             hasPresentedSheet: false)
 
         #expect(shouldPresent)
@@ -41,7 +41,7 @@ struct RootTabsPresentationTests {
                 showOnboarding: false,
                 gatewayConnected: true,
                 hasExistingGatewayConfig: false,
-                discoveredGatewayCount: 1),
+                discoveredGatewayCount: .init(value: 1)),
             hasPresentedSheet: false)
 
         #expect(!shouldPresent)
@@ -702,7 +702,7 @@ struct RootTabsPresentationTests {
         let store = TestStore(initialState: RootPresentationFeature.State(
             quickSetupDismissed: false,
             showOnboarding: false,
-            discoveredGatewayCount: 0))
+            discoveredGatewayCount: .init(value: 0)))
         {
             RootPresentationFeature()
         }
@@ -714,7 +714,7 @@ struct RootTabsPresentationTests {
             hasExistingGatewayConfig: false,
             discoveredGatewayCount: 1)))
         {
-            $0.discoveredGatewayCount = 1
+            $0.discoveredGatewayCount = .init(value: 1)
             $0.presentedSheet = .quickSetup
         }
 
@@ -1529,7 +1529,7 @@ struct RootTabsPresentationTests {
             showOnboarding: showOnboarding,
             gatewayConnected: gatewayConnected,
             hasExistingGatewayConfig: hasExistingGatewayConfig,
-            discoveredGatewayCount: discoveredGatewayCount))
+            discoveredGatewayCount: .init(value: discoveredGatewayCount)))
     }
 
     private static func localNetworkAccessRequest(

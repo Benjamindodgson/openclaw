@@ -1123,7 +1123,7 @@ extension RootTabs {
                 showOnboarding: self.presentationStore.showOnboarding,
                 gatewayConnected: self.appModel.gatewayServerName != nil,
                 hasExistingGatewayConfig: self.hasExistingGatewayConfig(),
-                discoveredGatewayCount: self.gatewayController.gateways.count))))
+                discoveredGatewayCount: .init(value: self.gatewayController.gateways.count)))))
     }
 }
 
