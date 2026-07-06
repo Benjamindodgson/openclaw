@@ -11,7 +11,7 @@ struct RootTabsPresentationTests {
     @Test func `quick setup does not present when gateway already configured`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             snapshot: RootPresentationFeature.QuickSetupSnapshot(
-                quickSetupDismissed: false,
+                quickSetupDismissal: .init(isDismissed: false),
                 showOnboarding: false,
                 gatewayConnection: .init(isConnected: false),
                 gatewayConfigPresence: .init(hasExistingConfig: true),
@@ -24,7 +24,7 @@ struct RootTabsPresentationTests {
     @Test func `quick setup presents for fresh install with discovered gateway`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             snapshot: RootPresentationFeature.QuickSetupSnapshot(
-                quickSetupDismissed: false,
+                quickSetupDismissal: .init(isDismissed: false),
                 showOnboarding: false,
                 gatewayConnection: .init(isConnected: false),
                 gatewayConfigPresence: .init(hasExistingConfig: false),
@@ -37,7 +37,7 @@ struct RootTabsPresentationTests {
     @Test func `quick setup does not present when already connected`() {
         let shouldPresent = RootTabs.shouldPresentQuickSetup(
             snapshot: RootPresentationFeature.QuickSetupSnapshot(
-                quickSetupDismissed: false,
+                quickSetupDismissal: .init(isDismissed: false),
                 showOnboarding: false,
                 gatewayConnection: .init(isConnected: true),
                 gatewayConfigPresence: .init(hasExistingConfig: false),
@@ -700,7 +700,7 @@ struct RootTabsPresentationTests {
 
     @Test func `reducer updates quick setup presentation`() async {
         let store = TestStore(initialState: RootPresentationFeature.State(
-            quickSetupDismissed: false,
+            quickSetupDismissal: .init(isDismissed: false),
             showOnboarding: false,
             discoveredGatewayCount: .init(value: 0)))
         {
@@ -1525,7 +1525,7 @@ struct RootTabsPresentationTests {
         -> RootPresentationFeature.QuickSetupSnapshotChange
     {
         RootPresentationFeature.QuickSetupSnapshotChange(snapshot: RootPresentationFeature.QuickSetupSnapshot(
-            quickSetupDismissed: quickSetupDismissed,
+            quickSetupDismissal: .init(isDismissed: quickSetupDismissed),
             showOnboarding: showOnboarding,
             gatewayConnection: .init(isConnected: gatewayConnected),
             gatewayConfigPresence: .init(hasExistingConfig: hasExistingGatewayConfig),

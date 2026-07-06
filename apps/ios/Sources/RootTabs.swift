@@ -1119,7 +1119,7 @@ extension RootTabs {
     private func maybeShowQuickSetup() {
         self.presentationStore.send(.quickSetupSnapshotChanged(
             RootPresentationFeature.QuickSetupSnapshotChange(snapshot: RootPresentationFeature.QuickSetupSnapshot(
-                quickSetupDismissed: self.quickSetupDismissed,
+                quickSetupDismissal: .init(isDismissed: self.quickSetupDismissed),
                 showOnboarding: self.presentationStore.showOnboarding,
                 gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
                 gatewayConfigPresence: .init(hasExistingConfig: self.hasExistingGatewayConfig()),
