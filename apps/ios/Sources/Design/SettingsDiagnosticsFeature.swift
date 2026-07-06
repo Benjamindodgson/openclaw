@@ -6,6 +6,7 @@ import SwiftUI
 struct SettingsDiagnosticsFeature {
     // swiftformat:disable redundantSendable
     struct DiscoveryStatusText: Equatable, Sendable { var value: String }
+    struct DiagnosticsIssueCount: Equatable, Sendable { var value: Int }
     struct LastRunText: Equatable, Sendable { var value: String }
 
     @ObservableState
@@ -13,7 +14,7 @@ struct SettingsDiagnosticsFeature {
         var discoveredGatewayCount = Action.DiscoveredGatewayCount(value: 0)
         var discoveryStatusText = DiscoveryStatusText(value: "Discovery idle")
         var gatewayConnected = Action.DiagnosticsGatewayConnected(value: false)
-        var issueCount: Int?
+        var issueCount: DiagnosticsIssueCount?
         var isAppleReviewDemoModeEnabled = Action.AppleReviewDemoModeEnabled(value: false)
         var lastRunText = LastRunText(value: "Not run")
         var screenRecordActive = Action.ScreenRecordActive(value: false)
@@ -57,12 +58,12 @@ struct SettingsDiagnosticsFeature {
 
         var runValue: String {
             guard let issueCount else { return "pending" }
-            return issueCount == 0 ? "pass" : "\(issueCount)"
+            return issueCount.value == 0 ? "pass" : "\(issueCount.value)"
         }
 
         var runColor: Color {
             guard let issueCount else { return .secondary }
-            return issueCount == 0 ? OpenClawBrand.ok : OpenClawBrand.warn
+            return issueCount.value == 0 ? OpenClawBrand.ok : OpenClawBrand.warn
         }
     }
 
@@ -108,11 +109,11 @@ struct SettingsDiagnosticsFeature {
                 return .none
 
             case let .diagnosticsCompletionRequested(request):
-                state.issueCount = SettingsDiagnostics.issueCount(
+                state.issueCount = .init(value: SettingsDiagnostics.issueCount(
                     gatewayConnected: request.gatewayConnected.value,
                     discoveredGatewayCount: request.discoveredGatewayCount.value,
                     talkConfigLoaded: request.talkConfigLoaded.value,
-                    notificationsAllowed: request.notificationsAllowed.value)
+                    notificationsAllowed: request.notificationsAllowed.value))
                 state.lastRunText = request.lastRunText
                 return .none
             }
