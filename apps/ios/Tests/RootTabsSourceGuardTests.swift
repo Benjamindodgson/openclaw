@@ -729,6 +729,10 @@ struct RootTabsSourceGuardTests {
         #expect(talkSource.contains("struct TalkEnabled: Equatable, Sendable"))
         #expect(talkSource.contains("struct TalkEnabledChange: Equatable, Sendable"))
         #expect(talkSource.contains("struct TalkEnabledChange: Equatable, Sendable { var enabled: TalkEnabled }"))
+        #expect(talkSource.contains("enum Destination: Equatable, Sendable"))
+        #expect(talkSource.contains("var destination: Destination?"))
+        #expect(talkSource.contains("state.destination = .permissionPrompt"))
+        #expect(talkSource.contains("state.destination = .talkIssueDetails"))
         #expect(talkSource.contains("case gatewayConnectionChanged(GatewayConnectionChange)"))
         #expect(talkSource.contains("case speakerphoneEnabledChanged(SpeakerphoneEnabledChange)"))
         #expect(talkSource.contains("case startTalkRequested(StartTalkRequest)"))
@@ -753,6 +757,8 @@ struct RootTabsSourceGuardTests {
         #expect(talkActionFunctions.contains(
             "self.store.send(.talkEnabledChanged(.init(enabled: .init(isEnabled: false))))"))
         #expect(!talkActionFunctions.contains("self.appModel.setTalkEnabled"))
+        #expect(!talkSource.contains("var showPermissionPrompt = false"))
+        #expect(!talkSource.contains("var showTalkIssueDetails = false"))
     }
 
     @Test func `agent row selection is reducer effect owned`() throws {

@@ -10,20 +10,22 @@ struct TalkProTabFeatureTests {
         }
 
         await store.send(.permissionRequired) {
-            $0.showPermissionPrompt = true
+            $0.destination = .permissionPrompt
         }
         await store.send(.permissionPromptDismissed) {
-            $0.showPermissionPrompt = false
+            $0.destination = nil
         }
     }
 
     @Test func `permission ready dismisses permission prompt`() async {
-        let store = TestStore(initialState: TalkProTabFeature.State(showPermissionPrompt: true)) {
+        var initialState = TalkProTabFeature.State()
+        initialState.destination = .permissionPrompt
+        let store = TestStore(initialState: initialState) {
             TalkProTabFeature()
         }
 
         await store.send(.permissionReady) {
-            $0.showPermissionPrompt = false
+            $0.destination = nil
         }
     }
 
@@ -33,10 +35,11 @@ struct TalkProTabFeatureTests {
         }
 
         await store.send(.runtimeIssueDetailsButtonTapped) {
-            $0.showTalkIssueDetails = true
+            $0.destination = .talkIssueDetails
         }
+        await store.send(.permissionReady)
         await store.send(.runtimeIssueDetailsDismissed) {
-            $0.showTalkIssueDetails = false
+            $0.destination = nil
         }
     }
 
