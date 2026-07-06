@@ -21,9 +21,22 @@ struct RootLaunchFeature {
 
     @ObservableState
     struct State: Equatable, Sendable {
-        var didApplyInitialAppearance = false
-        var didApplyInitialChatSession = false
+        enum OneShotPhase: Equatable, Sendable {
+            case pending
+            case applied
+        }
+
+        var initialAppearancePhase = OneShotPhase.pending
+        var initialChatSessionPhase = OneShotPhase.pending
         var command: Command?
+
+        var didApplyInitialAppearance: Bool {
+            self.initialAppearancePhase == .applied
+        }
+
+        var didApplyInitialChatSession: Bool {
+            self.initialChatSessionPhase == .applied
+        }
     }
 
     enum Command: Equatable, Sendable {
@@ -44,14 +57,14 @@ struct RootLaunchFeature {
             switch action {
             case let .initialAppearanceRequested(request):
                 guard !state.didApplyInitialAppearance else { return .none }
-                state.didApplyInitialAppearance = true
+                state.initialAppearancePhase = .applied
                 guard let preference = request.preference else { return .none }
                 state.command = .applyAppearance(ApplyAppearanceCommand(preference: preference))
                 return .none
 
             case let .initialChatSessionRequested(request):
                 guard !state.didApplyInitialChatSession else { return .none }
-                state.didApplyInitialChatSession = true
+                state.initialChatSessionPhase = .applied
                 state.command = .focusChatSession(FocusChatSessionCommand(sessionKey: request.sessionKey))
                 return .none
 
