@@ -7,6 +7,13 @@ struct PushEnrollmentConsentClient {
     var reset: @Sendable () -> Void
 }
 
+// swiftformat:disable redundantSendable
+struct PushEnrollmentDisclosureAccepted: Equatable, Sendable {
+    var value: Bool
+}
+
+// swiftformat:enable redundantSendable
+
 extension PushEnrollmentConsentClient: DependencyKey {
     static let liveValue = PushEnrollmentConsentClient(
         disclosureAccepted: { PushEnrollmentConsent.disclosureAccepted },
@@ -37,10 +44,10 @@ struct PushEnrollmentConsentFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var disclosureAccepted: Bool
+        var disclosureAccepted: PushEnrollmentDisclosureAccepted
 
         init(disclosureAccepted: Bool = PushEnrollmentConsent.disclosureAccepted) {
-            self.disclosureAccepted = disclosureAccepted
+            self.disclosureAccepted = .init(value: disclosureAccepted)
         }
     }
 
@@ -59,17 +66,17 @@ struct PushEnrollmentConsentFeature {
 
             switch action {
             case .refresh:
-                state.disclosureAccepted = consent.disclosureAccepted()
+                state.disclosureAccepted = .init(value: consent.disclosureAccepted())
                 return .none
 
             case .acceptDisclosure:
                 consent.markDisclosureAccepted()
-                state.disclosureAccepted = true
+                state.disclosureAccepted = .init(value: true)
                 return .none
 
             case .reset:
                 consent.reset()
-                state.disclosureAccepted = false
+                state.disclosureAccepted = .init(value: false)
                 return .none
             }
         }

@@ -12,7 +12,7 @@ struct PushEnrollmentConsentFeatureTests {
         }
 
         await store.send(.refresh) {
-            $0.disclosureAccepted = true
+            $0.disclosureAccepted = .init(value: true)
         }
     }
 
@@ -23,7 +23,7 @@ struct PushEnrollmentConsentFeatureTests {
         }
 
         await store.send(.acceptDisclosure) {
-            $0.disclosureAccepted = true
+            $0.disclosureAccepted = .init(value: true)
         }
 
         #expect(probe.markDisclosureAcceptedCount == 1)
@@ -36,7 +36,7 @@ struct PushEnrollmentConsentFeatureTests {
         }
 
         await store.send(.reset) {
-            $0.disclosureAccepted = false
+            $0.disclosureAccepted = .init(value: false)
         }
 
         #expect(probe.resetCount == 1)

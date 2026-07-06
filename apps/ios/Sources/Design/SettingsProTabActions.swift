@@ -572,7 +572,7 @@ extension SettingsProTab {
     @MainActor
     func registerForRemoteNotificationsIfEnrollmentReady() {
         self.notificationStore.send(.remoteRegistrationRequested(.init(
-            disclosureAccepted: .init(value: self.pushEnrollmentConsentStore.disclosureAccepted))))
+            disclosureAccepted: .init(value: self.pushEnrollmentConsentStore.disclosureAccepted.value))))
     }
 
     var manualPortBinding: Binding<String> {
