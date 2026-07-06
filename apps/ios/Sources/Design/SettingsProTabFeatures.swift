@@ -584,7 +584,11 @@ struct SettingsShareInstructionFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var defaultShareInstruction = ""
+        var defaultShareInstructionValue = SettingsDefaultShareInstruction(value: "")
+
+        var defaultShareInstruction: String {
+            self.defaultShareInstructionValue.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -606,11 +610,11 @@ struct SettingsShareInstructionFeature {
 
             switch action {
             case let .defaultShareInstructionChanged(change):
-                state.defaultShareInstruction = change.instruction.value
+                state.defaultShareInstructionValue = change.instruction
                 return .none
 
             case .defaultShareInstructionLoadRequested:
-                state.defaultShareInstruction = persistenceClient.loadDefaultInstruction().value
+                state.defaultShareInstructionValue = persistenceClient.loadDefaultInstruction()
                 return .none
 
             case let .defaultShareInstructionPersistenceRequested(instruction):
