@@ -8,6 +8,10 @@ struct GatewayProblemClipboardText: Equatable, Sendable {
     var value: String
 }
 
+struct GatewayProblemCopyFeedbackText: Equatable, Sendable {
+    var value: String
+}
+
 // swiftformat:enable redundantSendable
 
 struct GatewayProblemClipboardClient {
@@ -42,7 +46,7 @@ struct GatewayProblemDetailsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var copyFeedback: String?
+        var copyFeedback: GatewayProblemCopyFeedbackText?
     }
 
     enum Action: Equatable, Sendable {
@@ -67,13 +71,13 @@ struct GatewayProblemDetailsFeature {
 
             switch action {
             case let .copyRequestIDButtonTapped(request):
-                state.copyFeedback = "Copied request ID"
+                state.copyFeedback = .init(value: "Copied request ID")
                 return .run { _ in
                     await clipboard.copy(request.requestID)
                 }
 
             case let .copyCommandButtonTapped(request):
-                state.copyFeedback = "Copied command"
+                state.copyFeedback = .init(value: "Copied command")
                 return .run { _ in
                     await clipboard.copy(request.command)
                 }
@@ -242,7 +246,7 @@ struct GatewayProblemDetailsSheet: View {
 
                 if let copyFeedback = self.store.copyFeedback {
                     Section {
-                        Text(copyFeedback)
+                        Text(copyFeedback.value)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
