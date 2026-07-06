@@ -209,7 +209,7 @@ struct AgentProTab: View {
     }
 
     var clawHubLoading: Bool {
-        self.clawHubStore.isLoading
+        self.clawHubStore.loadingPhase == .inFlight
     }
 
     var clawHubErrorText: String? {
@@ -703,9 +703,14 @@ struct AgentClawHubSearchFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        enum SearchLoadingPhase: Equatable, Sendable {
+            case idle
+            case inFlight
+        }
+
         var query = AgentClawHubSearchQuery(value: "")
         var results: [ClawHubSearchResultLite] = []
-        var isLoading = false
+        var loadingPhase = SearchLoadingPhase.idle
         var errorText = AgentClawHubErrorText(value: nil)
         var installingSlug: AgentClawHubInstallSlug?
     }
@@ -751,18 +756,18 @@ struct AgentClawHubSearchFeature {
                 return .none
 
             case .searchRequested:
-                state.isLoading = true
+                state.loadingPhase = .inFlight
                 state.errorText = .init(value: nil)
                 return .none
 
             case let .searchFinished(response):
                 state.results = response.results
-                state.isLoading = false
+                state.loadingPhase = .idle
                 return .none
 
             case let .searchFailed(failure):
                 state.errorText = .init(value: failure.message.value)
-                state.isLoading = false
+                state.loadingPhase = .idle
                 return .none
 
             case let .installRequested(install):

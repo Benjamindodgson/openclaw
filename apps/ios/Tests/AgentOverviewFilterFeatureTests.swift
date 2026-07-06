@@ -298,25 +298,25 @@ struct AgentClawHubSearchFeatureTests {
         }
 
         await store.send(.searchRequested) {
-            $0.isLoading = true
+            $0.loadingPhase = .inFlight
         }
         await store.send(.searchFinished(.init(results: [result]))) {
             $0.results = [result]
-            $0.isLoading = false
+            $0.loadingPhase = .idle
         }
     }
 
     @Test func `search failure keeps existing results and stores error`() async {
         var initialState = AgentClawHubSearchFeature.State()
         initialState.results = [Self.result(slug: "existing")]
-        initialState.isLoading = true
+        initialState.loadingPhase = .inFlight
         let store = TestStore(initialState: initialState) {
             AgentClawHubSearchFeature()
         }
 
         await store.send(.searchFailed(.init(message: .init(value: "Search failed.")))) {
             $0.errorText = .init(value: "Search failed.")
-            $0.isLoading = false
+            $0.loadingPhase = .idle
         }
     }
 
