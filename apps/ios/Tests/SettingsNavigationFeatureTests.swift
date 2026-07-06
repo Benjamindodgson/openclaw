@@ -549,7 +549,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.connectionStarted(.init(gatewayID: .init(value: "gateway-1")))) {
-            $0.connectingGatewayID = "gateway-1"
+            $0.connectingGatewayID = .init(value: "gateway-1")
         }
         await store.send(.connectionFinished) {
             $0.connectingGatewayID = nil
@@ -572,7 +572,7 @@ struct SettingsNavigationFeatureTests {
     @Test func `settings gateway connection disconnects through client`() async {
         let probe = SettingsGatewayDisconnectProbe()
         var initialState = SettingsGatewayConnectionFeature.State()
-        initialState.connectingGatewayID = "manual"
+        initialState.connectingGatewayID = .init(value: "manual")
         let store = TestStore(initialState: initialState) {
             SettingsGatewayConnectionFeature(disconnectClient: probe.client)
         }
@@ -617,7 +617,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.connectionStarted(.init(gatewayID: .init(value: "manual")))) {
-            $0.connectingGatewayID = "manual"
+            $0.connectingGatewayID = .init(value: "manual")
         }
         await store.send(.connectionFinished) {
             $0.connectingGatewayID = nil
