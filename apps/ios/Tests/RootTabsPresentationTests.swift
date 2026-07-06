@@ -81,7 +81,7 @@ struct RootTabsPresentationTests {
     @Test func `reducer updates startup presentation route`() async {
         let store = TestStore(initialState: RootPresentationFeature.State(
             gatewayConnection: .init(isConnected: true),
-            hasConnectedOnce: true,
+            connectionHistory: .init(hasConnectedOnce: true),
             onboardingComplete: true,
             gatewayConfigPresence: .init(hasExistingConfig: true),
             shouldPresentOnLaunch: false))
@@ -96,7 +96,7 @@ struct RootTabsPresentationTests {
             hasExistingGatewayConfig: false)))
         {
             $0.gatewayConnection = .init(isConnected: false)
-            $0.hasConnectedOnce = false
+            $0.connectionHistory = .init(hasConnectedOnce: false)
             $0.onboardingComplete = false
             $0.gatewayConfigPresence = .init(hasExistingConfig: false)
             $0.startupRoute = .onboarding
@@ -108,7 +108,7 @@ struct RootTabsPresentationTests {
             onboardingComplete: true,
             hasExistingGatewayConfig: false)))
         {
-            $0.hasConnectedOnce = true
+            $0.connectionHistory = .init(hasConnectedOnce: true)
             $0.onboardingComplete = true
             $0.startupRoute = .settings
         }
@@ -158,7 +158,7 @@ struct RootTabsPresentationTests {
             onboardingComplete: true,
             hasExistingGatewayConfig: false)))
         {
-            $0.hasConnectedOnce = true
+            $0.connectionHistory = .init(hasConnectedOnce: true)
             $0.onboardingComplete = true
             $0.onboardingEvaluationGate = .init(didEvaluate: true)
             $0.autoOpenSettingsGate = .init(didOpen: true)
@@ -183,7 +183,7 @@ struct RootTabsPresentationTests {
             onboardingComplete: true,
             hasExistingGatewayConfig: false)))
         {
-            $0.hasConnectedOnce = true
+            $0.connectionHistory = .init(hasConnectedOnce: true)
             $0.onboardingComplete = true
             $0.startupRoute = .settings
             $0.autoOpenSettingsGate = .init(didOpen: true)
@@ -378,7 +378,7 @@ struct RootTabsPresentationTests {
             hasExistingGatewayConfig: true)))
         {
             $0.gatewayConnection = .init(isConnected: true)
-            $0.hasConnectedOnce = true
+            $0.connectionHistory = .init(hasConnectedOnce: true)
             $0.onboardingComplete = true
             $0.gatewayConfigPresence = .init(hasExistingConfig: true)
             $0.onboardingEvaluationGate = .init(didEvaluate: true)
@@ -1462,7 +1462,7 @@ struct RootTabsPresentationTests {
     {
         RootPresentationFeature.StartupSnapshot(
             gatewayConnection: .init(isConnected: gatewayConnected),
-            hasConnectedOnce: hasConnectedOnce,
+            connectionHistory: .init(hasConnectedOnce: hasConnectedOnce),
             onboardingComplete: onboardingComplete,
             gatewayConfigPresence: .init(hasExistingConfig: hasExistingGatewayConfig),
             shouldPresentOnLaunch: shouldPresentOnLaunch)

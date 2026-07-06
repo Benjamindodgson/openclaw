@@ -1063,7 +1063,7 @@ extension RootTabs {
     private func makeStartupSnapshot(shouldPresentOnLaunch: Bool) -> RootPresentationFeature.StartupSnapshot {
         RootPresentationFeature.StartupSnapshot(
             gatewayConnection: .init(isConnected: self.appModel.gatewayServerName != nil),
-            hasConnectedOnce: self.hasConnectedOnce,
+            connectionHistory: .init(hasConnectedOnce: self.hasConnectedOnce),
             onboardingComplete: self.onboardingComplete,
             gatewayConfigPresence: .init(hasExistingConfig: self.hasExistingGatewayConfig()),
             shouldPresentOnLaunch: shouldPresentOnLaunch)
