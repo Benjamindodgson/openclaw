@@ -38,7 +38,7 @@ extension IPadWorkboardClient: DependencyKey {
                 let data = try await Self.request(
                     appModel: appModel,
                     method: "workboard.cards.list",
-                    params: IPadWorkboardListParams(boardId: boardScope.boardID),
+                    params: IPadWorkboardListParams(boardId: boardScope.boardID?.value),
                     timeoutSeconds: 20)
                 return try JSONDecoder().decode(IPadWorkboardCardsResponse.self, from: data)
             },
@@ -78,7 +78,7 @@ extension IPadWorkboardClient: DependencyKey {
                 let data = try await Self.request(
                     appModel: appModel,
                     method: "workboard.cards.dispatch",
-                    params: IPadWorkboardListParams(boardId: boardScope.boardID),
+                    params: IPadWorkboardListParams(boardId: boardScope.boardID?.value),
                     timeoutSeconds: 45)
                 return try JSONDecoder().decode(IPadWorkboardDispatchSummary.self, from: data)
             })
@@ -116,6 +116,7 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct IPadWorkboardActiveRefreshBoardID: Equatable, Sendable { var value: String }
+struct IPadWorkboardBoardScopeID: Equatable, Sendable { var value: String }
 struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
 struct IPadWorkboardBusyCardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
@@ -149,7 +150,7 @@ struct IPadWorkboardDispatchSnapshot: Equatable, Sendable {
 }
 
 struct IPadWorkboardBoardScope: Equatable, Sendable {
-    var boardID: String?
+    var boardID: IPadWorkboardBoardScopeID?
 }
 
 // swiftformat:enable redundantSendable
@@ -195,9 +196,9 @@ struct IPadWorkboardFeature {
             self.isRefreshing || self.isDispatching
         }
 
-        var selectedBoardParam: String? {
+        var selectedBoardParam: IPadWorkboardBoardScopeID? {
             let selected = IPadWorkboardScreen.normalizedScopeID(self.selectedBoardID.value)
-            return selected.isEmpty ? nil : selected
+            return selected.isEmpty ? nil : .init(value: selected)
         }
 
         var trimmedDraftTitle: String {
@@ -579,7 +580,7 @@ struct IPadWorkboardFeature {
                     agentId: "",
                     sessionKey: nil,
                     position: state.nextPosition(for: status),
-                    boardId: state.selectedBoardParam)
+                    boardId: state.selectedBoardParam?.value)
                 return .run { send in
                     do {
                         let card = try await client.create(params)
@@ -699,7 +700,7 @@ struct IPadWorkboardFeature {
 
                 state.isRefreshing = true
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
-                state.activeRefreshBoardID = boardScope.boardID.map { .init(value: $0) }
+                state.activeRefreshBoardID = boardScope.boardID.map { .init(value: $0.value) }
                 state.errorText = nil
                 if !state.statusValues.contains(state.selectedStatus.value), state.selectedStatus.value != "active" {
                     state.selectedStatus = .init(value: "active")
@@ -722,7 +723,7 @@ struct IPadWorkboardFeature {
 
             case let .refreshResponse(response):
                 let activeRefreshBoardID = response.boardScope.boardID
-                    .map { IPadWorkboardActiveRefreshBoardID(value: $0) }
+                    .map { IPadWorkboardActiveRefreshBoardID(value: $0.value) }
                 guard state.activeRefreshBoardID == activeRefreshBoardID else { return .none }
                 state.isRefreshing = false
                 state.activeRefreshBoardID = nil
