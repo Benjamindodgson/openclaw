@@ -114,6 +114,27 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("state.copyFeedback = \"Copied command\""))
     }
 
+    @Test func `gateway display status inputs are typed reducer state`() throws {
+        let source = try String(contentsOf: Self.gatewayStatusBuilderSourceURL(), encoding: .utf8)
+        let state = try Self.extract(
+            source,
+            from: "struct State: Equatable, Sendable {",
+            to: "enum Action")
+
+        #expect(source.contains("struct GatewayDisplayServerName: Equatable, Sendable"))
+        #expect(source.contains("struct GatewayDisplayStatusText: Equatable, Sendable"))
+        #expect(state.contains("var gatewayServerName: GatewayDisplayServerName"))
+        #expect(state.contains("var gatewayStatusText: GatewayDisplayStatusText"))
+        #expect(source.contains("self.gatewayServerName = .init(value: gatewayServerName)"))
+        #expect(source.contains("self.gatewayStatusText = .init(value: gatewayStatusText)"))
+        #expect(source.contains("gatewayServerName: state.gatewayServerName.value"))
+        #expect(source.contains("gatewayStatusText: state.gatewayStatusText.value"))
+        #expect(!state.contains("var gatewayServerName: String?"))
+        #expect(!state.contains("var gatewayStatusText: String"))
+        #expect(!source.contains("gatewayServerName: state.gatewayServerName,"))
+        #expect(!source.contains("gatewayStatusText: state.gatewayStatusText)"))
+    }
+
     @Test func `sidebar keeps navigation model destination only`() throws {
         let source = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
@@ -5749,6 +5770,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Gateway/GatewayProblemView.swift")
+    }
+
+    private static func gatewayStatusBuilderSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Status/GatewayStatusBuilder.swift")
     }
 
     private static func gatewayConnectionControllerSourceURL() -> URL {
