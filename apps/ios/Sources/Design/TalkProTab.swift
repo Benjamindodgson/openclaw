@@ -54,11 +54,23 @@ struct TalkProTabFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        enum Destination: Equatable, Sendable {
+            case permissionPrompt
+            case talkIssueDetails
+        }
+
+        var destination: Destination?
         var gatewayConnected = false
-        var showPermissionPrompt = false
-        var showTalkIssueDetails = false
         var speakerphoneEnabled = TalkDefaults.speakerphoneEnabledByDefault
         var talkEnabled = false
+
+        var showPermissionPrompt: Bool {
+            self.destination == .permissionPrompt
+        }
+
+        var showTalkIssueDetails: Bool {
+            self.destination == .talkIssueDetails
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -100,19 +112,23 @@ struct TalkProTabFeature {
                 return .none
 
             case .permissionRequired:
-                state.showPermissionPrompt = true
+                state.destination = .permissionPrompt
                 return .none
 
             case .permissionPromptDismissed, .permissionReady:
-                state.showPermissionPrompt = false
+                if state.destination == .permissionPrompt {
+                    state.destination = nil
+                }
                 return .none
 
             case .runtimeIssueDetailsButtonTapped:
-                state.showTalkIssueDetails = true
+                state.destination = .talkIssueDetails
                 return .none
 
             case .runtimeIssueDetailsDismissed:
-                state.showTalkIssueDetails = false
+                if state.destination == .talkIssueDetails {
+                    state.destination = nil
+                }
                 return .none
 
             case let .speakerphoneEnabledChanged(change):
