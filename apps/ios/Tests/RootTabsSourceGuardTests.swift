@@ -2811,14 +2811,26 @@ struct RootTabsSourceGuardTests {
     @Test func `settings appearance preference picker change is typed`() throws {
         let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
 
         #expect(settingsSource.contains("struct SettingsAppearanceFeature"))
         #expect(settingsSource
             .contains("struct AppearancePreferenceChange: Equatable, Sendable { var preference: AppAppearancePreference }"))
+        #expect(supportSource.contains(
+            "struct SettingsAppearancePreferenceRawValue: Equatable, Sendable { var value: String }"))
+        #expect(settingsSource.contains(
+            "struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: SettingsAppearancePreferenceRawValue }"))
         #expect(settingsSource.contains("state.appearancePreferenceRaw = change.preference.rawValue"))
+        #expect(settingsSource.contains("state.appearancePreferenceRaw = sync.rawValue.value"))
         #expect(actionsSource.contains("guard let preference = AppAppearancePreference(rawValue: rawValue) else { return }"))
         #expect(actionsSource.contains("self.appearanceStore.send(.appearancePreferenceChanged(.init(preference: preference)))"))
+        #expect(actionsSource.contains("rawValue: .init(value: self.storedAppearancePreferenceRaw)"))
+        #expect(settingsSource.contains(
+            "self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: .init(value: newValue))))"))
         #expect(actionsSource.contains("self.storedAppearancePreferenceRaw = preference.rawValue"))
+        #expect(!settingsSource.contains("struct AppearancePreferenceSync: Equatable, Sendable { var rawValue: String }"))
+        #expect(!actionsSource.contains(
+            "self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: self.storedAppearancePreferenceRaw)))"))
     }
 
     @Test func `settings device display name change is typed`() throws {
