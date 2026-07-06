@@ -133,7 +133,8 @@ extension SettingsProTab {
     func reconnectGateway() async {
         let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled
         await self.gatewayActivityStore
-            .send(.reconnectRequested(.init(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled)))
+            .send(.reconnectRequested(.init(
+                isAppleReviewDemoModeEnabled: .init(value: isAppleReviewDemoModeEnabled))))
             .finish()
     }
 
@@ -142,7 +143,8 @@ extension SettingsProTab {
         guard !self.gatewayActivityStore.isRefreshingGateway else { return }
         let isAppleReviewDemoModeEnabled = self.appModel.isAppleReviewDemoModeEnabled
         await self.gatewayActivityStore
-            .send(.diagnosticsRefreshRequested(.init(isAppleReviewDemoModeEnabled: isAppleReviewDemoModeEnabled)))
+            .send(.diagnosticsRefreshRequested(.init(
+                isAppleReviewDemoModeEnabled: .init(value: isAppleReviewDemoModeEnabled))))
             .finish()
         self.syncGatewayConnectionStatusState()
         self.syncDiagnosticsContextState()
@@ -471,7 +473,7 @@ extension SettingsProTab {
         } else {
             await self.gatewayActivityStore
                 .send(.reconnectRequested(.init(
-                    isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled)))
+                    isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled))))
                 .finish()
         }
     }

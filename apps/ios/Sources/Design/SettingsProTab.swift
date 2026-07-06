@@ -302,9 +302,15 @@ struct SettingsGatewayActivityFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct DiagnosticsRefreshRequest: Equatable, Sendable { var isAppleReviewDemoModeEnabled: Bool }
+        struct SettingsGatewayActivityDemoModeEnabled: Equatable, Sendable { var value: Bool }
 
-        struct ReconnectRequest: Equatable, Sendable { var isAppleReviewDemoModeEnabled: Bool }
+        struct DiagnosticsRefreshRequest: Equatable, Sendable {
+            var isAppleReviewDemoModeEnabled: SettingsGatewayActivityDemoModeEnabled
+        }
+
+        struct ReconnectRequest: Equatable, Sendable {
+            var isAppleReviewDemoModeEnabled: SettingsGatewayActivityDemoModeEnabled
+        }
 
         struct RotatedCertificateTrustRequest: Equatable, Sendable { var problem: GatewayConnectionProblem }
 
@@ -333,7 +339,7 @@ struct SettingsGatewayActivityFeature {
                 guard !state.isRefreshingGateway else { return .none }
                 state.isRefreshingGateway = true
                 return .run { send in
-                    if !request.isAppleReviewDemoModeEnabled {
+                    if !request.isAppleReviewDemoModeEnabled.value {
                         await diagnosticsRefreshClient.refreshGateway()
                     }
                     await send(.refreshFinished)
@@ -344,7 +350,7 @@ struct SettingsGatewayActivityFeature {
                 return .none
 
             case let .reconnectRequested(request):
-                guard !request.isAppleReviewDemoModeEnabled, !state.isReconnectingGateway else { return .none }
+                guard !request.isAppleReviewDemoModeEnabled.value, !state.isReconnectingGateway else { return .none }
                 state.isReconnectingGateway = true
                 return .run { send in
                     await reconnectClient.reconnect()
