@@ -2857,13 +2857,33 @@ struct RootTabsSourceGuardTests {
     @Test func `onboarding connection issue action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let connectionIssueDetection = try Self.extract(
+            onboardingStateSource,
+            from: "struct ConnectionIssueDetection",
+            to: "struct ConnectionActivityStart")
 
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionIssueMessage: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionIssueRequestID: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionIssueStatusText: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingConnectionPauseReconnect: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionIssueDetection: Equatable, Sendable"))
+        #expect(connectionIssueDetection.contains("var requestId: OnboardingConnectionIssueRequestID"))
+        #expect(connectionIssueDetection.contains("var pauseReconnect: OnboardingConnectionPauseReconnect"))
+        #expect(connectionIssueDetection.contains("var message: OnboardingConnectionIssueMessage"))
+        #expect(connectionIssueDetection.contains("var statusText: OnboardingConnectionIssueStatusText"))
         #expect(onboardingStateSource.contains("case connectionIssueDetected(ConnectionIssueDetection)"))
         #expect(onboardingStateSource.contains("detected: detection.issue"))
-        #expect(onboardingStateSource.contains("detection.pauseReconnect"))
-        #expect(onboardingStateSource.contains("detection.statusText.trimmingCharacters"))
+        #expect(onboardingStateSource.contains("detection.pauseReconnect.value"))
+        #expect(onboardingStateSource.contains("detection.statusText.value.trimmingCharacters"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionIssueDetected(.init("))
+        #expect(onboardingSource.contains("requestId: .init(value: problem?.requestId ?? fallback.requestId)"))
+        #expect(onboardingSource.contains("pauseReconnect: .init(value: problem?.pauseReconnect == true)"))
+        #expect(onboardingSource.contains("message: .init(value: problem?.message)"))
+        #expect(onboardingSource.contains("statusText: .init(value: statusText)"))
+        #expect(!connectionIssueDetection.contains("var requestId: String?"))
+        #expect(!connectionIssueDetection.contains("var pauseReconnect: Bool"))
+        #expect(!connectionIssueDetection.contains("var message: String?"))
+        #expect(!connectionIssueDetection.contains("var statusText: String"))
     }
 
     @Test func `settings onboarding reset is reducer effect owned`() throws {

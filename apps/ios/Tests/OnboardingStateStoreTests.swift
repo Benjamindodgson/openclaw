@@ -369,10 +369,10 @@ import Testing
 
         await store.send(.connectionIssueDetected(.init(
             issue: .pairingRequired(requestId: "pair-1"),
-            requestId: "pair-1",
-            pauseReconnect: false,
-            message: "Pairing required",
-            statusText: "")))
+            requestId: .init(value: "pair-1"),
+            pauseReconnect: .init(value: false),
+            message: .init(value: "Pairing required"),
+            statusText: .init(value: ""))))
         {
             $0.connectMessage = "Pairing required"
             $0.issue = .pairingRequired(requestId: "pair-1")
@@ -383,10 +383,10 @@ import Testing
 
         await store.send(.connectionIssueDetected(.init(
             issue: .none,
-            requestId: nil,
-            pauseReconnect: false,
-            message: nil,
-            statusText: "Connecting")))
+            requestId: .init(value: nil),
+            pauseReconnect: .init(value: false),
+            message: .init(value: nil),
+            statusText: .init(value: "Connecting"))))
         {
             $0.connectMessage = "Connecting"
             $0.statusLine = "Connecting"
@@ -404,10 +404,10 @@ import Testing
 
         await store.send(.connectionIssueDetected(.init(
             issue: .unauthorized,
-            requestId: nil,
-            pauseReconnect: false,
-            message: nil,
-            statusText: "Unauthorized")))
+            requestId: .init(value: nil),
+            pauseReconnect: .init(value: false),
+            message: .init(value: nil),
+            statusText: .init(value: "Unauthorized"))))
         {
             $0.connectMessage = "Unauthorized"
             $0.issue = .unauthorized
@@ -417,10 +417,10 @@ import Testing
 
         await store.send(.connectionIssueDetected(.init(
             issue: .none,
-            requestId: nil,
-            pauseReconnect: false,
-            message: nil,
-            statusText: "Offline")))
+            requestId: .init(value: nil),
+            pauseReconnect: .init(value: false),
+            message: .init(value: nil),
+            statusText: .init(value: "Offline"))))
         {
             $0.connectMessage = "Offline"
             $0.statusLine = "Offline"
@@ -441,10 +441,10 @@ import Testing
 
         await store.send(.connectionIssueDetected(.init(
             issue: .pairingRequired(requestId: "pair-1"),
-            requestId: "pair-1",
-            pauseReconnect: false,
-            message: "Pairing required",
-            statusText: "")))
+            requestId: .init(value: "pair-1"),
+            pauseReconnect: .init(value: false),
+            message: .init(value: "Pairing required"),
+            statusText: .init(value: ""))))
         {
             $0.connectMessage = "Pairing required"
             $0.issue = .pairingRequired(requestId: "pair-1")

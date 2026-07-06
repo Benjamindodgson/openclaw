@@ -888,10 +888,10 @@ extension OnboardingWizardView {
 
         self.statusStore.send(.connectionIssueDetected(.init(
             issue: fallback,
-            requestId: problem?.requestId ?? fallback.requestId,
-            pauseReconnect: problem?.pauseReconnect == true,
-            message: problem?.message,
-            statusText: statusText)))
+            requestId: .init(value: problem?.requestId ?? fallback.requestId),
+            pauseReconnect: .init(value: problem?.pauseReconnect == true),
+            message: .init(value: problem?.message),
+            statusText: .init(value: statusText))))
 
         if self.statusStore.shouldShowAuthStep {
             self.stepStore.send(.stepChanged(.init(step: .auth)))

@@ -63,6 +63,14 @@ struct OnboardingConnectionStatusLine: Equatable, Sendable { var value: String }
 
 struct OnboardingConnectionStatusMessage: Equatable, Sendable { var value: String? }
 
+struct OnboardingConnectionIssueMessage: Equatable, Sendable { var value: String? }
+
+struct OnboardingConnectionIssueRequestID: Equatable, Sendable { var value: String? }
+
+struct OnboardingConnectionIssueStatusText: Equatable, Sendable { var value: String }
+
+struct OnboardingConnectionPauseReconnect: Equatable, Sendable { var value: Bool }
+
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -244,10 +252,10 @@ struct OnboardingStatusFeature {
 
         struct ConnectionIssueDetection: Equatable, Sendable {
             var issue: GatewayConnectionIssue
-            var requestId: String?
-            var pauseReconnect: Bool
-            var message: String?
-            var statusText: String
+            var requestId: OnboardingConnectionIssueRequestID
+            var pauseReconnect: OnboardingConnectionPauseReconnect
+            var message: OnboardingConnectionIssueMessage
+            var statusText: OnboardingConnectionIssueStatusText
         }
 
         struct ConnectionActivityStart: Equatable, Sendable { var id: OnboardingConnectionID }
@@ -304,18 +312,18 @@ struct OnboardingStatusFeature {
                     current: state.issue,
                     detected: detection.issue,
                     pairingRequestId: state.pairingRequestId)
-                if let requestId = detection.requestId, !requestId.isEmpty {
+                if let requestId = detection.requestId.value, !requestId.isEmpty {
                     state.pairingRequestId = requestId
                 }
                 state.shouldShowAuthStep = state.issue.needsAuthToken
                     || state.issue.needsPairing
-                    || detection.pauseReconnect
+                    || detection.pauseReconnect.value
 
-                if let message = detection.message {
+                if let message = detection.message.value {
                     state.connectMessage = message
                     state.statusLine = message
                 } else {
-                    let trimmedStatus = detection.statusText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedStatus = detection.statusText.value.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !trimmedStatus.isEmpty {
                         state.connectMessage = trimmedStatus
                         state.statusLine = trimmedStatus
