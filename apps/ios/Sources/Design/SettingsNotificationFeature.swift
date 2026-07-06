@@ -74,6 +74,8 @@ extension DependencyValues {
 
 @Reducer
 struct SettingsNotificationFeature {
+    private static let defaultHostedRelayHost = "ios-push-relay.openclaw.ai"
+
     private let authorizationClientOverride: SettingsNotificationAuthorizationClient?
     private let registrationClientOverride: SettingsNotificationRegistrationClient?
 
@@ -86,9 +88,11 @@ struct SettingsNotificationFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct HostedRelayHost: Equatable, Sendable { var value: String? }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var hostedRelayHost = "ios-push-relay.openclaw.ai"
+        var hostedRelayHost = HostedRelayHost(value: SettingsNotificationFeature.defaultHostedRelayHost)
         var actionRequest: ActionRequest?
         var authorizationRequestResult: SettingsNotificationAuthorizationResult?
         var isRequestingAuthorization = false
@@ -132,10 +136,14 @@ struct SettingsNotificationFeature {
             self.status.color
         }
 
+        var hostedRelayHostText: String {
+            self.hostedRelayHost.value ?? SettingsNotificationFeature.defaultHostedRelayHost
+        }
+
         var relayDetail: String {
             if self.usesOpenClawHostedRelay {
                 return """
-                This build uses OpenClaw's hosted push relay at \(self.hostedRelayHost) for notification \
+                This build uses OpenClaw's hosted push relay at \(self.hostedRelayHostText) for notification \
                 delivery data.
                 """
             }
@@ -155,7 +163,6 @@ struct SettingsNotificationFeature {
 
     enum Action: Equatable, Sendable {
         struct HostedRelayEnabled: Equatable, Sendable { var value: Bool }
-        struct HostedRelayHost: Equatable, Sendable { var value: String? }
         struct RemoteRegistrationDisclosureAccepted: Equatable, Sendable { var value: Bool }
 
         struct RelayConfigSync: Equatable, Sendable {
@@ -232,7 +239,7 @@ struct SettingsNotificationFeature {
 
             case let .relayConfigSynced(sync):
                 state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay.value
-                state.hostedRelayHost = sync.hostedRelayHost.value ?? "ios-push-relay.openclaw.ai"
+                state.hostedRelayHost = .init(value: sync.hostedRelayHost.value ?? Self.defaultHostedRelayHost)
                 return .none
 
             case let .remoteRegistrationRequested(request):

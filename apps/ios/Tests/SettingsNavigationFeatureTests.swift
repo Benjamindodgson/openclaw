@@ -1755,14 +1755,14 @@ struct SettingsNavigationFeatureTests {
             hostedRelayHost: .init(value: "relay.example.com"))))
         {
             $0.usesOpenClawHostedRelay = true
-            $0.hostedRelayHost = "relay.example.com"
+            $0.hostedRelayHost = .init(value: "relay.example.com")
         }
         await store.send(.relayConfigSynced(.init(
             usesOpenClawHostedRelay: .init(value: false),
             hostedRelayHost: .init(value: nil))))
         {
             $0.usesOpenClawHostedRelay = false
-            $0.hostedRelayHost = "ios-push-relay.openclaw.ai"
+            $0.hostedRelayHost = .init(value: "ios-push-relay.openclaw.ai")
         }
     }
 
@@ -1774,7 +1774,8 @@ struct SettingsNavigationFeatureTests {
             "Enabling this sends delivery data through OpenClaw's hosted push relay.")
 
         state.usesOpenClawHostedRelay = true
-        state.hostedRelayHost = "ios-push-relay-sandbox.openclaw.ai"
+        state.hostedRelayHost = .init(value: "ios-push-relay-sandbox.openclaw.ai")
+        #expect(state.hostedRelayHostText == "ios-push-relay-sandbox.openclaw.ai")
 
         #expect(state.relayDetail ==
             """
