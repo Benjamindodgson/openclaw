@@ -130,13 +130,15 @@ struct AgentDreamingDestinationFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct GatewayConnectionStatus: Equatable, Sendable { var isConnected: Bool }
+
         struct DreamDiaryDaySelection: Equatable, Sendable {
             var dayID: AgentDreamDiaryDayID
         }
 
         struct DreamActionTap: Equatable, Sendable {
             var action: AgentDreamAction
-            var gatewayConnected: Bool
+            var gatewayConnection: GatewayConnectionStatus
         }
 
         struct DreamActionResponse: Equatable, Sendable {
@@ -157,7 +159,7 @@ struct AgentDreamingDestinationFeature {
 
             switch action {
             case let .dreamActionTapped(tap):
-                guard tap.gatewayConnected, state.busyAction == nil else { return .none }
+                guard tap.gatewayConnection.isConnected, state.busyAction == nil else { return .none }
                 state.busyAction = tap.action
                 state.statusText = .init(value: nil)
                 return .run { send in
@@ -721,7 +723,7 @@ struct AgentProDreamingDestination: View {
     private func runDreamAction(_ action: AgentDreamAction) async {
         await self.store.send(.dreamActionTapped(.init(
             action: action,
-            gatewayConnected: self.gatewayConnected))).finish()
+            gatewayConnection: .init(isConnected: self.gatewayConnected)))).finish()
     }
 
     private func normalized(_ value: String?) -> String? {
