@@ -105,6 +105,30 @@ struct RootPresentationFeature {
         }
     }
 
+    struct OnboardingEvaluationGate: Equatable, Sendable {
+        var didEvaluate: Bool
+
+        init(didEvaluate: Bool = false) {
+            self.didEvaluate = didEvaluate
+        }
+
+        mutating func markEvaluated() {
+            self.didEvaluate = true
+        }
+    }
+
+    struct AutoOpenSettingsGate: Equatable, Sendable {
+        var didOpen: Bool
+
+        init(didOpen: Bool = false) {
+            self.didOpen = didOpen
+        }
+
+        mutating func markOpened() {
+            self.didOpen = true
+        }
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayConnected: Bool
@@ -117,8 +141,8 @@ struct RootPresentationFeature {
         var onboardingAllowSkip: Bool
         var presentedSheet: PresentedSheet?
         var discoveredGatewayCount: Int
-        var didEvaluateOnboarding: Bool
-        var didAutoOpenSettings: Bool
+        var onboardingEvaluationGate: OnboardingEvaluationGate
+        var autoOpenSettingsGate: AutoOpenSettingsGate
         var handledGatewaySetupRequestID: GatewaySetupRequestID
         var sidebarGatewayStatus: GatewayDisplayState
         var startupRoute: RootTabs.StartupPresentationRoute
@@ -147,8 +171,8 @@ struct RootPresentationFeature {
             self.onboardingAllowSkip = onboardingAllowSkip
             self.presentedSheet = presentedSheet
             self.discoveredGatewayCount = discoveredGatewayCount
-            self.didEvaluateOnboarding = false
-            self.didAutoOpenSettings = false
+            self.onboardingEvaluationGate = .init()
+            self.autoOpenSettingsGate = .init()
             self.handledGatewaySetupRequestID = .init()
             self.sidebarGatewayStatus = .disconnected
             self.startupRoute = .none
@@ -321,8 +345,8 @@ struct RootPresentationFeature {
                 return .none
 
             case let .startupPresentationEvaluationRequested(request):
-                guard !state.didEvaluateOnboarding else { return .none }
-                state.didEvaluateOnboarding = true
+                guard !state.onboardingEvaluationGate.didEvaluate else { return .none }
+                state.onboardingEvaluationGate.markEvaluated()
                 state.apply(startupSnapshot: request.snapshot)
 
                 switch state.startupRoute {
@@ -334,7 +358,7 @@ struct RootPresentationFeature {
                     state.showOnboarding = true
                     state.refreshPresentation()
                 case .settings:
-                    state.didAutoOpenSettings = true
+                    state.autoOpenSettingsGate.markOpened()
                     state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
                         LocalNetworkAccessCommand(reason: .rootAppear))
                 }
@@ -347,11 +371,11 @@ struct RootPresentationFeature {
                 return .none
 
             case let .autoOpenSettingsRequested(request):
-                guard !state.didAutoOpenSettings else { return .none }
+                guard !state.autoOpenSettingsGate.didOpen else { return .none }
                 guard !state.showOnboarding else { return .none }
                 state.apply(startupSnapshot: request.snapshot)
                 guard state.startupRoute == .settings else { return .none }
-                state.didAutoOpenSettings = true
+                state.autoOpenSettingsGate.markOpened()
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
                     LocalNetworkAccessCommand(reason: .autoOpenSettings))
                 return .none
@@ -362,7 +386,7 @@ struct RootPresentationFeature {
                 else { return .none }
                 state.handledGatewaySetupRequestID = request.requestID
                 state.showOnboarding = false
-                state.didAutoOpenSettings = true
+                state.autoOpenSettingsGate.markOpened()
                 state.presentedSheet = nil
                 state.refreshPresentation()
                 state.presentationCommand = .openGatewaySettingsAndRequestLocalNetworkAccess(
@@ -370,7 +394,7 @@ struct RootPresentationFeature {
                 return .none
 
             case let .localNetworkAccessRequested(request):
-                guard state.didEvaluateOnboarding else { return .none }
+                guard state.onboardingEvaluationGate.didEvaluate else { return .none }
                 guard request.sceneActivity.isActive else { return .none }
                 guard !state.showOnboarding else { return .none }
                 state.presentationCommand = .requestLocalNetworkAccess(
@@ -382,7 +406,7 @@ struct RootPresentationFeature {
                 state.showOnboarding = change.presentation.isPresented
                 state.refreshPresentation()
                 guard wasPresented, !change.presentation.isPresented else { return .none }
-                guard state.didEvaluateOnboarding, change.sceneActivity.isActive else { return .none }
+                guard state.onboardingEvaluationGate.didEvaluate, change.sceneActivity.isActive else { return .none }
                 state.presentationCommand = .requestLocalNetworkAccess(
                     LocalNetworkAccessCommand(reason: .onboardingDismissed))
                 return .none
