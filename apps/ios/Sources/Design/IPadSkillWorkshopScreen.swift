@@ -87,6 +87,7 @@ struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String 
 struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable { var value: Bool }
 struct IPadSkillWorkshopNoticeMessage: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopQuery: Equatable, Sendable { var value: String }
+struct IPadSkillWorkshopSelectedAgentScopeID: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopStatusFilter: Equatable, Sendable { var value: String }
 
 enum IPadSkillWorkshopError: Error, Equatable, Sendable {
@@ -125,7 +126,7 @@ struct IPadSkillWorkshopFeature {
     struct State: Equatable, Sendable {
         var proposals: [IPadSkillProposal] = []
         var selectedProposalID: String?
-        var selectedAgentScopeID = ""
+        var selectedAgentScopeID = IPadSkillWorkshopSelectedAgentScopeID(value: "")
         var statusFilter = IPadSkillWorkshopStatusFilter(value: "pending")
         var query = IPadSkillWorkshopQuery(value: "")
         var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)
@@ -136,7 +137,7 @@ struct IPadSkillWorkshopFeature {
         var presentedProposalRoute: IPadSkillProposalSheetRoute?
 
         var selectedAgentParam: String? {
-            let selected = IPadSkillWorkshopScreen.normalizedScopeID(self.selectedAgentScopeID)
+            let selected = IPadSkillWorkshopScreen.normalizedScopeID(self.selectedAgentScopeID.value)
             return selected.isEmpty ? nil : selected
         }
 
@@ -208,7 +209,7 @@ struct IPadSkillWorkshopFeature {
 
     enum Action: Equatable, Sendable {
         struct AgentScopeChange: Equatable, Sendable {
-            var agentID: String
+            var agentID: IPadSkillWorkshopSelectedAgentScopeID
         }
 
         case agentScopeChanged(AgentScopeChange)
@@ -293,7 +294,8 @@ struct IPadSkillWorkshopFeature {
 
             switch action {
             case let .agentScopeChanged(change):
-                state.selectedAgentScopeID = IPadSkillWorkshopScreen.normalizedScopeID(change.agentID)
+                state.selectedAgentScopeID = .init(
+                    value: IPadSkillWorkshopScreen.normalizedScopeID(change.agentID.value))
                 return .none
 
             case .clearQueryTapped:
@@ -717,11 +719,11 @@ struct IPadSkillWorkshopScreen: View {
                 .foregroundStyle(.secondary)
             Menu {
                 Button("Default agent") {
-                    self.store.send(.agentScopeChanged(.init(agentID: "")))
+                    self.store.send(.agentScopeChanged(.init(agentID: .init(value: ""))))
                 }
                 ForEach(self.agentScopeOptions, id: \.id) { option in
                     Button(option.title) {
-                        self.store.send(.agentScopeChanged(.init(agentID: option.id)))
+                        self.store.send(.agentScopeChanged(.init(agentID: .init(value: option.id))))
                     }
                 }
             } label: {
@@ -1007,7 +1009,7 @@ struct IPadSkillWorkshopScreen: View {
         [
             self.canRead ? "connected" : "offline",
             self.scenePhase == .active ? "active" : "inactive",
-            self.store.selectedAgentScopeID.isEmpty ? "default" : self.store.selectedAgentScopeID,
+            self.store.selectedAgentScopeID.value.isEmpty ? "default" : self.store.selectedAgentScopeID.value,
         ].joined(separator: ":")
     }
 
@@ -1040,7 +1042,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var agentScopeLabel: String {
-        let selected = Self.normalizedScopeID(self.store.selectedAgentScopeID)
+        let selected = Self.normalizedScopeID(self.store.selectedAgentScopeID.value)
         guard !selected.isEmpty else { return self.defaultAgentScopeLabel }
         return self.agentScopeOptions.first(where: { $0.id == selected })?.title ?? selected
     }
