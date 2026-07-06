@@ -119,6 +119,7 @@ struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
+struct IPadWorkboardStatusFilter: Equatable, Sendable { var value: String }
 
 enum IPadWorkboardError: Error, Equatable, Sendable {
     struct Failure: Equatable, Sendable { var message: IPadWorkboardFailureMessage }
@@ -462,7 +463,7 @@ struct IPadWorkboardFeature {
         case sheetDismissed
 
         struct StatusChange: Equatable, Sendable {
-            var status: String
+            var status: IPadWorkboardStatusFilter
         }
 
         case statusChanged(StatusChange)
@@ -727,7 +728,7 @@ struct IPadWorkboardFeature {
                 return .none
 
             case let .statusChanged(change):
-                state.selectedStatus = change.status
+                state.selectedStatus = change.status.value
                 return .none
             }
         }

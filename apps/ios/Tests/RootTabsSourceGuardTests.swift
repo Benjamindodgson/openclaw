@@ -1155,7 +1155,13 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("await self.store.send(.refreshRequested(.init("))
         #expect(source.contains("struct StatusChange: Equatable, Sendable"))
         #expect(source.contains("case statusChanged(StatusChange)"))
-        #expect(source.contains("self.store.send(.statusChanged(.init(status: $0)))"))
+        #expect(source.contains("struct IPadWorkboardStatusFilter: Equatable, Sendable"))
+        #expect(source.contains("var status: IPadWorkboardStatusFilter"))
+        #expect(source.contains("state.selectedStatus = change.status.value"))
+        #expect(source.contains("self.store.send(.statusChanged(.init(status: .init(value: $0))))"))
+        #expect(source.contains("self.store.send(.statusChanged(.init(status: .init(value: \"active\"))))"))
+        #expect(source.contains("self.store.send(.statusChanged(.init(status: .init(value: status))))"))
+        #expect(!source.contains("struct StatusChange: Equatable, Sendable {\n            var status: String"))
     }
 
     @Test func `task scope controls send real gateway params`() throws {
