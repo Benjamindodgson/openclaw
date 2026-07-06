@@ -14,7 +14,7 @@ struct RootTabsPresentationTests {
                 quickSetupDismissed: false,
                 showOnboarding: false,
                 gatewayConnection: .init(isConnected: false),
-                hasExistingGatewayConfig: true,
+                gatewayConfigPresence: .init(hasExistingConfig: true),
                 discoveredGatewayCount: .init(value: 1)),
             hasPresentedSheet: false)
 
@@ -27,7 +27,7 @@ struct RootTabsPresentationTests {
                 quickSetupDismissed: false,
                 showOnboarding: false,
                 gatewayConnection: .init(isConnected: false),
-                hasExistingGatewayConfig: false,
+                gatewayConfigPresence: .init(hasExistingConfig: false),
                 discoveredGatewayCount: .init(value: 1)),
             hasPresentedSheet: false)
 
@@ -40,7 +40,7 @@ struct RootTabsPresentationTests {
                 quickSetupDismissed: false,
                 showOnboarding: false,
                 gatewayConnection: .init(isConnected: true),
-                hasExistingGatewayConfig: false,
+                gatewayConfigPresence: .init(hasExistingConfig: false),
                 discoveredGatewayCount: .init(value: 1)),
             hasPresentedSheet: false)
 
@@ -83,7 +83,7 @@ struct RootTabsPresentationTests {
             gatewayConnection: .init(isConnected: true),
             hasConnectedOnce: true,
             onboardingComplete: true,
-            hasExistingGatewayConfig: true,
+            gatewayConfigPresence: .init(hasExistingConfig: true),
             shouldPresentOnLaunch: false))
         {
             RootPresentationFeature()
@@ -98,7 +98,7 @@ struct RootTabsPresentationTests {
             $0.gatewayConnection = .init(isConnected: false)
             $0.hasConnectedOnce = false
             $0.onboardingComplete = false
-            $0.hasExistingGatewayConfig = false
+            $0.gatewayConfigPresence = .init(hasExistingConfig: false)
             $0.startupRoute = .onboarding
         }
 
@@ -119,7 +119,7 @@ struct RootTabsPresentationTests {
             onboardingComplete: true,
             hasExistingGatewayConfig: true)))
         {
-            $0.hasExistingGatewayConfig = true
+            $0.gatewayConfigPresence = .init(hasExistingConfig: true)
             $0.startupRoute = .none
         }
     }
@@ -380,7 +380,7 @@ struct RootTabsPresentationTests {
             $0.gatewayConnection = .init(isConnected: true)
             $0.hasConnectedOnce = true
             $0.onboardingComplete = true
-            $0.hasExistingGatewayConfig = true
+            $0.gatewayConfigPresence = .init(hasExistingConfig: true)
             $0.onboardingEvaluationGate = .init(didEvaluate: true)
             $0.startupRoute = .none
             $0.presentationCommand = .requestLocalNetworkAccess(
@@ -1464,7 +1464,7 @@ struct RootTabsPresentationTests {
             gatewayConnection: .init(isConnected: gatewayConnected),
             hasConnectedOnce: hasConnectedOnce,
             onboardingComplete: onboardingComplete,
-            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            gatewayConfigPresence: .init(hasExistingConfig: hasExistingGatewayConfig),
             shouldPresentOnLaunch: shouldPresentOnLaunch)
     }
 
@@ -1528,7 +1528,7 @@ struct RootTabsPresentationTests {
             quickSetupDismissed: quickSetupDismissed,
             showOnboarding: showOnboarding,
             gatewayConnection: .init(isConnected: gatewayConnected),
-            hasExistingGatewayConfig: hasExistingGatewayConfig,
+            gatewayConfigPresence: .init(hasExistingConfig: hasExistingGatewayConfig),
             discoveredGatewayCount: .init(value: discoveredGatewayCount)))
     }
 

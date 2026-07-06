@@ -40,11 +40,19 @@ struct RootPresentationFeature {
         }
     }
 
+    struct GatewayConfigPresence: Equatable, Sendable {
+        var hasExistingConfig: Bool
+
+        init(hasExistingConfig: Bool = false) {
+            self.hasExistingConfig = hasExistingConfig
+        }
+    }
+
     struct StartupSnapshot: Equatable, Sendable {
         var gatewayConnection: GatewayConnection
         var hasConnectedOnce: Bool
         var onboardingComplete: Bool
-        var hasExistingGatewayConfig: Bool
+        var gatewayConfigPresence: GatewayConfigPresence
         var shouldPresentOnLaunch: Bool
     }
 
@@ -64,7 +72,7 @@ struct RootPresentationFeature {
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
         var gatewayConnection: GatewayConnection
-        var hasExistingGatewayConfig: Bool
+        var gatewayConfigPresence: GatewayConfigPresence
         var discoveredGatewayCount: DiscoveredGatewayCount
     }
 
@@ -154,7 +162,7 @@ struct RootPresentationFeature {
         var gatewayConnection: GatewayConnection
         var hasConnectedOnce: Bool
         var onboardingComplete: Bool
-        var hasExistingGatewayConfig: Bool
+        var gatewayConfigPresence: GatewayConfigPresence
         var shouldPresentOnLaunch: Bool
         var quickSetupDismissed: Bool
         var showOnboarding: Bool
@@ -173,7 +181,7 @@ struct RootPresentationFeature {
             gatewayConnection: GatewayConnection = .init(),
             hasConnectedOnce: Bool = false,
             onboardingComplete: Bool = false,
-            hasExistingGatewayConfig: Bool = false,
+            gatewayConfigPresence: GatewayConfigPresence = .init(),
             shouldPresentOnLaunch: Bool = false,
             quickSetupDismissed: Bool = false,
             showOnboarding: Bool = false,
@@ -184,7 +192,7 @@ struct RootPresentationFeature {
             self.gatewayConnection = gatewayConnection
             self.hasConnectedOnce = hasConnectedOnce
             self.onboardingComplete = onboardingComplete
-            self.hasExistingGatewayConfig = hasExistingGatewayConfig
+            self.gatewayConfigPresence = gatewayConfigPresence
             self.shouldPresentOnLaunch = shouldPresentOnLaunch
             self.quickSetupDismissed = quickSetupDismissed
             self.showOnboarding = showOnboarding
@@ -237,14 +245,14 @@ struct RootPresentationFeature {
                     gatewayConnection: self.gatewayConnection,
                     hasConnectedOnce: self.hasConnectedOnce,
                     onboardingComplete: self.onboardingComplete,
-                    hasExistingGatewayConfig: self.hasExistingGatewayConfig,
+                    gatewayConfigPresence: self.gatewayConfigPresence,
                     shouldPresentOnLaunch: self.shouldPresentOnLaunch))
             self.shouldPresentQuickSetup = Self.shouldPresentQuickSetup(
                 snapshot: RootPresentationFeature.QuickSetupSnapshot(
                     quickSetupDismissed: self.quickSetupDismissed,
                     showOnboarding: self.showOnboarding,
                     gatewayConnection: self.gatewayConnection,
-                    hasExistingGatewayConfig: self.hasExistingGatewayConfig,
+                    gatewayConfigPresence: self.gatewayConfigPresence,
                     discoveredGatewayCount: self.discoveredGatewayCount),
                 hasPresentedSheet: self.presentedSheet != nil)
         }
@@ -253,7 +261,7 @@ struct RootPresentationFeature {
             self.gatewayConnection = snapshot.gatewayConnection
             self.hasConnectedOnce = snapshot.hasConnectedOnce
             self.onboardingComplete = snapshot.onboardingComplete
-            self.hasExistingGatewayConfig = snapshot.hasExistingGatewayConfig
+            self.gatewayConfigPresence = snapshot.gatewayConfigPresence
             self.shouldPresentOnLaunch = snapshot.shouldPresentOnLaunch
             self.refreshPresentation()
         }
@@ -268,7 +276,7 @@ struct RootPresentationFeature {
             if snapshot.shouldPresentOnLaunch || !snapshot.hasConnectedOnce || !snapshot.onboardingComplete {
                 return .onboarding
             }
-            if !snapshot.hasExistingGatewayConfig {
+            if !snapshot.gatewayConfigPresence.hasExistingConfig {
                 return .settings
             }
             return .none
@@ -283,7 +291,7 @@ struct RootPresentationFeature {
             guard !snapshot.showOnboarding else { return false }
             guard !hasPresentedSheet else { return false }
             guard !snapshot.gatewayConnection.isConnected else { return false }
-            guard !snapshot.hasExistingGatewayConfig else { return false }
+            guard !snapshot.gatewayConfigPresence.hasExistingConfig else { return false }
             return snapshot.discoveredGatewayCount.hasDiscoveredGateway
         }
     }
@@ -350,7 +358,7 @@ struct RootPresentationFeature {
                 state.quickSetupDismissed = snapshot.quickSetupDismissed
                 state.showOnboarding = snapshot.showOnboarding
                 state.gatewayConnection = snapshot.gatewayConnection
-                state.hasExistingGatewayConfig = snapshot.hasExistingGatewayConfig
+                state.gatewayConfigPresence = snapshot.gatewayConfigPresence
                 state.discoveredGatewayCount = snapshot.discoveredGatewayCount
                 state.refreshPresentation()
                 if state.shouldPresentQuickSetup {
