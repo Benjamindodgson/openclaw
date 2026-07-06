@@ -282,7 +282,14 @@ struct RootTabsSourceGuardTests {
             .contains("struct MutationSuccess: Equatable, Sendable {\n            var message: String"))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationSucceeded(.init("))
         #expect(skillsSource.contains("self.skillPolicyMutationStore.send(.mutationFailed(.init("))
-        #expect(skillsSource.contains("self.skillEditorStore.send(.editorOpened(.init(id: skill.effectiveSkillKey)))"))
+        #expect(
+            skillsSource.contains(
+                "self.skillEditorStore.send(.editorOpened(.init(id: .init(value: skill.effectiveSkillKey))))"))
+        #expect(source.contains("struct AgentSkillEditorID: Equatable, Sendable"))
+        #expect(source.contains("var id: AgentSkillEditorID"))
+        #expect(source.contains("state.selection = AgentProTab.SkillEditorSelection(id: editor.id.value)"))
+        #expect(!source.contains(
+            "struct EditorID: Equatable, Sendable {\n            var id: String"))
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftChanged(.init("))
         #expect(skillsSource.contains("self.skillEditorStore.send(.apiKeyDraftCleared(.init("))
         #expect(skillsSource.contains("key: .init(value: skill.effectiveSkillKey)"))
