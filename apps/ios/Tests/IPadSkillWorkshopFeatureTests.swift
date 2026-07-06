@@ -15,7 +15,11 @@ struct IPadSkillWorkshopFeatureTests {
             IPadSkillWorkshopFeature(client: Self.client())
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: false, force: false))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: false),
+            force: .init(isForced: false))))
+        {
             $0.proposals = []
             $0.isLoading = .init(value: false)
             $0.inspectingProposalID = nil
@@ -33,10 +37,17 @@ struct IPadSkillWorkshopFeatureTests {
                 inspect: { _, _ in inspect }))
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: false))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: false))))
+        {
             $0.isLoading = .init(value: true)
         }
-        await store.receive(.refreshResponse(.init(force: false, result: .success(manifest)))) {
+        await store.receive(.refreshResponse(.init(
+            force: .init(isForced: false),
+            result: .success(manifest))))
+        {
             $0.isLoading = .init(value: false)
             $0.proposals = [IPadSkillProposal(entry: entry, previous: nil)]
             $0.selectedProposalID = .init(value: "pending-1")
@@ -97,26 +108,33 @@ struct IPadSkillWorkshopFeatureTests {
         await store.send(.proposalMutationRequested(.init(
             kind: .apply,
             proposalID: .init(value: "pending-1"),
-            sceneActive: true,
-            canRead: true,
-            canWrite: true,
-            hasOperatorAdminScope: true)))
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            writeAccess: .init(canWrite: true),
+            adminAccess: .init(hasOperatorAdminScope: true))))
         {
             $0.busyAction = IPadSkillProposalAction(kind: .apply, proposalID: "pending-1")
         }
         await store.receive(.proposalMutationResponse(.init(
             kind: .apply,
-            sceneActive: true,
-            canRead: true,
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
             result: .success(.init()))))
         {
             $0.busyAction = nil
             $0.noticeText = .init(value: "Proposal applied.")
         }
-        await store.receive(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
+        await store.receive(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: true))))
+        {
             $0.isLoading = .init(value: true)
         }
-        await store.receive(.refreshResponse(.init(force: true, result: .success(refreshedManifest)))) {
+        await store.receive(.refreshResponse(.init(
+            force: .init(isForced: true),
+            result: .success(refreshedManifest))))
+        {
             $0.isLoading = .init(value: false)
             $0.proposals = [IPadSkillProposal(entry: after, previous: IPadSkillProposal(entry: before, previous: nil))]
             $0.selectedProposalID = nil
@@ -129,11 +147,15 @@ struct IPadSkillWorkshopFeatureTests {
                 list: { _ in throw TestSkillWorkshopFailure.failed }))
         }
 
-        await store.send(.refreshRequested(.init(sceneActive: true, canRead: true, force: true))) {
+        await store.send(.refreshRequested(.init(
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            force: .init(isForced: true))))
+        {
             $0.isLoading = .init(value: true)
         }
         await store.receive(.refreshResponse(.init(
-            force: true,
+            force: .init(isForced: true),
             result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
         {
             $0.isLoading = .init(value: false)
@@ -151,17 +173,17 @@ struct IPadSkillWorkshopFeatureTests {
         await store.send(.proposalMutationRequested(.init(
             kind: .reject,
             proposalID: .init(value: "pending-1"),
-            sceneActive: true,
-            canRead: true,
-            canWrite: true,
-            hasOperatorAdminScope: true)))
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            writeAccess: .init(canWrite: true),
+            adminAccess: .init(hasOperatorAdminScope: true))))
         {
             $0.busyAction = operation
         }
         await store.receive(.proposalMutationResponse(.init(
             kind: .reject,
-            sceneActive: true,
-            canRead: true,
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
             result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
         {
             $0.busyAction = nil
