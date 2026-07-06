@@ -668,7 +668,7 @@ extension SettingsProTab {
                 .pickerStyle(.segmented)
                 .disabled(self.locationStore.isChangingLocationMode)
 
-                if let locationStatusText = self.locationStore.statusText {
+                if let locationStatusText = self.locationStore.statusText.value {
                     Text(locationStatusText)
                         .font(.caption2)
                         .foregroundStyle(OpenClawBrand.warn)

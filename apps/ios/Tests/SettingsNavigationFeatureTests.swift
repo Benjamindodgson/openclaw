@@ -1352,7 +1352,7 @@ struct SettingsNavigationFeatureTests {
             mode: .always,
             previousValue: .init(rawValue: OpenClawLocationMode.off.rawValue),
             value: .init(rawValue: OpenClawLocationMode.always.rawValue))
-        initialState.statusText = "Location permission was not granted."
+        initialState.statusText = .init(value: "Location permission was not granted.")
         let store = TestStore(initialState: initialState) {
             SettingsLocationFeature(
                 gatewayRefreshClient: gatewayRefreshProbe.client,
@@ -1367,7 +1367,7 @@ struct SettingsNavigationFeatureTests {
             $0.isChangingLocationMode = true
             $0.locationModeApplyResult = nil
             $0.locationModeRequest = nil
-            $0.statusText = nil
+            $0.statusText = .init(value: nil)
         }
         await store.receive(.locationModeApplyFinished(appliedResult)) {
             $0.isChangingLocationMode = false
@@ -1513,7 +1513,7 @@ struct SettingsNavigationFeatureTests {
             $0.locationModeApplyResult = deniedResult
             $0.locationModeRaw = OpenClawLocationMode.off.rawValue
             $0.previousLocationModeRaw = OpenClawLocationMode.off.rawValue
-            $0.statusText = "Location permission was not granted."
+            $0.statusText = .init(value: "Location permission was not granted.")
         }
         await store.finish()
 

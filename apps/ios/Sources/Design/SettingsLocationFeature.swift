@@ -12,6 +12,8 @@ struct SettingsLocationGatewayRefreshClient: Sendable {
     var refreshGatewayRegistration: @MainActor @Sendable () -> Void
 }
 
+struct SettingsLocationStatusText: Equatable, Sendable { var value: String? }
+
 // swiftformat:enable redundantSendable
 
 extension SettingsLocationPermissionClient: DependencyKey {
@@ -80,7 +82,7 @@ struct SettingsLocationFeature {
         var locationModeRequest: LocationModeRequest?
         var locationModeRaw = OpenClawLocationMode.off.rawValue
         var previousLocationModeRaw = OpenClawLocationMode.off.rawValue
-        var statusText: String?
+        var statusText = SettingsLocationStatusText(value: nil)
 
         var locationLabel: String {
             switch self.locationMode {
@@ -184,7 +186,7 @@ struct SettingsLocationFeature {
                 case let .denied(denied):
                     state.locationModeRaw = denied.previousValue.rawValue
                     state.previousLocationModeRaw = denied.previousValue.rawValue
-                    state.statusText = "Location permission was not granted."
+                    state.statusText = .init(value: Self.locationPermissionDeniedStatusText)
                     return .none
                 }
 
@@ -193,7 +195,7 @@ struct SettingsLocationFeature {
                 guard !state.isChangingLocationMode else { return .none }
                 state.isChangingLocationMode = true
                 state.locationModeApplyResult = nil
-                state.statusText = nil
+                state.statusText = .init(value: nil)
 
                 guard request.mode != .off else {
                     state.isChangingLocationMode = false
@@ -246,4 +248,6 @@ struct SettingsLocationFeature {
         }
         .autoLogActions()
     }
+
+    private static let locationPermissionDeniedStatusText = "Location permission was not granted."
 }
