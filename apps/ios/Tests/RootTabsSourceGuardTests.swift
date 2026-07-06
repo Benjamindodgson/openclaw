@@ -189,6 +189,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "@Reducer\nstruct AgentSkillPolicyMutationFeature",
             to: "// swiftformat:disable redundantSendable\nstruct AgentSkillEditorAPIKeyDraftKey")
+        let cronActionFeature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentCronActionFeature",
+            to: "// swiftformat:disable redundantSendable\nstruct AgentSkillFilterSearchText")
 
         #expect(!source.contains("ToolbarItem"))
         #expect(source.contains("@Reducer\nstruct AgentSkillPolicyMutationFeature"))
@@ -382,15 +386,21 @@ struct RootTabsSourceGuardTests {
         #expect(cronSource.contains("self.cronActionStore.send(.actionStarted(.init(id: actionID)))"))
         #expect(source.contains("struct AgentCronActionID: Equatable, Sendable"))
         #expect(source.contains("struct AgentCronActionFailureMessage: Equatable, Sendable"))
+        #expect(source.contains("struct AgentCronActionStatusText: Equatable, Sendable"))
         #expect(source.contains("struct AgentCronActionSuccessMessage: Equatable, Sendable"))
+        #expect(cronActionFeature.contains("var statusText = AgentCronActionStatusText(value: nil)"))
         #expect(source.contains("var id: AgentCronActionID"))
         #expect(source.contains("var message: AgentCronActionFailureMessage"))
         #expect(source.contains("var message: AgentCronActionSuccessMessage"))
+        #expect(source.contains("self.cronActionStore.statusText.value"))
         #expect(source.contains("state.busyIDs.insert(action.id.value)"))
         #expect(source.contains("state.busyIDs.remove(action.id.value)"))
         #expect(source.contains("state.busyIDs.remove(failure.id.value)"))
-        #expect(source.contains("state.statusText = result.message.value"))
-        #expect(source.contains("state.statusText = failure.message.value"))
+        #expect(cronActionFeature.contains("state.statusText = .init(value: result.message.value)"))
+        #expect(cronActionFeature.contains("state.statusText = .init(value: failure.message.value)"))
+        #expect(!cronActionFeature.contains("var statusText: String?"))
+        #expect(!cronActionFeature.contains("state.statusText = result.message.value"))
+        #expect(!cronActionFeature.contains("state.statusText = failure.message.value"))
         #expect(cronSource.contains("self.cronActionStore.send(.actionSucceeded(.init(message: .init(value: success)))"))
         #expect(!source.contains("struct ActionSuccess: Equatable, Sendable {\n            var message: String"))
         #expect(!source.contains(
