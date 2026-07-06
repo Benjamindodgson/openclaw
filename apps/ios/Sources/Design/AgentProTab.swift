@@ -96,10 +96,6 @@ struct AgentProTab: View {
         }
     }
 
-    struct SkillEditorSelection: Equatable, Identifiable {
-        let id: String
-    }
-
     struct SkillEditorMessage: Equatable {
         let kind: Kind
         let text: String
@@ -278,7 +274,7 @@ struct AgentProTab: View {
         Dictionary(uniqueKeysWithValues: self.skillEditorStore.apiKeyDrafts.map { ($0.key.value, $0.value.value) })
     }
 
-    var skillEditorSelectionBinding: Binding<SkillEditorSelection?> {
+    var skillEditorSelectionBinding: Binding<AgentSkillEditorSelection?> {
         Binding(
             get: { self.skillEditorStore.selection },
             set: { self.skillEditorStore.send(.selectionChanged(.init(selection: $0))) })
@@ -467,6 +463,15 @@ struct AgentSkillEditorAPIKeyDraftValue: Equatable, Sendable { var value: String
 struct AgentSkillEditorID: Equatable, Sendable { var value: String }
 struct AgentSkillEditorMutationKey: Equatable, Hashable, Sendable { var value: String }
 struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable { var value: String }
+
+struct AgentSkillEditorSelection: Equatable, Identifiable, Sendable {
+    var skillID: AgentSkillEditorID
+
+    var id: String {
+        self.skillID.value
+    }
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -477,7 +482,7 @@ struct AgentSkillEditorFeature {
         var apiKeyDrafts: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] = [:]
         var busyKeys: Set<AgentSkillEditorMutationKey> = []
         var messages: [AgentSkillEditorMutationKey: AgentProTab.SkillEditorMessage] = [:]
-        var selection: AgentProTab.SkillEditorSelection?
+        var selection: AgentSkillEditorSelection?
     }
 
     enum Action: Equatable, Sendable {
@@ -509,7 +514,7 @@ struct AgentSkillEditorFeature {
         }
 
         struct SelectionChange: Equatable, Sendable {
-            var selection: AgentProTab.SkillEditorSelection?
+            var selection: AgentSkillEditorSelection?
         }
 
         case apiKeyDraftChanged(APIKeyDraftChange)
@@ -541,7 +546,7 @@ struct AgentSkillEditorFeature {
                 return .none
 
             case let .editorOpened(editor):
-                state.selection = AgentProTab.SkillEditorSelection(id: editor.id.value)
+                state.selection = AgentSkillEditorSelection(skillID: editor.id)
                 return .none
 
             case let .selectionChanged(change):
