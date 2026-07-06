@@ -1066,7 +1066,7 @@ extension RootTabs {
             connectionHistory: .init(hasConnectedOnce: self.hasConnectedOnce),
             onboardingCompletion: .init(isComplete: self.onboardingComplete),
             gatewayConfigPresence: .init(hasExistingConfig: self.hasExistingGatewayConfig()),
-            shouldPresentOnLaunch: shouldPresentOnLaunch)
+            launchOnboardingPresentation: .init(shouldPresent: shouldPresentOnLaunch))
     }
 
     private func hasExistingGatewayConfig() -> Bool {

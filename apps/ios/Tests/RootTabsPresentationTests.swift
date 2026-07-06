@@ -84,7 +84,7 @@ struct RootTabsPresentationTests {
             connectionHistory: .init(hasConnectedOnce: true),
             onboardingCompletion: .init(isComplete: true),
             gatewayConfigPresence: .init(hasExistingConfig: true),
-            shouldPresentOnLaunch: false))
+            launchOnboardingPresentation: .init(shouldPresent: false)))
         {
             RootPresentationFeature()
         }
@@ -1465,7 +1465,7 @@ struct RootTabsPresentationTests {
             connectionHistory: .init(hasConnectedOnce: hasConnectedOnce),
             onboardingCompletion: .init(isComplete: onboardingComplete),
             gatewayConfigPresence: .init(hasExistingConfig: hasExistingGatewayConfig),
-            shouldPresentOnLaunch: shouldPresentOnLaunch)
+            launchOnboardingPresentation: .init(shouldPresent: shouldPresentOnLaunch))
     }
 
     private static func startupSnapshotChange(
