@@ -115,6 +115,7 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct IPadWorkboardBoardScopeSelection: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftNotes: Equatable, Sendable { var value: String }
 struct IPadWorkboardDraftTitle: Equatable, Sendable { var value: String }
 struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
@@ -379,7 +380,7 @@ struct IPadWorkboardFeature {
         case boardScopesResponse(BoardScopesResponse)
 
         struct BoardScopeChange: Equatable, Sendable {
-            var boardID: String
+            var boardID: IPadWorkboardBoardScopeSelection
         }
 
         case boardScopeChanged(BoardScopeChange)
@@ -527,7 +528,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .boardScopeChanged(change):
-                state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(change.boardID)
+                state.selectedBoardID = IPadWorkboardScreen.normalizedScopeID(change.boardID.value)
                 return .none
 
             case let .cardSheetPresented(presentation):
