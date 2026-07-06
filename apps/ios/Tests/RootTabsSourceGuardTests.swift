@@ -185,6 +185,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "@Reducer\nstruct AgentOverviewLoadFeature",
             to: "@Reducer\nstruct AgentNavigationFeature")
+        let clawHubSearchFeature = try Self.extract(
+            source,
+            from: "@Reducer\nstruct AgentClawHubSearchFeature",
+            to: "@Reducer\nstruct AgentOverviewLoadFeature")
         let skillPolicyMutationFeature = try Self.extract(
             source,
             from: "@Reducer\nstruct AgentSkillPolicyMutationFeature",
@@ -261,6 +265,8 @@ struct RootTabsSourceGuardTests {
         #expect(gatewayDataSource
             .contains("self.overviewStore.send(.refreshFinished(.init(snapshot: snapshot, requestID: requestID)))"))
         #expect(skillsSource.contains("text: self.clawHubQueryBinding"))
+        #expect(source.contains("var clawHubQuery: String {\n        self.clawHubStore.query.value"))
+        #expect(source.contains("get: { self.clawHubStore.query.value }"))
         #expect(source.contains("set: { self.clawHubStore.send(.queryChanged(.init(query: .init(value: $0)))) }"))
         #expect(skillsSource.contains("self.clawHubStore.send(.searchRequested)"))
         #expect(source.contains("case searchFinished(SearchResults)"))
@@ -276,7 +282,8 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("var query: AgentClawHubSearchQuery"))
         #expect(source.contains("var message: AgentClawHubInstallFailureMessage"))
         #expect(source.contains("var message: AgentClawHubSearchFailureMessage"))
-        #expect(source.contains("state.query = change.query.value"))
+        #expect(clawHubSearchFeature.contains("var query = AgentClawHubSearchQuery(value: \"\")"))
+        #expect(clawHubSearchFeature.contains("state.query = change.query"))
         #expect(source.contains("state.installingSlug = install.slug.value"))
         #expect(source.contains("state.installingSlug == install.slug.value"))
         #expect(source.contains("state.installingSlug == failure.slug.value"))
@@ -287,6 +294,8 @@ struct RootTabsSourceGuardTests {
             "struct InstallSlug: Equatable, Sendable {\n            var slug: String"))
         #expect(!source.contains(
             "struct QueryChange: Equatable, Sendable {\n            var query: String"))
+        #expect(!clawHubSearchFeature.contains("var query = \"\""))
+        #expect(!clawHubSearchFeature.contains("state.query = change.query.value"))
         #expect(!source.contains("struct SearchFailure: Equatable, Sendable {\n            var message: String"))
         #expect(!source.contains(
             "struct InstallFailure: Equatable, Sendable {\n            var slug: String\n            var message: String"))
