@@ -1692,6 +1692,8 @@ struct RootTabsSourceGuardTests {
 
         #expect(source.contains("struct IPadActivitySessionsFailureMessage: Equatable, Sendable"))
         #expect(source.contains("struct IPadActivitySessionsLoadingInFlight: Equatable, Sendable"))
+        #expect(source.contains("struct IPadActivitySceneActive: Equatable, Sendable"))
+        #expect(source.contains("struct IPadActivitySessionsAvailable: Equatable, Sendable"))
         #expect(feature.contains("var isLoading = IPadActivitySessionsLoadingInFlight(value: false)"))
         #expect(feature.contains("var loadErrorText: IPadActivitySessionsFailureMessage?"))
         #expect(feature.contains("state.isLoading = .init(value: true)"))
@@ -1703,10 +1705,14 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
         #expect(feature.contains("struct SceneActivity: Equatable, Sendable"))
         #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
+        #expect(feature.contains("var isActive: IPadActivitySceneActive"))
+        #expect(feature.contains("var isAvailable: IPadActivitySessionsAvailable"))
         #expect(feature.contains("var sceneActivity: SceneActivity"))
         #expect(feature.contains("var sessionsAvailability: SessionsAvailability"))
-        #expect(feature.contains("guard request.sceneActivity.isActive"))
-        #expect(feature.contains("guard request.sessionsAvailability.isAvailable"))
+        #expect(feature.contains("guard request.sceneActivity.isActive.value"))
+        #expect(feature.contains("guard request.sessionsAvailability.isAvailable.value"))
+        #expect(source.contains("sceneActivity: .init(isActive: .init(value: self.scenePhase == .active))"))
+        #expect(source.contains("sessionsAvailability: .init(isAvailable: .init(value: self.sessionsAvailable))"))
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
         #expect(feature.contains("switch response.result"))
@@ -1719,6 +1725,12 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("detail: loadErrorText,"))
         #expect(!feature.contains("var sceneActive: Bool"))
         #expect(!feature.contains("var sessionsAvailable: Bool"))
+        #expect(!feature.contains("var isActive: Bool"))
+        #expect(!feature.contains("var isAvailable: Bool"))
+        #expect(!feature.contains("guard request.sceneActivity.isActive else"))
+        #expect(!feature.contains("guard request.sessionsAvailability.isAvailable else"))
+        #expect(!source.contains("sceneActivity: .init(isActive: self.scenePhase == .active)"))
+        #expect(!source.contains("sessionsAvailability: .init(isAvailable: self.sessionsAvailable)"))
     }
 
     @Test func `command sessions refresh response action is typed`() throws {

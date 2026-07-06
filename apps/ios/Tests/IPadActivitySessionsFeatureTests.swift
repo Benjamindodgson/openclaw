@@ -17,8 +17,8 @@ struct IPadActivitySessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: false),
-            sessionsAvailability: .init(isAvailable: true))))
+            sceneActivity: .init(isActive: .init(value: false)),
+            sessionsAvailability: .init(isAvailable: .init(value: true)))))
         {
             $0.isLoading = .init(value: false)
         }
@@ -38,8 +38,8 @@ struct IPadActivitySessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: true),
-            sessionsAvailability: .init(isAvailable: false))))
+            sceneActivity: .init(isActive: .init(value: true)),
+            sessionsAvailability: .init(isAvailable: .init(value: false)))))
         {
             $0.isLoading = .init(value: false)
             $0.sessions = []
@@ -61,8 +61,8 @@ struct IPadActivitySessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: true),
-            sessionsAvailability: .init(isAvailable: true))))
+            sceneActivity: .init(isActive: .init(value: true)),
+            sessionsAvailability: .init(isAvailable: .init(value: true)))))
         {
             $0.isLoading = .init(value: true)
             $0.loadErrorText = nil
@@ -86,8 +86,8 @@ struct IPadActivitySessionsFeatureTests {
         }
 
         await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: true),
-            sessionsAvailability: .init(isAvailable: true))))
+            sceneActivity: .init(isActive: .init(value: true)),
+            sessionsAvailability: .init(isAvailable: .init(value: true)))))
         {
             $0.isLoading = .init(value: true)
             $0.loadErrorText = nil
