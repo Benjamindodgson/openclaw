@@ -2735,9 +2735,14 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource.contains(
             "struct TransportModeRecord: Equatable, Sendable { var transportModeID: ChatTransportModeID }"))
         #expect(chatSource.contains("case transportModeRecorded(TransportModeRecord)"))
-        #expect(chatSource.contains("state.transportModeID = record.transportModeID.value"))
+        #expect(chatSource.contains("var transportMode = ChatTransportModeID(value: \"\")"))
+        #expect(chatSource.contains("var transportModeID: String"))
+        #expect(chatSource.contains("self.transportMode.value"))
+        #expect(chatSource.contains("state.transportMode = record.transportModeID"))
         #expect(chatSource.contains("self.viewModelLifecycleStore.send(.transportModeRecorded(.init("))
         #expect(chatSource.contains("transportModeID: .init(value: transportModeID))))"))
+        #expect(!chatSource.contains("var transportModeID = \"\""))
+        #expect(!chatSource.contains("state.transportModeID = record.transportModeID.value"))
         #expect(!chatSource.contains(
             "struct TransportModeRecord: Equatable, Sendable { var transportModeID: String }"))
         #expect(!chatSource.contains("state.transportModeID = record.transportModeID\n"))
