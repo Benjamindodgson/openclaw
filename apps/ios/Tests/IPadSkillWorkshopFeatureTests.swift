@@ -8,7 +8,7 @@ struct IPadSkillWorkshopFeatureTests {
     @Test func `offline refresh clears proposal state`() async {
         var initialState = IPadSkillWorkshopFeature.State()
         initialState.proposals = [Self.proposal(id: "pending-1", status: "pending")]
-        initialState.isLoading = .init(value: true)
+        initialState.loadingPhase = .inFlight
         initialState.inspectingProposalID = .init(value: "pending-1")
         initialState.errorText = .init(value: "old error")
         let store = TestStore(initialState: initialState) {
@@ -21,7 +21,7 @@ struct IPadSkillWorkshopFeatureTests {
             force: .init(isForced: false))))
         {
             $0.proposals = []
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
             $0.inspectingProposalID = nil
             $0.errorText = nil
         }
@@ -42,13 +42,13 @@ struct IPadSkillWorkshopFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: false))))
         {
-            $0.isLoading = .init(value: true)
+            $0.loadingPhase = .inFlight
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: false),
             result: .success(manifest))))
         {
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
             $0.proposals = [IPadSkillProposal(entry: entry, previous: nil)]
             $0.selectedProposalID = .init(value: "pending-1")
             $0.inspectingProposalID = .init(value: "pending-1")
@@ -158,13 +158,13 @@ struct IPadSkillWorkshopFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: true))))
         {
-            $0.isLoading = .init(value: true)
+            $0.loadingPhase = .inFlight
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: true),
             result: .success(refreshedManifest))))
         {
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
             $0.proposals = [IPadSkillProposal(entry: after, previous: IPadSkillProposal(entry: before, previous: nil))]
             $0.selectedProposalID = nil
         }
@@ -181,13 +181,13 @@ struct IPadSkillWorkshopFeatureTests {
             readAccess: .init(canRead: true),
             force: .init(isForced: true))))
         {
-            $0.isLoading = .init(value: true)
+            $0.loadingPhase = .inFlight
         }
         await store.receive(.refreshResponse(.init(
             force: .init(isForced: true),
             result: .failure(.failed(.init(message: .init(value: "skill boom")))))))
         {
-            $0.isLoading = .init(value: false)
+            $0.loadingPhase = .idle
             $0.errorText = .init(value: "skill boom")
         }
     }
