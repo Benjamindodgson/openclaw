@@ -259,11 +259,11 @@ struct AgentProTab: View {
     }
 
     var skillMutationErrorText: String? {
-        self.skillPolicyMutationStore.errorText
+        self.skillPolicyMutationStore.errorText.value
     }
 
     var skillMutationStatusText: String? {
-        self.skillPolicyMutationStore.statusText
+        self.skillPolicyMutationStore.statusText.value
     }
 
     var skillConfigBusyKeys: Set<String> {
@@ -394,7 +394,9 @@ struct AgentSelectionFeature {
 
 // swiftformat:disable redundantSendable
 struct AgentSkillPolicyMutationKey: Equatable, Sendable { var value: String }
+struct AgentSkillPolicyMutationErrorText: Equatable, Sendable { var value: String? }
 struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable { var value: String }
+struct AgentSkillPolicyMutationStatusText: Equatable, Sendable { var value: String? }
 struct AgentSkillPolicyMutationSuccessMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
@@ -404,8 +406,8 @@ struct AgentSkillPolicyMutationFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var busyKeys: Set<String> = []
-        var errorText: String?
-        var statusText: String?
+        var errorText = AgentSkillPolicyMutationErrorText(value: nil)
+        var statusText = AgentSkillPolicyMutationStatusText(value: nil)
     }
 
     enum Action: Equatable, Sendable {
@@ -434,16 +436,16 @@ struct AgentSkillPolicyMutationFeature {
             switch action {
             case let .mutationStarted(mutation):
                 state.busyKeys.insert(mutation.key.value)
-                state.errorText = nil
-                state.statusText = nil
+                state.errorText = .init(value: nil)
+                state.statusText = .init(value: nil)
                 return .none
 
             case let .mutationSucceeded(result):
-                state.statusText = result.message.value
+                state.statusText = .init(value: result.message.value)
                 return .none
 
             case let .mutationFailed(failure):
-                state.errorText = failure.message.value
+                state.errorText = .init(value: failure.message.value)
                 return .none
 
             case let .mutationFinished(mutation):

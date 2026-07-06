@@ -32,16 +32,16 @@ private final class AgentSelectionProbe: @unchecked Sendable {
 struct AgentSkillPolicyMutationFeatureTests {
     @Test func `mutation start records busy key and clears messages`() async {
         var initialState = AgentSkillPolicyMutationFeature.State()
-        initialState.errorText = "Old error."
-        initialState.statusText = "Old status."
+        initialState.errorText = .init(value: "Old error.")
+        initialState.statusText = .init(value: "Old status.")
         let store = TestStore(initialState: initialState) {
             AgentSkillPolicyMutationFeature()
         }
 
         await store.send(.mutationStarted(.init(key: .init(value: "skill-a")))) {
             $0.busyKeys = ["skill-a"]
-            $0.errorText = nil
-            $0.statusText = nil
+            $0.errorText = .init(value: nil)
+            $0.statusText = .init(value: nil)
         }
     }
 
@@ -53,7 +53,7 @@ struct AgentSkillPolicyMutationFeatureTests {
         }
 
         await store.send(.mutationSucceeded(.init(message: .init(value: "Skill policy saved.")))) {
-            $0.statusText = "Skill policy saved."
+            $0.statusText = .init(value: "Skill policy saved.")
         }
     }
 
@@ -65,7 +65,7 @@ struct AgentSkillPolicyMutationFeatureTests {
         }
 
         await store.send(.mutationFailed(.init(message: .init(value: "Skill policy failed.")))) {
-            $0.errorText = "Skill policy failed."
+            $0.errorText = .init(value: "Skill policy failed.")
         }
     }
 
