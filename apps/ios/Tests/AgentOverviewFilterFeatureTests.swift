@@ -319,10 +319,10 @@ struct AgentClawHubSearchFeatureTests {
             AgentClawHubSearchFeature()
         }
 
-        await store.send(.installRequested(.init(slug: "memory-plus"))) {
+        await store.send(.installRequested(.init(slug: .init(value: "memory-plus")))) {
             $0.installingSlug = "memory-plus"
         }
-        await store.send(.installFinished(.init(slug: "memory-plus"))) {
+        await store.send(.installFinished(.init(slug: .init(value: "memory-plus")))) {
             $0.installingSlug = nil
         }
     }
@@ -334,7 +334,10 @@ struct AgentClawHubSearchFeatureTests {
             AgentClawHubSearchFeature()
         }
 
-        await store.send(.installFailed(.init(slug: "memory-plus", message: .init(value: "Install failed.")))) {
+        await store.send(.installFailed(.init(
+            slug: .init(value: "memory-plus"),
+            message: .init(value: "Install failed."))))
+        {
             $0.errorText = "Install failed."
             $0.installingSlug = nil
         }

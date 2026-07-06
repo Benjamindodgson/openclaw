@@ -673,6 +673,7 @@ struct AgentSkillFilterFeature {
 }
 
 // swiftformat:disable redundantSendable
+struct AgentClawHubInstallSlug: Equatable, Sendable { var value: String }
 struct AgentClawHubInstallFailureMessage: Equatable, Sendable { var value: String }
 struct AgentClawHubSearchFailureMessage: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
@@ -699,11 +700,11 @@ struct AgentClawHubSearchFeature {
         }
 
         struct InstallSlug: Equatable, Sendable {
-            var slug: String
+            var slug: AgentClawHubInstallSlug
         }
 
         struct InstallFailure: Equatable, Sendable {
-            var slug: String
+            var slug: AgentClawHubInstallSlug
             var message: AgentClawHubInstallFailureMessage
         }
 
@@ -745,19 +746,19 @@ struct AgentClawHubSearchFeature {
                 return .none
 
             case let .installRequested(install):
-                state.installingSlug = install.slug
+                state.installingSlug = install.slug.value
                 state.errorText = nil
                 return .none
 
             case let .installFinished(install):
-                if state.installingSlug == install.slug {
+                if state.installingSlug == install.slug.value {
                     state.installingSlug = nil
                 }
                 return .none
 
             case let .installFailed(failure):
                 state.errorText = failure.message.value
-                if state.installingSlug == failure.slug {
+                if state.installingSlug == failure.slug.value {
                     state.installingSlug = nil
                 }
                 return .none
