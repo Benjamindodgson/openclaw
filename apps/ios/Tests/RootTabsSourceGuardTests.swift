@@ -1537,6 +1537,10 @@ struct RootTabsSourceGuardTests {
             from: "@Reducer\nstruct IPadActivitySessionsFeature",
             to: "enum IPadActivitySessionsStoreFactory")
 
+        #expect(source.contains("struct IPadActivitySessionsFailureMessage: Equatable, Sendable"))
+        #expect(feature.contains("var loadErrorText: IPadActivitySessionsFailureMessage?"))
+        #expect(feature.contains("state.loadErrorText = .init(value: \"Try again after the gateway reconnects.\")"))
+        #expect(source.contains("detail: loadErrorText.value"))
         #expect(feature.contains("struct RefreshResponse: Equatable, Sendable"))
         #expect(feature.contains("struct SceneActivity: Equatable, Sendable"))
         #expect(feature.contains("struct SessionsAvailability: Equatable, Sendable"))
@@ -1547,6 +1551,9 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(sessions))))"))
         #expect(feature.contains("switch response.result"))
+        #expect(!feature.contains("var loadErrorText: String?"))
+        #expect(!feature.contains("state.loadErrorText = \"Try again after the gateway reconnects.\""))
+        #expect(!source.contains("detail: loadErrorText,"))
         #expect(!feature.contains("var sceneActive: Bool"))
         #expect(!feature.contains("var sessionsAvailable: Bool"))
     }

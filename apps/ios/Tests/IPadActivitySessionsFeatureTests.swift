@@ -11,7 +11,7 @@ struct IPadActivitySessionsFeatureTests {
         var initialState = IPadActivitySessionsFeature.State()
         initialState.sessions = [Self.session(key: "chat-existing")]
         initialState.isLoading = true
-        initialState.loadErrorText = "Previous error"
+        initialState.loadErrorText = .init(value: "Previous error")
         let store = TestStore(initialState: initialState) {
             IPadActivitySessionsFeature(client: probe.client)
         }
@@ -32,7 +32,7 @@ struct IPadActivitySessionsFeatureTests {
         var initialState = IPadActivitySessionsFeature.State()
         initialState.sessions = [Self.session(key: "chat-existing")]
         initialState.isLoading = true
-        initialState.loadErrorText = "Previous error"
+        initialState.loadErrorText = .init(value: "Previous error")
         let store = TestStore(initialState: initialState) {
             IPadActivitySessionsFeature(client: probe.client)
         }
@@ -55,7 +55,7 @@ struct IPadActivitySessionsFeatureTests {
         let loadedSessions = [Self.session(key: "chat-loaded")]
         probe.result = .success(loadedSessions)
         var initialState = IPadActivitySessionsFeature.State()
-        initialState.loadErrorText = "Previous error"
+        initialState.loadErrorText = .init(value: "Previous error")
         let store = TestStore(initialState: initialState) {
             IPadActivitySessionsFeature(client: probe.client)
         }
@@ -95,7 +95,7 @@ struct IPadActivitySessionsFeatureTests {
         await store.receive(.refreshResponse(.init(result: .failure(.failed)))) {
             $0.isLoading = false
             $0.sessions = []
-            $0.loadErrorText = "Try again after the gateway reconnects."
+            $0.loadErrorText = .init(value: "Try again after the gateway reconnects.")
         }
         await store.finish()
 

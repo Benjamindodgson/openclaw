@@ -29,6 +29,8 @@ extension DependencyValues {
 }
 
 // swiftformat:disable redundantSendable
+struct IPadActivitySessionsFailureMessage: Equatable, Sendable { var value: String }
+
 enum IPadActivitySessionsError: Error, Equatable, Sendable {
     case failed
 }
@@ -48,7 +50,7 @@ struct IPadActivitySessionsFeature {
     struct State: Equatable, Sendable {
         var sessions: [OpenClawChatSessionEntry] = []
         var isLoading = false
-        var loadErrorText: String?
+        var loadErrorText: IPadActivitySessionsFailureMessage?
         var gatewayPresentation = IPadActivityGatewayPresentationState()
     }
 
@@ -121,7 +123,7 @@ struct IPadActivitySessionsFeature {
                 case .failure:
                     state.isLoading = false
                     state.sessions = []
-                    state.loadErrorText = "Try again after the gateway reconnects."
+                    state.loadErrorText = .init(value: "Try again after the gateway reconnects.")
                     return .none
                 }
             }
@@ -263,7 +265,7 @@ struct IPadActivityScreen: View {
                     ProStatusRow(
                         icon: "exclamationmark.triangle.fill",
                         title: "Sessions unavailable",
-                        detail: loadErrorText,
+                        detail: loadErrorText.value,
                         value: "error",
                         color: OpenClawBrand.warn,
                         actionTitle: nil,
