@@ -732,7 +732,7 @@ extension AgentProTab {
         } catch {
             self.skillEditorStore.send(.mutationFailed(.init(
                 key: key,
-                message: Self.skillMutationMessage(error))))
+                message: .init(value: Self.skillMutationMessage(error)))))
         }
     }
 
