@@ -209,6 +209,14 @@ struct IPadSkillWorkshopFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct SceneActivity: Equatable, Sendable { var isActive: Bool }
+        struct GatewayReadAccess: Equatable, Sendable { var canRead: Bool }
+        struct GatewayWriteAccess: Equatable, Sendable { var canWrite: Bool }
+        struct OperatorAdminAccess: Equatable, Sendable { var hasOperatorAdminScope: Bool }
+        struct RefreshForce: Equatable, Sendable { var isForced: Bool }
+        struct InspectionForce: Equatable, Sendable { var isForced: Bool }
+        struct ProposalSheetOpening: Equatable, Sendable { var opensSheet: Bool }
+
         struct AgentScopeChange: Equatable, Sendable {
             var agentID: IPadSkillWorkshopSelectedAgentScopeID
         }
@@ -218,8 +226,8 @@ struct IPadSkillWorkshopFeature {
 
         struct InspectRequest: Equatable, Sendable {
             var proposalID: IPadSkillWorkshopProposalID
-            var canRead: Bool
-            var force: Bool
+            var readAccess: GatewayReadAccess
+            var force: InspectionForce
         }
 
         struct InspectResponse: Equatable, Sendable {
@@ -233,18 +241,18 @@ struct IPadSkillWorkshopFeature {
         struct ProposalMutationRequest: Equatable, Sendable {
             var kind: IPadSkillProposalAction.Kind
             var proposalID: IPadSkillWorkshopProposalID
-            var sceneActive: Bool
-            var canRead: Bool
-            var canWrite: Bool
-            var hasOperatorAdminScope: Bool
+            var sceneActivity: SceneActivity
+            var readAccess: GatewayReadAccess
+            var writeAccess: GatewayWriteAccess
+            var adminAccess: OperatorAdminAccess
         }
 
         struct ProposalMutationSuccess: Equatable, Sendable {}
 
         struct ProposalMutationResponse: Equatable, Sendable {
             var kind: IPadSkillProposalAction.Kind
-            var sceneActive: Bool
-            var canRead: Bool
+            var sceneActivity: SceneActivity
+            var readAccess: GatewayReadAccess
             var result: Result<ProposalMutationSuccess, IPadSkillWorkshopError>
         }
 
@@ -253,9 +261,9 @@ struct IPadSkillWorkshopFeature {
 
         struct ProposalSelectionRequest: Equatable, Sendable {
             var proposalID: IPadSkillWorkshopProposalID
-            var opensSheet: Bool
-            var canRead: Bool
-            var forceInspect: Bool
+            var opensSheet: ProposalSheetOpening
+            var readAccess: GatewayReadAccess
+            var forceInspect: InspectionForce
         }
 
         struct QueryChange: Equatable, Sendable {
@@ -263,13 +271,13 @@ struct IPadSkillWorkshopFeature {
         }
 
         struct RefreshRequest: Equatable, Sendable {
-            var sceneActive: Bool
-            var canRead: Bool
-            var force: Bool
+            var sceneActivity: SceneActivity
+            var readAccess: GatewayReadAccess
+            var force: RefreshForce
         }
 
         struct RefreshResponse: Equatable, Sendable {
-            var force: Bool
+            var force: RefreshForce
             var result: Result<IPadSkillProposalManifest, IPadSkillWorkshopError>
         }
 
@@ -326,8 +334,8 @@ struct IPadSkillWorkshopFeature {
 
             case let .proposalMutationRequested(request):
                 guard IPadSkillWorkshopScreen.shouldEnableProposalMutation(
-                    canWrite: request.canWrite,
-                    hasOperatorAdminScope: request.hasOperatorAdminScope),
+                    canWrite: request.writeAccess.canWrite,
+                    hasOperatorAdminScope: request.adminAccess.hasOperatorAdminScope),
                     state.busyAction == nil
                 else {
                     return .none
@@ -342,14 +350,14 @@ struct IPadSkillWorkshopFeature {
                         try await client.run(request.kind, agentScope, request.proposalID)
                         await send(.proposalMutationResponse(.init(
                             kind: request.kind,
-                            sceneActive: request.sceneActive,
-                            canRead: request.canRead,
+                            sceneActivity: request.sceneActivity,
+                            readAccess: request.readAccess,
                             result: .success(.init()))))
                     } catch {
                         await send(.proposalMutationResponse(.init(
                             kind: request.kind,
-                            sceneActive: request.sceneActive,
-                            canRead: request.canRead,
+                            sceneActivity: request.sceneActivity,
+                            readAccess: request.readAccess,
                             result: .failure(Self.failure(for: error)))))
                     }
                 }
@@ -362,9 +370,9 @@ struct IPadSkillWorkshopFeature {
                         value: response.kind == .apply ? "Proposal applied." : "Proposal rejected.")
                     return .run { send in
                         await send(.refreshRequested(.init(
-                            sceneActive: response.sceneActive,
-                            canRead: response.canRead,
-                            force: true)))
+                            sceneActivity: response.sceneActivity,
+                            readAccess: response.readAccess,
+                            force: .init(isForced: true))))
                     }
 
                 case let .failure(error):
@@ -375,7 +383,7 @@ struct IPadSkillWorkshopFeature {
 
             case let .proposalSelected(request):
                 state.selectedProposalID = request.proposalID
-                if request.opensSheet {
+                if request.opensSheet.opensSheet {
                     state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: request.proposalID.value)
                 }
                 return self.inspectEffect(
@@ -383,7 +391,7 @@ struct IPadSkillWorkshopFeature {
                     client: client,
                     request: .init(
                         proposalID: request.proposalID,
-                        canRead: request.canRead,
+                        readAccess: request.readAccess,
                         force: request.forceInspect))
 
             case .proposalSheetDismissed:
@@ -396,11 +404,11 @@ struct IPadSkillWorkshopFeature {
                 return .none
 
             case let .refreshRequested(request):
-                guard request.sceneActive else {
+                guard request.sceneActivity.isActive else {
                     state.isLoading = .init(value: false)
                     return .none
                 }
-                guard request.canRead else {
+                guard request.readAccess.canRead else {
                     state.proposals = []
                     state.errorText = nil
                     state.isLoading = .init(value: false)
@@ -440,11 +448,11 @@ struct IPadSkillWorkshopFeature {
                         client: client,
                         request: .init(
                             proposalID: proposalID,
-                            canRead: true,
-                            force: response.force))
+                            readAccess: .init(canRead: true),
+                            force: .init(isForced: response.force.isForced)))
 
                 case let .failure(error):
-                    if response.force || state.proposals.isEmpty {
+                    if response.force.isForced || state.proposals.isEmpty {
                         state.errorText = .init(value: error.message)
                     }
                     return .none
@@ -464,9 +472,9 @@ struct IPadSkillWorkshopFeature {
         client: IPadSkillWorkshopClient,
         request: Action.InspectRequest) -> Effect<Action>
     {
-        guard request.canRead else { return .none }
-        guard request.force || state.proposals.first(where: { $0.id == request.proposalID.value })?.content == nil
-        else { return .none }
+        guard request.readAccess.canRead else { return .none }
+        let existingContent = state.proposals.first(where: { $0.id == request.proposalID.value })?.content
+        guard request.force.isForced || existingContent == nil else { return .none }
         guard state.inspectingProposalID == nil else { return .none }
 
         state.inspectingProposalID = request.proposalID
@@ -1244,34 +1252,34 @@ struct IPadSkillWorkshopScreen: View {
         Task {
             await self.store.send(.proposalSelected(.init(
                 proposalID: .init(value: proposal.id),
-                opensSheet: opensSheet,
-                canRead: self.canRead,
-                forceInspect: forceInspect))).finish()
+                opensSheet: .init(opensSheet: opensSheet),
+                readAccess: .init(canRead: self.canRead),
+                forceInspect: .init(isForced: forceInspect)))).finish()
         }
     }
 
     private func loadProposals(force: Bool) async {
         await self.store.send(.refreshRequested(.init(
-            sceneActive: self.scenePhase == .active,
-            canRead: self.canRead,
-            force: force))).finish()
+            sceneActivity: .init(isActive: self.scenePhase == .active),
+            readAccess: .init(canRead: self.canRead),
+            force: .init(isForced: force)))).finish()
     }
 
     private func inspect(proposalID: String, force: Bool) async {
         await self.store.send(.inspectRequested(.init(
             proposalID: .init(value: proposalID),
-            canRead: self.canRead,
-            force: force))).finish()
+            readAccess: .init(canRead: self.canRead),
+            force: .init(isForced: force)))).finish()
     }
 
     private func run(_ action: IPadSkillProposalAction.Kind, proposal: IPadSkillProposal) async {
         await self.store.send(.proposalMutationRequested(.init(
             kind: action,
             proposalID: .init(value: proposal.id),
-            sceneActive: self.scenePhase == .active,
-            canRead: self.canRead,
-            canWrite: self.canWrite,
-            hasOperatorAdminScope: self.appModel.hasOperatorAdminScope))).finish()
+            sceneActivity: .init(isActive: self.scenePhase == .active),
+            readAccess: .init(canRead: self.canRead),
+            writeAccess: .init(canWrite: self.canWrite),
+            adminAccess: .init(hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)))).finish()
     }
 }
 
