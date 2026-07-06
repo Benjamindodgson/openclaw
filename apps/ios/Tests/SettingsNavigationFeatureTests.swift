@@ -74,10 +74,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.talkIssueDetailsButtonTapped) {
-            $0.showTalkIssueDetails = true
+            $0.destination = .talkIssueDetails
         }
         await store.send(.talkIssueDetailsDismissed) {
-            $0.showTalkIssueDetails = false
+            $0.destination = nil
         }
     }
 
@@ -87,10 +87,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.gatewayProblemDetailsButtonTapped) {
-            $0.showGatewayProblemDetails = true
+            $0.destination = .gatewayProblemDetails
         }
         await store.send(.gatewayProblemDetailsDismissed) {
-            $0.showGatewayProblemDetails = false
+            $0.destination = nil
         }
     }
 
@@ -100,10 +100,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.resetOnboardingButtonTapped) {
-            $0.showResetOnboardingAlert = true
+            $0.destination = .resetOnboardingAlert
         }
         await store.send(.resetOnboardingAlertDismissed) {
-            $0.showResetOnboardingAlert = false
+            $0.destination = nil
         }
     }
 
@@ -113,10 +113,10 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.notificationRelayDisclosureRequested) {
-            $0.showNotificationRelayDisclosure = true
+            $0.destination = .notificationRelayDisclosure
         }
         await store.send(.notificationRelayDisclosureDismissed) {
-            $0.showNotificationRelayDisclosure = false
+            $0.destination = nil
         }
     }
 
@@ -126,26 +126,26 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.qrScannerButtonTapped) {
-            $0.showQRScanner = true
+            $0.destination = .qrScanner
         }
         await store.send(.qrScannerDismissed) {
-            $0.showQRScanner = false
+            $0.destination = nil
         }
     }
 
     @Test func `settings presentation records and dismisses QR scanner error`() async {
         var initialState = SettingsPresentationFeature.State()
-        initialState.showQRScanner = true
+        initialState.destination = .qrScanner
         let store = TestStore(initialState: initialState) {
             SettingsPresentationFeature()
         }
 
         await store.send(.qrScannerErrorReceived(.init(message: .init(value: "Camera unavailable")))) {
-            $0.showQRScanner = false
-            $0.scannerError = "Camera unavailable"
+            $0.destination = .scannerError(.init(value: "Camera unavailable"))
         }
+        await store.send(.qrScannerDismissed)
         await store.send(.qrScannerErrorDismissed) {
-            $0.scannerError = nil
+            $0.destination = nil
         }
     }
 
