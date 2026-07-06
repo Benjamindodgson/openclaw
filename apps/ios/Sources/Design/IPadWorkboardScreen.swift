@@ -308,21 +308,21 @@ struct IPadWorkboardScreen: View {
                 .padding(.horizontal, 10)
                 .frame(height: 30)
                 .background(
-                    self.store.selectedStatus == status
+                    self.store.selectedStatus.value == status
                         ? OpenClawBrand.accent.opacity(0.12)
                         : Color.primary.opacity(0.06),
                     in: Capsule())
                 .overlay {
                     Capsule()
                         .strokeBorder(
-                            self.store.selectedStatus == status
+                            self.store.selectedStatus.value == status
                                 ? OpenClawBrand.accent.opacity(0.42)
                                 : Color.primary.opacity(0.08),
                             lineWidth: 1)
                 }
         }
         .buttonStyle(.plain)
-        .foregroundStyle(self.store.selectedStatus == status ? OpenClawBrand.accent : .primary)
+        .foregroundStyle(self.store.selectedStatus.value == status ? OpenClawBrand.accent : .primary)
         .accessibilityLabel("Show \(IPadWorkboardDefaults.label(for: status)) cards")
     }
 
@@ -373,7 +373,7 @@ struct IPadWorkboardScreen: View {
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text(IPadWorkboardDefaults.label(for: self.store.selectedStatus))
+                    Text(IPadWorkboardDefaults.label(for: self.store.selectedStatus.value))
                         .font(.subheadline.weight(.semibold))
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2.weight(.bold))
@@ -416,7 +416,7 @@ struct IPadWorkboardScreen: View {
 
     private var selectedStatusBinding: Binding<String> {
         Binding(
-            get: { self.store.selectedStatus },
+            get: { self.store.selectedStatus.value },
             set: { self.store.send(.statusChanged(.init(status: .init(value: $0)))) })
     }
 
@@ -560,7 +560,7 @@ struct IPadWorkboardScreen: View {
     private var currentWorkboardSubtitle: String {
         Self.workboardSubtitle(
             boardScopeLabel: self.boardScopeLabel,
-            selectedStatus: self.store.selectedStatus)
+            selectedStatus: self.store.selectedStatus.value)
     }
 
     private var boardScopeOptions: [String] {
@@ -609,7 +609,7 @@ struct IPadWorkboardScreen: View {
         IPadWorkboardFeature.State.cardsForKanbanStatus(
             cards: self.store.cards,
             status: status,
-            selectedStatus: self.store.selectedStatus,
+            selectedStatus: self.store.selectedStatus.value,
             query: self.store.query)
     }
 

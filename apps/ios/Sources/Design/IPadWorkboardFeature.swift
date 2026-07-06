@@ -124,6 +124,7 @@ struct IPadWorkboardFailureMessage: Equatable, Sendable { var value: String }
 struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedBoardID: Equatable, Sendable { var value: String }
+struct IPadWorkboardSelectedStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatusFilter: Equatable, Sendable { var value: String }
 
 enum IPadWorkboardError: Error, Equatable, Sendable {
@@ -173,7 +174,7 @@ struct IPadWorkboardFeature {
         var activeRefreshBoardID: IPadWorkboardActiveRefreshBoardID?
         var busyCardID: IPadWorkboardBusyCardID?
         var dispatchSummaryText: String?
-        var selectedStatus = "active"
+        var selectedStatus = IPadWorkboardSelectedStatus(value: "active")
         var selectedBoardID = IPadWorkboardSelectedBoardID(value: "")
         var query = ""
         var draftTitle = ""
@@ -215,11 +216,11 @@ struct IPadWorkboardFeature {
         }
 
         var visibleKanbanStatuses: [String] {
-            if self.selectedStatus == "active" {
+            if self.selectedStatus.value == "active" {
                 return self.statuses.filter { $0 != "done" }
             }
-            if self.statuses.contains(self.selectedStatus) {
-                return [self.selectedStatus]
+            if self.statuses.contains(self.selectedStatus.value) {
+                return [self.selectedStatus.value]
             }
             return self.statuses
         }
@@ -234,7 +235,7 @@ struct IPadWorkboardFeature {
         var filteredCards: [IPadWorkboardCard] {
             Self.filteredCards(
                 cards: self.cards,
-                selectedStatus: self.selectedStatus,
+                selectedStatus: self.selectedStatus.value,
                 query: self.query)
         }
 
@@ -242,7 +243,7 @@ struct IPadWorkboardFeature {
             Self.cardsForKanbanStatus(
                 cards: self.cards,
                 status: status,
-                selectedStatus: self.selectedStatus,
+                selectedStatus: self.selectedStatus.value,
                 query: self.query)
         }
 
@@ -350,8 +351,8 @@ struct IPadWorkboardFeature {
         }
 
         private mutating func validateSelectedStatus() {
-            if !self.statuses.contains(self.selectedStatus), self.selectedStatus != "active" {
-                self.selectedStatus = "active"
+            if !self.statuses.contains(self.selectedStatus.value), self.selectedStatus.value != "active" {
+                self.selectedStatus = .init(value: "active")
             }
         }
 
@@ -552,7 +553,7 @@ struct IPadWorkboardFeature {
 
                 state.isCreatingCard = true
                 state.errorText = nil
-                let status = state.statuses.contains(state.selectedStatus) ? state.selectedStatus : "todo"
+                let status = state.statuses.contains(state.selectedStatus.value) ? state.selectedStatus.value : "todo"
                 let params = IPadWorkboardCreateParams(
                     title: state.trimmedDraftTitle,
                     notes: state.draftNotes.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -684,8 +685,8 @@ struct IPadWorkboardFeature {
                 let boardScope = IPadWorkboardBoardScope(boardID: state.selectedBoardParam)
                 state.activeRefreshBoardID = boardScope.boardID.map { .init(value: $0) }
                 state.errorText = nil
-                if !state.statuses.contains(state.selectedStatus), state.selectedStatus != "active" {
-                    state.selectedStatus = "active"
+                if !state.statuses.contains(state.selectedStatus.value), state.selectedStatus.value != "active" {
+                    state.selectedStatus = .init(value: "active")
                 }
                 return .run { send in
                     do {
@@ -736,7 +737,7 @@ struct IPadWorkboardFeature {
                 return .none
 
             case let .statusChanged(change):
-                state.selectedStatus = change.status.value
+                state.selectedStatus = .init(value: change.status.value)
                 return .none
             }
         }

@@ -40,7 +40,7 @@ struct IPadWorkboardFeatureTests {
             $0.query = ""
         }
         await store.send(.statusChanged(.init(status: .init(value: "review")))) {
-            $0.selectedStatus = "review"
+            $0.selectedStatus = .init(value: "review")
         }
     }
 
@@ -68,7 +68,7 @@ struct IPadWorkboardFeatureTests {
         }
         client.listBoards = { boards }
         var initialState = IPadWorkboardFeature.State()
-        initialState.selectedStatus = "missing"
+        initialState.selectedStatus = .init(value: "missing")
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: client)
         }
@@ -80,7 +80,7 @@ struct IPadWorkboardFeatureTests {
             $0.isRefreshing = true
             $0.activeRefreshBoardID = .init(value: "planning")
             $0.errorText = nil
-            $0.selectedStatus = "active"
+            $0.selectedStatus = .init(value: "active")
         }
         await store.receive(.refreshResponse(.init(
             boardScope: .init(boardID: "planning"),
@@ -156,7 +156,7 @@ struct IPadWorkboardFeatureTests {
         var initialState = IPadWorkboardFeature.State()
         initialState.cards = [existing]
         initialState.statuses = ["todo", "ready"]
-        initialState.selectedStatus = "ready"
+        initialState.selectedStatus = .init(value: "ready")
         initialState.selectedBoardID = .init(value: "planning")
         initialState.presentedSheet = .create
         initialState.draftTitle = "  New card  "
