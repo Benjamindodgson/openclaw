@@ -4431,11 +4431,12 @@ struct RootTabsSourceGuardTests {
 
         #expect(notificationSource.contains("enum ActionRequest: Equatable, Sendable"))
         #expect(notificationSource.contains("struct RelayConfigSync: Equatable, Sendable"))
-        #expect(notificationSource.contains("struct AuthorizationRequestInFlight: Equatable, Sendable"))
+        #expect(notificationSource.contains("enum AuthorizationRequestPhase: Equatable, Sendable"))
+        #expect(notificationSource.contains("case idle"))
+        #expect(notificationSource.contains("case inFlight"))
         #expect(notificationSource.contains("struct HostedRelayEnabled: Equatable, Sendable"))
         #expect(notificationSource.contains("struct HostedRelayHost: Equatable, Sendable"))
-        #expect(notificationSource.contains(
-            "var isRequestingAuthorization = Action.AuthorizationRequestInFlight(value: false)"))
+        #expect(notificationSource.contains("var authorizationRequestPhase = AuthorizationRequestPhase.idle"))
         #expect(notificationSource.contains("var usesOpenClawHostedRelay = Action.HostedRelayEnabled(value: false)"))
         #expect(notificationSource.contains("var usesOpenClawHostedRelay: HostedRelayEnabled"))
         #expect(notificationSource.contains("var hostedRelayHost: HostedRelayHost"))
@@ -4455,10 +4456,15 @@ struct RootTabsSourceGuardTests {
             .contains(
                 "state.actionRequest = state.usesOpenClawHostedRelay.value ? .showRelayDisclosure : .requestAuthorization"))
         #expect(notificationSource.contains(
-            "guard state.status == .notSet, !state.isRequestingAuthorization.value else { return .none }"))
+            "guard state.status == .notSet, state.authorizationRequestPhase != .inFlight else { return .none }"))
         #expect(notificationSource.contains("state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay"))
+        #expect(!notificationSource.contains("struct AuthorizationRequestInFlight: Equatable, Sendable"))
+        #expect(!notificationSource.contains(
+            "var isRequestingAuthorization = Action.AuthorizationRequestInFlight(value: false)"))
         #expect(!notificationSource.contains("var isRequestingAuthorization = false"))
         #expect(!notificationSource.contains("var usesOpenClawHostedRelay = false"))
+        #expect(!notificationSource.contains(
+            "guard state.status == .notSet, !state.isRequestingAuthorization.value else { return .none }"))
         #expect(!notificationSource.contains("guard state.status == .notSet, !state.isRequestingAuthorization else"))
         #expect(!notificationSource.contains("state.usesOpenClawHostedRelay = sync.usesOpenClawHostedRelay.value"))
         #expect(notificationSource.contains("case notificationSettingsOpenRequested"))
@@ -4487,19 +4493,18 @@ struct RootTabsSourceGuardTests {
         #expect(notificationSource.contains("struct SettingsNotificationAuthorizationClient"))
         #expect(notificationSource.contains("struct SettingsNotificationAuthorizationGranted: Equatable, Sendable"))
         #expect(notificationSource.contains("let granted: SettingsNotificationAuthorizationGranted"))
-        #expect(notificationSource.contains("struct AuthorizationRequestInFlight: Equatable, Sendable"))
-        #expect(notificationSource.contains(
-            "var isRequestingAuthorization = Action.AuthorizationRequestInFlight(value: false)"))
+        #expect(notificationSource.contains("enum AuthorizationRequestPhase: Equatable, Sendable"))
+        #expect(notificationSource.contains("var authorizationRequestPhase = AuthorizationRequestPhase.idle"))
         #expect(notificationSource.contains("case authorizationRequestRequested"))
         #expect(notificationSource
             .contains("case authorizationRequestFinished(SettingsNotificationAuthorizationResult)"))
         #expect(notificationSource.contains("await authorizationClient.requestAuthorization()"))
         #expect(notificationSource.contains("return .run { send in"))
-        #expect(notificationSource.contains("guard !state.isRequestingAuthorization.value else { return .none }"))
-        #expect(notificationSource.contains("state.isRequestingAuthorization = .init(value: true)"))
-        #expect(notificationSource.contains("state.isRequestingAuthorization = .init(value: false)"))
-        #expect(requestFunction.contains("guard !self.notificationStore.isRequestingAuthorization.value else { return }"))
-        #expect(sectionsSource.contains("|| self.notificationStore.isRequestingAuthorization.value"))
+        #expect(notificationSource.contains("guard state.authorizationRequestPhase != .inFlight else { return .none }"))
+        #expect(notificationSource.contains("state.authorizationRequestPhase = .inFlight"))
+        #expect(notificationSource.contains("state.authorizationRequestPhase = .idle"))
+        #expect(requestFunction.contains("guard self.notificationStore.authorizationRequestPhase != .inFlight else { return }"))
+        #expect(sectionsSource.contains("|| self.notificationStore.authorizationRequestPhase == .inFlight"))
         #expect(actionsSource.contains("self.notificationStore.send(.authorizationRequestRequested)"))
         #expect(actionsSource.contains("self.notificationStore.send(.authorizationRequestResultHandled)"))
         #expect(settingsSource
@@ -4508,12 +4513,20 @@ struct RootTabsSourceGuardTests {
         #expect(requestFunction.contains("UNUserNotificationCenter.current().requestAuthorization") == false)
         #expect(requestFunction.contains("let granted = await") == false)
         #expect(requestFunction.contains("Task {") == false)
+        #expect(!notificationSource.contains("struct AuthorizationRequestInFlight: Equatable, Sendable"))
+        #expect(!notificationSource.contains(
+            "var isRequestingAuthorization = Action.AuthorizationRequestInFlight(value: false)"))
         #expect(!notificationSource.contains("let granted: Bool"))
         #expect(!actionsSource.contains("guard result.granted else { return }"))
+        #expect(!notificationSource.contains("guard !state.isRequestingAuthorization.value else { return .none }"))
         #expect(!notificationSource.contains("guard !state.isRequestingAuthorization else { return .none }"))
+        #expect(!notificationSource.contains("state.isRequestingAuthorization = .init(value: true)"))
+        #expect(!notificationSource.contains("state.isRequestingAuthorization = .init(value: false)"))
         #expect(!notificationSource.contains("state.isRequestingAuthorization = true"))
         #expect(!notificationSource.contains("state.isRequestingAuthorization = false"))
+        #expect(!requestFunction.contains("guard !self.notificationStore.isRequestingAuthorization.value else { return }"))
         #expect(!requestFunction.contains("guard !self.notificationStore.isRequestingAuthorization else { return }"))
+        #expect(!sectionsSource.contains("|| self.notificationStore.isRequestingAuthorization.value"))
         #expect(!sectionsSource.contains("|| self.notificationStore.isRequestingAuthorization)"))
     }
 

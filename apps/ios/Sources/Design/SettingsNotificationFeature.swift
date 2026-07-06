@@ -97,10 +97,15 @@ struct SettingsNotificationFeature {
 
     @ObservableState
     struct State: Equatable, Sendable {
+        enum AuthorizationRequestPhase: Equatable, Sendable {
+            case idle
+            case inFlight
+        }
+
         var hostedRelayHost = HostedRelayHost(value: SettingsNotificationFeature.defaultHostedRelayHost)
         var actionRequest: ActionRequest?
         var authorizationRequestResult: SettingsNotificationAuthorizationResult?
-        var isRequestingAuthorization = Action.AuthorizationRequestInFlight(value: false)
+        var authorizationRequestPhase = AuthorizationRequestPhase.idle
         var status: SettingsNotificationStatus = .checking
         var statusRefreshResult: SettingsNotificationStatus?
         var usesOpenClawHostedRelay = Action.HostedRelayEnabled(value: false)
@@ -167,7 +172,6 @@ struct SettingsNotificationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct AuthorizationRequestInFlight: Equatable, Sendable { var value: Bool }
         struct HostedRelayEnabled: Equatable, Sendable { var value: Bool }
         struct RemoteRegistrationDisclosureAccepted: Equatable, Sendable { var value: Bool }
 
@@ -210,7 +214,7 @@ struct SettingsNotificationFeature {
                     state.actionRequest = .openSettings
                     return .none
                 }
-                guard state.status == .notSet, !state.isRequestingAuthorization.value else { return .none }
+                guard state.status == .notSet, state.authorizationRequestPhase != .inFlight else { return .none }
                 state.actionRequest = state.usesOpenClawHostedRelay.value ? .showRelayDisclosure : .requestAuthorization
                 return .none
 
@@ -220,15 +224,15 @@ struct SettingsNotificationFeature {
 
             case let .authorizationRequestFinished(result):
                 state.authorizationRequestResult = result
-                state.isRequestingAuthorization = .init(value: false)
+                state.authorizationRequestPhase = .idle
                 state.status = result.status
                 return .none
 
             case .authorizationRequestRequested:
-                guard !state.isRequestingAuthorization.value else { return .none }
+                guard state.authorizationRequestPhase != .inFlight else { return .none }
                 state.actionRequest = nil
                 state.authorizationRequestResult = nil
-                state.isRequestingAuthorization = .init(value: true)
+                state.authorizationRequestPhase = .inFlight
                 return .run { send in
                     let result = await authorizationClient.requestAuthorization()
                     await send(.authorizationRequestFinished(result))
