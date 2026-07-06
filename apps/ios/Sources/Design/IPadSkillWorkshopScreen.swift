@@ -125,7 +125,7 @@ struct IPadSkillWorkshopFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var proposals: [IPadSkillProposal] = []
-        var selectedProposalID: String?
+        var selectedProposalID: IPadSkillWorkshopProposalID?
         var selectedAgentScopeID = IPadSkillWorkshopSelectedAgentScopeID(value: "")
         var statusFilter = IPadSkillWorkshopStatusFilter(value: "pending")
         var query = IPadSkillWorkshopQuery(value: "")
@@ -168,10 +168,11 @@ struct IPadSkillWorkshopFeature {
 
         mutating func syncSelectedProposalIDForVisibleProposals() {
             let nextID = IPadSkillWorkshopScreen.nextSelectedProposalID(
-                current: self.selectedProposalID,
+                current: self.selectedProposalID?.value,
                 visibleProposalIDs: self.filteredProposals.map(\.id))
-            guard self.selectedProposalID != nextID else { return }
-            self.selectedProposalID = nextID
+            let nextProposalID = nextID.map { IPadSkillWorkshopProposalID(value: $0) }
+            guard self.selectedProposalID != nextProposalID else { return }
+            self.selectedProposalID = nextProposalID
         }
 
         mutating func merge(_ proposal: IPadSkillProposal) {
@@ -373,7 +374,7 @@ struct IPadSkillWorkshopFeature {
                 }
 
             case let .proposalSelected(request):
-                state.selectedProposalID = request.proposalID.value
+                state.selectedProposalID = request.proposalID
                 if request.opensSheet {
                     state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: request.proposalID.value)
                 }
@@ -438,7 +439,7 @@ struct IPadSkillWorkshopFeature {
                         state: &state,
                         client: client,
                         request: .init(
-                            proposalID: .init(value: proposalID),
+                            proposalID: proposalID,
                             canRead: true,
                             force: response.force))
 
@@ -784,7 +785,7 @@ struct IPadSkillWorkshopScreen: View {
                     IPadSkillProposalKanbanColumn(
                         status: status,
                         proposals: self.proposals(forLaneStatus: status),
-                        selectedProposalID: self.store.selectedProposalID,
+                        selectedProposalID: self.store.selectedProposalID?.value,
                         inspectingProposalID: self.store.inspectingProposalID,
                         canApplyProposalMutations: self.canApplyProposalMutations,
                         busyAction: self.store.busyAction,
@@ -834,7 +835,7 @@ struct IPadSkillWorkshopScreen: View {
                     } label: {
                         IPadSkillProposalRow(
                             proposal: proposal,
-                            isSelected: proposal.id == self.store.selectedProposalID,
+                            isSelected: proposal.id == self.store.selectedProposalID?.value,
                             isBusy: self.store.inspectingProposalID == proposal.id)
                     }
                     .buttonStyle(.plain)

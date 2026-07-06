@@ -39,7 +39,7 @@ struct IPadSkillWorkshopFeatureTests {
         await store.receive(.refreshResponse(.init(force: false, result: .success(manifest)))) {
             $0.isLoading = .init(value: false)
             $0.proposals = [IPadSkillProposal(entry: entry, previous: nil)]
-            $0.selectedProposalID = "pending-1"
+            $0.selectedProposalID = .init(value: "pending-1")
             $0.inspectingProposalID = "pending-1"
         }
         await store.receive(.inspectResponse(.init(
@@ -59,7 +59,7 @@ struct IPadSkillWorkshopFeatureTests {
             Self.proposal(id: "applied-1", status: "applied", title: "Applied Proposal"),
             Self.proposal(id: "pending-1", status: "pending", title: "Pending Proposal"),
         ]
-        initialState.selectedProposalID = "applied-1"
+        initialState.selectedProposalID = .init(value: "applied-1")
         let store = TestStore(initialState: initialState) {
             IPadSkillWorkshopFeature(client: Self.client())
         }
@@ -69,7 +69,7 @@ struct IPadSkillWorkshopFeatureTests {
         }
         await store.send(.statusFilterChanged(.init(filter: .init(value: "pending")))) {
             $0.statusFilter = .init(value: "pending")
-            $0.selectedProposalID = "pending-1"
+            $0.selectedProposalID = .init(value: "pending-1")
         }
         await store.send(.queryChanged(.init(query: .init(value: "missing")))) {
             $0.query = .init(value: "missing")
@@ -77,7 +77,7 @@ struct IPadSkillWorkshopFeatureTests {
         }
         await store.send(.clearQueryTapped) {
             $0.query = .init(value: "")
-            $0.selectedProposalID = "pending-1"
+            $0.selectedProposalID = .init(value: "pending-1")
         }
     }
 
@@ -87,7 +87,7 @@ struct IPadSkillWorkshopFeatureTests {
         let refreshedManifest = IPadSkillProposalManifest(proposals: [after])
         var initialState = IPadSkillWorkshopFeature.State()
         initialState.proposals = [IPadSkillProposal(entry: before, previous: nil)]
-        initialState.selectedProposalID = "pending-1"
+        initialState.selectedProposalID = .init(value: "pending-1")
         let store = TestStore(initialState: initialState) {
             IPadSkillWorkshopFeature(client: Self.client(
                 list: { _ in refreshedManifest },
