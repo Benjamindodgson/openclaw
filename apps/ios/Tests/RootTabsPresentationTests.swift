@@ -1608,11 +1608,11 @@ struct RootTabsPresentationTests {
     {
         RootSidebarFeature.LayoutModeResolution(
             layoutMode: layoutMode,
-            force: force)
+            force: .init(isForced: force))
     }
 
     private static func sidebarVisibilityChange(isVisible: Bool) -> RootSidebarFeature.VisibilityChange {
-        RootSidebarFeature.VisibilityChange(isVisible: isVisible)
+        RootSidebarFeature.VisibilityChange(visibility: .init(isVisible: isVisible))
     }
 
     private static func tabSelection(_ tab: RootTabs.AppTab) -> RootNavigationSelectionFeature.TabSelection {
