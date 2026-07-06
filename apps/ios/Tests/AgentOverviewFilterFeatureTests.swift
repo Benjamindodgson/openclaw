@@ -369,9 +369,11 @@ struct AgentOverviewLoadFeatureTests {
         {
             $0.isLoading = true
             $0.nextRefreshRequestID = 1
-            $0.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(id: 1, activeAgentID: "mobile")
+            $0.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
+                id: .init(value: 1),
+                activeAgentID: "mobile")
         }
-        await store.send(.refreshLaunched(.init(requestID: 1))) {
+        await store.send(.refreshLaunched(.init(requestID: .init(value: 1)))) {
             $0.refreshRequest = nil
         }
     }
@@ -381,7 +383,9 @@ struct AgentOverviewLoadFeatureTests {
         initialState.overview = Self.snapshot(hasLiveData: true)
         initialState.errorText = "old warning"
         initialState.isLoading = true
-        initialState.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(id: 1, activeAgentID: "mobile")
+        initialState.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
+            id: .init(value: 1),
+            activeAgentID: "mobile")
         let store = TestStore(initialState: initialState) {
             AgentOverviewLoadFeature()
         }
@@ -419,7 +423,7 @@ struct AgentOverviewLoadFeatureTests {
             AgentOverviewLoadFeature()
         }
 
-        await store.send(.refreshFinished(.init(snapshot: snapshot, requestID: 1))) {
+        await store.send(.refreshFinished(.init(snapshot: snapshot, requestID: .init(value: 1)))) {
             $0.overview = snapshot
             $0.isLoading = false
         }
@@ -433,7 +437,7 @@ struct AgentOverviewLoadFeatureTests {
             AgentOverviewLoadFeature()
         }
 
-        await store.send(.refreshFinished(.init(snapshot: snapshot, requestID: 1))) {
+        await store.send(.refreshFinished(.init(snapshot: snapshot, requestID: .init(value: 1)))) {
             $0.overview = snapshot
             $0.errorText = "Live overview could not load yet."
             $0.isLoading = false

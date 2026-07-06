@@ -776,12 +776,16 @@ struct AgentClawHubSearchFeature {
 
 @Reducer
 struct AgentOverviewLoadFeature {
-    struct RefreshRequest: Equatable {
-        let id: Int
+    // swiftformat:disable redundantSendable
+    struct AgentOverviewRefreshRequestID: Equatable, Sendable {
+        var value: Int
+    }
+
+    struct RefreshRequest: Equatable, Sendable {
+        let id: AgentOverviewRefreshRequestID
         let activeAgentID: String
     }
 
-    // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var overview: AgentOverviewSnapshot?
@@ -811,12 +815,12 @@ struct AgentOverviewLoadFeature {
         }
 
         struct RefreshLaunch: Equatable, Sendable {
-            var requestID: Int
+            var requestID: AgentOverviewRefreshRequestID
         }
 
         struct RefreshResult: Equatable, Sendable {
             var snapshot: AgentOverviewSnapshot
-            var requestID: Int
+            var requestID: AgentOverviewRefreshRequestID
         }
 
         case refreshFinished(RefreshResult)
@@ -845,7 +849,7 @@ struct AgentOverviewLoadFeature {
 
                 state.nextRefreshRequestID += 1
                 state.refreshRequest = RefreshRequest(
-                    id: state.nextRefreshRequestID,
+                    id: .init(value: state.nextRefreshRequestID),
                     activeAgentID: request.activeAgent.value)
                 state.isLoading = true
                 state.errorText = nil
