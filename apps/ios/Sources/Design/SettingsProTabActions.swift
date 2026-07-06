@@ -453,7 +453,7 @@ extension SettingsProTab {
 
         switch result {
         case let .blocked(blocked):
-            if let statusText = blocked.statusText {
+            if let statusText = blocked.statusText.value {
                 self.gatewaySetupStatusStore.send(.statusChanged(.init(statusText: .init(value: statusText))))
             }
             return false

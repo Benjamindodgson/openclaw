@@ -2937,11 +2937,16 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("enum GatewayPreflightResult: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct Blocked: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct LocalNetworkAccess: Equatable, Sendable"))
+        #expect(gatewaySetupFeaturesSource
+            .contains("struct GatewayPreflightStatusText: Equatable, Sendable { var value: String? }"))
+        #expect(gatewaySetupFeaturesSource.contains("var statusText: GatewayPreflightStatusText"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayTailnetIPv4Availability: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("var host: ManualGatewayHost"))
         #expect(gatewaySetupFeaturesSource.contains("var hasTailnetIPv4: ManualGatewayTailnetIPv4Availability"))
         #expect(gatewaySetupFeaturesSource.contains("let trimmed = request.host.value.trimmingCharacters"))
         #expect(gatewaySetupFeaturesSource.contains("!request.hasTailnetIPv4.value"))
+        #expect(gatewaySetupFeaturesSource
+            .contains("state.preflightResult = .blocked(.init(statusText: .init(value: nil)))"))
         #expect(gatewaySetupFeaturesSource.contains("case preflightRequested(GatewayPreflightRequest)"))
         #expect(gatewaySetupFeaturesSource.contains("struct SettingsLocalNetworkAccessClient"))
         #expect(gatewaySetupFeaturesSource.contains(
@@ -2955,8 +2960,11 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.preflightRequested(.init("))
         #expect(preflightFunction.contains("host: .init(value: host)"))
         #expect(preflightFunction.contains("hasTailnetIPv4: .init(value: Self.hasTailnetIPv4())"))
+        #expect(preflightFunction.contains("if let statusText = blocked.statusText.value"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.preflightResultHandled)"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested(.init("))
+        #expect(!gatewaySetupFeaturesSource.contains("var statusText: String?"))
+        #expect(!preflightFunction.contains("if let statusText = blocked.statusText {"))
         #expect(!actionsSource.contains("self.gatewayController.requestLocalNetworkAccess(reason: reason)"))
         #expect(!preflightFunction.contains("SettingsManualGatewayEndpointFeature.State.isTailnetHostOrIP"))
         #expect(!preflightFunction.contains("\"Tailscale is off on this device. Turn it on, then try again.\""))
