@@ -406,7 +406,11 @@ struct ChatViewModelLifecycleFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var transportModeID = ""
+        var transportMode = ChatTransportModeID(value: "")
+
+        var transportModeID: String {
+            self.transportMode.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -421,7 +425,7 @@ struct ChatViewModelLifecycleFeature {
         Reduce { state, action in
             switch action {
             case let .transportModeRecorded(record):
-                state.transportModeID = record.transportModeID.value
+                state.transportMode = record.transportModeID
                 return .none
             }
         }

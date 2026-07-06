@@ -106,10 +106,10 @@ struct GatewayStatusBuilderTests {
         }
 
         await store.send(.transportModeRecorded(.init(transportModeID: .init(value: "gateway")))) {
-            $0.transportModeID = "gateway"
+            $0.transportMode = .init(value: "gateway")
         }
         await store.send(.transportModeRecorded(.init(transportModeID: .init(value: "demo")))) {
-            $0.transportModeID = "demo"
+            $0.transportMode = .init(value: "demo")
         }
     }
 
