@@ -1826,7 +1826,7 @@ struct SettingsNavigationFeatureTests {
         await store.send(.defaultShareInstructionChanged(.init(
             instruction: .init(value: "Summarize this for my agent."))))
         {
-            $0.defaultShareInstruction = "Summarize this for my agent."
+            $0.defaultShareInstructionValue = .init(value: "Summarize this for my agent.")
         }
     }
 
@@ -1834,13 +1834,13 @@ struct SettingsNavigationFeatureTests {
         let probe = SettingsShareInstructionPersistenceProbe()
         probe.defaultInstruction = "Use the research agent."
         var initialState = SettingsShareInstructionFeature.State()
-        initialState.defaultShareInstruction = "Previous value"
+        initialState.defaultShareInstructionValue = .init(value: "Previous value")
         let store = TestStore(initialState: initialState) {
             SettingsShareInstructionFeature(persistenceClient: probe.client)
         }
 
         await store.send(.defaultShareInstructionLoadRequested) {
-            $0.defaultShareInstruction = "Use the research agent."
+            $0.defaultShareInstructionValue = .init(value: "Use the research agent.")
         }
     }
 
