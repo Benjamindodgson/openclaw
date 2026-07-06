@@ -31,6 +31,8 @@ extension DependencyValues {
 // swiftformat:disable redundantSendable
 struct IPadActivitySessionsFailureMessage: Equatable, Sendable { var value: String }
 struct IPadActivitySessionsLoadingInFlight: Equatable, Sendable { var value: Bool }
+struct IPadActivitySceneActive: Equatable, Sendable { var value: Bool }
+struct IPadActivitySessionsAvailable: Equatable, Sendable { var value: Bool }
 
 enum IPadActivitySessionsError: Error, Equatable, Sendable {
     case failed
@@ -57,11 +59,11 @@ struct IPadActivitySessionsFeature {
 
     enum Action: Equatable, Sendable {
         struct SceneActivity: Equatable, Sendable {
-            var isActive: Bool
+            var isActive: IPadActivitySceneActive
         }
 
         struct SessionsAvailability: Equatable, Sendable {
-            var isAvailable: Bool
+            var isAvailable: IPadActivitySessionsAvailable
         }
 
         struct RefreshRequest: Equatable, Sendable {
@@ -91,11 +93,11 @@ struct IPadActivitySessionsFeature {
                 return .none
 
             case let .refreshRequested(request):
-                guard request.sceneActivity.isActive else {
+                guard request.sceneActivity.isActive.value else {
                     state.isLoading = .init(value: false)
                     return .none
                 }
-                guard request.sessionsAvailability.isAvailable else {
+                guard request.sessionsAvailability.isAvailable.value else {
                     state.isLoading = .init(value: false)
                     state.sessions = []
                     state.loadErrorText = nil
@@ -350,8 +352,8 @@ struct IPadActivityScreen: View {
 
     private func refreshSessions() async {
         await self.store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: self.scenePhase == .active),
-            sessionsAvailability: .init(isAvailable: self.sessionsAvailable)))).finish()
+            sceneActivity: .init(isActive: .init(value: self.scenePhase == .active)),
+            sessionsAvailability: .init(isAvailable: .init(value: self.sessionsAvailable))))).finish()
     }
 
     private func open(_ item: CommandCenterTab.WorkItem) {
