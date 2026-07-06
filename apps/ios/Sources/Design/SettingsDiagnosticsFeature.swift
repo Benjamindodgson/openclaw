@@ -10,31 +10,33 @@ struct SettingsDiagnosticsFeature {
 
     @ObservableState
     struct State: Equatable, Sendable {
-        var discoveredGatewayCount = 0
+        var discoveredGatewayCount = Action.DiscoveredGatewayCount(value: 0)
         var discoveryStatusText = DiscoveryStatusText(value: "Discovery idle")
-        var gatewayConnected = false
+        var gatewayConnected = Action.DiagnosticsGatewayConnected(value: false)
         var issueCount: Int?
-        var isAppleReviewDemoModeEnabled = false
+        var isAppleReviewDemoModeEnabled = Action.AppleReviewDemoModeEnabled(value: false)
         var lastRunText = LastRunText(value: "Not run")
-        var screenRecordActive = false
+        var screenRecordActive = Action.ScreenRecordActive(value: false)
 
         var detailText: String {
             "System checks"
         }
 
         var healthValue: String {
-            if self.isAppleReviewDemoModeEnabled { return "demo" }
-            if self.gatewayConnected { return "ready" }
-            if self.discoveredGatewayCount == 0 { return "check" }
+            if self.isAppleReviewDemoModeEnabled.value { return "demo" }
+            if self.gatewayConnected.value { return "ready" }
+            if self.discoveredGatewayCount.value == 0 { return "check" }
             return "partial"
         }
 
         var healthColor: Color {
-            self.isAppleReviewDemoModeEnabled || self.gatewayConnected ? OpenClawBrand.ok : OpenClawBrand.warn
+            self.isAppleReviewDemoModeEnabled.value || self.gatewayConnected.value
+                ? OpenClawBrand.ok
+                : OpenClawBrand.warn
         }
 
         var discoveryValue: String {
-            "\(self.discoveredGatewayCount)"
+            "\(self.discoveredGatewayCount.value)"
         }
 
         var discoveryColor: Color {
@@ -42,15 +44,15 @@ struct SettingsDiagnosticsFeature {
         }
 
         var hasDiscoveredGateway: Bool {
-            self.discoveredGatewayCount > 0
+            self.discoveredGatewayCount.value > 0
         }
 
         var screenCaptureValue: String {
-            self.screenRecordActive ? "live" : "idle"
+            self.screenRecordActive.value ? "live" : "idle"
         }
 
         var screenCaptureColor: Color {
-            self.screenRecordActive ? OpenClawBrand.ok : .secondary
+            self.screenRecordActive.value ? OpenClawBrand.ok : .secondary
         }
 
         var runValue: String {
@@ -98,11 +100,11 @@ struct SettingsDiagnosticsFeature {
         Reduce { state, action in
             switch action {
             case let .diagnosticsContextSynced(sync):
-                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled.value
-                state.gatewayConnected = sync.gatewayConnected.value
-                state.discoveredGatewayCount = sync.discoveredGatewayCount.value
+                state.isAppleReviewDemoModeEnabled = sync.isAppleReviewDemoModeEnabled
+                state.gatewayConnected = sync.gatewayConnected
+                state.discoveredGatewayCount = sync.discoveredGatewayCount
                 state.discoveryStatusText = sync.discoveryStatusText
-                state.screenRecordActive = sync.screenRecordActive.value
+                state.screenRecordActive = sync.screenRecordActive
                 return .none
 
             case let .diagnosticsCompletionRequested(request):
