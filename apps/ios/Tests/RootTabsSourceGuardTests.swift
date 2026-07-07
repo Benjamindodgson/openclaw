@@ -184,9 +184,13 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("state.copyFeedback = .init(value: \"Copied request ID\")"))
         #expect(source.contains("state.copyFeedback = .init(value: \"Copied command\")"))
         #expect(source.contains("Text(copyFeedback.value)"))
+        #expect(source.contains("store: StoreOf<GatewayProblemDetailsFeature>? = nil"))
+        #expect(source.contains("storeFactory: () -> StoreOf<GatewayProblemDetailsFeature>"))
+        #expect(source.contains("let resolvedStore = store ?? storeFactory()"))
         #expect(!source.contains("var copyFeedback: String?"))
         #expect(!source.contains("state.copyFeedback = \"Copied request ID\""))
         #expect(!source.contains("state.copyFeedback = \"Copied command\""))
+        #expect(!source.contains("store: StoreOf<GatewayProblemDetailsFeature> = Store("))
     }
 
     @Test func `gateway display status inputs are typed reducer state`() throws {
