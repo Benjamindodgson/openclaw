@@ -117,13 +117,16 @@ struct TalkRuntimeIssueDetailsSheet: View {
     init(
         issue: TalkRuntimeIssue,
         onOpenSettings: (() -> Void)? = nil,
-        store: StoreOf<TalkRuntimeIssueDetailsFeature>? = nil)
+        store: StoreOf<TalkRuntimeIssueDetailsFeature>? = nil,
+        storeFactory: (TalkRuntimeIssue) -> StoreOf<TalkRuntimeIssueDetailsFeature> = { issue in
+            Store(initialState: TalkRuntimeIssueDetailsFeature.State(issue: issue)) {
+                TalkRuntimeIssueDetailsFeature()
+            }
+        })
     {
         self.issue = issue
         self.onOpenSettings = onOpenSettings
-        let resolvedStore = store ?? Store(initialState: TalkRuntimeIssueDetailsFeature.State(issue: issue)) {
-            TalkRuntimeIssueDetailsFeature()
-        }
+        let resolvedStore = store ?? storeFactory(issue)
         self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
