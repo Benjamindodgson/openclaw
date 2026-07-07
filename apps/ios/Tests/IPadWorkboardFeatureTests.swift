@@ -57,6 +57,22 @@ struct IPadWorkboardFeatureTests {
             .createUnavailableMessage(canRead: true, canWrite: true) == "Card creation is already in progress.")
     }
 
+    @Test func `kanban cards are filtered by reducer state`() {
+        var state = IPadWorkboardFeature.State()
+        state.cardEntries = .init(values: [
+            Self.card(id: "todo-match", title: "Gateway fix", status: "todo", position: 30),
+            Self.card(id: "todo-other", title: "Other", status: "todo", position: 10),
+            Self.card(id: "done-match", title: "Gateway shipped", status: "done", position: 20),
+            Self.card(id: "archived-match", title: "Gateway archived", status: "todo", position: 5, archivedAt: 1),
+        ])
+        state.query = .init(value: "gateway")
+
+        #expect(state.cards(forKanbanStatus: "todo").map(\.id) == ["todo-match"])
+
+        state.selectedStatus = .init(value: "todo")
+        #expect(state.cards(forKanbanStatus: "todo").map(\.id) == ["archived-match", "todo-match"])
+    }
+
     @Test func `refresh loads cards and board scopes through client`() async {
         let card = Self.card(id: "card-1", status: "todo", position: 20, boardID: "planning")
         let response = IPadWorkboardCardsResponse(cards: [card], statuses: ["todo", "done"])
