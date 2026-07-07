@@ -893,11 +893,11 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.sidebarNavigationPathChanged(Self.sidebarNavigationPathChange([.voice]))) {
-            $0.sidebarNavigationPath = [.voice]
+            $0.sidebarNavigationPathState = .init(routes: [.voice])
         }
 
         await store.send(.sidebarDestinationSelected(Self.sidebarDestinationSelection(.gateway))) {
-            $0.sidebarNavigationPath = []
+            $0.sidebarNavigationPathState = .init(routes: [])
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .gateway
             $0.selectedSettingsRoute = .gateway
@@ -917,11 +917,11 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.sidebarNavigationPathChanged(Self.sidebarNavigationPathChange([.privacy]))) {
-            $0.sidebarNavigationPath = [.privacy]
+            $0.sidebarNavigationPathState = .init(routes: [.privacy])
         }
 
         await store.send(.settingsRouteSelected(Self.settingsRouteSelection(.voice))) {
-            $0.sidebarNavigationPath = []
+            $0.sidebarNavigationPathState = .init(routes: [])
             $0.selectedTab = .settings
             $0.selectedSidebarDestination = .settings
             $0.selectedSettingsRoute = .voice
@@ -981,7 +981,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.sidebarSettingsRoutePushed(Self.sidebarSettingsRoutePush(.privacy))) {
-            $0.sidebarNavigationPath = [.privacy]
+            $0.sidebarNavigationPathState = .init(routes: [.privacy])
         }
 
         await store.send(.settingsRouteChanged(Self.settingsRouteChange(.notifications)))
@@ -1674,7 +1674,7 @@ struct RootTabsPresentationTests {
         _ path: [SettingsRoute])
         -> RootNavigationSelectionFeature.SidebarNavigationPathChange
     {
-        RootNavigationSelectionFeature.SidebarNavigationPathChange(path: path)
+        RootNavigationSelectionFeature.SidebarNavigationPathChange(path: .init(routes: path))
     }
 
     private static func sidebarSettingsRoutePush(
