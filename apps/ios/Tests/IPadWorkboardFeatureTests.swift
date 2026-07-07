@@ -92,7 +92,7 @@ struct IPadWorkboardFeatureTests {
         {
             $0.refreshPhase = .idle
             $0.cardEntries = .init(values: [card])
-            $0.statuses = [.init(value: "todo"), .init(value: "done")]
+            $0.statusEntries = .init(values: [.init(value: "todo"), .init(value: "done")])
             $0.knownBoardIDs = [.init(value: "planning")]
         }
         await store.receive(.boardScopesResponse(.init(force: .init(isForced: false), result: .success(boards)))) {
@@ -175,7 +175,7 @@ struct IPadWorkboardFeatureTests {
         }
         var initialState = IPadWorkboardFeature.State()
         initialState.cardEntries = .init(values: [existing])
-        initialState.statuses = [.init(value: "todo"), .init(value: "ready")]
+        initialState.statusEntries = .init(values: [.init(value: "todo"), .init(value: "ready")])
         initialState.selectedStatus = .init(value: "ready")
         initialState.selectedBoardID = .init(value: "planning")
         initialState.presentedSheet = .create
@@ -303,7 +303,7 @@ struct IPadWorkboardFeatureTests {
             $0.dispatchPhase = .idle
             $0.dispatchSummaryText = .init(value: "1 dispatched: 1 started.")
             $0.cardEntries = .init(values: [refreshed])
-            $0.statuses = [.init(value: "running")]
+            $0.statusEntries = .init(values: [.init(value: "running")])
             $0.knownBoardIDs = [.init(value: "default")]
         }
     }
@@ -327,7 +327,7 @@ struct IPadWorkboardFeatureTests {
         {
             $0.refreshPhase = .idle
             $0.cardEntries = .init(values: [refreshed])
-            $0.statuses = [.init(value: "todo")]
+            $0.statusEntries = .init(values: [.init(value: "todo")])
             $0.knownBoardIDs = [.init(value: "default")]
         }
         await store.receive(.boardScopesResponse(.init(force: .init(isForced: true), result: .success([]))))
