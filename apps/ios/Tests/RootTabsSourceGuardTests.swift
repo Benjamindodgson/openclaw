@@ -3252,6 +3252,10 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding gateway snapshot action is typed`() throws {
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateBlock = try Self.extract(
+            onboardingStateSource,
+            from: "@ObservableState\n    struct State: Equatable, Sendable",
+            to: "        init(")
         let gatewaySnapshotChange = try Self.extract(
             onboardingStateSource,
             from: "struct GatewaySnapshotChange",
@@ -3264,9 +3268,11 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySnapshotChange.contains("var hasSavedGatewayConnection: OnboardingHasSavedGatewayConnection"))
         #expect(onboardingStateSource.contains("case gatewaySnapshotChanged(GatewaySnapshotChange)"))
         #expect(onboardingStateSource.contains("state.gatewayServerName = snapshot.gatewayServerName.value"))
-        #expect(onboardingStateSource.contains("state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection.value"))
+        #expect(onboardingStateSource.contains("state.savedGatewayConnection = snapshot.hasSavedGatewayConnection"))
+        #expect(onboardingStateSource.contains("var savedGatewayConnection: OnboardingHasSavedGatewayConnection"))
         #expect(!gatewaySnapshotChange.contains("var gatewayServerName: String?"))
         #expect(!gatewaySnapshotChange.contains("var hasSavedGatewayConnection: Bool"))
+        #expect(!onboardingStateBlock.contains("var hasSavedGatewayConnection: Bool"))
     }
 
     @Test func `onboarding completion mark action is typed`() throws {
@@ -3275,6 +3281,29 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct CompletionMark: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case markCompleted(CompletionMark)"))
         #expect(onboardingStateSource.contains("if let mode = mark.mode"))
+    }
+
+    @Test func `onboarding reducer stores presentation flags as typed state`() throws {
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateBlock = try Self.extract(
+            onboardingStateSource,
+            from: "@ObservableState\n    struct State: Equatable, Sendable",
+            to: "        init(")
+
+        #expect(onboardingStateSource.contains("struct OnboardingCompletion: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingFirstRunIntroSeen: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingLaunchPresentation: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingFirstRunIntroPresentation: Equatable, Sendable"))
+        #expect(onboardingStateBlock.contains("var completion: OnboardingCompletion"))
+        #expect(onboardingStateBlock.contains("var firstRunIntroSeenState: OnboardingFirstRunIntroSeen"))
+        #expect(onboardingStateBlock.contains("var launchPresentation: OnboardingLaunchPresentation"))
+        #expect(onboardingStateBlock.contains("var firstRunIntroPresentation: OnboardingFirstRunIntroPresentation"))
+        #expect(onboardingStateSource.contains("state.completion = .init(isCompleted: true)"))
+        #expect(onboardingStateSource.contains("state.firstRunIntroSeenState = .init(value: true)"))
+        #expect(!onboardingStateBlock.contains("var isCompleted: Bool"))
+        #expect(!onboardingStateBlock.contains("var firstRunIntroSeen: Bool"))
+        #expect(!onboardingStateBlock.contains("var shouldPresentOnLaunch: Bool"))
+        #expect(!onboardingStateBlock.contains("var shouldPresentFirstRunIntro: Bool"))
     }
 
     @Test func `onboarding gateway connected action is typed`() throws {
