@@ -37,52 +37,6 @@ struct RootTabs: View {
 
     @State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>
 
-    init(
-        navigationStore: StoreOf<RootNavigationSelectionFeature> = Store(
-            initialState: RootNavigationSelectionFeature.State(
-                selectedTab: Self.initialTab,
-                selectedSidebarDestination: Self.initialSidebarDestination))
-        {
-            RootNavigationSelectionFeature()
-        },
-        sidebarStore: StoreOf<RootSidebarFeature> = Store(
-            initialState: RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility))
-        {
-            RootSidebarFeature()
-        },
-        launchStore: StoreOf<RootLaunchFeature> = Store(initialState: RootLaunchFeature.State()) {
-            RootLaunchFeature()
-        },
-        voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature> = Store(
-            initialState: RootVoiceWakeToastFeature.State())
-        {
-            RootVoiceWakeToastFeature()
-        },
-        presentationStore: StoreOf<RootPresentationFeature> = Store(
-            initialState: RootPresentationFeature.State())
-        {
-            RootPresentationFeature()
-        },
-        idleTimerStore: StoreOf<RootIdleTimerFeature> = Store(
-            initialState: RootIdleTimerFeature.State())
-        {
-            RootIdleTimerFeature(client: .live)
-        },
-        homeCanvasStore: StoreOf<RootHomeCanvasFeature> = Store(
-            initialState: RootHomeCanvasFeature.State())
-        {
-            RootHomeCanvasFeature()
-        })
-    {
-        self._navigationStore = State(wrappedValue: navigationStore)
-        self._sidebarStore = State(wrappedValue: sidebarStore)
-        self._launchStore = State(wrappedValue: launchStore)
-        self._voiceWakeToastStore = State(wrappedValue: voiceWakeToastStore)
-        self._presentationStore = State(wrappedValue: presentationStore)
-        self._idleTimerStore = State(wrappedValue: idleTimerStore)
-        self._homeCanvasStore = State(wrappedValue: homeCanvasStore)
-    }
-
     private static var initialTab: AppTab {
         Self.initialTab(arguments: ProcessInfo.processInfo.arguments)
     }
@@ -981,6 +935,72 @@ struct RootTabs: View {
 
     private func makeHomeCanvasSnapshot() -> RootHomeCanvasFeature.Snapshot {
         RootHomeCanvasFeature.Snapshot(appModel: self.appModel, gatewayStatus: self.gatewayStatus)
+    }
+}
+
+extension RootTabs {
+    init(
+        navigationStore: StoreOf<RootNavigationSelectionFeature>? = nil,
+        navigationStoreFactory: () -> StoreOf<RootNavigationSelectionFeature> = {
+            Store(
+                initialState: RootNavigationSelectionFeature.State(
+                    selectedTab: Self.initialTab,
+                    selectedSidebarDestination: Self.initialSidebarDestination))
+            {
+                RootNavigationSelectionFeature()
+            }
+        },
+        sidebarStore: StoreOf<RootSidebarFeature>? = nil,
+        sidebarStoreFactory: () -> StoreOf<RootSidebarFeature> = {
+            Store(initialState: RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility)) {
+                RootSidebarFeature()
+            }
+        },
+        launchStore: StoreOf<RootLaunchFeature>? = nil,
+        launchStoreFactory: () -> StoreOf<RootLaunchFeature> = {
+            Store(initialState: RootLaunchFeature.State()) {
+                RootLaunchFeature()
+            }
+        },
+        voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature>? = nil,
+        voiceWakeToastStoreFactory: () -> StoreOf<RootVoiceWakeToastFeature> = {
+            Store(initialState: RootVoiceWakeToastFeature.State()) {
+                RootVoiceWakeToastFeature()
+            }
+        },
+        presentationStore: StoreOf<RootPresentationFeature>? = nil,
+        presentationStoreFactory: () -> StoreOf<RootPresentationFeature> = {
+            Store(initialState: RootPresentationFeature.State()) {
+                RootPresentationFeature()
+            }
+        },
+        idleTimerStore: StoreOf<RootIdleTimerFeature>? = nil,
+        idleTimerStoreFactory: () -> StoreOf<RootIdleTimerFeature> = {
+            Store(initialState: RootIdleTimerFeature.State()) {
+                RootIdleTimerFeature(client: .live)
+            }
+        },
+        homeCanvasStore: StoreOf<RootHomeCanvasFeature>? = nil,
+        homeCanvasStoreFactory: () -> StoreOf<RootHomeCanvasFeature> = {
+            Store(initialState: RootHomeCanvasFeature.State()) {
+                RootHomeCanvasFeature()
+            }
+        })
+    {
+        let resolvedNavigationStore = navigationStore ?? navigationStoreFactory()
+        let resolvedSidebarStore = sidebarStore ?? sidebarStoreFactory()
+        let resolvedLaunchStore = launchStore ?? launchStoreFactory()
+        let resolvedVoiceWakeToastStore = voiceWakeToastStore ?? voiceWakeToastStoreFactory()
+        let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
+        let resolvedIdleTimerStore = idleTimerStore ?? idleTimerStoreFactory()
+        let resolvedHomeCanvasStore = homeCanvasStore ?? homeCanvasStoreFactory()
+        self._navigationStore = State(wrappedValue: resolvedNavigationStore)
+        self._sidebarStore = State(wrappedValue: resolvedSidebarStore)
+        self._launchStore = State(wrappedValue: resolvedLaunchStore)
+        self._voiceWakeToastStore = State(wrappedValue: resolvedVoiceWakeToastStore)
+        self._presentationStore = State(wrappedValue: resolvedPresentationStore)
+        self._idleTimerStore = State(wrappedValue: resolvedIdleTimerStore)
+        self._homeCanvasStore = State(wrappedValue: resolvedHomeCanvasStore)
     }
 }
 
