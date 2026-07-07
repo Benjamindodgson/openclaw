@@ -575,6 +575,7 @@ struct CommandCenterGatewayPresentationFeature {
 struct CommandCenterGatewayRemoteAddress: Equatable, Sendable { var value: String? }
 struct CommandCenterGatewayServerName: Equatable, Sendable { var value: String? }
 struct CommandCenterGatewayActiveAgentName: Equatable, Sendable { var value: String }
+struct CommandCenterGatewayDisplayStatusText: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
 struct CommandCenterGatewayPresentationState: Equatable {
@@ -583,7 +584,7 @@ struct CommandCenterGatewayPresentationState: Equatable {
     var gatewayServerNameState = CommandCenterGatewayServerName(value: nil)
     var gatewayAgentCount = 0
     var activeAgentNameState = CommandCenterGatewayActiveAgentName(value: "Default Agent")
-    var gatewayDisplayStatusText = "Offline"
+    var gatewayDisplayStatusTextState = CommandCenterGatewayDisplayStatusText(value: "Offline")
 
     init(
         gatewayDisplayState: GatewayDisplayState = .disconnected,
@@ -598,7 +599,7 @@ struct CommandCenterGatewayPresentationState: Equatable {
         self.gatewayServerNameState = .init(value: gatewayServerName)
         self.gatewayAgentCount = gatewayAgentCount
         self.activeAgentNameState = .init(value: activeAgentName)
-        self.gatewayDisplayStatusText = gatewayDisplayStatusText
+        self.gatewayDisplayStatusTextState = .init(value: gatewayDisplayStatusText)
     }
 
     var isConnected: Bool {
@@ -615,6 +616,10 @@ struct CommandCenterGatewayPresentationState: Equatable {
 
     var activeAgentName: String {
         self.activeAgentNameState.value
+    }
+
+    var gatewayDisplayStatusText: String {
+        self.gatewayDisplayStatusTextState.value
     }
 
     var connectionText: String {
