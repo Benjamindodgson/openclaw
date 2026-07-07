@@ -38,6 +38,7 @@ enum IPadActivitySessionsLoadingPhase: Equatable, Sendable {
 
 struct IPadActivitySceneActive: Equatable, Sendable { var value: Bool }
 struct IPadActivitySessionsAvailable: Equatable, Sendable { var value: Bool }
+struct IPadActivitySessionReferenceKey: Equatable, Sendable { var value: String }
 struct IPadActivitySessionEntries: Equatable, Sendable {
     var entries: [OpenClawChatSessionEntry] = []
 }
@@ -60,12 +61,24 @@ struct IPadActivitySessionsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var sessionEntries = IPadActivitySessionEntries()
+        var currentSession = IPadActivitySessionReferenceKey(value: "")
+        var defaultSession = IPadActivitySessionReferenceKey(value: "")
         var loadingPhase = IPadActivitySessionsLoadingPhase.idle
         var loadErrorText: IPadActivitySessionsFailureMessage?
         var gatewayPresentation = IPadActivityGatewayPresentationState()
 
         var sessions: [OpenClawChatSessionEntry] {
             self.sessionEntries.entries
+        }
+
+        var visibleSessions: [OpenClawChatSessionEntry] {
+            Array(
+                self.sessionEntries.entries
+                    .filter {
+                        CommandCenterTab.isRecentChatSession($0.key, defaultSessionKey: self.defaultSession.value)
+                    }
+                    .sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
+                    .prefix(8))
         }
     }
 
@@ -81,10 +94,16 @@ struct IPadActivitySessionsFeature {
         struct RefreshRequest: Equatable, Sendable {
             var sceneActivity: SceneActivity
             var sessionsAvailability: SessionsAvailability
+            var currentSession: SessionReference
+            var defaultSession: SessionReference
         }
 
         struct RefreshResponse: Equatable, Sendable {
             var result: Result<IPadActivitySessionEntries, IPadActivitySessionsError>
+        }
+
+        struct SessionReference: Equatable, Sendable {
+            var key: IPadActivitySessionReferenceKey
         }
 
         case gatewayPresentationChanged(IPadActivityGatewayPresentationState)
@@ -105,6 +124,9 @@ struct IPadActivitySessionsFeature {
                 return .none
 
             case let .refreshRequested(request):
+                state.currentSession = request.currentSession.key
+                state.defaultSession = request.defaultSession.key
+
                 guard request.sceneActivity.isActive.value else {
                     state.loadingPhase = .idle
                     return .none
@@ -323,6 +345,7 @@ struct IPadActivityScreen: View {
         [
             self.sessionsMode,
             self.appModel.chatSessionKey,
+            self.appModel.defaultChatSessionKey,
             self.scenePhase == .active ? "active" : "inactive",
         ].joined(separator: ":")
     }
@@ -351,23 +374,20 @@ struct IPadActivityScreen: View {
     }
 
     private var sessionRows: [CommandCenterTab.WorkItem] {
-        self.store.sessions
-            .filter { CommandCenterTab.isRecentChatSession(
-                $0.key,
-                defaultSessionKey: self.appModel.defaultChatSessionKey) }
-            .sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
-            .prefix(8)
+        self.store.visibleSessions
             .map {
                 CommandCenterTab.sessionWorkItem(
                     for: $0,
-                    currentSessionKey: self.appModel.chatSessionKey)
+                    currentSessionKey: self.store.currentSession.value)
             }
     }
 
     private func refreshSessions() async {
         await self.store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: .init(value: self.scenePhase == .active)),
-            sessionsAvailability: .init(isAvailable: .init(value: self.sessionsAvailable))))).finish()
+            sessionsAvailability: .init(isAvailable: .init(value: self.sessionsAvailable)),
+            currentSession: .init(key: .init(value: self.appModel.chatSessionKey)),
+            defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))))).finish()
     }
 
     private func open(_ item: CommandCenterTab.WorkItem) {
