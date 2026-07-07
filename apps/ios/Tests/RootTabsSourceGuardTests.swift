@@ -3056,6 +3056,17 @@ struct RootTabsSourceGuardTests {
         #expect(notificationGuidanceSource.contains("onSuppressFuture"))
         #expect(notificationGuidanceSource.contains("suppressFuture: true"))
         #expect(notificationGuidanceSource.contains("Text(\"Don't show again\")"))
+        #expect(notificationGuidanceSource
+            .contains("store: StoreOf<NotificationPermissionGuidanceFeature>? = nil"))
+        #expect(notificationGuidanceSource
+            .contains("storeFactory: () -> StoreOf<NotificationPermissionGuidanceFeature>"))
+        #expect(notificationGuidanceSource
+            .contains("storeFactory: @escaping () -> StoreOf<NotificationPermissionGuidanceFeature>"))
+        #expect(notificationGuidanceSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(notificationGuidanceSource
+            .contains("NotificationPermissionGuidanceDialogModifier(store: store, storeFactory: storeFactory)"))
+        #expect(!notificationGuidanceSource
+            .contains("store: StoreOf<NotificationPermissionGuidanceFeature> = Store("))
         #expect(rootSource.contains("private func selectSettingsRoute(_ route: SettingsRoute)"))
         #expect(settingsSource.contains("title: \"Channels\""))
         #expect(settingsSource.contains("route: .channels"))
