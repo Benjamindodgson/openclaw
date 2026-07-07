@@ -46,6 +46,28 @@ struct AgentDreamingDestinationFeatureTests {
         #expect(state.selectedDreamDiaryDay(from: []) == nil)
     }
 
+    @Test func `dreaming entry labels are derived by reducer state`() {
+        let state = AgentDreamingDestinationFeature.State()
+        let entry = DreamingEntryLite(
+            key: "memory",
+            path: "/agent/memory/DREAMS.md",
+            startLine: 42,
+            endLine: 45,
+            snippet: "remember this",
+            recallCount: 3,
+            dailyCount: 1,
+            groundedCount: 2,
+            totalSignalCount: 5,
+            lightHits: 1,
+            remHits: 2,
+            phaseHitCount: 3,
+            promotedAt: "today",
+            lastRecalledAt: "yesterday")
+
+        #expect(state.dreamingEntryTitle(entry) == "DREAMS.md:42")
+        #expect(state.dreamingEntryDetail(entry) == "promoted today • recalled yesterday • 3 recalls • 2 grounded")
+    }
+
     @Test func `maintenance action is ignored while gateway is disconnected`() async {
         let store = TestStore(initialState: AgentDreamingDestinationFeature.State()) {
             AgentDreamingDestinationFeature(client: Self.client())
