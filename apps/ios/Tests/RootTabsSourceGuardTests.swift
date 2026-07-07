@@ -2526,6 +2526,21 @@ struct RootTabsSourceGuardTests {
         #expect(commandCenterSource.contains("currentSession: .init(key: .init(value: self.appModel.chatSessionKey))"))
         #expect(commandCenterSource.contains(
             "defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))"))
+        #expect(commandCenterSource
+            .contains("gatewayStore: StoreOf<CommandCenterGatewayPresentationFeature>? = nil"))
+        #expect(commandCenterSource
+            .contains("gatewayStoreFactory: () -> StoreOf<CommandCenterGatewayPresentationFeature>"))
+        #expect(commandCenterSource
+            .contains("recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature>? = nil"))
+        #expect(commandCenterSource
+            .contains("recentSessionsStoreFactory: () -> StoreOf<CommandCenterRecentSessionsFeature>"))
+        #expect(commandCenterSource.contains("let resolvedGatewayStore = gatewayStore ?? gatewayStoreFactory()"))
+        #expect(commandCenterSource
+            .contains("let resolvedRecentSessionsStore = recentSessionsStore ?? recentSessionsStoreFactory()"))
+        #expect(!commandCenterSource
+            .contains("gatewayStore: StoreOf<CommandCenterGatewayPresentationFeature> = Store("))
+        #expect(!commandCenterSource
+            .contains("recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature> = Store("))
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(snapshot))))"))
         #expect(feature.contains("switch response.result"))
