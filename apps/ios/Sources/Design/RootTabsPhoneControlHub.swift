@@ -113,10 +113,11 @@ struct RootTabsPhoneControlHub: View {
         groups: [RootTabs.SidebarGroup],
         initialDestination: RootTabs.SidebarDestination?,
         openRootDestination: @escaping (RootTabs.SidebarDestination) -> Void,
-        store: StoreOf<RootTabsPhoneControlHubFeature> = Store(
-            initialState: RootTabsPhoneControlHubFeature.State())
-        {
-            RootTabsPhoneControlHubFeature()
+        store: StoreOf<RootTabsPhoneControlHubFeature>? = nil,
+        storeFactory: () -> StoreOf<RootTabsPhoneControlHubFeature> = {
+            Store(initialState: RootTabsPhoneControlHubFeature.State()) {
+                RootTabsPhoneControlHubFeature()
+            }
         },
         agentSelectionStoreFactory: @escaping @MainActor (NodeAppModel)
             -> StoreOf<AgentSelectionFeature> = { appModel in
@@ -129,7 +130,8 @@ struct RootTabsPhoneControlHub: View {
         self.initialDestination = initialDestination
         self.openRootDestination = openRootDestination
         self.agentSelectionStoreFactory = agentSelectionStoreFactory
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
