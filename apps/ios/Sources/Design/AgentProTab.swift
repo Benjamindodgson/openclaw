@@ -470,6 +470,8 @@ struct AgentSkillEditorMessage: Equatable, Sendable {
     }
 }
 
+struct AgentSkillEditorBusyKeys: Equatable, Sendable { var values: Set<AgentSkillEditorMutationKey> = [] }
+
 struct AgentSkillEditorSelection: Equatable, Identifiable, Sendable {
     var skillID: AgentSkillEditorID
 
@@ -486,9 +488,13 @@ struct AgentSkillEditorFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var apiKeyDrafts: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] = [:]
-        var busyKeys: Set<AgentSkillEditorMutationKey> = []
+        var busyKeyEntries = AgentSkillEditorBusyKeys()
         var messages: [AgentSkillEditorMutationKey: AgentSkillEditorMessage] = [:]
         var selection: AgentSkillEditorSelection?
+
+        var busyKeys: Set<AgentSkillEditorMutationKey> {
+            self.busyKeyEntries.values
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -560,7 +566,7 @@ struct AgentSkillEditorFeature {
                 return .none
 
             case let .mutationStarted(mutation):
-                state.busyKeys.insert(mutation.key)
+                state.busyKeyEntries.values.insert(mutation.key)
                 state.messages[mutation.key] = nil
                 return .none
 
@@ -571,11 +577,11 @@ struct AgentSkillEditorFeature {
                 return .none
 
             case let .mutationFinished(mutation):
-                state.busyKeys.remove(mutation.key)
+                state.busyKeyEntries.values.remove(mutation.key)
                 return .none
 
             case let .mutationFailed(failure):
-                state.busyKeys.remove(failure.key)
+                state.busyKeyEntries.values.remove(failure.key)
                 state.messages[failure.key] = AgentSkillEditorMessage(
                     kind: .error,
                     text: .init(value: failure.message.value))

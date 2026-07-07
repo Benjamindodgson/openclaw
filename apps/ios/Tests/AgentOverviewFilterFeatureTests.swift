@@ -127,14 +127,14 @@ struct AgentSkillEditorFeatureTests {
         }
 
         await store.send(.mutationStarted(.init(key: .init(value: "skill-a")))) {
-            $0.busyKeys = [.init(value: "skill-a")]
+            $0.busyKeyEntries = .init(values: [.init(value: "skill-a")])
             $0.messages = [:]
         }
     }
 
     @Test func `mutation success stores message while busy key remains active`() async {
         var initialState = AgentSkillEditorFeature.State()
-        initialState.busyKeys = [.init(value: "skill-a")]
+        initialState.busyKeyEntries = .init(values: [.init(value: "skill-a")])
         let store = TestStore(initialState: initialState) {
             AgentSkillEditorFeature()
         }
@@ -153,7 +153,7 @@ struct AgentSkillEditorFeatureTests {
 
     @Test func `mutation finish clears busy key`() async {
         var initialState = AgentSkillEditorFeature.State()
-        initialState.busyKeys = [.init(value: "skill-a"), .init(value: "skill-b")]
+        initialState.busyKeyEntries = .init(values: [.init(value: "skill-a"), .init(value: "skill-b")])
         initialState.messages = [
             .init(value: "skill-a"): AgentSkillEditorMessage(kind: .success, text: .init(value: "Skill enabled.")),
         ]
@@ -162,13 +162,13 @@ struct AgentSkillEditorFeatureTests {
         }
 
         await store.send(.mutationFinished(.init(key: .init(value: "skill-a")))) {
-            $0.busyKeys = [.init(value: "skill-b")]
+            $0.busyKeyEntries = .init(values: [.init(value: "skill-b")])
         }
     }
 
     @Test func `mutation failure clears busy key and stores error`() async {
         var initialState = AgentSkillEditorFeature.State()
-        initialState.busyKeys = [.init(value: "skill-a")]
+        initialState.busyKeyEntries = .init(values: [.init(value: "skill-a")])
         let store = TestStore(initialState: initialState) {
             AgentSkillEditorFeature()
         }
@@ -177,7 +177,7 @@ struct AgentSkillEditorFeatureTests {
             key: .init(value: "skill-a"),
             message: .init(value: "Skill failed."))))
         {
-            $0.busyKeys = []
+            $0.busyKeyEntries = .init()
             $0.messages = [
                 .init(value: "skill-a"): AgentSkillEditorMessage(kind: .error, text: .init(value: "Skill failed.")),
             ]
