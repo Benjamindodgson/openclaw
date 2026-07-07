@@ -107,13 +107,15 @@ private struct NotificationPermissionGuidanceDialogModifier: ViewModifier {
     @State private var store: StoreOf<NotificationPermissionGuidanceFeature>
 
     init(
-        store: StoreOf<NotificationPermissionGuidanceFeature> = Store(
-            initialState: NotificationPermissionGuidanceFeature.State())
-        {
-            NotificationPermissionGuidanceFeature()
+        store: StoreOf<NotificationPermissionGuidanceFeature>? = nil,
+        storeFactory: () -> StoreOf<NotificationPermissionGuidanceFeature> = {
+            Store(initialState: NotificationPermissionGuidanceFeature.State()) {
+                NotificationPermissionGuidanceFeature()
+            }
         })
     {
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     func body(content: Content) -> some View {
@@ -205,12 +207,13 @@ private struct NotificationPermissionGuidanceCard: View {
 
 extension View {
     func notificationPermissionGuidanceDialog(
-        store: StoreOf<NotificationPermissionGuidanceFeature> = Store(
-            initialState: NotificationPermissionGuidanceFeature.State())
-        {
-            NotificationPermissionGuidanceFeature()
+        store: StoreOf<NotificationPermissionGuidanceFeature>? = nil,
+        storeFactory: @escaping () -> StoreOf<NotificationPermissionGuidanceFeature> = {
+            Store(initialState: NotificationPermissionGuidanceFeature.State()) {
+                NotificationPermissionGuidanceFeature()
+            }
         }) -> some View
     {
-        self.modifier(NotificationPermissionGuidanceDialogModifier(store: store))
+        self.modifier(NotificationPermissionGuidanceDialogModifier(store: store, storeFactory: storeFactory))
     }
 }
