@@ -73,12 +73,16 @@ struct GatewayDiscoveryDebugLogView: View {
     @AppStorage("gateway.discovery.debugLogs") private var debugLogsEnabled: Bool = false
     @State private var store: StoreOf<GatewayDiscoveryDebugLogFeature>
 
-    init(store: StoreOf<GatewayDiscoveryDebugLogFeature> = Store(
-        initialState: GatewayDiscoveryDebugLogFeature.State())
+    init(
+        store: StoreOf<GatewayDiscoveryDebugLogFeature>? = nil,
+        storeFactory: () -> StoreOf<GatewayDiscoveryDebugLogFeature> = {
+            Store(initialState: GatewayDiscoveryDebugLogFeature.State()) {
+                GatewayDiscoveryDebugLogFeature()
+            }
+        })
     {
-        GatewayDiscoveryDebugLogFeature()
-    }) {
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
