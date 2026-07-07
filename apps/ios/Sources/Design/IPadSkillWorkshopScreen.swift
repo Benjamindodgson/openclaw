@@ -175,6 +175,10 @@ struct IPadSkillWorkshopFeature {
             return [connection, scene, agent].joined(separator: ":")
         }
 
+        var isRefreshInFlight: Bool {
+            self.loadingPhase == .inFlight
+        }
+
         func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool {
             gatewayAccess.canWrite && gatewayAccess.hasOperatorAdminScope
         }
@@ -606,7 +610,7 @@ struct IPadSkillWorkshopFeature {
                     state.inspectingProposalID = nil
                     return .none
                 }
-                guard state.loadingPhase != .inFlight else { return .none }
+                guard !state.isRefreshInFlight else { return .none }
 
                 state.loadingPhase = .inFlight
                 state.errorText = nil
@@ -822,9 +826,9 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.loadingPhase == .inFlight)
+                    .disabled(self.store.isRefreshInFlight)
 
-                    if self.store.loadingPhase == .inFlight {
+                    if self.store.isRefreshInFlight {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -855,7 +859,7 @@ struct IPadSkillWorkshopScreen: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 8)
-                    if self.store.loadingPhase == .inFlight {
+                    if self.store.isRefreshInFlight {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -882,7 +886,7 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.loadingPhase == .inFlight)
+                    .disabled(self.store.isRefreshInFlight)
                 }
                 if let noticeText = self.store.noticeText {
                     Text(noticeText.value)

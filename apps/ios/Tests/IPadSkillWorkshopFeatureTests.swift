@@ -221,6 +221,15 @@ struct IPadSkillWorkshopFeatureTests {
             .refreshTaskID(gatewayAccess: connectedAccess, sceneIsActive: false) == "connected:inactive:agent-b")
     }
 
+    @Test func `refresh control state follows loading phase`() {
+        var state = IPadSkillWorkshopFeature.State()
+
+        #expect(!state.isRefreshInFlight)
+
+        state.loadingPhase = .inFlight
+        #expect(state.isRefreshInFlight)
+    }
+
     @Test func `empty proposal presentation follows gateway read access`() {
         let state = IPadSkillWorkshopFeature.State()
         let connectedAccess = IPadSkillWorkshopFeature.State.gatewayAccess(
