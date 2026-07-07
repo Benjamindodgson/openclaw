@@ -49,6 +49,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makePushEnrollmentConsentStore() -> StoreOf<PushEnrollmentConsentFeature> {
+        Store(initialState: PushEnrollmentConsentFeature.State()) {
+            PushEnrollmentConsentFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsManualGatewayEndpointStore() -> StoreOf<SettingsManualGatewayEndpointFeature> {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(

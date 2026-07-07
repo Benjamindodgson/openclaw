@@ -198,6 +198,7 @@ struct RootTabs: View {
 
             SettingsProTab(
                 initialRoute: self.selectedSettingsRoute,
+                pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore(),
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                 voiceControlStore: self.makeSettingsVoiceControlStore(),
@@ -498,6 +499,7 @@ struct RootTabs: View {
                     headerLeadingAction: self.sidebarHeaderLeadingAction,
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
+                    pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore(),
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                     voiceControlStore: self.makeSettingsVoiceControlStore(),
@@ -516,6 +518,7 @@ struct RootTabs: View {
                     headerLeadingAction: self.sidebarHeaderLeadingAction,
                     ownsNavigationStack: false,
                     navigateToRoute: self.pushSidebarSettingsRoute,
+                    pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore(),
                     execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                     debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                     voiceControlStore: self.makeSettingsVoiceControlStore(),
@@ -536,6 +539,7 @@ struct RootTabs: View {
                 headerLeadingAction: self.sidebarHeaderLeadingAction,
                 ownsNavigationStack: false,
                 navigateToRoute: self.pushSidebarSettingsRoute,
+                pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore(),
                 execApprovalPromptStore: self.makeExecApprovalPromptStore(),
                 debugOptionsStore: self.makeSettingsDebugOptionsStore(),
                 voiceControlStore: self.makeSettingsVoiceControlStore(),

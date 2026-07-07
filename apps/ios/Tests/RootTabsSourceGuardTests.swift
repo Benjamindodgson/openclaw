@@ -1270,14 +1270,17 @@ struct RootTabsSourceGuardTests {
 
         #expect(storesSource.contains("extension RootTabs"))
         #expect(storesSource.contains("func makeGatewayQuickSetupStore()"))
+        #expect(storesSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(storesSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(storesSource.contains("withDependencies"))
         #expect(storesSource.contains("openNotifications: { approvalId in"))
         #expect(rootSource.contains("GatewayQuickSetupSheet(store: self.makeGatewayQuickSetupStore())"))
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
+        #expect(rootSource.contains("pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore()"))
         #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
         #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
+        #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(!rootSource.contains("withDependencies"))
@@ -2893,6 +2896,7 @@ struct RootTabsSourceGuardTests {
         let modelSource = try String(contentsOf: Self.nodeAppModelSourceURL(), encoding: .utf8)
         let pushConsentSource = try String(contentsOf: Self.pushEnrollmentConsentSourceURL(), encoding: .utf8)
         let notificationSource = try String(contentsOf: Self.settingsNotificationFeatureSourceURL(), encoding: .utf8)
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
         let pushConsentState = try Self.extract(
             pushConsentSource,
             from: "struct State: Equatable, Sendable {",
@@ -2905,6 +2909,7 @@ struct RootTabsSourceGuardTests {
         #expect(pushConsentSource.contains("state.disclosureAccepted = .init(value: consent.disclosureAccepted())"))
         #expect(pushConsentSource.contains("state.disclosureAccepted = .init(value: true)"))
         #expect(pushConsentSource.contains("state.disclosureAccepted = .init(value: false)"))
+        #expect(settingsSource.contains("@State var pushEnrollmentConsentStore: StoreOf<PushEnrollmentConsentFeature>"))
         #expect(actionsSource.contains("self.pushEnrollmentConsentStore.send(.acceptDisclosure)"))
         #expect(actionsSource.contains("self.pushEnrollmentConsentStore.disclosureAccepted.value"))
         #expect(actionsSource.contains("self.registerForRemoteNotificationsIfEnrollmentReady()"))
