@@ -7,7 +7,7 @@ import Testing
 struct IPadSkillWorkshopFeatureTests {
     @Test func `offline refresh clears proposal state`() async {
         var initialState = IPadSkillWorkshopFeature.State()
-        initialState.proposals = [Self.proposal(id: "pending-1", status: "pending")]
+        initialState.proposalEntries = .init(values: [Self.proposal(id: "pending-1", status: "pending")])
         initialState.loadingPhase = .inFlight
         initialState.inspectingProposalID = .init(value: "pending-1")
         initialState.errorText = .init(value: "old error")
@@ -20,7 +20,7 @@ struct IPadSkillWorkshopFeatureTests {
             readAccess: .init(canRead: false),
             force: .init(isForced: false))))
         {
-            $0.proposals = []
+            $0.proposalEntries = .init()
             $0.loadingPhase = .idle
             $0.inspectingProposalID = nil
             $0.errorText = nil
@@ -49,7 +49,7 @@ struct IPadSkillWorkshopFeatureTests {
             result: .success(manifest))))
         {
             $0.loadingPhase = .idle
-            $0.proposals = [IPadSkillProposal(entry: entry, previous: nil)]
+            $0.proposalEntries = .init(values: [IPadSkillProposal(entry: entry, previous: nil)])
             $0.selectedProposalID = .init(value: "pending-1")
             $0.inspectingProposalID = .init(value: "pending-1")
         }
@@ -58,18 +58,18 @@ struct IPadSkillWorkshopFeatureTests {
             result: .success(inspect))))
         {
             $0.inspectingProposalID = nil
-            $0.proposals = [IPadSkillProposal(
+            $0.proposalEntries = .init(values: [IPadSkillProposal(
                 inspect: inspect,
-                previous: IPadSkillProposal(entry: entry, previous: nil))]
+                previous: IPadSkillProposal(entry: entry, previous: nil))])
         }
     }
 
     @Test func `filter and query changes keep selection inside visible proposals`() async {
         var initialState = IPadSkillWorkshopFeature.State()
-        initialState.proposals = [
+        initialState.proposalEntries = .init(values: [
             Self.proposal(id: "applied-1", status: "applied", title: "Applied Proposal"),
             Self.proposal(id: "pending-1", status: "pending", title: "Pending Proposal"),
-        ]
+        ])
         initialState.selectedProposalID = .init(value: "applied-1")
         let store = TestStore(initialState: initialState) {
             IPadSkillWorkshopFeature(client: Self.client())
@@ -126,7 +126,7 @@ struct IPadSkillWorkshopFeatureTests {
         let after = Self.entry(id: "pending-1", status: "applied")
         let refreshedManifest = IPadSkillProposalManifest(proposals: [after])
         var initialState = IPadSkillWorkshopFeature.State()
-        initialState.proposals = [IPadSkillProposal(entry: before, previous: nil)]
+        initialState.proposalEntries = .init(values: [IPadSkillProposal(entry: before, previous: nil)])
         initialState.selectedProposalID = .init(value: "pending-1")
         let store = TestStore(initialState: initialState) {
             IPadSkillWorkshopFeature(client: Self.client(
@@ -165,7 +165,9 @@ struct IPadSkillWorkshopFeatureTests {
             result: .success(refreshedManifest))))
         {
             $0.loadingPhase = .idle
-            $0.proposals = [IPadSkillProposal(entry: after, previous: IPadSkillProposal(entry: before, previous: nil))]
+            $0.proposalEntries = .init(values: [IPadSkillProposal(
+                entry: after,
+                previous: IPadSkillProposal(entry: before, previous: nil))])
             $0.selectedProposalID = nil
         }
     }
