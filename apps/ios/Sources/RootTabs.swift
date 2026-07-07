@@ -41,11 +41,7 @@ struct RootTabs: View {
 
     @State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature>
 
-    @State private var presentationStore: StoreOf<RootPresentationFeature> = Store(
-        initialState: RootPresentationFeature.State())
-    {
-        RootPresentationFeature()
-    }
+    @State private var presentationStore: StoreOf<RootPresentationFeature>
 
     @State private var idleTimerStore: StoreOf<RootIdleTimerFeature>
 
@@ -60,6 +56,11 @@ struct RootTabs: View {
         {
             RootVoiceWakeToastFeature()
         },
+        presentationStore: StoreOf<RootPresentationFeature> = Store(
+            initialState: RootPresentationFeature.State())
+        {
+            RootPresentationFeature()
+        },
         idleTimerStore: StoreOf<RootIdleTimerFeature> = Store(
             initialState: RootIdleTimerFeature.State())
         {
@@ -73,6 +74,7 @@ struct RootTabs: View {
     {
         self._launchStore = State(wrappedValue: launchStore)
         self._voiceWakeToastStore = State(wrappedValue: voiceWakeToastStore)
+        self._presentationStore = State(wrappedValue: presentationStore)
         self._idleTimerStore = State(wrappedValue: idleTimerStore)
         self._homeCanvasStore = State(wrappedValue: homeCanvasStore)
     }

@@ -2602,6 +2602,10 @@ struct RootTabsSourceGuardTests {
             sidebarFeature,
             from: "struct State: Equatable, Sendable {",
             to: "enum Action")
+        let presentationStoreDeclaration = try Self.extract(
+            rootSource,
+            from: "@State private var presentationStore",
+            to: "@State private var idleTimerStore")
 
         #expect(rootSource.matches(of: /openSettings: \{ self\.selectSidebarDestination\(\.gateway\) \}/).count >= 2)
         #expect(rootSource.matches(of: /openVoiceSettings: \{ self\.selectSettingsRoute\(\.voice\) \}/).count == 2)
@@ -2658,6 +2662,10 @@ struct RootTabsSourceGuardTests {
         #expect(navigationSource.contains("var showGatewayProblemDetails: Bool"))
         #expect(navigationSource.contains("self.presentedSheet == .gatewayProblemDetails"))
         #expect(navigationSource.contains("state.presentedSheet = .gatewayProblemDetails"))
+        #expect(rootSource.contains("@State private var presentationStore: StoreOf<RootPresentationFeature>"))
+        #expect(presentationStoreDeclaration.contains(
+            "@State private var presentationStore: StoreOf<RootPresentationFeature>"))
+        #expect(!presentationStoreDeclaration.contains("= Store("))
         #expect(rootSource.contains(".sheet(item: self.presentedSheetBinding)"))
         #expect(rootSource.contains("case .gatewayProblemDetails:"))
         #expect(rootSource.contains("GatewayProblemDetailsSheet("))
