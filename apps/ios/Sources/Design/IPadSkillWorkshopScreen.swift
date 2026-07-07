@@ -196,6 +196,14 @@ struct IPadSkillWorkshopFeature {
                 value: nil)
         }
 
+        static func shouldShowProposalActions(status: String) -> Bool {
+            status == "pending"
+        }
+
+        func shouldShowProposalActions(for proposal: IPadSkillProposal) -> Bool {
+            Self.shouldShowProposalActions(status: proposal.status)
+        }
+
         static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
         static let defaultProposalStatusBoardLanes = ["pending", "quarantined", "stale", "applied", "rejected"]
 
@@ -1040,7 +1048,7 @@ struct IPadSkillWorkshopScreen: View {
                                 opening: .sheet,
                                 forceInspect: true)
                         }
-                        if proposal.status == "pending" {
+                        if self.store.state.shouldShowProposalActions(for: proposal) {
                             Button("Apply") {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
@@ -1052,7 +1060,7 @@ struct IPadSkillWorkshopScreen: View {
                         }
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if proposal.status == "pending" {
+                        if self.store.state.shouldShowProposalActions(for: proposal) {
                             Button("Apply") {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
@@ -1142,7 +1150,7 @@ struct IPadSkillWorkshopScreen: View {
                     }
                 }
 
-                if proposal.status == "pending" {
+                if self.store.state.shouldShowProposalActions(for: proposal) {
                     if self.isCompactWidth {
                         VStack(spacing: 8) {
                             self.proposalApplyButton(proposal)
@@ -1358,6 +1366,8 @@ struct IPadSkillProposalKanbanColumn: View {
                             proposal: proposal,
                             isSelected: proposal.id == self.selectedProposalID,
                             isInspecting: proposal.id == self.inspectingProposalID,
+                            showsProposalActions: IPadSkillWorkshopFeature.State
+                                .shouldShowProposalActions(status: proposal.status),
                             canApplyProposalMutations: self.canApplyProposalMutations,
                             isBusy: self.busyAction != nil,
                             select: {
@@ -1383,6 +1393,7 @@ private struct IPadSkillProposalKanbanCard: View {
     let proposal: IPadSkillProposal
     let isSelected: Bool
     let isInspecting: Bool
+    let showsProposalActions: Bool
     let canApplyProposalMutations: Bool
     let isBusy: Bool
     let select: () -> Void
@@ -1422,7 +1433,7 @@ private struct IPadSkillProposalKanbanCard: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
-                if self.proposal.status == "pending" {
+                if self.showsProposalActions {
                     Button(action: self.apply) {
                         Image(systemName: "checkmark.circle")
                     }
@@ -1456,7 +1467,7 @@ private struct IPadSkillProposalKanbanCard: View {
         .contentShape(Rectangle())
         .contextMenu {
             Button("Inspect", action: self.inspect)
-            if self.proposal.status == "pending" {
+            if self.showsProposalActions {
                 Button("Apply", action: self.apply)
                     .disabled(!self.canApplyProposalMutations || self.isBusy)
                 Button("Reject", role: .destructive, action: self.reject)

@@ -121,6 +121,16 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
     }
 
+    @Test func `proposal action visibility follows reducer state`() {
+        let state = IPadSkillWorkshopFeature.State()
+
+        #expect(IPadSkillWorkshopFeature.State.shouldShowProposalActions(status: "pending"))
+        #expect(!IPadSkillWorkshopFeature.State.shouldShowProposalActions(status: "applied"))
+        #expect(!IPadSkillWorkshopFeature.State.shouldShowProposalActions(status: "stale"))
+        #expect(state.shouldShowProposalActions(for: Self.proposal(id: "pending-1", status: "pending")))
+        #expect(!state.shouldShowProposalActions(for: Self.proposal(id: "rejected-1", status: "rejected")))
+    }
+
     @Test func `agent scope snapshot updates reducer presentation state`() async {
         let snapshot = IPadSkillWorkshopFeature.Action.AgentScopeSnapshot(
             gatewayDefaultAgentID: .init(value: " main "),
