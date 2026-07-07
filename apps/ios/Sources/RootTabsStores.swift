@@ -106,6 +106,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsDiagnosticsStore() -> StoreOf<SettingsDiagnosticsFeature> {
+        Store(initialState: SettingsDiagnosticsFeature.State()) {
+            SettingsDiagnosticsFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsDebugOptionsStore() -> StoreOf<SettingsDebugOptionsFeature> {
         Store(initialState: SettingsDebugOptionsFeature.State()) {
             SettingsDebugOptionsFeature(

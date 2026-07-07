@@ -49,11 +49,7 @@ struct SettingsProTab: View {
 
     @State var manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature>
 
-    @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
-        initialState: SettingsDiagnosticsFeature.State())
-    {
-        SettingsDiagnosticsFeature()
-    }
+    @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature>
 
     @State var appearanceStore: StoreOf<SettingsAppearanceFeature>
 
@@ -166,6 +162,11 @@ struct SettingsProTab: View {
         {
             SettingsManualGatewayEndpointFeature()
         },
+        diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
+            initialState: SettingsDiagnosticsFeature.State())
+        {
+            SettingsDiagnosticsFeature()
+        },
         gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
             initialState: SettingsGatewayActivityFeature.State())
         {
@@ -241,6 +242,7 @@ struct SettingsProTab: View {
         self._shareInstructionStore = State(wrappedValue: shareInstructionStore)
         self._manualGatewayPortStore = State(wrappedValue: manualGatewayPortStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
+        self._diagnosticsStore = State(wrappedValue: diagnosticsStore)
         self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)
         self._gatewayAutoConnectStore = State(wrappedValue: gatewayAutoConnectStore)
         self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
