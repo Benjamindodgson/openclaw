@@ -3605,7 +3605,20 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource.contains("@Reducer\nstruct ChatViewModelLifecycleFeature"))
         #expect(chatSource
             .contains("@State private var viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>"))
+        #expect(chatSource.contains("viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>? = nil"))
+        #expect(chatSource.contains("viewModelLifecycleStoreFactory: () -> StoreOf<ChatViewModelLifecycleFeature>"))
+        #expect(chatSource.contains("presentationStore: StoreOf<ChatProPresentationFeature>? = nil"))
+        #expect(chatSource.contains("presentationStoreFactory: () -> StoreOf<ChatProPresentationFeature>"))
+        #expect(chatSource.contains("talkControlStore: StoreOf<ChatTalkControlFeature>? = nil"))
+        #expect(chatSource.contains("talkControlStoreFactory: () -> StoreOf<ChatTalkControlFeature>"))
+        #expect(chatSource.contains(
+            "let resolvedViewModelLifecycleStore = viewModelLifecycleStore ?? viewModelLifecycleStoreFactory()"))
+        #expect(chatSource.contains("let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()"))
+        #expect(chatSource.contains("let resolvedTalkControlStore = talkControlStore ?? talkControlStoreFactory()"))
         #expect(!chatSource.contains("@State private var viewModelTransportModeID"))
+        #expect(!chatSource.contains("viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature> = Store("))
+        #expect(!chatSource.contains("presentationStore: StoreOf<ChatProPresentationFeature> = Store("))
+        #expect(!chatSource.contains("talkControlStore: StoreOf<ChatTalkControlFeature> = Store("))
         #expect(chatSource.contains("struct ChatTransportModeID: Equatable, Sendable"))
         #expect(chatSource.contains("struct TransportModeRecord: Equatable, Sendable"))
         #expect(chatSource.contains(
