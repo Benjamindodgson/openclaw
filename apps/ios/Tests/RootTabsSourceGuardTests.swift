@@ -3245,6 +3245,10 @@ struct RootTabsSourceGuardTests {
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
             encoding: .utf8)
         let controllerSource = try String(contentsOf: Self.gatewayConnectionControllerSourceURL(), encoding: .utf8)
+        let credentialsStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var credentialsStore",
+            to: "@State private var selectedPhoto")
 
         #expect(appSource.contains("deferDiscoveryUntilLocalNetworkRequest: true"))
         #expect(controllerSource.contains("func requestLocalNetworkAccess(reason: String)"))
@@ -3271,6 +3275,9 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.requestLocalNetworkAccessIfPastIntro(reason: \"onboarding_appear\")"))
         #expect(!onboardingSource.contains("@State private var pendingManualAuthOverride"))
         #expect(!onboardingSource.contains("discoveryRestartTask"))
+        #expect(credentialsStoreDeclaration
+            .contains("@State private var credentialsStore: StoreOf<OnboardingCredentialsFeature>"))
+        #expect(!credentialsStoreDeclaration.contains("= Store("))
         #expect(onboardingSource.contains("@State private var discoveryRestartStore"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.disappeared)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.discoveryDomainChanged)"))
