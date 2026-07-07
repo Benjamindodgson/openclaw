@@ -760,6 +760,10 @@ struct RootTabsSourceGuardTests {
         #expect(destinationsSource.contains("self.directHeader(\n                        for: .cron"))
         #expect(destinationsSource.contains("self.directRoute == route ? self.headerLeadingAction : nil"))
         #expect(nodesSource.contains("OpenClawSidebarHeaderLeadingSlot(action: headerLeadingAction)"))
+        #expect(nodesSource.contains("store: StoreOf<AgentNodeDetailCopyFeature>? = nil"))
+        #expect(nodesSource.contains("storeFactory: () -> StoreOf<AgentNodeDetailCopyFeature>"))
+        #expect(nodesSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!nodesSource.contains("store: StoreOf<AgentNodeDetailCopyFeature> = Store("))
         #expect(dreamingSource.contains("OpenClawSidebarHeaderLeadingSlot(action: headerLeadingAction)"))
     }
 
