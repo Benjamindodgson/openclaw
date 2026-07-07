@@ -29,6 +29,12 @@ struct RootHomeCanvasFeature {
 
     struct ActiveAgentName: Equatable, Sendable { var value: String }
 
+    struct AgentID: Equatable, Sendable { var value: String }
+
+    struct AgentName: Equatable, Sendable { var value: String? }
+
+    struct AgentEmoji: Equatable, Sendable { var value: String? }
+
     struct Snapshot: Equatable, Sendable {
         var gatewayStatus: GatewayDisplayState
         var gatewayServerName: GatewayServerName
@@ -40,9 +46,9 @@ struct RootHomeCanvasFeature {
     }
 
     struct AgentSnapshot: Equatable, Sendable {
-        var id: String
-        var name: String?
-        var emoji: String?
+        var id: AgentID
+        var name: AgentName
+        var emoji: AgentEmoji
     }
 
     struct Payload: Codable, Equatable, Sendable {
@@ -166,10 +172,10 @@ struct RootHomeCanvasFeature {
     private static func agentCards(snapshot: Snapshot, activeAgentID: String) -> [AgentCard] {
         let defaultAgentID = self.defaultAgentID(snapshot: snapshot)
         let cards = snapshot.agents.map { agent -> AgentCard in
-            let isActive = !activeAgentID.isEmpty && agent.id == activeAgentID
-            let isDefault = !defaultAgentID.isEmpty && agent.id == defaultAgentID
+            let isActive = !activeAgentID.isEmpty && agent.id.value == activeAgentID
+            let isDefault = !defaultAgentID.isEmpty && agent.id.value == defaultAgentID
             return AgentCard(
-                id: agent.id,
+                id: agent.id.value,
                 name: self.agentName(agent),
                 badge: self.agentBadge(agent),
                 caption: isActive ? "Routed on this phone" : (isDefault ? "Gateway default" : "Available"),
@@ -185,11 +191,11 @@ struct RootHomeCanvasFeature {
     }
 
     private static func agentName(_ agent: AgentSnapshot) -> String {
-        self.normalized(agent.name) ?? agent.id
+        self.normalized(agent.name.value) ?? agent.id.value
     }
 
     private static func agentBadge(_ agent: AgentSnapshot) -> String {
-        if let normalizedEmoji = normalized(agent.emoji) {
+        if let normalizedEmoji = normalized(agent.emoji.value) {
             return normalizedEmoji
         }
         let words = self.agentName(agent)
@@ -226,8 +232,8 @@ extension RootHomeCanvasFeature.Snapshot {
 extension RootHomeCanvasFeature.AgentSnapshot {
     init(agent: AgentSummary) {
         self.init(
-            id: agent.id,
-            name: agent.name,
-            emoji: agent.identity?["emoji"]?.value as? String)
+            id: .init(value: agent.id),
+            name: .init(value: agent.name),
+            emoji: .init(value: agent.identity?["emoji"]?.value as? String))
     }
 }
