@@ -75,6 +75,11 @@ struct IPadSkillWorkshopFeedbackPresentation: Equatable, Identifiable, Sendable 
     }
 }
 
+struct IPadSkillWorkshopRefreshControlPresentation: Equatable, Sendable {
+    let isDisabled: Bool
+    let showsProgress: Bool
+}
+
 struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String

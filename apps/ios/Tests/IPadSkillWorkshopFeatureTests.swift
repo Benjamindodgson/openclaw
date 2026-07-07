@@ -258,9 +258,15 @@ struct IPadSkillWorkshopFeatureTests {
         var state = IPadSkillWorkshopFeature.State()
 
         #expect(!state.isRefreshInFlight)
+        #expect(state.refreshControlPresentation == .init(
+            isDisabled: false,
+            showsProgress: false))
 
         state.loadingPhase = .inFlight
         #expect(state.isRefreshInFlight)
+        #expect(state.refreshControlPresentation == .init(
+            isDisabled: true,
+            showsProgress: true))
     }
 
     @Test func `query clear button follows reducer state`() {
