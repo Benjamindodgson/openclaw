@@ -70,6 +70,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsManualGatewayPortStore() -> StoreOf<SettingsManualGatewayPortFeature> {
+        Store(initialState: SettingsManualGatewayPortFeature.State()) {
+            SettingsManualGatewayPortFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsManualGatewayEndpointStore() -> StoreOf<SettingsManualGatewayEndpointFeature> {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(
