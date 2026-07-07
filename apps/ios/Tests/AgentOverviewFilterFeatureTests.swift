@@ -39,7 +39,7 @@ struct AgentSkillPolicyMutationFeatureTests {
         }
 
         await store.send(.mutationStarted(.init(key: .init(value: "skill-a")))) {
-            $0.busyKeys = [.init(value: "skill-a")]
+            $0.busyKeyEntries = .init(values: [.init(value: "skill-a")])
             $0.errorText = .init(value: nil)
             $0.statusText = .init(value: nil)
         }
@@ -47,7 +47,7 @@ struct AgentSkillPolicyMutationFeatureTests {
 
     @Test func `mutation success stores status while busy key remains active`() async {
         var initialState = AgentSkillPolicyMutationFeature.State()
-        initialState.busyKeys = [.init(value: "skill-a")]
+        initialState.busyKeyEntries = .init(values: [.init(value: "skill-a")])
         let store = TestStore(initialState: initialState) {
             AgentSkillPolicyMutationFeature()
         }
@@ -59,7 +59,7 @@ struct AgentSkillPolicyMutationFeatureTests {
 
     @Test func `mutation failure stores error while busy key remains active`() async {
         var initialState = AgentSkillPolicyMutationFeature.State()
-        initialState.busyKeys = [.init(value: "skill-a")]
+        initialState.busyKeyEntries = .init(values: [.init(value: "skill-a")])
         let store = TestStore(initialState: initialState) {
             AgentSkillPolicyMutationFeature()
         }
@@ -71,13 +71,13 @@ struct AgentSkillPolicyMutationFeatureTests {
 
     @Test func `mutation finish clears busy key`() async {
         var initialState = AgentSkillPolicyMutationFeature.State()
-        initialState.busyKeys = [.init(value: "skill-a"), .init(value: "skill-b")]
+        initialState.busyKeyEntries = .init(values: [.init(value: "skill-a"), .init(value: "skill-b")])
         let store = TestStore(initialState: initialState) {
             AgentSkillPolicyMutationFeature()
         }
 
         await store.send(.mutationFinished(.init(key: .init(value: "skill-a")))) {
-            $0.busyKeys = [.init(value: "skill-b")]
+            $0.busyKeyEntries = .init(values: [.init(value: "skill-b")])
         }
     }
 }

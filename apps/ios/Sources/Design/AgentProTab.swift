@@ -388,6 +388,7 @@ struct AgentSkillPolicyMutationErrorText: Equatable, Sendable { var value: Strin
 struct AgentSkillPolicyMutationFailureMessage: Equatable, Sendable { var value: String }
 struct AgentSkillPolicyMutationStatusText: Equatable, Sendable { var value: String? }
 struct AgentSkillPolicyMutationSuccessMessage: Equatable, Sendable { var value: String }
+struct AgentSkillPolicyMutationBusyKeys: Equatable, Sendable { var values: Set<AgentSkillPolicyMutationKey> = [] }
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -395,9 +396,13 @@ struct AgentSkillPolicyMutationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var busyKeys: Set<AgentSkillPolicyMutationKey> = []
+        var busyKeyEntries = AgentSkillPolicyMutationBusyKeys()
         var errorText = AgentSkillPolicyMutationErrorText(value: nil)
         var statusText = AgentSkillPolicyMutationStatusText(value: nil)
+
+        var busyKeys: Set<AgentSkillPolicyMutationKey> {
+            self.busyKeyEntries.values
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -425,7 +430,7 @@ struct AgentSkillPolicyMutationFeature {
         Reduce { state, action in
             switch action {
             case let .mutationStarted(mutation):
-                state.busyKeys.insert(mutation.key)
+                state.busyKeyEntries.values.insert(mutation.key)
                 state.errorText = .init(value: nil)
                 state.statusText = .init(value: nil)
                 return .none
@@ -439,7 +444,7 @@ struct AgentSkillPolicyMutationFeature {
                 return .none
 
             case let .mutationFinished(mutation):
-                state.busyKeys.remove(mutation.key)
+                state.busyKeyEntries.values.remove(mutation.key)
                 return .none
             }
         }
