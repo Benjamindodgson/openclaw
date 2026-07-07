@@ -27,11 +27,7 @@ struct OnboardingWizardView: View {
 
     @State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature>
 
-    @State private var photoImportStore: StoreOf<OnboardingQRPhotoImportFeature> = Store(
-        initialState: OnboardingQRPhotoImportFeature.State())
-    {
-        OnboardingQRPhotoImportFeature()
-    }
+    @State private var photoImportStore: StoreOf<OnboardingQRPhotoImportFeature>
 
     private static let pairingAutoResumeTicker = Timer.publish(every: 2.0, on: .main, in: .common).autoconnect()
 
@@ -72,6 +68,11 @@ struct OnboardingWizardView: View {
             initialState: OnboardingSetupCodeFeature.State())
         {
             OnboardingSetupCodeFeature()
+        },
+        photoImportStore: StoreOf<OnboardingQRPhotoImportFeature> = Store(
+            initialState: OnboardingQRPhotoImportFeature.State())
+        {
+            OnboardingQRPhotoImportFeature()
         })
     {
         self.allowSkip = allowSkip
@@ -88,6 +89,7 @@ struct OnboardingWizardView: View {
         self._discoveryRestartStore = State(wrappedValue: discoveryRestartStore)
         self._connectionFormStore = State(wrappedValue: connectionFormStore)
         self._setupCodeStore = State(wrappedValue: setupCodeStore)
+        self._photoImportStore = State(wrappedValue: photoImportStore)
     }
 
     @MainActor

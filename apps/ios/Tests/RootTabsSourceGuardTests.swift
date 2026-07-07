@@ -3269,6 +3269,10 @@ struct RootTabsSourceGuardTests {
             onboardingSource,
             from: "@State private var setupCodeStore",
             to: "@State private var photoImportStore")
+        let photoImportStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var photoImportStore",
+            to: "private static let pairingAutoResumeTicker")
 
         #expect(appSource.contains("deferDiscoveryUntilLocalNetworkRequest: true"))
         #expect(controllerSource.contains("func requestLocalNetworkAccess(reason: String)"))
@@ -3313,13 +3317,15 @@ struct RootTabsSourceGuardTests {
         #expect(setupCodeStoreDeclaration
             .contains("@State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature>"))
         #expect(!setupCodeStoreDeclaration.contains("= Store("))
+        #expect(photoImportStoreDeclaration
+            .contains("@State private var photoImportStore: StoreOf<OnboardingQRPhotoImportFeature>"))
+        #expect(!photoImportStoreDeclaration.contains("= Store("))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.disappeared)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.discoveryDomainChanged)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.restartRequestID"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.setupAuthApplied(.init(setupAuth: setupAuth)))"))
         #expect(onboardingSource.contains("pendingOverride: self.credentialsStore.pendingManualAuthOverride"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.pendingManualAuthOverrideConsumed)"))
-        #expect(onboardingSource.contains("@State private var photoImportStore"))
         #expect(onboardingSource.contains("self.photoImportStore.send(.importStarted)"))
         #expect(onboardingSource
             .contains("self.photoImportStore.send(.qrMessageDetected(.init(message: .init(value: self.detectQRCode(from: data)))))"))
