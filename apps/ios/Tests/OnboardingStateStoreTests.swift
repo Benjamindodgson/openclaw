@@ -702,18 +702,18 @@ import Testing
             lastMode: .developerLocal)))
         {
             $0.selectedMode = .developerLocal
-            $0.manualHost = "localhost"
+            $0.manualHostState = .init(value: "localhost")
             $0.manualTLSState = .init(value: false)
         }
 
         await store.send(.manualPortTextChanged(.init(text: .init(value: "65abc536")))) {
-            $0.manualPort = 65535
-            $0.manualPortText = "65535"
+            $0.manualPortState = .init(value: 65535)
+            $0.manualPortTextState = .init(value: "65535")
         }
 
         await store.send(.manualPortTextChanged(.init(text: .init(value: "0")))) {
-            $0.manualPort = 0
-            $0.manualPortText = ""
+            $0.manualPortState = .init(value: 0)
+            $0.manualPortTextState = .init(value: "")
         }
 
         #expect(!store.state.canConnectManual)
@@ -722,15 +722,17 @@ import Testing
 
         await store.send(.modeSelected(.init(mode: .remoteDomain))) {
             $0.selectedMode = .remoteDomain
-            $0.manualHost = ""
-            $0.manualPort = 18789
-            $0.manualPortText = "18789"
+            $0.manualHostState = .init(value: "")
+            $0.manualPortState = .init(value: 18789)
+            $0.manualPortTextState = .init(value: "18789")
             $0.manualTLSState = .init(value: true)
         }
 
         await store.send(.manualHostChanged(.init(host: .init(value: "gateway.example.com")))) {
-            $0.manualHost = "gateway.example.com"
+            $0.manualHostState = .init(value: "gateway.example.com")
         }
+
+        #expect(store.state.manualHost == "gateway.example.com")
 
         await store.send(.manualTLSChanged(.init(useTLS: .init(value: false)))) {
             $0.manualTLSState = .init(value: false)
@@ -745,9 +747,9 @@ import Testing
             port: .init(value: 19000),
             tls: .init(value: false))))
         {
-            $0.manualHost = "studio.local"
-            $0.manualPort = 19000
-            $0.manualPortText = "19000"
+            $0.manualHostState = .init(value: "studio.local")
+            $0.manualPortState = .init(value: 19000)
+            $0.manualPortTextState = .init(value: "19000")
             $0.manualTLSState = .init(value: false)
         }
 
