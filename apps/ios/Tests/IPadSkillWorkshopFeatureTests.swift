@@ -92,6 +92,26 @@ struct IPadSkillWorkshopFeatureTests {
         }
     }
 
+    @Test func `proposal lanes are filtered by reducer state`() {
+        var state = IPadSkillWorkshopFeature.State()
+        state.proposalEntries = .init(values: [
+            Self.proposal(id: "pending-match", status: "pending", title: "Gateway proposal"),
+            Self.proposal(id: "pending-other", status: "pending", title: "Other proposal"),
+            Self.proposal(id: "applied-match", status: "applied", title: "Gateway applied"),
+            Self.proposal(id: "stale-match", status: "stale", title: "Gateway stale"),
+        ])
+        state.query = .init(value: "gateway")
+
+        #expect(state.filteredProposals.map(\.id) == ["pending-match"])
+        #expect(state.visibleProposalLaneStatuses == ["pending"])
+        #expect(state.proposals(forLaneStatus: "pending").map(\.id) == ["pending-match"])
+        #expect(state.proposals(forLaneStatus: "applied").map(\.id) == ["applied-match"])
+
+        state.statusFilter = .init(value: "all")
+        #expect(state.filteredProposals.map(\.id) == ["pending-match", "applied-match", "stale-match"])
+        #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
+    }
+
     @Test func `proposal selection opening controls sheet presentation`() async {
         let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
             IPadSkillWorkshopFeature(client: Self.client())
