@@ -8,7 +8,7 @@ import Testing
 struct SettingsChannelsFeatureTests {
     @Test func `offline refresh clears channel state`() async {
         var initialState = SettingsChannelsFeature.State()
-        initialState.entries = Self.connectedEntries
+        initialState.channelEntries = Self.connectedEntries
         initialState.loadingPhase = .inFlight
         initialState.errorText = .init(value: "old error")
         let store = TestStore(initialState: initialState) {
@@ -20,7 +20,7 @@ struct SettingsChannelsFeatureTests {
             readAccess: .init(canRead: false),
             force: .init(isForced: false))))
         {
-            $0.entries = []
+            $0.channelEntries = .init()
             $0.loadingPhase = .idle
             $0.errorText = nil
         }
@@ -42,14 +42,14 @@ struct SettingsChannelsFeatureTests {
             force: .init(isForced: false),
             result: .success(Self.connectedEntries))))
         {
-            $0.entries = Self.connectedEntries
+            $0.channelEntries = Self.connectedEntries
             $0.loadingPhase = .idle
         }
     }
 
     @Test func `soft refresh failure preserves existing entries`() async {
         var initialState = SettingsChannelsFeature.State()
-        initialState.entries = Self.connectedEntries
+        initialState.channelEntries = Self.connectedEntries
         let store = TestStore(initialState: initialState) {
             SettingsChannelsFeature(client: Self.client(status: { throw TestChannelsFailure.failed }))
         }
@@ -71,7 +71,7 @@ struct SettingsChannelsFeatureTests {
 
     @Test func `forced refresh failure surfaces error text`() async {
         var initialState = SettingsChannelsFeature.State()
-        initialState.entries = Self.connectedEntries
+        initialState.channelEntries = Self.connectedEntries
         let store = TestStore(initialState: initialState) {
             SettingsChannelsFeature(client: Self.client(status: { throw TestChannelsFailure.failed }))
         }
@@ -108,7 +108,7 @@ struct SettingsChannelsFeatureTests {
         }
         await store.receive(.operationResponse(.init(result: .success(Self.connectedEntries)))) {
             $0.busyOperation = nil
-            $0.entries = Self.connectedEntries
+            $0.channelEntries = Self.connectedEntries
         }
     }
 
@@ -147,7 +147,7 @@ struct SettingsChannelsFeatureTests {
             adminAccess: .init(canAdmin: false))))
     }
 
-    private static var connectedEntries: [SettingsChannelEntry] {
+    private static var connectedEntries: SettingsChannelEntries {
         SettingsChannelsFeature.entries(from: connectedStatus)
     }
 

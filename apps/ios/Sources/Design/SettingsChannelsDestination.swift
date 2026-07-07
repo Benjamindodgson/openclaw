@@ -104,6 +104,9 @@ extension DependencyValues {
 
 // swiftformat:disable redundantSendable
 struct SettingsChannelsFailureMessage: Equatable, Sendable { var value: String }
+struct SettingsChannelEntries: Equatable, Sendable {
+    var values: [SettingsChannelEntry] = []
+}
 
 enum SettingsChannelsLoadingPhase: Equatable, Sendable {
     case idle
@@ -129,10 +132,14 @@ struct SettingsChannelsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var entries: [SettingsChannelEntry] = []
+        var channelEntries = SettingsChannelEntries()
         var loadingPhase = SettingsChannelsLoadingPhase.idle
         var errorText: SettingsChannelsFailureMessage?
         var busyOperation: SettingsChannelOperation?
+
+        var entries: [SettingsChannelEntry] {
+            self.channelEntries.values
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -160,7 +167,7 @@ struct SettingsChannelsFeature {
 
         struct RefreshResponse: Equatable, Sendable {
             var force: RefreshForce
-            var result: Result<[SettingsChannelEntry], SettingsChannelsError>
+            var result: Result<SettingsChannelEntries, SettingsChannelsError>
         }
 
         struct OperationRequest: Equatable, Sendable {
@@ -171,7 +178,7 @@ struct SettingsChannelsFeature {
         }
 
         struct OperationResponse: Equatable, Sendable {
-            var result: Result<[SettingsChannelEntry], SettingsChannelsError>
+            var result: Result<SettingsChannelEntries, SettingsChannelsError>
         }
 
         case refreshRequested(RefreshRequest)
@@ -194,7 +201,7 @@ struct SettingsChannelsFeature {
                     return .none
                 }
                 guard request.readAccess.canRead else {
-                    state.entries = []
+                    state.channelEntries = .init()
                     state.loadingPhase = .idle
                     state.errorText = nil
                     return .none
@@ -219,8 +226,8 @@ struct SettingsChannelsFeature {
             case let .refreshResponse(response):
                 state.loadingPhase = .idle
                 switch response.result {
-                case let .success(entries):
-                    state.entries = entries
+                case let .success(channelEntries):
+                    state.channelEntries = channelEntries
                     state.errorText = nil
 
                 case let .failure(.failed(failure)):
@@ -264,9 +271,9 @@ struct SettingsChannelsFeature {
 
             case let .operationResponse(response):
                 switch response.result {
-                case let .success(entries):
+                case let .success(channelEntries):
                     state.busyOperation = nil
-                    state.entries = entries
+                    state.channelEntries = channelEntries
                     state.errorText = nil
                     return .none
 
@@ -280,9 +287,9 @@ struct SettingsChannelsFeature {
         .autoLogActions()
     }
 
-    static func entries(from snapshot: ChannelsStatusResult) -> [SettingsChannelEntry] {
+    static func entries(from snapshot: ChannelsStatusResult) -> SettingsChannelEntries {
         let ids = snapshot.channelorder.isEmpty ? Array(snapshot.channels.keys).sorted() : snapshot.channelorder
-        return ids.map { self.entry(channelID: $0, snapshot: snapshot) }
+        return .init(values: ids.map { self.entry(channelID: $0, snapshot: snapshot) })
     }
 
     private static func entry(channelID: String, snapshot: ChannelsStatusResult) -> SettingsChannelEntry {
