@@ -93,10 +93,10 @@ struct IPadWorkboardFeatureTests {
             $0.refreshPhase = .idle
             $0.cardEntries = .init(values: [card])
             $0.statusEntries = .init(values: [.init(value: "todo"), .init(value: "done")])
-            $0.knownBoardIDs = [.init(value: "planning")]
+            $0.knownBoardIDEntries = .init(values: [.init(value: "planning")])
         }
         await store.receive(.boardScopesResponse(.init(force: .init(isForced: false), result: .success(boards)))) {
-            $0.knownBoardIDs = [.init(value: "ops"), .init(value: "planning")]
+            $0.knownBoardIDEntries = .init(values: [.init(value: "ops"), .init(value: "planning")])
         }
     }
 
@@ -198,7 +198,7 @@ struct IPadWorkboardFeatureTests {
             $0.draftNotes = .init(value: "")
             $0.presentedSheet = nil
             $0.cardEntries = .init(values: [existing, created])
-            $0.knownBoardIDs = [.init(value: "planning")]
+            $0.knownBoardIDEntries = .init(values: [.init(value: "planning")])
         }
     }
 
@@ -259,7 +259,7 @@ struct IPadWorkboardFeatureTests {
         await store.receive(.moveResponse(.init(result: .success(moved)))) {
             $0.busyCardID = nil
             $0.cardEntries = .init(values: [moved])
-            $0.knownBoardIDs = [.init(value: "default")]
+            $0.knownBoardIDEntries = .init(values: [.init(value: "default")])
         }
         await store.send(.archiveRequested(.init(card: moved, writeAccess: .init(canWrite: true)))) {
             $0.busyCardID = .init(value: "card-1")
@@ -268,7 +268,7 @@ struct IPadWorkboardFeatureTests {
         await store.receive(.archiveResponse(.init(result: .success(archived)))) {
             $0.busyCardID = nil
             $0.cardEntries = .init(values: [archived])
-            $0.knownBoardIDs = [.init(value: "default")]
+            $0.knownBoardIDEntries = .init(values: [.init(value: "default")])
         }
     }
 
@@ -304,7 +304,7 @@ struct IPadWorkboardFeatureTests {
             $0.dispatchSummaryText = .init(value: "1 dispatched: 1 started.")
             $0.cardEntries = .init(values: [refreshed])
             $0.statusEntries = .init(values: [.init(value: "running")])
-            $0.knownBoardIDs = [.init(value: "default")]
+            $0.knownBoardIDEntries = .init(values: [.init(value: "default")])
         }
     }
 
@@ -328,7 +328,7 @@ struct IPadWorkboardFeatureTests {
             $0.refreshPhase = .idle
             $0.cardEntries = .init(values: [refreshed])
             $0.statusEntries = .init(values: [.init(value: "todo")])
-            $0.knownBoardIDs = [.init(value: "default")]
+            $0.knownBoardIDEntries = .init(values: [.init(value: "default")])
         }
         await store.receive(.boardScopesResponse(.init(force: .init(isForced: true), result: .success([]))))
     }
