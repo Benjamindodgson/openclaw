@@ -2957,21 +2957,22 @@ struct RootTabsSourceGuardTests {
             "struct SettingsApprovalsPendingApprovalAllowsAllowAlways: Equatable, Sendable { var value: Bool }"))
         #expect(settingsSource.contains("struct ApprovalsSync: Equatable, Sendable"))
         #expect(approvalsFeature.contains(
-            "var activeAgentName = Action.SettingsApprovalsActiveAgentName(value: \"Default Agent\")"))
+            "var activeAgentName = SettingsApprovalsActiveAgentName(value: \"Default Agent\")"))
         #expect(approvalsFeature.contains(
-            "var gatewayConnected = Action.SettingsApprovalsGatewayConnected(value: false)"))
+            "var gatewayConnected = SettingsApprovalsGatewayConnected(value: false)"))
         #expect(approvalsFeature.contains(
-            "var hasPendingApproval = Action.SettingsApprovalsHasPendingApproval(value: false)"))
+            "var hasPendingApproval = SettingsApprovalsHasPendingApproval(value: false)"))
         #expect(approvalsFeature.contains(
-            "var isAppleReviewDemoModeEnabled = Action.SettingsApprovalsDemoModeEnabled(value: false)"))
+            "var isAppleReviewDemoModeEnabled = SettingsApprovalsDemoModeEnabled(value: false)"))
         #expect(approvalsFeature.contains(
-            "var isResolvingPendingApproval = Action.SettingsApprovalsResolvingPendingApproval(value: false)"))
+            "var isResolvingPendingApproval = SettingsApprovalsResolvingPendingApproval(value: false)"))
         #expect(approvalsFeature.contains(
-            "var notificationsNeedAttention = Action.SettingsApprovalsNotificationsNeedAttention(value: false)"))
+            "var notificationsNeedAttention = SettingsApprovalsNotificationsNeedAttention(value: false)"))
         #expect(approvalsFeature.contains(
-            "var pendingApprovalAllowsAllowAlways = Action.SettingsApprovalsPendingApprovalAllowsAllowAlways(value: false)"))
+            "var pendingApprovalAllowsAllowAlways = SettingsApprovalsPendingApprovalAllowsAllowAlways(value: false)"))
         #expect(approvalsFeature.contains(
-            "var pendingCommandPreview = Action.SettingsApprovalsPendingCommandPreview(value: nil)"))
+            "var pendingCommandPreview = SettingsApprovalsPendingCommandPreview(value: nil)"))
+        #expect(!approvalsFeature.contains("Action.SettingsApprovals"))
         #expect(approvalsSync.contains("var isAppleReviewDemoModeEnabled: SettingsApprovalsDemoModeEnabled"))
         #expect(approvalsSync.contains("var gatewayConnected: SettingsApprovalsGatewayConnected"))
         #expect(approvalsSync.contains(

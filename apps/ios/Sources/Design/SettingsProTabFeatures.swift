@@ -215,16 +215,25 @@ struct SettingsPresentationFeature {
 @Reducer
 struct SettingsApprovalsFeature {
     // swiftformat:disable redundantSendable
+    struct SettingsApprovalsDemoModeEnabled: Equatable, Sendable { var value: Bool }
+    struct SettingsApprovalsGatewayConnected: Equatable, Sendable { var value: Bool }
+    struct SettingsApprovalsNotificationsNeedAttention: Equatable, Sendable { var value: Bool }
+    struct SettingsApprovalsHasPendingApproval: Equatable, Sendable { var value: Bool }
+    struct SettingsApprovalsPendingCommandPreview: Equatable, Sendable { var value: String? }
+    struct SettingsApprovalsActiveAgentName: Equatable, Sendable { var value: String }
+    struct SettingsApprovalsResolvingPendingApproval: Equatable, Sendable { var value: Bool }
+    struct SettingsApprovalsPendingApprovalAllowsAllowAlways: Equatable, Sendable { var value: Bool }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var activeAgentName = Action.SettingsApprovalsActiveAgentName(value: "Default Agent")
-        var gatewayConnected = Action.SettingsApprovalsGatewayConnected(value: false)
-        var hasPendingApproval = Action.SettingsApprovalsHasPendingApproval(value: false)
-        var isAppleReviewDemoModeEnabled = Action.SettingsApprovalsDemoModeEnabled(value: false)
-        var isResolvingPendingApproval = Action.SettingsApprovalsResolvingPendingApproval(value: false)
-        var notificationsNeedAttention = Action.SettingsApprovalsNotificationsNeedAttention(value: false)
-        var pendingApprovalAllowsAllowAlways = Action.SettingsApprovalsPendingApprovalAllowsAllowAlways(value: false)
-        var pendingCommandPreview = Action.SettingsApprovalsPendingCommandPreview(value: nil)
+        var activeAgentName = SettingsApprovalsActiveAgentName(value: "Default Agent")
+        var gatewayConnected = SettingsApprovalsGatewayConnected(value: false)
+        var hasPendingApproval = SettingsApprovalsHasPendingApproval(value: false)
+        var isAppleReviewDemoModeEnabled = SettingsApprovalsDemoModeEnabled(value: false)
+        var isResolvingPendingApproval = SettingsApprovalsResolvingPendingApproval(value: false)
+        var notificationsNeedAttention = SettingsApprovalsNotificationsNeedAttention(value: false)
+        var pendingApprovalAllowsAllowAlways = SettingsApprovalsPendingApprovalAllowsAllowAlways(value: false)
+        var pendingCommandPreview = SettingsApprovalsPendingCommandPreview(value: nil)
 
         var approvalBadgeValue: String? {
             self.hasPendingApproval.value ? "1" : nil
@@ -296,15 +305,6 @@ struct SettingsApprovalsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct SettingsApprovalsDemoModeEnabled: Equatable, Sendable { var value: Bool }
-        struct SettingsApprovalsGatewayConnected: Equatable, Sendable { var value: Bool }
-        struct SettingsApprovalsNotificationsNeedAttention: Equatable, Sendable { var value: Bool }
-        struct SettingsApprovalsHasPendingApproval: Equatable, Sendable { var value: Bool }
-        struct SettingsApprovalsPendingCommandPreview: Equatable, Sendable { var value: String? }
-        struct SettingsApprovalsActiveAgentName: Equatable, Sendable { var value: String }
-        struct SettingsApprovalsResolvingPendingApproval: Equatable, Sendable { var value: Bool }
-        struct SettingsApprovalsPendingApprovalAllowsAllowAlways: Equatable, Sendable { var value: Bool }
-
         struct ApprovalsSync: Equatable, Sendable {
             var isAppleReviewDemoModeEnabled: SettingsApprovalsDemoModeEnabled
             var gatewayConnected: SettingsApprovalsGatewayConnected
