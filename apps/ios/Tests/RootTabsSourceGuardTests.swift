@@ -5593,6 +5593,11 @@ struct RootTabsSourceGuardTests {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try Self.settingsProTabCombinedSource()
+        let gatewayActivityStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var gatewayActivityStore",
+            to: "@State var gatewayAutoConnectStore")
         let runDiagnosticsFunction = try Self.extract(
             actionsSource,
             from: "func runDiagnostics()",
@@ -5711,6 +5716,9 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("func applyNotificationStatus") == false)
         #expect(runDiagnosticsFunction.contains("SettingsDiagnostics.issueCount(") == false)
         #expect(actionsSource.contains(".diagnosticsCompleted(") == false)
+        #expect(gatewayActivityStoreDeclaration
+            .contains("@State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature>"))
+        #expect(!gatewayActivityStoreDeclaration.contains("= Store("))
     }
 
     @Test func `settings location mode request decision is reducer owned`() throws {
