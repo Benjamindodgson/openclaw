@@ -1315,6 +1315,7 @@ struct RootTabsSourceGuardTests {
     @Test func `root tca store factories live outside root tabs`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let deepLinkSource = try String(contentsOf: Self.deepLinkAgentPromptAlertSourceURL(), encoding: .utf8)
 
         #expect(storesSource.contains("extension RootTabs"))
         #expect(storesSource.contains("func makeGatewayQuickSetupStore()"))
@@ -1335,6 +1336,15 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("withDependencies"))
         #expect(storesSource.contains("openNotifications: { approvalId in"))
         #expect(rootSource.contains("GatewayQuickSetupSheet(store: self.makeGatewayQuickSetupStore())"))
+        #expect(rootSource.contains(".deepLinkAgentPromptAlert(store: self.makeDeepLinkAgentPromptStore())"))
+        #expect(storesSource.contains("func makeDeepLinkAgentPromptStore()"))
+        #expect(storesSource.contains("DeepLinkAgentPromptFeature(client: .live(appModel: self.appModel))"))
+        #expect(deepLinkSource.contains("store: StoreOf<DeepLinkAgentPromptFeature>? = nil"))
+        #expect(deepLinkSource.contains("storeFactory: () -> StoreOf<DeepLinkAgentPromptFeature>"))
+        #expect(deepLinkSource.contains("storeFactory: @escaping () -> StoreOf<DeepLinkAgentPromptFeature>"))
+        #expect(deepLinkSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(deepLinkSource.contains("DeepLinkAgentPromptAlert(store: store, storeFactory: storeFactory)"))
+        #expect(!deepLinkSource.contains("store: StoreOf<DeepLinkAgentPromptFeature> = Store("))
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
         #expect(rootSource.contains("pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore()"))
         #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
@@ -1364,6 +1374,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makeSettingsNotificationStore()"))
         #expect(!rootSource.contains("func makeSettingsPresentationStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
+        #expect(!rootSource.contains("func makeDeepLinkAgentPromptStore()"))
         #expect(!rootSource.contains("withDependencies"))
     }
 
@@ -6981,6 +6992,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Gateway/GatewayTrustPromptAlert.swift")
+    }
+
+    private static func deepLinkAgentPromptAlertSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Gateway/DeepLinkAgentPromptAlert.swift")
     }
 
     private static func gatewayQuickSetupSourceURL() -> URL {

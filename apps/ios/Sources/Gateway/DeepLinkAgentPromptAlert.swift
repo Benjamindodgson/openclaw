@@ -78,12 +78,16 @@ struct DeepLinkAgentPromptAlert: ViewModifier {
     @Environment(NodeAppModel.self) private var appModel: NodeAppModel
     @State private var store: StoreOf<DeepLinkAgentPromptFeature>
 
-    init(store: StoreOf<DeepLinkAgentPromptFeature> = Store(
-        initialState: DeepLinkAgentPromptFeature.State())
+    init(
+        store: StoreOf<DeepLinkAgentPromptFeature>? = nil,
+        storeFactory: () -> StoreOf<DeepLinkAgentPromptFeature> = {
+            Store(initialState: DeepLinkAgentPromptFeature.State()) {
+                DeepLinkAgentPromptFeature()
+            }
+        })
     {
-        DeepLinkAgentPromptFeature()
-    }) {
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     private var promptBinding: Binding<NodeAppModel.AgentDeepLinkPrompt?> {
@@ -118,12 +122,13 @@ struct DeepLinkAgentPromptAlert: ViewModifier {
 
 extension View {
     func deepLinkAgentPromptAlert(
-        store: StoreOf<DeepLinkAgentPromptFeature> = Store(
-            initialState: DeepLinkAgentPromptFeature.State())
-        {
-            DeepLinkAgentPromptFeature()
+        store: StoreOf<DeepLinkAgentPromptFeature>? = nil,
+        storeFactory: @escaping () -> StoreOf<DeepLinkAgentPromptFeature> = {
+            Store(initialState: DeepLinkAgentPromptFeature.State()) {
+                DeepLinkAgentPromptFeature()
+            }
         }) -> some View
     {
-        self.modifier(DeepLinkAgentPromptAlert(store: store))
+        self.modifier(DeepLinkAgentPromptAlert(store: store, storeFactory: storeFactory))
     }
 }
