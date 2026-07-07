@@ -1,14 +1,14 @@
 import ComposableArchitecture
+@testable import OpenClaw
 import OpenClawChatUI
 import Testing
-@testable import OpenClaw
 
 @MainActor
 struct CommandSessionsFeatureTests {
     @Test func `unavailable refresh clears sessions and errors without loading`() async {
         let probe = CommandSessionsProbe()
         var initialState = CommandSessionsFeature.State()
-        initialState.sessions = [Self.session(key: "chat-existing")]
+        initialState.sessionEntries = .init(entries: [Self.session(key: "chat-existing")])
         initialState.loadingPhase = .inFlight
         initialState.loadErrorText = .init(value: "Previous error")
         let store = TestStore(initialState: initialState) {
@@ -17,7 +17,7 @@ struct CommandSessionsFeatureTests {
 
         await store.send(.refreshRequested(.init(sessionsAvailability: .init(isAvailable: .init(value: false))))) {
             $0.loadingPhase = .idle
-            $0.sessions = []
+            $0.sessionEntries = .init()
             $0.loadErrorText = nil
         }
         await store.finish()
@@ -39,9 +39,9 @@ struct CommandSessionsFeatureTests {
             $0.loadingPhase = .inFlight
             $0.loadErrorText = nil
         }
-        await store.receive(.refreshResponse(.init(result: .success(loadedSessions)))) {
+        await store.receive(.refreshResponse(.init(result: .success(.init(entries: loadedSessions))))) {
             $0.loadingPhase = .idle
-            $0.sessions = loadedSessions
+            $0.sessionEntries = .init(entries: loadedSessions)
         }
         await store.finish()
 
@@ -52,7 +52,7 @@ struct CommandSessionsFeatureTests {
         let probe = CommandSessionsProbe()
         probe.result = .failure(CommandSessionsProbeError.failed)
         var initialState = CommandSessionsFeature.State()
-        initialState.sessions = [Self.session(key: "chat-existing")]
+        initialState.sessionEntries = .init(entries: [Self.session(key: "chat-existing")])
         let store = TestStore(initialState: initialState) {
             CommandSessionsFeature(client: probe.client)
         }
@@ -63,7 +63,7 @@ struct CommandSessionsFeatureTests {
         }
         await store.receive(.refreshResponse(.init(result: .failure(.failed)))) {
             $0.loadingPhase = .idle
-            $0.sessions = []
+            $0.sessionEntries = .init()
             $0.loadErrorText = .init(value: "Try again after the gateway reconnects.")
         }
         await store.finish()
@@ -91,7 +91,8 @@ struct CommandSessionsFeatureTests {
             totalTokens: nil,
             modelProvider: "openai",
             model: "gpt-5.5",
-            contextTokens: 128_000)
+            contextTokens: 128_000
+        )
     }
 }
 
@@ -101,7 +102,7 @@ struct CommandCenterRecentSessionsFeatureTests {
         let probe = CommandSessionsProbe()
         var initialState = CommandCenterRecentSessionsFeature.State()
         initialState.defaultChatSessionEntry = Self.session(key: "main", updatedAt: 2)
-        initialState.recentChatSessions = [Self.session(key: "chat-existing", updatedAt: 1)]
+        initialState.recentChatSessionEntries = .init(entries: [Self.session(key: "chat-existing", updatedAt: 1)])
         let store = TestStore(initialState: initialState) {
             CommandCenterRecentSessionsFeature(client: probe.client)
         }
@@ -110,7 +111,8 @@ struct CommandCenterRecentSessionsFeatureTests {
             sceneActivity: .init(isActive: .init(value: false)),
             sessionsAvailability: .init(isAvailable: .init(value: true)),
             currentSession: .init(key: .init(value: "chat-existing")),
-            defaultSession: .init(key: .init(value: "main")))))
+            defaultSession: .init(key: .init(value: "main"))
+        )))
         await store.finish()
 
         #expect(probe.requestedLimits.isEmpty)
@@ -120,7 +122,7 @@ struct CommandCenterRecentSessionsFeatureTests {
         let probe = CommandSessionsProbe()
         var initialState = CommandCenterRecentSessionsFeature.State()
         initialState.defaultChatSessionEntry = Self.session(key: "main", updatedAt: 2)
-        initialState.recentChatSessions = [Self.session(key: "chat-existing", updatedAt: 1)]
+        initialState.recentChatSessionEntries = .init(entries: [Self.session(key: "chat-existing", updatedAt: 1)])
         let store = TestStore(initialState: initialState) {
             CommandCenterRecentSessionsFeature(client: probe.client)
         }
@@ -129,10 +131,10 @@ struct CommandCenterRecentSessionsFeatureTests {
             sceneActivity: .init(isActive: .init(value: true)),
             sessionsAvailability: .init(isAvailable: .init(value: false)),
             currentSession: .init(key: .init(value: "chat-existing")),
-            defaultSession: .init(key: .init(value: "main")))))
-        {
+            defaultSession: .init(key: .init(value: "main"))
+        ))) {
             $0.defaultChatSessionEntry = nil
-            $0.recentChatSessions = []
+            $0.recentChatSessionEntries = .init()
         }
         await store.finish()
 
@@ -157,24 +159,26 @@ struct CommandCenterRecentSessionsFeatureTests {
         }
         let expectedSnapshot = CommandCenterRecentSessionsFeature.Snapshot(
             defaultChatSessionEntry: defaultSession,
-            recentChatSessions: [
+            recentChatSessionEntries: .init(entries: [
                 currentSession,
                 newestSession,
                 oldSession,
             ])
+        )
 
         await store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: .init(value: true)),
             sessionsAvailability: .init(isAvailable: .init(value: true)),
             currentSession: .init(key: .init(value: currentSession.key)),
-            defaultSession: .init(key: .init(value: defaultSession.key)))))
+            defaultSession: .init(key: .init(value: defaultSession.key))
+        )))
         await store.receive(.refreshResponse(.init(result: .success(expectedSnapshot)))) {
             $0.defaultChatSessionEntry = defaultSession
-            $0.recentChatSessions = [
+            $0.recentChatSessionEntries = .init(entries: [
                 currentSession,
                 newestSession,
                 oldSession,
-            ]
+            ])
         }
         await store.finish()
 
@@ -186,7 +190,7 @@ struct CommandCenterRecentSessionsFeatureTests {
         probe.result = .failure(CommandSessionsProbeError.failed)
         var initialState = CommandCenterRecentSessionsFeature.State()
         initialState.defaultChatSessionEntry = Self.session(key: "main", updatedAt: 2)
-        initialState.recentChatSessions = [Self.session(key: "chat-existing", updatedAt: 1)]
+        initialState.recentChatSessionEntries = .init(entries: [Self.session(key: "chat-existing", updatedAt: 1)])
         let store = TestStore(initialState: initialState) {
             CommandCenterRecentSessionsFeature(client: probe.client)
         }
@@ -195,10 +199,11 @@ struct CommandCenterRecentSessionsFeatureTests {
             sceneActivity: .init(isActive: .init(value: true)),
             sessionsAvailability: .init(isAvailable: .init(value: true)),
             currentSession: .init(key: .init(value: "chat-existing")),
-            defaultSession: .init(key: .init(value: "main")))))
+            defaultSession: .init(key: .init(value: "main"))
+        )))
         await store.receive(.refreshResponse(.init(result: .failure(.failed)))) {
             $0.defaultChatSessionEntry = nil
-            $0.recentChatSessions = []
+            $0.recentChatSessionEntries = .init()
         }
         await store.finish()
 
@@ -225,7 +230,8 @@ struct CommandCenterRecentSessionsFeatureTests {
             totalTokens: nil,
             modelProvider: "openai",
             model: "gpt-5.5",
-            contextTokens: 128_000)
+            contextTokens: 128_000
+        )
     }
 }
 
