@@ -28,20 +28,23 @@ struct ChatProTab: View {
         showsAgentBadge: Bool = true,
         ownsNavigationStack: Bool = true,
         openSettings: (() -> Void)? = nil,
-        viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature> = Store(
-            initialState: ChatViewModelLifecycleFeature.State())
-        {
-            ChatViewModelLifecycleFeature()
+        viewModelLifecycleStore: StoreOf<ChatViewModelLifecycleFeature>? = nil,
+        viewModelLifecycleStoreFactory: () -> StoreOf<ChatViewModelLifecycleFeature> = {
+            Store(initialState: ChatViewModelLifecycleFeature.State()) {
+                ChatViewModelLifecycleFeature()
+            }
         },
-        presentationStore: StoreOf<ChatProPresentationFeature> = Store(
-            initialState: ChatProPresentationFeature.State())
-        {
-            ChatProPresentationFeature()
+        presentationStore: StoreOf<ChatProPresentationFeature>? = nil,
+        presentationStoreFactory: () -> StoreOf<ChatProPresentationFeature> = {
+            Store(initialState: ChatProPresentationFeature.State()) {
+                ChatProPresentationFeature()
+            }
         },
-        talkControlStore: StoreOf<ChatTalkControlFeature> = Store(
-            initialState: ChatTalkControlFeature.State())
-        {
-            ChatTalkControlFeature()
+        talkControlStore: StoreOf<ChatTalkControlFeature>? = nil,
+        talkControlStoreFactory: () -> StoreOf<ChatTalkControlFeature> = {
+            Store(initialState: ChatTalkControlFeature.State()) {
+                ChatTalkControlFeature()
+            }
         })
     {
         self.headerLeadingAction = headerLeadingAction
@@ -50,9 +53,12 @@ struct ChatProTab: View {
         self.showsAgentBadge = showsAgentBadge
         self.ownsNavigationStack = ownsNavigationStack
         self.openSettings = openSettings
-        self._viewModelLifecycleStore = State(wrappedValue: viewModelLifecycleStore)
-        self._presentationStore = State(wrappedValue: presentationStore)
-        self._talkControlStore = State(wrappedValue: talkControlStore)
+        let resolvedViewModelLifecycleStore = viewModelLifecycleStore ?? viewModelLifecycleStoreFactory()
+        let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
+        let resolvedTalkControlStore = talkControlStore ?? talkControlStoreFactory()
+        self._viewModelLifecycleStore = State(wrappedValue: resolvedViewModelLifecycleStore)
+        self._presentationStore = State(wrappedValue: resolvedPresentationStore)
+        self._talkControlStore = State(wrappedValue: resolvedTalkControlStore)
     }
 
     var body: some View {
