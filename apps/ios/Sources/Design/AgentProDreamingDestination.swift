@@ -160,6 +160,11 @@ struct AgentDreamingDestinationFeature {
             ].compactMap(\.self)
             return parts.joined(separator: " • ")
         }
+
+        func dreamingPhaseState(_ phase: DreamingPhaseStatusLite) -> String {
+            if phase.enabled == false { return "off" }
+            return phase.managedCronPresent == true ? "scheduled" : "setup"
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -662,7 +667,7 @@ struct AgentProDreamingDestination: View {
                 }
             }
             Spacer(minLength: 8)
-            Text(self.dreamingPhaseState(phase.status))
+            Text(self.store.state.dreamingPhaseState(phase.status))
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(phase.status.managedCronPresent == true ? OpenClawBrand.accent : .secondary)
                 .lineLimit(1)
@@ -709,11 +714,6 @@ struct AgentProDreamingDestination: View {
             return "Managed cron is installed."
         }
         return "Managed cron is not installed."
-    }
-
-    private func dreamingPhaseState(_ phase: DreamingPhaseStatusLite) -> String {
-        if phase.enabled == false { return "off" }
-        return phase.managedCronPresent == true ? "scheduled" : "setup"
     }
 
     private func dreamDiaryUpdatedLabel(_ diary: DreamDiaryLite) -> String {

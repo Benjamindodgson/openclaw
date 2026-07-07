@@ -68,6 +68,19 @@ struct AgentDreamingDestinationFeatureTests {
         #expect(state.dreamingEntryDetail(entry) == "promoted today • recalled yesterday • 3 recalls • 2 grounded")
     }
 
+    @Test func `dreaming phase labels are derived by reducer state`() {
+        let state = AgentDreamingDestinationFeature.State()
+
+        #expect(state
+            .dreamingPhaseState(.init(enabled: false, cron: nil, managedCronPresent: true, nextRunAtMs: nil)) == "off")
+        #expect(state
+            .dreamingPhaseState(.init(enabled: true, cron: nil, managedCronPresent: true, nextRunAtMs: nil)) ==
+            "scheduled")
+        #expect(state
+            .dreamingPhaseState(.init(enabled: true, cron: nil, managedCronPresent: false, nextRunAtMs: nil)) ==
+            "setup")
+    }
+
     @Test func `maintenance action is ignored while gateway is disconnected`() async {
         let store = TestStore(initialState: AgentDreamingDestinationFeature.State()) {
             AgentDreamingDestinationFeature(client: Self.client())
