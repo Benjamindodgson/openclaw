@@ -2219,6 +2219,24 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("sessionsAvailability: .init(isAvailable: self.sessionsAvailable)"))
     }
 
+    @Test func `iPad activity gateway endpoints are typed presentation state`() throws {
+        let source = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct IPadActivityGatewayRemoteAddress: Equatable, Sendable"))
+        #expect(source.contains("struct IPadActivityGatewayServerName: Equatable, Sendable"))
+        #expect(source.contains("var gatewayRemoteAddressState = IPadActivityGatewayRemoteAddress(value: nil)"))
+        #expect(source.contains("var gatewayServerNameState = IPadActivityGatewayServerName(value: nil)"))
+        #expect(source.contains("gatewayRemoteAddress: String? = nil"))
+        #expect(source.contains("gatewayServerName: String? = nil"))
+        #expect(source.contains("self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)"))
+        #expect(source.contains("self.gatewayServerNameState = .init(value: gatewayServerName)"))
+        #expect(source.contains("var gatewayRemoteAddress: String?"))
+        #expect(source.contains("var gatewayServerName: String?"))
+        #expect(source.contains("self.gatewayRemoteAddressState.value"))
+        #expect(source.contains("self.gatewayServerNameState.value"))
+        #expect(!source.contains("var gatewayRemoteAddress: String?\n    var gatewayServerName: String?"))
+    }
+
     @Test func `command sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
         let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
