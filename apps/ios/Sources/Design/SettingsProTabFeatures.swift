@@ -808,10 +808,13 @@ struct SettingsOnboardingStateFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct SettingsOnboardingHasConnectedOnce: Equatable, Sendable { var value: Bool }
+    struct SettingsOnboardingComplete: Equatable, Sendable { var value: Bool }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var hasConnectedOnceState = Action.SettingsOnboardingHasConnectedOnce(value: false)
-        var onboardingCompletion = Action.SettingsOnboardingComplete(value: false)
+        var hasConnectedOnceState = SettingsOnboardingHasConnectedOnce(value: false)
+        var onboardingCompletion = SettingsOnboardingComplete(value: false)
         var requestID = SettingsOnboardingRequestID(value: 0)
 
         var hasConnectedOnce: Bool {
@@ -831,9 +834,6 @@ struct SettingsOnboardingStateFeature {
         struct OnboardingRequestIDChange: Equatable, Sendable { var requestID: SettingsOnboardingRequestID }
 
         struct OnboardingResetRequest: Equatable, Sendable { var instanceId: SettingsGatewayCurrentInstanceID }
-
-        struct SettingsOnboardingHasConnectedOnce: Equatable, Sendable { var value: Bool }
-        struct SettingsOnboardingComplete: Equatable, Sendable { var value: Bool }
 
         struct OnboardingStateSync: Equatable, Sendable {
             var hasConnectedOnce: SettingsOnboardingHasConnectedOnce
