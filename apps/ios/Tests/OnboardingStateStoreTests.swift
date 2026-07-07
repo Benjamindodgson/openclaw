@@ -106,17 +106,21 @@ import Testing
             gatewayServerName: .init(value: "gateway"),
             hasSavedGatewayConnection: .init(value: false))))
         {
-            $0.gatewayServerName = "gateway"
+            $0.gatewayServerNameState = .init(value: "gateway")
             $0.launchPresentation = .init(shouldPresent: false)
         }
+
+        #expect(store.state.gatewayServerName == "gateway")
 
         await store.send(.gatewaySnapshotChanged(.init(
             gatewayServerName: .init(value: nil),
             hasSavedGatewayConnection: .init(value: true))))
         {
-            $0.gatewayServerName = nil
+            $0.gatewayServerNameState = .init(value: nil)
             $0.savedGatewayConnection = .init(value: true)
         }
+
+        #expect(store.state.gatewayServerName == nil)
 
         await store.send(.gatewaySnapshotChanged(.init(
             gatewayServerName: .init(value: nil),
