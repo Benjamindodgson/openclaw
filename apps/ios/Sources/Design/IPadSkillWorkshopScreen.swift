@@ -697,7 +697,7 @@ struct IPadSkillWorkshopScreen: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("\(self.store.filteredProposalCount) proposals")
                             .font(.headline)
-                        Text(self.statusFilterLabel)
+                        Text(self.store.statusFilterLabel)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -1249,10 +1249,6 @@ struct IPadSkillWorkshopScreen: View {
         Binding(
             get: { self.store.statusFilter.value },
             set: { self.store.send(.statusFilterChanged(.init(filter: .init(value: $0)))) })
-    }
-
-    private var statusFilterLabel: String {
-        self.store.statusFilterLabel
     }
 
     private func selectProposal(
