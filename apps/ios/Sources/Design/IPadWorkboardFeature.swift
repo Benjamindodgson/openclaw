@@ -153,6 +153,10 @@ struct IPadWorkboardBoardScope: Equatable, Sendable {
     var boardID: IPadWorkboardBoardScopeID?
 }
 
+struct IPadWorkboardCards: Equatable, Sendable {
+    var values: [IPadWorkboardCard] = []
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -203,7 +207,7 @@ struct IPadWorkboardFeature {
             case inFlight
         }
 
-        var cards: [IPadWorkboardCard] = []
+        var cardEntries = IPadWorkboardCards()
         var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
         var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
         var refreshPhase = RefreshPhase.idle
@@ -218,6 +222,10 @@ struct IPadWorkboardFeature {
         var cardCreationPhase = CardCreationPhase.idle
         var errorText: IPadWorkboardFailureMessage?
         var presentedSheet: IPadWorkboardSheet?
+
+        var cards: [IPadWorkboardCard] {
+            self.cardEntries.values
+        }
 
         var boardScopeLabel: String {
             self.selectedBoardID.value.isEmpty ? "All boards" : IPadWorkboardScreen
@@ -293,7 +301,7 @@ struct IPadWorkboardFeature {
         }
 
         mutating func applyCardsResponse(_ response: IPadWorkboardCardsResponse) {
-            self.cards = response.cards.sorted { $0.position < $1.position }
+            self.cardEntries = .init(values: response.cards.sorted { $0.position < $1.position })
             self.statuses = Self.normalizedStatuses(response.statuses)
             self.rememberBoardIDs(from: response.cards)
             self.validateSelectedStatus()
@@ -308,9 +316,11 @@ struct IPadWorkboardFeature {
         }
 
         mutating func replace(_ card: IPadWorkboardCard) {
-            self.cards.removeAll { $0.id == card.id }
-            self.cards.append(card)
-            self.cards.sort { $0.position < $1.position }
+            var cardValues = self.cardEntries.values
+            cardValues.removeAll { $0.id == card.id }
+            cardValues.append(card)
+            cardValues.sort { $0.position < $1.position }
+            self.cardEntries = .init(values: cardValues)
             self.rememberBoardIDs(from: [card])
         }
 
@@ -730,7 +740,7 @@ struct IPadWorkboardFeature {
                     return .cancel(id: CancelID.refresh)
                 }
                 guard request.readAccess.canRead else {
-                    state.cards = []
+                    state.cardEntries = .init()
                     state.errorText = nil
                     state.refreshPhase = .idle
                     return .cancel(id: CancelID.refresh)
