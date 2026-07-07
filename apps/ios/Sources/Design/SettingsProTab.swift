@@ -43,11 +43,7 @@ struct SettingsProTab: View {
 
     @State var agentSelectionStore: StoreOf<SettingsAgentSelectionFeature>
 
-    @State var shareInstructionStore: StoreOf<SettingsShareInstructionFeature> = Store(
-        initialState: SettingsShareInstructionFeature.State())
-    {
-        SettingsShareInstructionFeature()
-    }
+    @State var shareInstructionStore: StoreOf<SettingsShareInstructionFeature>
 
     @State var manualGatewayPortStore: StoreOf<SettingsManualGatewayPortFeature> = Store(
         initialState: SettingsManualGatewayPortFeature.State())
@@ -204,6 +200,11 @@ struct SettingsProTab: View {
         {
             SettingsAgentSelectionFeature()
         },
+        shareInstructionStore: StoreOf<SettingsShareInstructionFeature> = Store(
+            initialState: SettingsShareInstructionFeature.State())
+        {
+            SettingsShareInstructionFeature()
+        },
         manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature> = Store(
             initialState: SettingsManualGatewayEndpointFeature.State())
         {
@@ -258,6 +259,7 @@ struct SettingsProTab: View {
         self._voiceControlStore = State(wrappedValue: voiceControlStore)
         self._talkPreferencesStore = State(wrappedValue: talkPreferencesStore)
         self._agentSelectionStore = State(wrappedValue: agentSelectionStore)
+        self._shareInstructionStore = State(wrappedValue: shareInstructionStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)
         self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)

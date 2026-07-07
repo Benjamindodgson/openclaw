@@ -63,6 +63,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsShareInstructionStore() -> StoreOf<SettingsShareInstructionFeature> {
+        Store(initialState: SettingsShareInstructionFeature.State()) {
+            SettingsShareInstructionFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsManualGatewayEndpointStore() -> StoreOf<SettingsManualGatewayEndpointFeature> {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(
