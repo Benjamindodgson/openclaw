@@ -9,20 +9,20 @@ struct AgentNavigationFeatureTests {
             AgentNavigationFeature()
         }
 
-        await store.send(.navigationPathChanged(.init(path: [.instances]))) {
-            $0.navigationPath = [.instances]
+        await store.send(.navigationPathChanged(.init(path: .init(routes: [.instances])))) {
+            $0.navigationPathState = .init(routes: [.instances])
         }
     }
 
     @Test func `multi level path changes are preserved`() async {
         var initialState = AgentNavigationFeature.State()
-        initialState.navigationPath = [.skills]
+        initialState.navigationPathState = .init(routes: [.skills])
         let store = TestStore(initialState: initialState) {
             AgentNavigationFeature()
         }
 
-        await store.send(.navigationPathChanged(.init(path: [.skills, .cron]))) {
-            $0.navigationPath = [.skills, .cron]
+        await store.send(.navigationPathChanged(.init(path: .init(routes: [.skills, .cron])))) {
+            $0.navigationPathState = .init(routes: [.skills, .cron])
         }
     }
 }
