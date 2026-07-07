@@ -1065,9 +1065,9 @@ struct RootTabsPresentationTests {
         #expect(IPadWorkboardScreen.boardScopeOptions(
             knownBoardIDs: ["default", " empty-board ", ""],
             cardBoardIDs: ["planning", "default"]) == ["default", "empty-board", "planning"])
-        #expect(IPadWorkboardScreen
+        #expect(IPadWorkboardFeature.State
             .workboardSubtitle(boardScopeLabel: "All boards", selectedStatus: "active") == "All boards / Active")
-        #expect(IPadWorkboardScreen
+        #expect(IPadWorkboardFeature.State
             .workboardSubtitle(boardScopeLabel: "planning", selectedStatus: "running") == "planning / Running")
     }
 

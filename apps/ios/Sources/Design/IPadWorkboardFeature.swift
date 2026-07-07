@@ -256,6 +256,12 @@ struct IPadWorkboardFeature {
                 .boardScopeLabel(for: self.selectedBoardID.value)
         }
 
+        var workboardSubtitle: String {
+            Self.workboardSubtitle(
+                boardScopeLabel: self.boardScopeLabel,
+                selectedStatus: self.selectedStatus.value)
+        }
+
         var isLoading: Bool {
             self.refreshPhase.isInFlight || self.dispatchPhase == .inFlight
         }
@@ -376,6 +382,10 @@ struct IPadWorkboardFeature {
                 return "Enter a title to create a card."
             }
             return nil
+        }
+
+        static func workboardSubtitle(boardScopeLabel: String, selectedStatus: String) -> String {
+            "\(boardScopeLabel) / \(IPadWorkboardDefaults.label(for: selectedStatus))"
         }
 
         static func cardsForKanbanStatus(
