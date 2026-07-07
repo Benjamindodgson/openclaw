@@ -133,7 +133,17 @@ struct IPadSkillWorkshopFeature {
         }
 
         func shouldEnableProposalActionControls(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool {
-            self.shouldEnableProposalMutation(gatewayAccess: gatewayAccess) && self.busyAction == nil
+            self.proposalActionControlsPresentation(gatewayAccess: gatewayAccess).canRunActions
+        }
+
+        func proposalActionControlsPresentation(
+            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopProposalActionControlsPresentation
+        {
+            let canApplyMutations = self.shouldEnableProposalMutation(gatewayAccess: gatewayAccess)
+            return .init(
+                canApplyMutations: canApplyMutations,
+                canRunActions: canApplyMutations && self.busyAction == nil,
+                showsAdminScopeNotice: !canApplyMutations)
         }
 
         func emptyProposalPresentation(
@@ -945,7 +955,7 @@ struct IPadSkillWorkshopScreen: View {
                         proposalPresentation: { proposal in
                             self.store.state.proposalPresentation(for: proposal)
                         },
-                        canRunProposalActions: self.canRunProposalActions,
+                        canRunProposalActions: self.proposalActionControlsPresentation.canRunActions,
                         select: { proposal in
                             self.selectProposal(
                                 proposal,
@@ -1008,11 +1018,11 @@ struct IPadSkillWorkshopScreen: View {
                             Button("Apply") {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
-                            .disabled(!self.canRunProposalActions)
+                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
                             Button("Reject", role: .destructive) {
                                 Task { await self.run(.reject, proposal: proposal) }
                             }
-                            .disabled(!self.canRunProposalActions)
+                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
                         }
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -1021,11 +1031,11 @@ struct IPadSkillWorkshopScreen: View {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
                             .tint(OpenClawBrand.ok)
-                            .disabled(!self.canRunProposalActions)
+                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
                             Button("Reject", role: .destructive) {
                                 Task { await self.run(.reject, proposal: proposal) }
                             }
-                            .disabled(!self.canRunProposalActions)
+                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
                         }
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -1120,7 +1130,7 @@ struct IPadSkillWorkshopScreen: View {
                             self.proposalInspectButton(proposal)
                         }
                     }
-                    if !self.canApplyProposalMutations {
+                    if self.proposalActionControlsPresentation.showsAdminScopeNotice {
                         self.adminScopeNotice
                     }
                 }
@@ -1137,7 +1147,7 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)
-        .disabled(!self.canRunProposalActions)
+        .disabled(!self.proposalActionControlsPresentation.canRunActions)
     }
 
     private func proposalRejectButton(_ proposal: IPadSkillProposal) -> some View {
@@ -1149,7 +1159,7 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .disabled(!self.canRunProposalActions)
+        .disabled(!self.proposalActionControlsPresentation.canRunActions)
     }
 
     private func proposalInspectButton(_ proposal: IPadSkillProposal) -> some View {
@@ -1177,13 +1187,8 @@ struct IPadSkillWorkshopScreen: View {
             hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)
     }
 
-    private var canApplyProposalMutations: Bool {
-        self.store.state.shouldEnableProposalMutation(
-            gatewayAccess: self.gatewayAccess)
-    }
-
-    private var canRunProposalActions: Bool {
-        self.store.state.shouldEnableProposalActionControls(
+    private var proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation {
+        self.store.state.proposalActionControlsPresentation(
             gatewayAccess: self.gatewayAccess)
     }
 

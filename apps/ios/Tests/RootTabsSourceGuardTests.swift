@@ -2332,12 +2332,17 @@ struct RootTabsSourceGuardTests {
             "func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
         #expect(source.contains(
             "func shouldEnableProposalActionControls(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
+        #expect(typeSource.contains(
+            "struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable"))
+        #expect(source.contains(
+            "func proposalActionControlsPresentation(\n            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopProposalActionControlsPresentation"))
         #expect(source.contains(
             "func emptyProposalPresentation(\n            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopEmptyProposalPresentation"))
         #expect(source.contains("guard state.shouldEnableProposalActionControls("))
-        #expect(source.contains("self.store.state.shouldEnableProposalMutation("))
-        #expect(source.contains("private var canRunProposalActions: Bool"))
-        #expect(source.contains("self.store.state.shouldEnableProposalActionControls("))
+        #expect(source.contains("private var proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation"))
+        #expect(source.contains("self.store.state.proposalActionControlsPresentation("))
+        #expect(source.contains("self.proposalActionControlsPresentation.canRunActions"))
+        #expect(source.contains("if self.proposalActionControlsPresentation.showsAdminScopeNotice"))
         #expect(source.contains("private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation"))
         #expect(source.contains("self.store.state.emptyProposalPresentation("))
         #expect(source.contains("icon: self.emptyProposalPresentation.icon"))
@@ -2351,6 +2356,11 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("private var defaultAgentScopeLabel: String"))
         #expect(!source.contains("private var refreshID: String"))
         #expect(!source.contains("IPadSkillWorkshopScreen.shouldEnableProposalMutation("))
+        #expect(!source.contains("private var canApplyProposalMutations: Bool"))
+        #expect(!source.contains("private var canRunProposalActions: Bool"))
+        #expect(!source.contains("self.store.state.shouldEnableProposalMutation("))
+        #expect(!source.contains("self.store.state.shouldEnableProposalActionControls("))
+        #expect(!source.contains("if !self.canApplyProposalMutations"))
         #expect(!source.contains(
             "func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String"))
         #expect(!source.contains(
