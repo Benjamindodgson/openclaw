@@ -91,172 +91,6 @@ struct SettingsProTab: View {
     let navigateToRoute: ((SettingsRoute) -> Void)?
     let onRouteChange: ((SettingsRoute?) -> Void)?
 
-    init(
-        initialRoute: SettingsRoute? = nil,
-        directRoute: SettingsRoute? = nil,
-        headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
-        ownsNavigationStack: Bool = true,
-        navigateToRoute: ((SettingsRoute) -> Void)? = nil,
-        pushEnrollmentConsentStore: StoreOf<PushEnrollmentConsentFeature> = Store(
-            initialState: PushEnrollmentConsentFeature.State())
-        {
-            PushEnrollmentConsentFeature()
-        },
-        execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature> = Store(
-            initialState: ExecApprovalPromptFeature.State())
-        {
-            ExecApprovalPromptFeature()
-        },
-        approvalsStore: StoreOf<SettingsApprovalsFeature> = Store(
-            initialState: SettingsApprovalsFeature.State())
-        {
-            SettingsApprovalsFeature()
-        },
-        appearanceStore: StoreOf<SettingsAppearanceFeature> = Store(
-            initialState: SettingsAppearanceFeature.State())
-        {
-            SettingsAppearanceFeature()
-        },
-        deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature> = Store(
-            initialState: SettingsDeviceCapabilityFeature.State())
-        {
-            SettingsDeviceCapabilityFeature()
-        },
-        deviceIdentityStore: StoreOf<SettingsDeviceIdentityFeature> = Store(
-            initialState: SettingsDeviceIdentityFeature.State())
-        {
-            SettingsDeviceIdentityFeature()
-        },
-        debugOptionsStore: StoreOf<SettingsDebugOptionsFeature> = Store(
-            initialState: SettingsDebugOptionsFeature.State())
-        {
-            SettingsDebugOptionsFeature()
-        },
-        voiceControlStore: StoreOf<SettingsVoiceControlFeature> = Store(
-            initialState: SettingsVoiceControlFeature.State())
-        {
-            SettingsVoiceControlFeature()
-        },
-        talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature> = Store(
-            initialState: SettingsTalkPreferencesFeature.State())
-        {
-            SettingsTalkPreferencesFeature()
-        },
-        agentSelectionStore: StoreOf<SettingsAgentSelectionFeature> = Store(
-            initialState: SettingsAgentSelectionFeature.State())
-        {
-            SettingsAgentSelectionFeature()
-        },
-        shareInstructionStore: StoreOf<SettingsShareInstructionFeature> = Store(
-            initialState: SettingsShareInstructionFeature.State())
-        {
-            SettingsShareInstructionFeature()
-        },
-        manualGatewayPortStore: StoreOf<SettingsManualGatewayPortFeature> = Store(
-            initialState: SettingsManualGatewayPortFeature.State())
-        {
-            SettingsManualGatewayPortFeature()
-        },
-        manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature> = Store(
-            initialState: SettingsManualGatewayEndpointFeature.State())
-        {
-            SettingsManualGatewayEndpointFeature()
-        },
-        diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
-            initialState: SettingsDiagnosticsFeature.State())
-        {
-            SettingsDiagnosticsFeature()
-        },
-        gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
-            initialState: SettingsGatewayActivityFeature.State())
-        {
-            SettingsGatewayActivityFeature()
-        },
-        gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature> = Store(
-            initialState: SettingsGatewayAutoConnectFeature.State())
-        {
-            SettingsGatewayAutoConnectFeature()
-        },
-        gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
-            initialState: SettingsGatewayConnectionFeature.State())
-        {
-            SettingsGatewayConnectionFeature()
-        },
-        gatewaySetupStatusStore: StoreOf<SettingsGatewaySetupStatusFeature> = Store(
-            initialState: SettingsGatewaySetupStatusFeature.State())
-        {
-            SettingsGatewaySetupStatusFeature()
-        },
-        gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature> = Store(
-            initialState: SettingsGatewayCredentialsFeature.State())
-        {
-            SettingsGatewayCredentialsFeature()
-        },
-        gatewaySetupLinkStore: StoreOf<SettingsGatewaySetupLinkFeature> = Store(
-            initialState: SettingsGatewaySetupLinkFeature.State())
-        {
-            SettingsGatewaySetupLinkFeature()
-        },
-        locationStore: StoreOf<SettingsLocationFeature> = Store(
-            initialState: SettingsLocationFeature.State())
-        {
-            SettingsLocationFeature()
-        },
-        notificationStore: StoreOf<SettingsNotificationFeature> = Store(
-            initialState: SettingsNotificationFeature.State())
-        {
-            SettingsNotificationFeature()
-        },
-        presentationStore: StoreOf<SettingsPresentationFeature> = Store(
-            initialState: SettingsPresentationFeature.State())
-        {
-            SettingsPresentationFeature()
-        },
-        onboardingStateStore: StoreOf<SettingsOnboardingStateFeature> = Store(
-            initialState: SettingsOnboardingStateFeature.State())
-        {
-            SettingsOnboardingStateFeature()
-        },
-        navigationStore: StoreOf<SettingsNavigationFeature> = Store(
-            initialState: SettingsNavigationFeature.State())
-        {
-            SettingsNavigationFeature()
-        },
-        onRouteChange: ((SettingsRoute?) -> Void)? = nil)
-    {
-        self.initialRoute = initialRoute
-        self.directRoute = directRoute
-        self.headerLeadingAction = headerLeadingAction
-        self.ownsNavigationStack = ownsNavigationStack
-        self.navigateToRoute = navigateToRoute
-        self._pushEnrollmentConsentStore = State(wrappedValue: pushEnrollmentConsentStore)
-        self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
-        self._approvalsStore = State(wrappedValue: approvalsStore)
-        self._appearanceStore = State(wrappedValue: appearanceStore)
-        self._deviceCapabilityStore = State(wrappedValue: deviceCapabilityStore)
-        self._deviceIdentityStore = State(wrappedValue: deviceIdentityStore)
-        self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
-        self._voiceControlStore = State(wrappedValue: voiceControlStore)
-        self._talkPreferencesStore = State(wrappedValue: talkPreferencesStore)
-        self._agentSelectionStore = State(wrappedValue: agentSelectionStore)
-        self._shareInstructionStore = State(wrappedValue: shareInstructionStore)
-        self._manualGatewayPortStore = State(wrappedValue: manualGatewayPortStore)
-        self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
-        self._diagnosticsStore = State(wrappedValue: diagnosticsStore)
-        self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)
-        self._gatewayAutoConnectStore = State(wrappedValue: gatewayAutoConnectStore)
-        self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
-        self._gatewaySetupStatusStore = State(wrappedValue: gatewaySetupStatusStore)
-        self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
-        self._gatewaySetupLinkStore = State(wrappedValue: gatewaySetupLinkStore)
-        self._locationStore = State(wrappedValue: locationStore)
-        self._notificationStore = State(wrappedValue: notificationStore)
-        self._presentationStore = State(wrappedValue: presentationStore)
-        self._onboardingStateStore = State(wrappedValue: onboardingStateStore)
-        self._navigationStore = State(wrappedValue: navigationStore)
-        self.onRouteChange = onRouteChange
-    }
-
     var body: some View {
         self.settingsModalPresentation(
             self.settingsLifecycle(
@@ -629,6 +463,222 @@ struct SettingsProTab: View {
 }
 
 extension SettingsProTab {
+    init(
+        initialRoute: SettingsRoute? = nil,
+        directRoute: SettingsRoute? = nil,
+        headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
+        ownsNavigationStack: Bool = true,
+        navigateToRoute: ((SettingsRoute) -> Void)? = nil,
+        pushEnrollmentConsentStore: StoreOf<PushEnrollmentConsentFeature>? = nil,
+        pushEnrollmentConsentStoreFactory: @MainActor @Sendable () -> StoreOf<PushEnrollmentConsentFeature> = {
+            Store(initialState: PushEnrollmentConsentFeature.State()) {
+                PushEnrollmentConsentFeature()
+            }
+        },
+        execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>? = nil,
+        execApprovalPromptStoreFactory: @MainActor @Sendable () -> StoreOf<ExecApprovalPromptFeature> = {
+            Store(initialState: ExecApprovalPromptFeature.State()) {
+                ExecApprovalPromptFeature()
+            }
+        },
+        approvalsStore: StoreOf<SettingsApprovalsFeature>? = nil,
+        approvalsStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsApprovalsFeature> = {
+            Store(initialState: SettingsApprovalsFeature.State()) {
+                SettingsApprovalsFeature()
+            }
+        },
+        appearanceStore: StoreOf<SettingsAppearanceFeature>? = nil,
+        appearanceStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsAppearanceFeature> = {
+            Store(initialState: SettingsAppearanceFeature.State()) {
+                SettingsAppearanceFeature()
+            }
+        },
+        deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature>? = nil,
+        deviceCapabilityStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsDeviceCapabilityFeature> = {
+            Store(initialState: SettingsDeviceCapabilityFeature.State()) {
+                SettingsDeviceCapabilityFeature()
+            }
+        },
+        deviceIdentityStore: StoreOf<SettingsDeviceIdentityFeature>? = nil,
+        deviceIdentityStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsDeviceIdentityFeature> = {
+            Store(initialState: SettingsDeviceIdentityFeature.State()) {
+                SettingsDeviceIdentityFeature()
+            }
+        },
+        debugOptionsStore: StoreOf<SettingsDebugOptionsFeature>? = nil,
+        debugOptionsStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsDebugOptionsFeature> = {
+            Store(initialState: SettingsDebugOptionsFeature.State()) {
+                SettingsDebugOptionsFeature()
+            }
+        },
+        voiceControlStore: StoreOf<SettingsVoiceControlFeature>? = nil,
+        voiceControlStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsVoiceControlFeature> = {
+            Store(initialState: SettingsVoiceControlFeature.State()) {
+                SettingsVoiceControlFeature()
+            }
+        },
+        talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature>? = nil,
+        talkPreferencesStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsTalkPreferencesFeature> = {
+            Store(initialState: SettingsTalkPreferencesFeature.State()) {
+                SettingsTalkPreferencesFeature()
+            }
+        },
+        agentSelectionStore: StoreOf<SettingsAgentSelectionFeature>? = nil,
+        agentSelectionStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsAgentSelectionFeature> = {
+            Store(initialState: SettingsAgentSelectionFeature.State()) {
+                SettingsAgentSelectionFeature()
+            }
+        },
+        shareInstructionStore: StoreOf<SettingsShareInstructionFeature>? = nil,
+        shareInstructionStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsShareInstructionFeature> = {
+            Store(initialState: SettingsShareInstructionFeature.State()) {
+                SettingsShareInstructionFeature()
+            }
+        },
+        manualGatewayPortStore: StoreOf<SettingsManualGatewayPortFeature>? = nil,
+        manualGatewayPortStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsManualGatewayPortFeature> = {
+            Store(initialState: SettingsManualGatewayPortFeature.State()) {
+                SettingsManualGatewayPortFeature()
+            }
+        },
+        manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature>? = nil,
+        manualGatewayEndpointStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsManualGatewayEndpointFeature> = {
+            Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
+                SettingsManualGatewayEndpointFeature()
+            }
+        },
+        diagnosticsStore: StoreOf<SettingsDiagnosticsFeature>? = nil,
+        diagnosticsStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsDiagnosticsFeature> = {
+            Store(initialState: SettingsDiagnosticsFeature.State()) {
+                SettingsDiagnosticsFeature()
+            }
+        },
+        gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature>? = nil,
+        gatewayActivityStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsGatewayActivityFeature> = {
+            Store(initialState: SettingsGatewayActivityFeature.State()) {
+                SettingsGatewayActivityFeature()
+            }
+        },
+        gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature>? = nil,
+        gatewayAutoConnectStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsGatewayAutoConnectFeature> = {
+            Store(initialState: SettingsGatewayAutoConnectFeature.State()) {
+                SettingsGatewayAutoConnectFeature()
+            }
+        },
+        gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature>? = nil,
+        gatewayConnectionStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsGatewayConnectionFeature> = {
+            Store(initialState: SettingsGatewayConnectionFeature.State()) {
+                SettingsGatewayConnectionFeature()
+            }
+        },
+        gatewaySetupStatusStore: StoreOf<SettingsGatewaySetupStatusFeature>? = nil,
+        gatewaySetupStatusStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsGatewaySetupStatusFeature> = {
+            Store(initialState: SettingsGatewaySetupStatusFeature.State()) {
+                SettingsGatewaySetupStatusFeature()
+            }
+        },
+        gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature>? = nil,
+        gatewayCredentialsStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsGatewayCredentialsFeature> = {
+            Store(initialState: SettingsGatewayCredentialsFeature.State()) {
+                SettingsGatewayCredentialsFeature()
+            }
+        },
+        gatewaySetupLinkStore: StoreOf<SettingsGatewaySetupLinkFeature>? = nil,
+        gatewaySetupLinkStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsGatewaySetupLinkFeature> = {
+            Store(initialState: SettingsGatewaySetupLinkFeature.State()) {
+                SettingsGatewaySetupLinkFeature()
+            }
+        },
+        locationStore: StoreOf<SettingsLocationFeature>? = nil,
+        locationStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsLocationFeature> = {
+            Store(initialState: SettingsLocationFeature.State()) {
+                SettingsLocationFeature()
+            }
+        },
+        notificationStore: StoreOf<SettingsNotificationFeature>? = nil,
+        notificationStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsNotificationFeature> = {
+            Store(initialState: SettingsNotificationFeature.State()) {
+                SettingsNotificationFeature()
+            }
+        },
+        presentationStore: StoreOf<SettingsPresentationFeature>? = nil,
+        presentationStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsPresentationFeature> = {
+            Store(initialState: SettingsPresentationFeature.State()) {
+                SettingsPresentationFeature()
+            }
+        },
+        onboardingStateStore: StoreOf<SettingsOnboardingStateFeature>? = nil,
+        onboardingStateStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsOnboardingStateFeature> = {
+            Store(initialState: SettingsOnboardingStateFeature.State()) {
+                SettingsOnboardingStateFeature()
+            }
+        },
+        navigationStore: StoreOf<SettingsNavigationFeature>? = nil,
+        navigationStoreFactory: @MainActor @Sendable () -> StoreOf<SettingsNavigationFeature> = {
+            Store(initialState: SettingsNavigationFeature.State()) {
+                SettingsNavigationFeature()
+            }
+        },
+        onRouteChange: ((SettingsRoute?) -> Void)? = nil)
+    {
+        self.initialRoute = initialRoute
+        self.directRoute = directRoute
+        self.headerLeadingAction = headerLeadingAction
+        self.ownsNavigationStack = ownsNavigationStack
+        self.navigateToRoute = navigateToRoute
+        let resolvedPushEnrollmentConsentStore = pushEnrollmentConsentStore ?? pushEnrollmentConsentStoreFactory()
+        let resolvedExecApprovalPromptStore = execApprovalPromptStore ?? execApprovalPromptStoreFactory()
+        let resolvedApprovalsStore = approvalsStore ?? approvalsStoreFactory()
+        let resolvedAppearanceStore = appearanceStore ?? appearanceStoreFactory()
+        let resolvedDeviceCapabilityStore = deviceCapabilityStore ?? deviceCapabilityStoreFactory()
+        let resolvedDeviceIdentityStore = deviceIdentityStore ?? deviceIdentityStoreFactory()
+        let resolvedDebugOptionsStore = debugOptionsStore ?? debugOptionsStoreFactory()
+        let resolvedVoiceControlStore = voiceControlStore ?? voiceControlStoreFactory()
+        let resolvedTalkPreferencesStore = talkPreferencesStore ?? talkPreferencesStoreFactory()
+        let resolvedAgentSelectionStore = agentSelectionStore ?? agentSelectionStoreFactory()
+        let resolvedShareInstructionStore = shareInstructionStore ?? shareInstructionStoreFactory()
+        let resolvedManualGatewayPortStore = manualGatewayPortStore ?? manualGatewayPortStoreFactory()
+        let resolvedManualGatewayEndpointStore = manualGatewayEndpointStore ?? manualGatewayEndpointStoreFactory()
+        let resolvedDiagnosticsStore = diagnosticsStore ?? diagnosticsStoreFactory()
+        let resolvedGatewayActivityStore = gatewayActivityStore ?? gatewayActivityStoreFactory()
+        let resolvedGatewayAutoConnectStore = gatewayAutoConnectStore ?? gatewayAutoConnectStoreFactory()
+        let resolvedGatewayConnectionStore = gatewayConnectionStore ?? gatewayConnectionStoreFactory()
+        let resolvedGatewaySetupStatusStore = gatewaySetupStatusStore ?? gatewaySetupStatusStoreFactory()
+        let resolvedGatewayCredentialsStore = gatewayCredentialsStore ?? gatewayCredentialsStoreFactory()
+        let resolvedGatewaySetupLinkStore = gatewaySetupLinkStore ?? gatewaySetupLinkStoreFactory()
+        let resolvedLocationStore = locationStore ?? locationStoreFactory()
+        let resolvedNotificationStore = notificationStore ?? notificationStoreFactory()
+        let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
+        let resolvedOnboardingStateStore = onboardingStateStore ?? onboardingStateStoreFactory()
+        let resolvedNavigationStore = navigationStore ?? navigationStoreFactory()
+        self._pushEnrollmentConsentStore = State(wrappedValue: resolvedPushEnrollmentConsentStore)
+        self._execApprovalPromptStore = State(wrappedValue: resolvedExecApprovalPromptStore)
+        self._approvalsStore = State(wrappedValue: resolvedApprovalsStore)
+        self._appearanceStore = State(wrappedValue: resolvedAppearanceStore)
+        self._deviceCapabilityStore = State(wrappedValue: resolvedDeviceCapabilityStore)
+        self._deviceIdentityStore = State(wrappedValue: resolvedDeviceIdentityStore)
+        self._debugOptionsStore = State(wrappedValue: resolvedDebugOptionsStore)
+        self._voiceControlStore = State(wrappedValue: resolvedVoiceControlStore)
+        self._talkPreferencesStore = State(wrappedValue: resolvedTalkPreferencesStore)
+        self._agentSelectionStore = State(wrappedValue: resolvedAgentSelectionStore)
+        self._shareInstructionStore = State(wrappedValue: resolvedShareInstructionStore)
+        self._manualGatewayPortStore = State(wrappedValue: resolvedManualGatewayPortStore)
+        self._manualGatewayEndpointStore = State(wrappedValue: resolvedManualGatewayEndpointStore)
+        self._diagnosticsStore = State(wrappedValue: resolvedDiagnosticsStore)
+        self._gatewayActivityStore = State(wrappedValue: resolvedGatewayActivityStore)
+        self._gatewayAutoConnectStore = State(wrappedValue: resolvedGatewayAutoConnectStore)
+        self._gatewayConnectionStore = State(wrappedValue: resolvedGatewayConnectionStore)
+        self._gatewaySetupStatusStore = State(wrappedValue: resolvedGatewaySetupStatusStore)
+        self._gatewayCredentialsStore = State(wrappedValue: resolvedGatewayCredentialsStore)
+        self._gatewaySetupLinkStore = State(wrappedValue: resolvedGatewaySetupLinkStore)
+        self._locationStore = State(wrappedValue: resolvedLocationStore)
+        self._notificationStore = State(wrappedValue: resolvedNotificationStore)
+        self._presentationStore = State(wrappedValue: resolvedPresentationStore)
+        self._onboardingStateStore = State(wrappedValue: resolvedOnboardingStateStore)
+        self._navigationStore = State(wrappedValue: resolvedNavigationStore)
+        self.onRouteChange = onRouteChange
+    }
+
     var connectingGatewayID: String? {
         self.gatewayConnectionStore.connectingGatewayID?.value
     }
