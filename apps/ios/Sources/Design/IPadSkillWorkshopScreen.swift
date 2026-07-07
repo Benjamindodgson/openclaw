@@ -55,6 +55,10 @@ struct IPadSkillWorkshopFeature {
                 .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
         }
 
+        var shouldEnableAgentScopeMenu: Bool {
+            !self.agentScopeOptions.isEmpty
+        }
+
         var agentScopeLabel: String {
             let selected = Self.normalizedScopeID(self.selectedAgentScopeID.value)
             guard !selected.isEmpty else { return self.defaultAgentScopeLabel }
@@ -875,7 +879,7 @@ struct IPadSkillWorkshopScreen: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .tint(self.neutralControlTint)
-            .disabled(self.store.agentScopeOptions.isEmpty)
+            .disabled(!self.store.shouldEnableAgentScopeMenu)
             .accessibilityLabel("Skill Workshop agent scope")
         }
     }

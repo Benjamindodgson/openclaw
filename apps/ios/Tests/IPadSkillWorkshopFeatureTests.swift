@@ -155,6 +155,8 @@ struct IPadSkillWorkshopFeatureTests {
     }
 
     @Test func `agent scope snapshot updates reducer presentation state`() async {
+        #expect(!IPadSkillWorkshopFeature.State().shouldEnableAgentScopeMenu)
+
         let snapshot = IPadSkillWorkshopFeature.Action.AgentScopeSnapshot(
             gatewayDefaultAgentID: .init(value: " main "),
             gatewayAgents: .init(values: [
@@ -188,6 +190,7 @@ struct IPadSkillWorkshopFeatureTests {
             IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
             IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
         ])
+        #expect(state.shouldEnableAgentScopeMenu)
 
         await store.send(.agentScopeChanged(.init(agentID: .init(value: "agent-b")))) {
             $0.selectedAgentScopeID = .init(value: "agent-b")
