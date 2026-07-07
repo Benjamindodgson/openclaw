@@ -38,6 +38,9 @@ enum IPadActivitySessionsLoadingPhase: Equatable, Sendable {
 
 struct IPadActivitySceneActive: Equatable, Sendable { var value: Bool }
 struct IPadActivitySessionsAvailable: Equatable, Sendable { var value: Bool }
+struct IPadActivitySessionEntries: Equatable, Sendable {
+    var entries: [OpenClawChatSessionEntry] = []
+}
 
 enum IPadActivitySessionsError: Error, Equatable, Sendable {
     case failed
@@ -56,10 +59,14 @@ struct IPadActivitySessionsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var sessions: [OpenClawChatSessionEntry] = []
+        var sessionEntries = IPadActivitySessionEntries()
         var loadingPhase = IPadActivitySessionsLoadingPhase.idle
         var loadErrorText: IPadActivitySessionsFailureMessage?
         var gatewayPresentation = IPadActivityGatewayPresentationState()
+
+        var sessions: [OpenClawChatSessionEntry] {
+            self.sessionEntries.entries
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -77,7 +84,7 @@ struct IPadActivitySessionsFeature {
         }
 
         struct RefreshResponse: Equatable, Sendable {
-            var result: Result<[OpenClawChatSessionEntry], IPadActivitySessionsError>
+            var result: Result<IPadActivitySessionEntries, IPadActivitySessionsError>
         }
 
         case gatewayPresentationChanged(IPadActivityGatewayPresentationState)
@@ -104,7 +111,7 @@ struct IPadActivitySessionsFeature {
                 }
                 guard request.sessionsAvailability.isAvailable.value else {
                     state.loadingPhase = .idle
-                    state.sessions = []
+                    state.sessionEntries = .init()
                     state.loadErrorText = nil
                     return .none
                 }
@@ -114,7 +121,7 @@ struct IPadActivitySessionsFeature {
                 return .run { send in
                     do {
                         let sessions = try await client.listSessions(CommandCenterTab.recentSessionsFetchLimit)
-                        await send(.refreshResponse(.init(result: .success(sessions))))
+                        await send(.refreshResponse(.init(result: .success(.init(entries: sessions)))))
                     } catch {
                         await send(.refreshResponse(.init(result: .failure(.failed))))
                     }
@@ -122,15 +129,15 @@ struct IPadActivitySessionsFeature {
 
             case let .refreshResponse(response):
                 switch response.result {
-                case let .success(sessions):
+                case let .success(sessionEntries):
                     state.loadingPhase = .idle
-                    state.sessions = sessions
+                    state.sessionEntries = sessionEntries
                     state.loadErrorText = nil
                     return .none
 
                 case .failure:
                     state.loadingPhase = .idle
-                    state.sessions = []
+                    state.sessionEntries = .init()
                     state.loadErrorText = .init(value: "Try again after the gateway reconnects.")
                     return .none
                 }
@@ -170,7 +177,7 @@ struct IPadActivityScreen: View {
         self.headerLeadingAction = headerLeadingAction
         self.openChat = openChat
         self.openSettings = openSettings
-        self._store = State(wrappedValue: store)
+        _store = State(wrappedValue: store)
     }
 
     var body: some View {
