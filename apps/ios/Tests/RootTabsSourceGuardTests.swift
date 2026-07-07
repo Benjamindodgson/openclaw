@@ -3160,6 +3160,13 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource.contains("var headerSubtitle: String?"))
         #expect(chatSource.contains("self.headerSubtitleValue.value"))
         #expect(!chatSource.contains("var headerSubtitle: String?\n    var showsAgentBadge"))
+        #expect(chatSource.contains("struct ChatProShowsAgentBadge: Equatable, Sendable"))
+        #expect(chatSource.contains("var showsAgentBadgeValue = ChatProShowsAgentBadge(value: true)"))
+        #expect(chatSource.contains("showsAgentBadge: Bool = true"))
+        #expect(chatSource.contains("self.showsAgentBadgeValue = .init(value: showsAgentBadge)"))
+        #expect(chatSource.contains("var showsAgentBadge: Bool"))
+        #expect(chatSource.contains("self.showsAgentBadgeValue.value"))
+        #expect(!chatSource.contains("var showsAgentBadge = true"))
         #expect(!chatSource.contains("var transportModeID = \"\""))
         #expect(!chatSource.contains("state.transportModeID = record.transportModeID.value"))
         #expect(!chatSource.contains(
