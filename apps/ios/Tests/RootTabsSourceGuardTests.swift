@@ -3189,6 +3189,51 @@ struct RootTabsSourceGuardTests {
         #expect(modelSource.contains("enrollment_disclosure_not_accepted"))
     }
 
+    @Test func `settings pro tab store defaults use lazy factories`() throws {
+        let settingsSource = try String(contentsOf: Self.settingsProTabSourceURL(), encoding: .utf8)
+        let storeTypes = [
+            ("pushEnrollmentConsentStore", "PushEnrollmentConsentFeature"),
+            ("execApprovalPromptStore", "ExecApprovalPromptFeature"),
+            ("approvalsStore", "SettingsApprovalsFeature"),
+            ("appearanceStore", "SettingsAppearanceFeature"),
+            ("deviceCapabilityStore", "SettingsDeviceCapabilityFeature"),
+            ("deviceIdentityStore", "SettingsDeviceIdentityFeature"),
+            ("debugOptionsStore", "SettingsDebugOptionsFeature"),
+            ("voiceControlStore", "SettingsVoiceControlFeature"),
+            ("talkPreferencesStore", "SettingsTalkPreferencesFeature"),
+            ("agentSelectionStore", "SettingsAgentSelectionFeature"),
+            ("shareInstructionStore", "SettingsShareInstructionFeature"),
+            ("manualGatewayPortStore", "SettingsManualGatewayPortFeature"),
+            ("manualGatewayEndpointStore", "SettingsManualGatewayEndpointFeature"),
+            ("diagnosticsStore", "SettingsDiagnosticsFeature"),
+            ("gatewayActivityStore", "SettingsGatewayActivityFeature"),
+            ("gatewayAutoConnectStore", "SettingsGatewayAutoConnectFeature"),
+            ("gatewayConnectionStore", "SettingsGatewayConnectionFeature"),
+            ("gatewaySetupStatusStore", "SettingsGatewaySetupStatusFeature"),
+            ("gatewayCredentialsStore", "SettingsGatewayCredentialsFeature"),
+            ("gatewaySetupLinkStore", "SettingsGatewaySetupLinkFeature"),
+            ("locationStore", "SettingsLocationFeature"),
+            ("notificationStore", "SettingsNotificationFeature"),
+            ("presentationStore", "SettingsPresentationFeature"),
+            ("onboardingStateStore", "SettingsOnboardingStateFeature"),
+            ("navigationStore", "SettingsNavigationFeature"),
+        ]
+
+        for (label, feature) in storeTypes {
+            #expect(!settingsSource.contains("\(label): StoreOf<\(feature)> = Store("))
+            #expect(settingsSource.contains("\(label): StoreOf<\(feature)>? = nil"))
+            #expect(settingsSource.contains("\(label)Factory: @MainActor @Sendable () -> StoreOf<\(feature)>"))
+        }
+        #expect(settingsSource.contains("extension SettingsProTab {\n    init("))
+        #expect(settingsSource.contains("Store(initialState: PushEnrollmentConsentFeature.State())"))
+        #expect(settingsSource.contains("Store(initialState: SettingsNavigationFeature.State())"))
+        #expect(settingsSource.contains(
+            "let resolvedPushEnrollmentConsentStore = pushEnrollmentConsentStore "
+                + "?? pushEnrollmentConsentStoreFactory()"))
+        #expect(settingsSource.contains(
+            "let resolvedNavigationStore = navigationStore ?? navigationStoreFactory()"))
+    }
+
     @Test func `settings approvals sync action is typed`() throws {
         let settingsSource = try Self.settingsProTabCombinedSource()
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
