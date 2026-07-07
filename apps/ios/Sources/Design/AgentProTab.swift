@@ -455,6 +455,10 @@ struct AgentSkillPolicyMutationFeature {
 // swiftformat:disable redundantSendable
 struct AgentSkillEditorAPIKeyDraftKey: Equatable, Hashable, Sendable { var value: String }
 struct AgentSkillEditorAPIKeyDraftValue: Equatable, Sendable { var value: String }
+struct AgentSkillEditorAPIKeyDrafts: Equatable, Sendable {
+    var values: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] = [:]
+}
+
 struct AgentSkillEditorID: Equatable, Sendable { var value: String }
 struct AgentSkillEditorMutationKey: Equatable, Hashable, Sendable { var value: String }
 struct AgentSkillEditorMutationFailureMessage: Equatable, Sendable { var value: String }
@@ -487,10 +491,14 @@ struct AgentSkillEditorFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var apiKeyDrafts: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] = [:]
+        var apiKeyDraftEntries = AgentSkillEditorAPIKeyDrafts()
         var busyKeyEntries = AgentSkillEditorBusyKeys()
         var messages: [AgentSkillEditorMutationKey: AgentSkillEditorMessage] = [:]
         var selection: AgentSkillEditorSelection?
+
+        var apiKeyDrafts: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] {
+            self.apiKeyDraftEntries.values
+        }
 
         var busyKeys: Set<AgentSkillEditorMutationKey> {
             self.busyKeyEntries.values
@@ -546,11 +554,11 @@ struct AgentSkillEditorFeature {
         Reduce { state, action in
             switch action {
             case let .apiKeyDraftChanged(draft):
-                state.apiKeyDrafts[draft.key] = draft.value
+                state.apiKeyDraftEntries.values[draft.key] = draft.value
                 return .none
 
             case let .apiKeyDraftCleared(draft):
-                state.apiKeyDrafts[draft.key] = nil
+                state.apiKeyDraftEntries.values[draft.key] = nil
                 return .none
 
             case .editorDismissed:

@@ -110,10 +110,10 @@ struct AgentSkillEditorFeatureTests {
             key: .init(value: "skill-a"),
             value: .init(value: "sk-test"))))
         {
-            $0.apiKeyDrafts = [.init(value: "skill-a"): .init(value: "sk-test")]
+            $0.apiKeyDraftEntries = .init(values: [.init(value: "skill-a"): .init(value: "sk-test")])
         }
         await store.send(.apiKeyDraftCleared(.init(key: .init(value: "skill-a")))) {
-            $0.apiKeyDrafts = [:]
+            $0.apiKeyDraftEntries = .init()
         }
     }
 
