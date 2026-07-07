@@ -1276,6 +1276,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayAutoConnectStore()"))
+        #expect(storesSource.contains("func makeSettingsGatewaySetupStatusStore()"))
         #expect(storesSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(storesSource.contains("withDependencies"))
         #expect(storesSource.contains("openNotifications: { approvalId in"))
@@ -1287,6 +1288,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("shareInstructionStore: self.makeSettingsShareInstructionStore()"))
         #expect(rootSource.contains("manualGatewayPortStore: self.makeSettingsManualGatewayPortStore()"))
         #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
+        #expect(rootSource.contains("gatewaySetupStatusStore: self.makeSettingsGatewaySetupStatusStore()"))
         #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
@@ -1294,6 +1296,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayAutoConnectStore()"))
+        #expect(!rootSource.contains("func makeSettingsGatewaySetupStatusStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(!rootSource.contains("withDependencies"))
     }
@@ -3591,6 +3594,10 @@ struct RootTabsSourceGuardTests {
             settingsSource,
             from: "@State var gatewayConnectionStore",
             to: "@State var gatewaySetupStatusStore")
+        let gatewaySetupStatusStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var gatewaySetupStatusStore",
+            to: "@State var gatewaySetupLinkStore")
         let openScannerFunction = try Self.extract(
             actionsSource,
             from: "func openGatewayQRScanner() async",
@@ -3611,6 +3618,11 @@ struct RootTabsSourceGuardTests {
         #expect(gatewayConnectionStoreDeclaration
             .contains("@State var gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature>"))
         #expect(!gatewayConnectionStoreDeclaration.contains("= Store("))
+        #expect(rootSource.contains("gatewaySetupStatusStore: self.makeSettingsGatewaySetupStatusStore()"))
+        #expect(storesSource.contains("func makeSettingsGatewaySetupStatusStore()"))
+        #expect(gatewaySetupStatusStoreDeclaration
+            .contains("@State var gatewaySetupStatusStore: StoreOf<SettingsGatewaySetupStatusFeature>"))
+        #expect(!gatewaySetupStatusStoreDeclaration.contains("= Store("))
         #expect(!openScannerFunction.contains("self.appModel.disconnectGateway()"))
         #expect(!openScannerFunction.contains("Opening QR scanner..."))
     }
