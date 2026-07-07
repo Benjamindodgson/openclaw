@@ -644,10 +644,10 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.nonceChanged) {
-            $0.opacity = 0.85
+            $0.opacityState = .init(value: 0.85)
         }
         await store.receive(.fadeOutDelayElapsed) {
-            $0.opacity = 0
+            $0.opacityState = .init(value: 0)
         }
     }
 
@@ -658,7 +658,7 @@ struct RootTabsPresentationTests {
         }
 
         await store.send(.nonceChanged) {
-            $0.opacity = 0.85
+            $0.opacityState = .init(value: 0.85)
         }
         await store.send(.disappeared)
 
