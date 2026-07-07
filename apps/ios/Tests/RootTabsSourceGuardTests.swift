@@ -2237,6 +2237,19 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var gatewayRemoteAddress: String?\n    var gatewayServerName: String?"))
     }
 
+    @Test func `iPad activity status text is typed presentation state`() throws {
+        let source = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct IPadActivityGatewayDisplayStatusText: Equatable, Sendable"))
+        #expect(source.contains(
+            "var gatewayDisplayStatusTextState = IPadActivityGatewayDisplayStatusText(value: \"Offline\")"))
+        #expect(source.contains("gatewayDisplayStatusText: String = \"Offline\""))
+        #expect(source.contains("self.gatewayDisplayStatusTextState = .init(value: gatewayDisplayStatusText)"))
+        #expect(source.contains("var gatewayDisplayStatusText: String"))
+        #expect(source.contains("self.gatewayDisplayStatusTextState.value"))
+        #expect(!source.contains("var gatewayDisplayStatusText = \"Offline\""))
+    }
+
     @Test func `command sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
         let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
