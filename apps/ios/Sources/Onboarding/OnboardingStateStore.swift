@@ -276,7 +276,7 @@ struct OnboardingStatusFeature {
         var connectingGatewayIDState: OnboardingConnectionID?
         var completionMark = OnboardingGatewayMarkedCompleted(value: false)
         var issue: GatewayConnectionIssue = .none
-        var lastPairingAutoResumeAttemptAt: Date?
+        var lastPairingAutoResumeAttemptState: OnboardingPairingResumeRequestTime?
         var pairingRequestIdState = OnboardingConnectionIssueRequestID(value: nil)
         var automaticPairingResume = OnboardingAutomaticPairingResume(shouldResume: false)
         var authStepPresentation = OnboardingAuthStepPresentation(shouldShow: false)
@@ -296,6 +296,10 @@ struct OnboardingStatusFeature {
 
         var pairingRequestId: String? {
             self.pairingRequestIdState.value
+        }
+
+        var lastPairingAutoResumeAttemptAt: Date? {
+            self.lastPairingAutoResumeAttemptState?.value
         }
 
         var statusLine: String {
@@ -377,7 +381,7 @@ struct OnboardingStatusFeature {
                         return .none
                     }
                 }
-                state.lastPairingAutoResumeAttemptAt = request.now.value
+                state.lastPairingAutoResumeAttemptState = request.now
                 state.automaticPairingResume = .init(shouldResume: true)
                 return .none
 
@@ -439,7 +443,7 @@ struct OnboardingStatusFeature {
                 state.connectingGatewayIDState = nil
                 state.connectMessageState = .init(value: nil)
                 state.issue = .none
-                state.lastPairingAutoResumeAttemptAt = nil
+                state.lastPairingAutoResumeAttemptState = nil
                 state.pairingRequestIdState = .init(value: nil)
                 state.automaticPairingResume = .init(shouldResume: false)
                 state.authStepPresentation = .init(shouldShow: false)
@@ -457,7 +461,7 @@ struct OnboardingStatusFeature {
                 state.connectingGatewayIDState = nil
                 state.connectMessageState = .init(value: nil)
                 state.issue = .none
-                state.lastPairingAutoResumeAttemptAt = nil
+                state.lastPairingAutoResumeAttemptState = nil
                 state.pairingRequestIdState = .init(value: nil)
                 state.automaticPairingResume = .init(shouldResume: false)
                 state.authStepPresentation = .init(shouldShow: false)
