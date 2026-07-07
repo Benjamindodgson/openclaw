@@ -819,20 +819,20 @@ struct CommandSessionsScreen: View {
     }
 
     private var sessionRows: [CommandCenterTab.WorkItem] {
-        self.store.sessions
-            .filter { CommandCenterTab.isRecentChatSession(
-                $0.key,
-                defaultSessionKey: self.appModel.defaultChatSessionKey) }
-            .sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
+        self.store.visibleSessions
             .map {
                 CommandCenterTab.sessionWorkItem(
                     for: $0,
-                    currentSessionKey: self.appModel.chatSessionKey)
+                    currentSessionKey: self.store.currentSession.value)
             }
     }
 
     private var refreshID: String {
-        self.appModel.commandSessionListMode
+        [
+            self.appModel.commandSessionListMode,
+            self.appModel.chatSessionKey,
+            self.appModel.defaultChatSessionKey,
+        ].joined(separator: ":")
     }
 
     private func open(_ item: CommandCenterTab.WorkItem) {
@@ -848,7 +848,9 @@ struct CommandSessionsScreen: View {
 
     private func refreshSessions() async {
         await self.store.send(.refreshRequested(.init(
-            sessionsAvailability: .init(isAvailable: .init(value: self.appModel.isCommandSessionListAvailable)))))
+            sessionsAvailability: .init(isAvailable: .init(value: self.appModel.isCommandSessionListAvailable)),
+            currentSession: .init(key: .init(value: self.appModel.chatSessionKey)),
+            defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey)))))
             .finish()
     }
 }
