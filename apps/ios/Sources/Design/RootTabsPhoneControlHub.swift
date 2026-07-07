@@ -416,13 +416,14 @@ struct RootTabsPhoneControlHubGatewayServerName: Equatable, Sendable { var value
 struct RootTabsPhoneControlHubGatewayRemoteAddress: Equatable, Sendable { var value: String? }
 struct RootTabsPhoneControlHubSelectedAgentID: Equatable, Sendable { var value: String? }
 struct RootTabsPhoneControlHubGatewayDefaultAgentID: Equatable, Sendable { var value: String? }
+struct RootTabsPhoneControlHubGatewayDisplayStatusText: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
 struct RootTabsPhoneControlHubPresentationState: Equatable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
     var gatewayServerNameState = RootTabsPhoneControlHubGatewayServerName(value: nil)
     var gatewayRemoteAddressState = RootTabsPhoneControlHubGatewayRemoteAddress(value: nil)
-    var gatewayDisplayStatusText = "Offline"
+    var gatewayDisplayStatusTextState = RootTabsPhoneControlHubGatewayDisplayStatusText(value: "Offline")
     var selectedAgentIDState = RootTabsPhoneControlHubSelectedAgentID(value: nil)
     var gatewayDefaultAgentIDState = RootTabsPhoneControlHubGatewayDefaultAgentID(value: nil)
     var gatewayAgentEntries = RootTabsPhoneControlHubAgents()
@@ -441,7 +442,7 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
         self.gatewayDisplayState = gatewayDisplayState
         self.gatewayServerNameState = .init(value: gatewayServerName)
         self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)
-        self.gatewayDisplayStatusText = gatewayDisplayStatusText
+        self.gatewayDisplayStatusTextState = .init(value: gatewayDisplayStatusText)
         self.selectedAgentIDState = .init(value: selectedAgentId)
         self.gatewayDefaultAgentIDState = .init(value: gatewayDefaultAgentId)
         self.gatewayAgentEntries = .init(values: gatewayAgents)
@@ -466,6 +467,10 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
 
     var gatewayDefaultAgentId: String? {
         self.gatewayDefaultAgentIDState.value
+    }
+
+    var gatewayDisplayStatusText: String {
+        self.gatewayDisplayStatusTextState.value
     }
 
     var activeAgentTitle: String {
