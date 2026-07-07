@@ -3232,7 +3232,8 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("case scannerError(OnboardingScannerErrorMessage)"))
         #expect(onboardingStateSource.contains("case scannerErrorReceived(ScannerError)"))
         #expect(onboardingStateSource.contains("case qrScannerErrorReceived(QRScannerError)"))
-        #expect(onboardingStateSource.contains("state.statusLine = \"Scanner error: \\(error.message.value)\""))
+        #expect(onboardingStateSource.contains(
+            "state.statusLineState = .init(value: \"Scanner error: \\(error.message.value)\")"))
         #expect(onboardingStateSource.contains("state.destination = .scannerError(error.message)"))
         #expect(onboardingSource.contains(
             "self.statusStore.send(.scannerErrorReceived(.init(message: .init(value: error))))"))
@@ -3241,6 +3242,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains(
             "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message.value))))"))
         #expect(!onboardingStateSource.contains("state.scannerError = error.message.value"))
+        #expect(!onboardingStateSource.contains("state.statusLine = \"Scanner error: \\(error.message.value)\""))
         #expect(!onboardingStateSource.contains("var scannerError: String?\n"))
         #expect(!onboardingStateSource.contains("var showGatewayProblemDetails = false"))
         #expect(!onboardingStateSource.contains("var showQRScanner = false"))
@@ -4388,8 +4390,12 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("var connectingGatewayIDState: OnboardingConnectionID?"))
         #expect(onboardingStateSource.contains("var connectingGatewayID: String? {\n            self.connectingGatewayIDState?.value"))
         #expect(onboardingStateSource.contains("state.connectingGatewayIDState = start.id"))
-        #expect(onboardingStateSource.contains("state.connectMessage = start.message.value"))
-        #expect(onboardingStateSource.contains("state.statusLine = start.statusLine.value"))
+        #expect(onboardingStateSource.contains("var connectMessageState = OnboardingConnectionStatusMessage(value: nil)"))
+        #expect(onboardingStateSource.contains("var statusLineState: OnboardingConnectionStatusLine"))
+        #expect(onboardingStateSource.contains("var connectMessage: String? {\n            self.connectMessageState.value"))
+        #expect(onboardingStateSource.contains("var statusLine: String {\n            self.statusLineState.value"))
+        #expect(onboardingStateSource.contains("state.connectMessageState = .init(value: start.message.value)"))
+        #expect(onboardingStateSource.contains("state.statusLineState = start.statusLine"))
         #expect(onboardingStateSource.contains("if start.clearsIssue.value"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(.init("))
         #expect(onboardingSource.contains("id: .init(value: connectionID)"))
@@ -4400,6 +4406,10 @@ struct RootTabsSourceGuardTests {
         #expect(!connectionActivityStart.contains("var id: String"))
         #expect(!statusStateBlock.contains("var connectingGatewayID: String?"))
         #expect(!onboardingStateSource.contains("state.connectingGatewayID = start.id.value"))
+        #expect(!statusStateBlock.contains("var connectMessage: String?"))
+        #expect(!statusStateBlock.contains("var statusLine: String"))
+        #expect(!onboardingStateSource.contains("state.connectMessage = start.message.value"))
+        #expect(!onboardingStateSource.contains("state.statusLine = start.statusLine.value"))
         #expect(!onboardingSource.contains("self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))"))
     }
 
@@ -4417,13 +4427,15 @@ struct RootTabsSourceGuardTests {
         #expect(connectionStatusUpdate.contains("var message: OnboardingConnectionStatusMessage"))
         #expect(connectionStatusUpdate.contains("var statusLine: OnboardingConnectionStatusLine"))
         #expect(onboardingStateSource.contains("case connectionStatusUpdated(ConnectionStatusUpdate)"))
-        #expect(onboardingStateSource.contains("state.connectMessage = update.message.value"))
-        #expect(onboardingStateSource.contains("state.statusLine = update.statusLine.value"))
+        #expect(onboardingStateSource.contains("state.connectMessageState = update.message"))
+        #expect(onboardingStateSource.contains("state.statusLineState = update.statusLine"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStatusUpdated(.init("))
         #expect(onboardingSource.contains("message: .init(value: \"Connecting via QR code...\")"))
         #expect(onboardingSource.contains("statusLine: .init(value: \"QR loaded. Connecting to \\(scannedLink.host):"))
         #expect(!connectionStatusUpdate.contains("var message: String?"))
         #expect(!connectionStatusUpdate.contains("var statusLine: String\n"))
+        #expect(!onboardingStateSource.contains("state.connectMessage = update.message.value"))
+        #expect(!onboardingStateSource.contains("state.statusLine = update.statusLine.value"))
     }
 
     @Test func `onboarding connection issue action is typed`() throws {
@@ -4454,6 +4466,10 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.pairingRequestIdState = .init(value: requestId)"))
         #expect(onboardingStateSource.contains("detection.pauseReconnect.value"))
         #expect(onboardingStateSource.contains("detection.statusText.value.trimmingCharacters"))
+        #expect(onboardingStateSource.contains("state.connectMessageState = .init(value: message)"))
+        #expect(onboardingStateSource.contains("state.statusLineState = .init(value: message)"))
+        #expect(onboardingStateSource.contains("state.connectMessageState = .init(value: trimmedStatus)"))
+        #expect(onboardingStateSource.contains("state.statusLineState = .init(value: trimmedStatus)"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionIssueDetected(.init("))
         #expect(onboardingSource.contains("requestId: .init(value: problem?.requestId ?? fallback.requestId)"))
         #expect(onboardingSource.contains("pauseReconnect: .init(value: problem?.pauseReconnect == true)"))
@@ -4465,6 +4481,10 @@ struct RootTabsSourceGuardTests {
         #expect(!connectionIssueDetection.contains("var statusText: String"))
         #expect(!statusStateBlock.contains("var pairingRequestId: String?"))
         #expect(!onboardingStateSource.contains("state.pairingRequestId = requestId"))
+        #expect(!onboardingStateSource.contains("state.connectMessage = message"))
+        #expect(!onboardingStateSource.contains("state.statusLine = message"))
+        #expect(!onboardingStateSource.contains("state.connectMessage = trimmedStatus"))
+        #expect(!onboardingStateSource.contains("state.statusLine = trimmedStatus"))
     }
 
     @Test func `settings onboarding reset is reducer effect owned`() throws {
