@@ -75,6 +75,10 @@ struct OnboardingConnectionClearsIssue: Equatable, Sendable { var value: Bool }
 
 struct OnboardingGatewayMarkedCompleted: Equatable, Sendable { var value: Bool }
 
+struct OnboardingAutomaticPairingResume: Equatable, Sendable { var shouldResume: Bool }
+
+struct OnboardingAuthStepPresentation: Equatable, Sendable { var shouldShow: Bool }
+
 struct OnboardingPairingResumeRequestTime: Equatable, Sendable { var value: Date }
 
 struct OnboardingCompletion: Equatable, Sendable { var isCompleted: Bool }
@@ -264,16 +268,28 @@ struct OnboardingStatusFeature {
     struct State: Equatable, Sendable {
         var connectMessage: String?
         var connectingGatewayID: String?
-        var didMarkCompleted = false
+        var completionMark = OnboardingGatewayMarkedCompleted(value: false)
         var issue: GatewayConnectionIssue = .none
         var lastPairingAutoResumeAttemptAt: Date?
         var pairingRequestId: String?
-        var shouldResumePairingAutomatically = false
-        var shouldShowAuthStep = false
+        var automaticPairingResume = OnboardingAutomaticPairingResume(shouldResume: false)
+        var authStepPresentation = OnboardingAuthStepPresentation(shouldShow: false)
         var statusLine: String
 
         init(statusLine: String = OnboardingStatusFeature.defaultStatusLine) {
             self.statusLine = statusLine
+        }
+
+        var didMarkCompleted: Bool {
+            self.completionMark.value
+        }
+
+        var shouldResumePairingAutomatically: Bool {
+            self.automaticPairingResume.shouldResume
+        }
+
+        var shouldShowAuthStep: Bool {
+            self.authStepPresentation.shouldShow
         }
     }
 
@@ -331,7 +347,7 @@ struct OnboardingStatusFeature {
         Reduce { state, action in
             switch action {
             case let .automaticPairingResumeRequested(request):
-                state.shouldResumePairingAutomatically = false
+                state.automaticPairingResume = .init(shouldResume: false)
                 guard state.issue.needsPairing, state.connectingGatewayID == nil else { return .none }
                 if let last = state.lastPairingAutoResumeAttemptAt {
                     let elapsedSinceLastAttempt = request.now.value.timeIntervalSince(last)
@@ -340,7 +356,7 @@ struct OnboardingStatusFeature {
                     }
                 }
                 state.lastPairingAutoResumeAttemptAt = request.now.value
-                state.shouldResumePairingAutomatically = true
+                state.automaticPairingResume = .init(shouldResume: true)
                 return .none
 
             case .appleReviewDemoModeEnabled:
@@ -361,9 +377,10 @@ struct OnboardingStatusFeature {
                 if let requestId = detection.requestId.value, !requestId.isEmpty {
                     state.pairingRequestId = requestId
                 }
-                state.shouldShowAuthStep = state.issue.needsAuthToken
-                    || state.issue.needsPairing
-                    || detection.pauseReconnect.value
+                state.authStepPresentation = .init(shouldShow:
+                    state.issue.needsAuthToken
+                        || state.issue.needsPairing
+                        || detection.pauseReconnect.value)
 
                 if let message = detection.message.value {
                     state.connectMessage = message
@@ -381,7 +398,7 @@ struct OnboardingStatusFeature {
                 state.connectingGatewayID = start.id.value
                 if start.clearsIssue.value {
                     state.issue = .none
-                    state.shouldShowAuthStep = false
+                    state.authStepPresentation = .init(shouldShow: false)
                 }
                 state.connectMessage = start.message.value
                 state.statusLine = start.statusLine.value
@@ -402,15 +419,15 @@ struct OnboardingStatusFeature {
                 state.issue = .none
                 state.lastPairingAutoResumeAttemptAt = nil
                 state.pairingRequestId = nil
-                state.shouldResumePairingAutomatically = false
-                state.shouldShowAuthStep = false
+                state.automaticPairingResume = .init(shouldResume: false)
+                state.authStepPresentation = .init(shouldShow: false)
                 state.statusLine = "Opening QR scanner…"
                 return .none
 
             case let .gatewayConnected(completion):
                 state.statusLine = "Connected."
                 if completion.markedCompleted.value {
-                    state.didMarkCompleted = true
+                    state.completionMark = completion.markedCompleted
                 }
                 return .none
 
@@ -420,8 +437,8 @@ struct OnboardingStatusFeature {
                 state.issue = .none
                 state.lastPairingAutoResumeAttemptAt = nil
                 state.pairingRequestId = nil
-                state.shouldResumePairingAutomatically = false
-                state.shouldShowAuthStep = false
+                state.automaticPairingResume = .init(shouldResume: false)
+                state.authStepPresentation = .init(shouldShow: false)
                 state.statusLine = "Scan a fresh setup QR code from this gateway."
                 return .none
 
@@ -440,8 +457,8 @@ struct OnboardingStatusFeature {
 
             case .pairingResumeStarted:
                 state.issue = .none
-                state.shouldResumePairingAutomatically = false
-                state.shouldShowAuthStep = false
+                state.automaticPairingResume = .init(shouldResume: false)
+                state.authStepPresentation = .init(shouldShow: false)
                 state.connectMessage = "Retrying after approval…"
                 state.statusLine = "Retrying after approval…"
                 return .none
