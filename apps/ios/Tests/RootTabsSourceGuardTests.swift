@@ -1275,6 +1275,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makeSettingsAppearanceStore()"))
         #expect(storesSource.contains("func makeSettingsDeviceCapabilityStore()"))
         #expect(storesSource.contains("func makeSettingsDeviceIdentityStore()"))
+        #expect(storesSource.contains("func makeSettingsDiagnosticsStore()"))
         #expect(storesSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(storesSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
@@ -1293,6 +1294,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("appearanceStore: self.makeSettingsAppearanceStore()"))
         #expect(rootSource.contains("deviceCapabilityStore: self.makeSettingsDeviceCapabilityStore()"))
         #expect(rootSource.contains("deviceIdentityStore: self.makeSettingsDeviceIdentityStore()"))
+        #expect(rootSource.contains("diagnosticsStore: self.makeSettingsDiagnosticsStore()"))
         #expect(rootSource.contains("shareInstructionStore: self.makeSettingsShareInstructionStore()"))
         #expect(rootSource.contains("manualGatewayPortStore: self.makeSettingsManualGatewayPortStore()"))
         #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
@@ -1305,6 +1307,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makeSettingsAppearanceStore()"))
         #expect(!rootSource.contains("func makeSettingsDeviceCapabilityStore()"))
         #expect(!rootSource.contains("func makeSettingsDeviceIdentityStore()"))
+        #expect(!rootSource.contains("func makeSettingsDiagnosticsStore()"))
         #expect(!rootSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(!rootSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
@@ -5714,6 +5717,10 @@ struct RootTabsSourceGuardTests {
             settingsSource,
             from: "@State var gatewayActivityStore",
             to: "@State var gatewayAutoConnectStore")
+        let diagnosticsStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var diagnosticsStore",
+            to: "@State var appearanceStore")
         let runDiagnosticsFunction = try Self.extract(
             actionsSource,
             from: "func runDiagnostics()",
@@ -5753,6 +5760,10 @@ struct RootTabsSourceGuardTests {
         #expect(diagnosticsSource.contains("state.issueCount = .init(value: SettingsDiagnostics.issueCount("))
         #expect(actionsSource.contains("self.diagnosticsStore.lastRunText.value"))
         #expect(actionsSource.contains("self.diagnosticsStore.discoveryStatusText.value"))
+        #expect(rootSource.contains("diagnosticsStore: self.makeSettingsDiagnosticsStore()"))
+        #expect(storesSource.contains("func makeSettingsDiagnosticsStore()"))
+        #expect(diagnosticsStoreDeclaration.contains("@State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature>"))
+        #expect(!diagnosticsStoreDeclaration.contains("= Store("))
         #expect(diagnosticsSource.contains("case diagnosticsContextSynced(DiagnosticsContextSync)"))
         #expect(diagnosticsSource.contains("case diagnosticsCompletionRequested(DiagnosticsCompletionRequest)"))
         #expect(!diagnosticsSource.contains("var discoveredGatewayCount = 0"))
