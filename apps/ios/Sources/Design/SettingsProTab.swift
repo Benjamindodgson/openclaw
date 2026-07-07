@@ -47,11 +47,7 @@ struct SettingsProTab: View {
 
     @State var manualGatewayPortStore: StoreOf<SettingsManualGatewayPortFeature>
 
-    @State var manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature> = Store(
-        initialState: SettingsManualGatewayEndpointFeature.State())
-    {
-        SettingsManualGatewayEndpointFeature()
-    }
+    @State var manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature>
 
     @State var diagnosticsStore: StoreOf<SettingsDiagnosticsFeature> = Store(
         initialState: SettingsDiagnosticsFeature.State())
