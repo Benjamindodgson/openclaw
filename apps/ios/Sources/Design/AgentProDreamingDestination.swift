@@ -235,10 +235,11 @@ struct AgentProDreamingDestination: View {
         dreamingDetail: String,
         dreamingColor: Color,
         refresh: @escaping () async -> Void,
-        store: StoreOf<AgentDreamingDestinationFeature> = Store(
-            initialState: AgentDreamingDestinationFeature.State())
-        {
-            AgentDreamingDestinationFeature()
+        store: StoreOf<AgentDreamingDestinationFeature>? = nil,
+        storeFactory: () -> StoreOf<AgentDreamingDestinationFeature> = {
+            Store(initialState: AgentDreamingDestinationFeature.State()) {
+                AgentDreamingDestinationFeature()
+            }
         })
     {
         self.headerLeadingAction = headerLeadingAction
@@ -249,7 +250,8 @@ struct AgentProDreamingDestination: View {
         self.dreamingDetail = dreamingDetail
         self.dreamingColor = dreamingColor
         self.refresh = refresh
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
