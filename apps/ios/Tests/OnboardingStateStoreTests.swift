@@ -256,8 +256,10 @@ import Testing
         await store.send(.discoveryDomainChanged)
 
         await store.receive(.restartDelayElapsed) {
-            $0.restartRequestID = 1
+            $0.restartRequestIDState = .init(value: 1)
         }
+
+        #expect(store.state.restartRequestID == 1)
     }
 
     @Test @MainActor func `discovery restart reducer cancels pending restart on disappear`() async {

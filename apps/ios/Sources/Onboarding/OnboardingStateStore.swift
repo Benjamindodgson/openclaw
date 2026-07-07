@@ -105,6 +105,8 @@ struct OnboardingSetupCode: Equatable, Sendable { var value: String }
 
 struct OnboardingSetupCodeStatusMessage: Equatable, Sendable { var value: String? }
 
+struct OnboardingDiscoveryRestartRequestID: Equatable, Sendable { var value: Int }
+
 struct OnboardingManualHost: Equatable, Sendable { var value: String }
 
 struct OnboardingManualPort: Equatable, Sendable { var value: Int }
@@ -703,7 +705,11 @@ struct OnboardingDiscoveryRestartFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var restartRequestID = 0
+        var restartRequestIDState = OnboardingDiscoveryRestartRequestID(value: 0)
+
+        var restartRequestID: Int {
+            self.restartRequestIDState.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -728,7 +734,7 @@ struct OnboardingDiscoveryRestartFeature {
                 .cancellable(id: CancelID.restart, cancelInFlight: true)
 
             case .restartDelayElapsed:
-                state.restartRequestID &+= 1
+                state.restartRequestIDState = .init(value: state.restartRequestID &+ 1)
                 return .none
 
             case .disappeared:
