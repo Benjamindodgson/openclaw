@@ -78,12 +78,16 @@ struct GatewayTrustPromptAlert: ViewModifier {
     @Environment(GatewayConnectionController.self) private var gatewayController: GatewayConnectionController
     @State private var store: StoreOf<GatewayTrustPromptFeature>
 
-    init(store: StoreOf<GatewayTrustPromptFeature> = Store(
-        initialState: GatewayTrustPromptFeature.State())
+    init(
+        store: StoreOf<GatewayTrustPromptFeature>? = nil,
+        storeFactory: () -> StoreOf<GatewayTrustPromptFeature> = {
+            Store(initialState: GatewayTrustPromptFeature.State()) {
+                GatewayTrustPromptFeature()
+            }
+        })
     {
-        GatewayTrustPromptFeature()
-    }) {
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     func body(content: Content) -> some View {
@@ -116,12 +120,13 @@ struct GatewayTrustPromptAlert: ViewModifier {
 
 extension View {
     func gatewayTrustPromptAlert(
-        store: StoreOf<GatewayTrustPromptFeature> = Store(
-            initialState: GatewayTrustPromptFeature.State())
-        {
-            GatewayTrustPromptFeature()
+        store: StoreOf<GatewayTrustPromptFeature>? = nil,
+        storeFactory: @escaping () -> StoreOf<GatewayTrustPromptFeature> = {
+            Store(initialState: GatewayTrustPromptFeature.State()) {
+                GatewayTrustPromptFeature()
+            }
         }) -> some View
     {
-        self.modifier(GatewayTrustPromptAlert(store: store))
+        self.modifier(GatewayTrustPromptAlert(store: store, storeFactory: storeFactory))
     }
 }

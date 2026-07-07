@@ -3310,6 +3310,12 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("QRScannerView("))
         #expect(trustSource.contains("Trust this gateway?"))
         #expect(trustSource.contains("Trust and connect"))
+        #expect(trustSource.contains("store: StoreOf<GatewayTrustPromptFeature>? = nil"))
+        #expect(trustSource.contains("storeFactory: () -> StoreOf<GatewayTrustPromptFeature>"))
+        #expect(trustSource.contains("storeFactory: @escaping () -> StoreOf<GatewayTrustPromptFeature>"))
+        #expect(trustSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(trustSource.contains("GatewayTrustPromptAlert(store: store, storeFactory: storeFactory)"))
+        #expect(!trustSource.contains("store: StoreOf<GatewayTrustPromptFeature> = Store("))
         #expect(controllerSource.contains("acceptPendingTrustPrompt()"))
         #expect(controllerSource.contains("trustRotatedGatewayCertificate(from problem: GatewayConnectionProblem)"))
     }
