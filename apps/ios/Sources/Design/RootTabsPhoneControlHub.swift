@@ -107,6 +107,7 @@ struct RootTabsPhoneControlHub: View {
     let groups: [RootTabs.SidebarGroup]
     let initialDestination: RootTabs.SidebarDestination?
     let openRootDestination: (RootTabs.SidebarDestination) -> Void
+    private let agentSelectionStoreFactory: @MainActor (NodeAppModel) -> StoreOf<AgentSelectionFeature>
 
     init(
         groups: [RootTabs.SidebarGroup],
@@ -116,11 +117,18 @@ struct RootTabsPhoneControlHub: View {
             initialState: RootTabsPhoneControlHubFeature.State())
         {
             RootTabsPhoneControlHubFeature()
-        })
+        },
+        agentSelectionStoreFactory: @escaping @MainActor (NodeAppModel)
+            -> StoreOf<AgentSelectionFeature> = { appModel in
+                Store(initialState: AgentSelectionFeature.State()) {
+                    AgentSelectionFeature(selectionClient: .live(appModel: appModel))
+                }
+            })
     {
         self.groups = groups
         self.initialDestination = initialDestination
         self.openRootDestination = openRootDestination
+        self.agentSelectionStoreFactory = agentSelectionStoreFactory
         self._store = State(wrappedValue: store)
     }
 
@@ -357,9 +365,7 @@ struct RootTabsPhoneControlHub: View {
 
     @MainActor
     private func makeAgentSelectionStore() -> StoreOf<AgentSelectionFeature> {
-        Store(initialState: AgentSelectionFeature.State()) {
-            AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))
-        }
+        self.agentSelectionStoreFactory(self.appModel)
     }
 
     private func applyInitialDestinationIfNeeded() {
