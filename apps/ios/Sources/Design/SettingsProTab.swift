@@ -57,11 +57,7 @@ struct SettingsProTab: View {
 
     @State var appearanceStore: StoreOf<SettingsAppearanceFeature>
 
-    @State var deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature> = Store(
-        initialState: SettingsDeviceCapabilityFeature.State())
-    {
-        SettingsDeviceCapabilityFeature()
-    }
+    @State var deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature>
 
     @State var deviceIdentityStore: StoreOf<SettingsDeviceIdentityFeature>
 
@@ -124,6 +120,11 @@ struct SettingsProTab: View {
             initialState: SettingsAppearanceFeature.State())
         {
             SettingsAppearanceFeature()
+        },
+        deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature> = Store(
+            initialState: SettingsDeviceCapabilityFeature.State())
+        {
+            SettingsDeviceCapabilityFeature()
         },
         deviceIdentityStore: StoreOf<SettingsDeviceIdentityFeature> = Store(
             initialState: SettingsDeviceIdentityFeature.State())
@@ -231,6 +232,7 @@ struct SettingsProTab: View {
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._approvalsStore = State(wrappedValue: approvalsStore)
         self._appearanceStore = State(wrappedValue: appearanceStore)
+        self._deviceCapabilityStore = State(wrappedValue: deviceCapabilityStore)
         self._deviceIdentityStore = State(wrappedValue: deviceIdentityStore)
         self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
         self._voiceControlStore = State(wrappedValue: voiceControlStore)
