@@ -7,6 +7,10 @@ struct VoiceWakeWords: Equatable, Sendable {
     var values: [String]
 }
 
+struct VoiceWakeTriggerIndex: Equatable, Sendable {
+    var value: Int
+}
+
 // swiftformat:enable redundantSendable
 
 struct VoiceWakeWordsPreferencesClient {
@@ -88,7 +92,7 @@ struct VoiceWakeWordsSettingsFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var triggerWords: [String]
-        var focusedTriggerIndex: Int?
+        var focusedTriggerIndex: VoiceWakeTriggerIndex?
 
         init(triggerWords: [String]) {
             self.triggerWords = triggerWords
@@ -103,12 +107,12 @@ struct VoiceWakeWordsSettingsFeature {
 
     enum Action: Equatable, Sendable {
         struct TriggerWordChange: Equatable, Sendable {
-            var index: Int
+            var index: VoiceWakeTriggerIndex
             var value: String
         }
 
         struct FocusedTriggerIndexChange: Equatable, Sendable {
-            var index: Int?
+            var index: VoiceWakeTriggerIndex?
         }
 
         struct WordRemoval: Equatable, Sendable {
@@ -152,8 +156,8 @@ struct VoiceWakeWordsSettingsFeature {
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case let .triggerWordChanged(change):
-                guard state.triggerWords.indices.contains(change.index) else { return .none }
-                state.triggerWords[change.index] = change.value
+                guard state.triggerWords.indices.contains(change.index.value) else { return .none }
+                state.triggerWords[change.index.value] = change.value
                 return .none
 
             case .resetDefaultsButtonTapped:
@@ -262,7 +266,8 @@ struct VoiceWakeWordsSettingsView: View {
             self.store.send(.appeared)
         }
         .onChange(of: self.focusedTriggerIndex) { _, newValue in
-            self.store.send(.focusedTriggerIndexChanged(.init(index: newValue)))
+            self.store.send(.focusedTriggerIndexChanged(.init(
+                index: newValue.map { VoiceWakeTriggerIndex(value: $0) })))
         }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
             guard self.focusedTriggerIndex == nil else { return }
@@ -277,7 +282,7 @@ struct VoiceWakeWordsSettingsView: View {
                 return self.store.triggerWords[index]
             },
             set: { newValue in
-                self.store.send(.triggerWordChanged(.init(index: index, value: newValue)))
+                self.store.send(.triggerWordChanged(.init(index: .init(value: index), value: newValue)))
             })
     }
 }
