@@ -223,8 +223,20 @@ struct IPadSkillWorkshopFeature {
             canWrite && hasOperatorAdminScope
         }
 
+        static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
+
+        static func proposalStatusFilterLabel(_ filter: String) -> String {
+            switch filter {
+            case "pending": "Pending"
+            case "held": "Held"
+            case "applied": "Applied"
+            case "rejected": "Rejected"
+            default: "All"
+            }
+        }
+
         var statusFilterLabel: String {
-            IPadSkillWorkshopScreen.proposalStatusFilterLabel(self.statusFilter.value)
+            Self.proposalStatusFilterLabel(self.statusFilter.value)
         }
 
         var filteredProposals: [IPadSkillProposal] {
@@ -740,8 +752,8 @@ struct IPadSkillWorkshopScreen: View {
                 self.agentScopeMenu
                 self.proposalSearchField
                 Picker("Status", selection: self.statusFilterBinding) {
-                    ForEach(Self.proposalStatusFilters, id: \.self) { filter in
-                        Text(Self.proposalStatusFilterLabel(filter)).tag(filter)
+                    ForEach(IPadSkillWorkshopFeature.State.proposalStatusFilters, id: \.self) { filter in
+                        Text(IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(filter)).tag(filter)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -796,8 +808,8 @@ struct IPadSkillWorkshopScreen: View {
 
                 self.agentScopeMenu
                 Picker("Status", selection: self.statusFilterBinding) {
-                    ForEach(Self.proposalStatusFilters, id: \.self) { filter in
-                        Text(Self.proposalStatusFilterLabel(filter)).tag(filter)
+                    ForEach(IPadSkillWorkshopFeature.State.proposalStatusFilters, id: \.self) { filter in
+                        Text(IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(filter)).tag(filter)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -1201,26 +1213,14 @@ struct IPadSkillWorkshopScreen: View {
         horizontalSizeClass == .compact || verticalSizeClass == .compact
     }
 
-    nonisolated static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
-
     nonisolated static let defaultProposalStatusBoardLanes = ["pending", "quarantined", "stale", "applied", "rejected"]
-
-    nonisolated static func proposalStatusFilterLabel(_ filter: String) -> String {
-        switch filter {
-        case "pending": "Pending"
-        case "held": "Held"
-        case "applied": "Applied"
-        case "rejected": "Rejected"
-        default: "All"
-        }
-    }
 
     nonisolated static func proposalLaneLabel(_ status: String) -> String {
         switch status {
         case "quarantined": "Quarantined"
         case "stale": "Stale"
         case "pending", "applied", "rejected":
-            self.proposalStatusFilterLabel(status)
+            IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(status)
         default:
             self.titleCasedProposalStatus(status)
         }
