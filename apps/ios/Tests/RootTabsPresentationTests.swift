@@ -994,10 +994,24 @@ struct RootTabsPresentationTests {
 
     @Test func `skill workshop mutations require admin scope`() {
         let state = IPadSkillWorkshopFeature.State()
+        let writableAdmin = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: true)
+        let writableNonAdmin = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: false)
+        let reviewModeAdmin = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: true,
+            hasOperatorAdminScope: true)
 
-        #expect(state.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: true))
-        #expect(!state.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: false))
-        #expect(!state.shouldEnableProposalMutation(canWrite: false, hasOperatorAdminScope: true))
+        #expect(writableAdmin == .init(canRead: true, canWrite: true, hasOperatorAdminScope: true))
+        #expect(reviewModeAdmin == .init(canRead: true, canWrite: false, hasOperatorAdminScope: true))
+        #expect(state.shouldEnableProposalMutation(gatewayAccess: writableAdmin))
+        #expect(!state.shouldEnableProposalMutation(gatewayAccess: writableNonAdmin))
+        #expect(!state.shouldEnableProposalMutation(gatewayAccess: reviewModeAdmin))
     }
 
     @Test func `skill workshop held filter includes quarantined and stale`() {

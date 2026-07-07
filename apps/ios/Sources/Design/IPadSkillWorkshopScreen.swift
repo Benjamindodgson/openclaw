@@ -82,61 +82,6 @@ extension DependencyValues {
     }
 }
 
-// swiftformat:disable redundantSendable
-struct IPadSkillWorkshopFailureMessage: Equatable, Sendable { var value: String }
-struct IPadSkillWorkshopNoticeMessage: Equatable, Sendable { var value: String }
-struct IPadSkillWorkshopQuery: Equatable, Sendable { var value: String }
-struct IPadSkillWorkshopSelectedAgentScopeID: Equatable, Sendable { var value: String }
-struct IPadSkillWorkshopStatusFilter: Equatable, Sendable { var value: String }
-struct IPadSkillWorkshopGatewayDefaultAgentID: Equatable, Sendable { var value: String? }
-struct IPadSkillWorkshopActiveAgentName: Equatable, Sendable { var value: String }
-
-enum IPadSkillWorkshopLoadingPhase: Equatable, Sendable {
-    case idle
-    case inFlight
-}
-
-enum IPadSkillWorkshopError: Error, Equatable, Sendable {
-    struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }
-
-    case failed(Failure)
-
-    var message: String {
-        switch self {
-        case let .failed(failure):
-            failure.message.value
-        }
-    }
-}
-
-struct IPadSkillWorkshopAgentScopeParam: Equatable, Sendable {
-    var agentID: String?
-}
-
-struct IPadSkillWorkshopProposalID: Equatable, Sendable {
-    var value: String
-}
-
-struct IPadSkillWorkshopProposals: Equatable, Sendable {
-    var values: [IPadSkillProposal] = []
-}
-
-struct IPadSkillWorkshopGatewayAgent: Equatable, Sendable {
-    var id: String
-    var name: String?
-}
-
-struct IPadSkillWorkshopGatewayAgents: Equatable, Sendable {
-    var values: [IPadSkillWorkshopGatewayAgent] = []
-}
-
-struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
-    let id: String
-    let title: String
-}
-
-// swiftformat:enable redundantSendable
-
 @Reducer
 struct IPadSkillWorkshopFeature {
     private let clientOverride: IPadSkillWorkshopClient?
@@ -212,15 +157,26 @@ struct IPadSkillWorkshopFeature {
             (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
-        func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String {
-            let connection = canRead ? "connected" : "offline"
+        static func gatewayAccess(
+            isOperatorGatewayConnected: Bool,
+            isAppleReviewDemoModeEnabled: Bool,
+            hasOperatorAdminScope: Bool) -> IPadSkillWorkshopGatewayAccess
+        {
+            .init(
+                canRead: isOperatorGatewayConnected,
+                canWrite: isOperatorGatewayConnected && !isAppleReviewDemoModeEnabled,
+                hasOperatorAdminScope: hasOperatorAdminScope)
+        }
+
+        func refreshTaskID(gatewayAccess: IPadSkillWorkshopGatewayAccess, sceneIsActive: Bool) -> String {
+            let connection = gatewayAccess.canRead ? "connected" : "offline"
             let scene = sceneIsActive ? "active" : "inactive"
             let agent = self.selectedAgentScopeID.value.isEmpty ? "default" : self.selectedAgentScopeID.value
             return [connection, scene, agent].joined(separator: ":")
         }
 
-        func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool {
-            canWrite && hasOperatorAdminScope
+        func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool {
+            gatewayAccess.canWrite && gatewayAccess.hasOperatorAdminScope
         }
 
         static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
@@ -539,8 +495,10 @@ struct IPadSkillWorkshopFeature {
 
             case let .proposalMutationRequested(request):
                 guard state.shouldEnableProposalMutation(
-                    canWrite: request.writeAccess.canWrite,
-                    hasOperatorAdminScope: request.adminAccess.hasOperatorAdminScope),
+                    gatewayAccess: .init(
+                        canRead: request.readAccess.canRead,
+                        canWrite: request.writeAccess.canWrite,
+                        hasOperatorAdminScope: request.adminAccess.hasOperatorAdminScope)),
                     state.busyAction == nil
                 else {
                     return .none
@@ -975,12 +933,12 @@ struct IPadSkillWorkshopScreen: View {
             if self.store.filteredProposals.isEmpty {
                 ProCard(radius: OpenClawProMetric.cardRadius) {
                     ProStatusRow(
-                        icon: self.canRead ? "hammer" : "wifi.slash",
-                        title: self.canRead ? "No proposals" : "No proposals loaded",
-                        detail: self.canRead
+                        icon: self.gatewayAccess.canRead ? "hammer" : "wifi.slash",
+                        title: self.gatewayAccess.canRead ? "No proposals" : "No proposals loaded",
+                        detail: self.gatewayAccess.canRead
                             ? "New proposals will appear here when agents draft skills."
                             : "Connect from Settings to load Skill Workshop proposals.",
-                        value: self.canRead ? "empty" : nil,
+                        value: self.gatewayAccess.canRead ? "empty" : nil,
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)
@@ -1229,22 +1187,20 @@ struct IPadSkillWorkshopScreen: View {
 
     private var refreshTaskID: String {
         self.store.state.refreshTaskID(
-            canRead: self.canRead,
+            gatewayAccess: self.gatewayAccess,
             sceneIsActive: self.scenePhase == .active)
     }
 
-    private var canRead: Bool {
-        self.appModel.isOperatorGatewayConnected
-    }
-
-    private var canWrite: Bool {
-        self.appModel.isOperatorGatewayConnected && !self.appModel.isAppleReviewDemoModeEnabled
+    private var gatewayAccess: IPadSkillWorkshopGatewayAccess {
+        IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: self.appModel.isOperatorGatewayConnected,
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled,
+            hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)
     }
 
     private var canApplyProposalMutations: Bool {
         self.store.state.shouldEnableProposalMutation(
-            canWrite: self.canWrite,
-            hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)
+            gatewayAccess: self.gatewayAccess)
     }
 
     private var agentScopeSnapshot: IPadSkillWorkshopFeature.Action.AgentScopeSnapshot {
@@ -1312,7 +1268,7 @@ struct IPadSkillWorkshopScreen: View {
             await self.store.send(.proposalSelected(.init(
                 proposalID: .init(value: proposal.id),
                 opening: opening,
-                readAccess: .init(canRead: self.canRead),
+                readAccess: .init(canRead: self.gatewayAccess.canRead),
                 forceInspect: .init(isForced: forceInspect)))).finish()
         }
     }
@@ -1320,14 +1276,14 @@ struct IPadSkillWorkshopScreen: View {
     private func loadProposals(force: Bool) async {
         await self.store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: self.scenePhase == .active),
-            readAccess: .init(canRead: self.canRead),
+            readAccess: .init(canRead: self.gatewayAccess.canRead),
             force: .init(isForced: force)))).finish()
     }
 
     private func inspect(proposalID: String, force: Bool) async {
         await self.store.send(.inspectRequested(.init(
             proposalID: .init(value: proposalID),
-            readAccess: .init(canRead: self.canRead),
+            readAccess: .init(canRead: self.gatewayAccess.canRead),
             force: .init(isForced: force)))).finish()
     }
 
@@ -1336,9 +1292,9 @@ struct IPadSkillWorkshopScreen: View {
             kind: action,
             proposalID: .init(value: proposal.id),
             sceneActivity: .init(isActive: self.scenePhase == .active),
-            readAccess: .init(canRead: self.canRead),
-            writeAccess: .init(canWrite: self.canWrite),
-            adminAccess: .init(hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)))).finish()
+            readAccess: .init(canRead: self.gatewayAccess.canRead),
+            writeAccess: .init(canWrite: self.gatewayAccess.canWrite),
+            adminAccess: .init(hasOperatorAdminScope: self.gatewayAccess.hasOperatorAdminScope)))).finish()
     }
 }
 

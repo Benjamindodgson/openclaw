@@ -2058,6 +2058,9 @@ struct RootTabsSourceGuardTests {
 
     @Test func `task scope controls send real gateway params`() throws {
         let source = try Self.iPadTaskFeatureScreensSource()
+        let skillWorkshopTypeSource = try String(
+            contentsOf: Self.iPadSkillWorkshopTypesSourceURL(),
+            encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let phoneSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
 
@@ -2077,7 +2080,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))
         #expect(phoneSource.contains("store: IPadWorkboardStoreFactory.live(appModel: self.appModel)"))
         #expect(source.contains("private var agentScopeMenu: some View"))
-        #expect(source.contains("struct IPadSkillWorkshopAgentScopeParam: Equatable, Sendable"))
+        #expect(skillWorkshopTypeSource.contains("struct IPadSkillWorkshopAgentScopeParam: Equatable, Sendable"))
         #expect(source.contains("IPadSkillProposalListParams(agentId: agentScope.agentID)"))
         #expect(source.contains("agentId: agentScope.agentID"))
         #expect(!source
@@ -2123,6 +2126,8 @@ struct RootTabsSourceGuardTests {
 
     @Test func `skill workshop uses kanban lanes on wide I pad`() throws {
         let source = try String(contentsOf: Self.iPadSkillWorkshopScreenSourceURL(), encoding: .utf8)
+        let typeSource = try String(contentsOf: Self.iPadSkillWorkshopTypesSourceURL(), encoding: .utf8)
+        let featureSource = [source, typeSource].joined(separator: "\n")
         let previewSource = try String(contentsOf: Self.iPadSidebarFeaturePreviewsSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let phoneSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
@@ -2148,29 +2153,29 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("let resolvedStore = store ?? storeFactory()"))
         #expect(!source.contains(
             "store: StoreOf<IPadSkillWorkshopFeature> = Store(initialState: IPadSkillWorkshopFeature.State())"))
-        #expect(source.contains("struct IPadSkillWorkshopFailureMessage: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopFailureMessage: Equatable, Sendable"))
         #expect(source.contains("var errorText: IPadSkillWorkshopFailureMessage?"))
         #expect(source.contains("state.errorText = .init(value: error.message)"))
         #expect(source.contains("Text(errorText.value)"))
         #expect(!source.contains("var errorText: String?"))
         #expect(!source.contains("state.errorText = error.message"))
         #expect(!source.contains("Text(errorText)"))
-        #expect(source.contains("struct IPadSkillWorkshopNoticeMessage: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopNoticeMessage: Equatable, Sendable"))
         #expect(source.contains("var noticeText: IPadSkillWorkshopNoticeMessage?"))
         #expect(source.contains("state.noticeText = .init("))
         #expect(source.contains("Text(noticeText.value)"))
         #expect(!source.contains("var noticeText: String?"))
         #expect(!source.contains("Text(noticeText)"))
-        #expect(source.contains("enum IPadSkillWorkshopLoadingPhase: Equatable, Sendable"))
-        #expect(source.contains("case idle"))
-        #expect(source.contains("case inFlight"))
+        #expect(typeSource.contains("enum IPadSkillWorkshopLoadingPhase: Equatable, Sendable"))
+        #expect(typeSource.contains("case idle"))
+        #expect(typeSource.contains("case inFlight"))
         #expect(source.contains("var loadingPhase = IPadSkillWorkshopLoadingPhase.idle"))
         #expect(source.contains("guard state.loadingPhase != .inFlight else { return .none }"))
         #expect(source.contains("state.loadingPhase = .inFlight"))
         #expect(source.contains("state.loadingPhase = .idle"))
         #expect(source.contains(".disabled(self.store.loadingPhase == .inFlight)"))
         #expect(source.contains("if self.store.loadingPhase == .inFlight"))
-        #expect(!source.contains("struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable"))
+        #expect(!featureSource.contains("struct IPadSkillWorkshopLoadingInFlight: Equatable, Sendable"))
         #expect(!source.contains("var isLoading = IPadSkillWorkshopLoadingInFlight(value: false)"))
         #expect(!source.contains("var isLoading = false"))
         #expect(!source.contains("state.isLoading = true"))
@@ -2183,18 +2188,18 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains(".disabled(self.store.isLoading)"))
         #expect(!source.contains("if self.store.isLoading.value"))
         #expect(!source.contains("if self.store.isLoading {"))
-        #expect(source.contains(
+        #expect(typeSource.contains(
             "struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }"))
-        #expect(source.contains("case failed(Failure)"))
+        #expect(typeSource.contains("case failed(Failure)"))
         #expect(source.contains("private static func failure(for error: Error) -> IPadSkillWorkshopError"))
         #expect(source.contains("message: .init(value: \"Proposal unavailable.\")"))
         #expect(source.contains(".failed(.init(message: .init(value: self.message(for: error))))"))
-        #expect(source.contains("failure.message.value"))
+        #expect(typeSource.contains("failure.message.value"))
         #expect(source.contains("result: .failure(Self.failure(for: error))"))
-        #expect(!source.contains("struct Failure: Equatable, Sendable { var message: String }"))
-        #expect(!source.contains("case failed(String)"))
+        #expect(!featureSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
+        #expect(!featureSource.contains("case failed(String)"))
         #expect(!source.contains("@State private var proposals"))
-        #expect(source.contains("struct IPadSkillWorkshopProposals: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopProposals: Equatable, Sendable"))
         #expect(source.contains("var proposalEntries = IPadSkillWorkshopProposals()"))
         #expect(source.contains("var proposals: [IPadSkillProposal] {\n            self.proposalEntries.values\n        }"))
         #expect(source.contains("var statusFilterLabel: String"))
@@ -2253,17 +2258,18 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("state.inspectingProposalID = request.proposalID.value"))
         #expect(!source.contains("inspectingProposalID: self.store.inspectingProposalID,"))
         #expect(!source.contains("self.store.inspectingProposalID == proposal.id"))
-        #expect(source.contains("struct IPadSkillWorkshopSelectedAgentScopeID: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopSelectedAgentScopeID: Equatable, Sendable"))
         #expect(source.contains("var selectedAgentScopeID = IPadSkillWorkshopSelectedAgentScopeID(value: \"\")"))
         #expect(source.contains("self.selectedAgentScopeID.value"))
         #expect(source.contains("var agentID: IPadSkillWorkshopSelectedAgentScopeID"))
         #expect(source.contains("IPadSkillWorkshopFeature.State.normalizedScopeID(change.agentID.value)"))
         #expect(source.contains("Self.normalizedScopeID(self.selectedAgentScopeID.value)"))
-        #expect(source.contains("struct IPadSkillWorkshopGatewayDefaultAgentID: Equatable, Sendable"))
-        #expect(source.contains("struct IPadSkillWorkshopActiveAgentName: Equatable, Sendable"))
-        #expect(source.contains("struct IPadSkillWorkshopGatewayAgent: Equatable, Sendable"))
-        #expect(source.contains("struct IPadSkillWorkshopGatewayAgents: Equatable, Sendable"))
-        #expect(source.contains("struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopGatewayDefaultAgentID: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopActiveAgentName: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopGatewayAgent: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopGatewayAgents: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopGatewayAccess: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable"))
         #expect(source.contains("var gatewayDefaultAgentID = IPadSkillWorkshopGatewayDefaultAgentID(value: nil)"))
         #expect(source.contains("var gatewayAgentEntries = IPadSkillWorkshopGatewayAgents()"))
         #expect(source.contains("var activeAgentName = IPadSkillWorkshopActiveAgentName(value: \"Default Agent\")"))
@@ -2274,10 +2280,15 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("var defaultAgentScopeLabel: String"))
         #expect(source.contains("self.store.agentScopeOptions"))
         #expect(source.contains("Text(self.store.agentScopeLabel)"))
-        #expect(source.contains("func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String"))
+        #expect(source.contains("static func gatewayAccess("))
+        #expect(source.contains("isAppleReviewDemoModeEnabled: Bool"))
+        #expect(source.contains("canWrite: isOperatorGatewayConnected && !isAppleReviewDemoModeEnabled"))
+        #expect(source.contains(
+            "func refreshTaskID(gatewayAccess: IPadSkillWorkshopGatewayAccess, sceneIsActive: Bool) -> String"))
         #expect(source.contains(".task(id: self.refreshTaskID)"))
         #expect(source.contains("self.store.state.refreshTaskID("))
-        #expect(source.contains("func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool"))
+        #expect(source.contains(
+            "func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
         #expect(source.contains("guard state.shouldEnableProposalMutation("))
         #expect(source.contains("self.store.state.shouldEnableProposalMutation("))
         #expect(!source.contains("var selectedAgentScopeID = \"\""))
@@ -2287,10 +2298,14 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("private var defaultAgentScopeLabel: String"))
         #expect(!source.contains("private var refreshID: String"))
         #expect(!source.contains("IPadSkillWorkshopScreen.shouldEnableProposalMutation("))
+        #expect(!source.contains(
+            "func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String"))
+        #expect(!source.contains(
+            "func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool"))
         #expect(!source.contains("static func shouldEnableProposalMutation"))
         #expect(!source.contains("IPadSkillWorkshopScreen.normalizedScopeID("))
         #expect(!source.contains("@State private var statusFilter"))
-        #expect(source.contains("struct IPadSkillWorkshopStatusFilter: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopStatusFilter: Equatable, Sendable"))
         #expect(source.contains("var statusFilter = IPadSkillWorkshopStatusFilter(value: \"pending\")"))
         #expect(source.contains("static let proposalStatusFilters"))
         #expect(source.contains("static let defaultProposalStatusBoardLanes"))
@@ -2327,7 +2342,7 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var filter: String"))
         #expect(!source.contains("get: { self.store.statusFilter }"))
         #expect(!source.contains("@State private var query"))
-        #expect(source.contains("struct IPadSkillWorkshopQuery: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopQuery: Equatable, Sendable"))
         #expect(source.contains("var query = IPadSkillWorkshopQuery(value: \"\")"))
         #expect(source.contains("query: self.query.value"))
         #expect(source.contains("var query: IPadSkillWorkshopQuery"))
@@ -2374,9 +2389,16 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("request.opening == .sheet"))
         #expect(source.contains("response.force.isForced"))
         #expect(source.contains("opening: self.isCompactWidth ? .sheet : .inline"))
-        #expect(source.contains("readAccess: .init(canRead: self.canRead)"))
-        #expect(source.contains("writeAccess: .init(canWrite: self.canWrite)"))
-        #expect(source.contains("adminAccess: .init(hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)"))
+        #expect(source.contains("private var gatewayAccess: IPadSkillWorkshopGatewayAccess"))
+        #expect(source.contains("gatewayAccess: self.gatewayAccess"))
+        #expect(source.contains("readAccess: .init(canRead: self.gatewayAccess.canRead)"))
+        #expect(source.contains("writeAccess: .init(canWrite: self.gatewayAccess.canWrite)"))
+        #expect(source.contains(
+            "adminAccess: .init(hasOperatorAdminScope: self.gatewayAccess.hasOperatorAdminScope)"))
+        #expect(!source.contains("private var canRead: Bool"))
+        #expect(!source.contains("private var canWrite: Bool"))
+        #expect(!source.contains(
+            "self.appModel.isOperatorGatewayConnected && !self.appModel.isAppleReviewDemoModeEnabled"))
         #expect(source.contains("sceneActivity: .init(isActive: self.scenePhase == .active)"))
         #expect(source.contains("force: .init(isForced: force)"))
         #expect(!source.contains(
@@ -7102,6 +7124,7 @@ struct RootTabsSourceGuardTests {
             self.iPadWorkboardScreenSourceURL(),
             self.iPadWorkboardFeatureSourceURL(),
             self.iPadSkillWorkshopScreenSourceURL(),
+            self.iPadSkillWorkshopTypesSourceURL(),
             self.iPadSidebarFeatureScreensSourceURL(),
         ]
             .map { try String(contentsOf: $0, encoding: .utf8) }
@@ -7136,6 +7159,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/IPadSkillWorkshopScreen.swift")
+    }
+
+    private static func iPadSkillWorkshopTypesSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Features/SkillWorkshop/IPadSkillWorkshopTypes.swift")
     }
 
     private static func iPadSidebarFeaturePreviewsSourceURL() -> URL {
