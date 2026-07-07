@@ -1991,6 +1991,11 @@ struct RootTabsSourceGuardTests {
         #expect(board.contains("IPadSkillProposalKanbanColumn("))
         #expect(source.contains("private struct IPadSkillProposalKanbanCard"))
         #expect(source.contains("@Reducer\nstruct IPadSkillWorkshopFeature"))
+        #expect(source.contains("store: StoreOf<IPadSkillWorkshopFeature>? = nil"))
+        #expect(source.contains("storeFactory: () -> StoreOf<IPadSkillWorkshopFeature>"))
+        #expect(source.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!source.contains(
+            "store: StoreOf<IPadSkillWorkshopFeature> = Store(initialState: IPadSkillWorkshopFeature.State())"))
         #expect(source.contains("struct IPadSkillWorkshopFailureMessage: Equatable, Sendable"))
         #expect(source.contains("var errorText: IPadSkillWorkshopFailureMessage?"))
         #expect(source.contains("state.errorText = .init(value: error.message)"))

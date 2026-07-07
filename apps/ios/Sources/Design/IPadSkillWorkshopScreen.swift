@@ -548,13 +548,17 @@ struct IPadSkillWorkshopScreen: View {
     init(
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         openSettings: @escaping () -> Void = {},
-        store: StoreOf<IPadSkillWorkshopFeature> = Store(initialState: IPadSkillWorkshopFeature.State()) {
-            IPadSkillWorkshopFeature()
+        store: StoreOf<IPadSkillWorkshopFeature>? = nil,
+        storeFactory: () -> StoreOf<IPadSkillWorkshopFeature> = {
+            Store(initialState: IPadSkillWorkshopFeature.State()) {
+                IPadSkillWorkshopFeature()
+            }
         })
     {
         self.headerLeadingAction = headerLeadingAction
         self.openSettings = openSettings
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
