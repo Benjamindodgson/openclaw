@@ -295,7 +295,7 @@ struct SettingsProTab: View {
     private var navigationPathBinding: Binding<[SettingsRoute]> {
         Binding(
             get: { self.navigationStore.navigationPath },
-            set: { self.navigationStore.send(.navigationPathChanged(.init(path: $0))) })
+            set: { self.navigationStore.send(.navigationPathChanged(.init(path: .init(routes: $0)))) })
     }
 
     private var settingsNavigationContent: some View {
