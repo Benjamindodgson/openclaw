@@ -468,6 +468,7 @@ struct ChatProAgentDisplayName: Equatable, Sendable { var value: String }
 struct ChatProHeaderTitle: Equatable, Sendable { var value: String? }
 struct ChatProHeaderSubtitle: Equatable, Sendable { var value: String? }
 struct ChatProShowsAgentBadge: Equatable, Sendable { var value: Bool }
+struct ChatProAgentBadgeOverride: Equatable, Sendable { var value: String? }
 // swiftformat:enable redundantSendable
 
 struct ChatProPresentationState: Equatable {
@@ -477,7 +478,7 @@ struct ChatProPresentationState: Equatable {
     var headerTitleValue = ChatProHeaderTitle(value: nil)
     var headerSubtitleValue = ChatProHeaderSubtitle(value: nil)
     var showsAgentBadgeValue = ChatProShowsAgentBadge(value: true)
-    var agentBadgeOverride: String?
+    var agentBadgeOverrideValue = ChatProAgentBadgeOverride(value: nil)
 
     init(
         gatewayDisplayState: GatewayDisplayState = .disconnected,
@@ -494,7 +495,7 @@ struct ChatProPresentationState: Equatable {
         self.headerTitleValue = .init(value: headerTitle)
         self.headerSubtitleValue = .init(value: headerSubtitle)
         self.showsAgentBadgeValue = .init(value: showsAgentBadge)
-        self.agentBadgeOverride = agentBadgeOverride
+        self.agentBadgeOverrideValue = .init(value: agentBadgeOverride)
     }
 
     var agentDisplayName: String {
@@ -511,6 +512,10 @@ struct ChatProPresentationState: Equatable {
 
     var showsAgentBadge: Bool {
         self.showsAgentBadgeValue.value
+    }
+
+    var agentBadgeOverride: String? {
+        self.agentBadgeOverrideValue.value
     }
 
     var gatewayPillTitle: String {
