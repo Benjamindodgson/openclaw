@@ -1273,6 +1273,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(storesSource.contains("func makeSettingsApprovalsStore()"))
         #expect(storesSource.contains("func makeSettingsAppearanceStore()"))
+        #expect(storesSource.contains("func makeSettingsDeviceCapabilityStore()"))
         #expect(storesSource.contains("func makeSettingsDeviceIdentityStore()"))
         #expect(storesSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(storesSource.contains("func makeSettingsManualGatewayPortStore()"))
@@ -1290,6 +1291,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
         #expect(rootSource.contains("approvalsStore: self.makeSettingsApprovalsStore()"))
         #expect(rootSource.contains("appearanceStore: self.makeSettingsAppearanceStore()"))
+        #expect(rootSource.contains("deviceCapabilityStore: self.makeSettingsDeviceCapabilityStore()"))
         #expect(rootSource.contains("deviceIdentityStore: self.makeSettingsDeviceIdentityStore()"))
         #expect(rootSource.contains("shareInstructionStore: self.makeSettingsShareInstructionStore()"))
         #expect(rootSource.contains("manualGatewayPortStore: self.makeSettingsManualGatewayPortStore()"))
@@ -1301,6 +1303,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
         #expect(!rootSource.contains("func makeSettingsAppearanceStore()"))
+        #expect(!rootSource.contains("func makeSettingsDeviceCapabilityStore()"))
         #expect(!rootSource.contains("func makeSettingsDeviceIdentityStore()"))
         #expect(!rootSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(!rootSource.contains("func makeSettingsManualGatewayPortStore()"))
@@ -5878,6 +5881,12 @@ struct RootTabsSourceGuardTests {
             encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let settingsSource = try Self.settingsProTabCombinedSource()
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let deviceCapabilityStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var deviceCapabilityStore",
+            to: "@State var deviceIdentityStore")
 
         #expect(deviceCapabilitySource.contains("struct CameraEnabled: Equatable, Sendable"))
         #expect(deviceCapabilitySource.contains("struct CameraEnabledChange: Equatable, Sendable"))
@@ -5919,6 +5928,10 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("self.deviceCapabilityStore.send(.cameraEnabledChanged(.init("))
         #expect(settingsSource.contains("self.deviceCapabilityStore.send(.preventSleepChanged(.init("))
         #expect(settingsSource.contains("enabled: .init(value: newValue)"))
+        #expect(rootSource.contains("deviceCapabilityStore: self.makeSettingsDeviceCapabilityStore()"))
+        #expect(storesSource.contains("func makeSettingsDeviceCapabilityStore()"))
+        #expect(deviceCapabilityStoreDeclaration.contains("@State var deviceCapabilityStore: StoreOf<SettingsDeviceCapabilityFeature>"))
+        #expect(!deviceCapabilityStoreDeclaration.contains("= Store("))
         #expect(!deviceCapabilitySource.contains("var isEnabled: Bool"))
         #expect(!deviceCapabilitySource.contains("state.cameraEnabled = change.isEnabled"))
         #expect(!deviceCapabilitySource.contains("state.preventSleep = change.isEnabled"))
