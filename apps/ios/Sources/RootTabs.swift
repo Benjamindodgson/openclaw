@@ -215,6 +215,7 @@ struct RootTabs: View {
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 locationStore: self.makeSettingsLocationStore(),
+                notificationStore: self.makeSettingsNotificationStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
@@ -521,6 +522,7 @@ struct RootTabs: View {
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     locationStore: self.makeSettingsLocationStore(),
+                    notificationStore: self.makeSettingsNotificationStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
@@ -545,6 +547,7 @@ struct RootTabs: View {
                     gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     locationStore: self.makeSettingsLocationStore(),
+                    notificationStore: self.makeSettingsNotificationStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
@@ -571,6 +574,7 @@ struct RootTabs: View {
                 gatewayCredentialsStore: self.makeSettingsGatewayCredentialsStore(),
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 locationStore: self.makeSettingsLocationStore(),
+                notificationStore: self.makeSettingsNotificationStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }

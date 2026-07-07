@@ -125,6 +125,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsNotificationStore() -> StoreOf<SettingsNotificationFeature> {
+        Store(initialState: SettingsNotificationFeature.State()) {
+            SettingsNotificationFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewayActivityStore() -> StoreOf<SettingsGatewayActivityFeature> {
         Store(initialState: SettingsGatewayActivityFeature.State()) {
             SettingsGatewayActivityFeature(
