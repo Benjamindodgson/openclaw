@@ -1112,11 +1112,15 @@ struct SettingsVoiceControlFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct SettingsTalkEnabled: Equatable, Sendable { var isEnabled: Bool }
+    struct SettingsVoiceWakeEnabled: Equatable, Sendable { var isEnabled: Bool }
+    struct SettingsVoiceWakeStatusText: Equatable, Sendable { var value: String }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var talkEnabled = Action.SettingsTalkEnabled(isEnabled: false)
-        var voiceWakeEnabled = Action.SettingsVoiceWakeEnabled(isEnabled: false)
-        var voiceWakeStatusText = Action.SettingsVoiceWakeStatusText(value: "Off")
+        var talkEnabled = SettingsTalkEnabled(isEnabled: false)
+        var voiceWakeEnabled = SettingsVoiceWakeEnabled(isEnabled: false)
+        var voiceWakeStatusText = SettingsVoiceWakeStatusText(value: "Off")
 
         var detailText: String {
             if self.talkEnabled.isEnabled, self.voiceWakeEnabled.isEnabled { return "Talk + Wake" }
@@ -1139,10 +1143,7 @@ struct SettingsVoiceControlFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct SettingsTalkEnabled: Equatable, Sendable { var isEnabled: Bool }
         struct SettingsVoiceControlDemoModeEnabled: Equatable, Sendable { var value: Bool }
-        struct SettingsVoiceWakeEnabled: Equatable, Sendable { var isEnabled: Bool }
-        struct SettingsVoiceWakeStatusText: Equatable, Sendable { var value: String }
         struct TalkEnabledChange: Equatable, Sendable { var enabled: SettingsTalkEnabled }
 
         struct TalkEnabledChangeRequest: Equatable, Sendable {
@@ -1191,7 +1192,7 @@ struct SettingsVoiceControlFeature {
                 let requested = request.enabled
                 let talkEnabled =
                     if request.isAppleReviewDemoModeEnabled.value {
-                        Action.SettingsTalkEnabled(isEnabled: false)
+                        SettingsTalkEnabled(isEnabled: false)
                     } else {
                         requested
                     }
