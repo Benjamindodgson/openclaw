@@ -824,7 +824,7 @@ struct AgentOverviewLoadFeature {
         var errorText = AgentOverviewErrorText(value: nil)
         var loadingPhase = LoadingPhase.idle
         var refreshRequest: RefreshRequest?
-        var nextRefreshRequestID = 0
+        var nextRefreshRequestID = AgentOverviewRefreshRequestID(value: 0)
     }
 
     enum Action: Equatable, Sendable {
@@ -875,9 +875,9 @@ struct AgentOverviewLoadFeature {
                     return .none
                 }
 
-                state.nextRefreshRequestID += 1
+                state.nextRefreshRequestID.value += 1
                 state.refreshRequest = RefreshRequest(
-                    id: .init(value: state.nextRefreshRequestID),
+                    id: state.nextRefreshRequestID,
                     activeAgentID: request.activeAgent)
                 state.loadingPhase = .inFlight
                 state.errorText = .init(value: nil)
