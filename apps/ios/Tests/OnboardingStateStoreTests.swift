@@ -553,9 +553,10 @@ import Testing
         }
 
         await store.send(.setupCodeChanged(.init(code: .init(value: "  oc_setup_123  ")))) {
-            $0.setupCode = "  oc_setup_123  "
+            $0.setupCodeState = .init(value: "  oc_setup_123  ")
         }
 
+        #expect(store.state.setupCode == "  oc_setup_123  ")
         #expect(store.state.trimmedSetupCode == "oc_setup_123")
         #expect(store.state.canApply)
 
@@ -570,12 +571,12 @@ import Testing
         }
 
         await store.send(.setupCodeAccepted) {
-            $0.setupCode = ""
+            $0.setupCodeState = .init(value: "")
             $0.status = "Setup code applied. Connecting..."
         }
 
         await store.send(.setupCodeChanged(.init(code: .init(value: "  ")))) {
-            $0.setupCode = "  "
+            $0.setupCodeState = .init(value: "  ")
         }
 
         #expect(!store.state.canApply)
@@ -585,7 +586,7 @@ import Testing
         }
 
         await store.send(.appleReviewDemoCodeAccepted) {
-            $0.setupCode = ""
+            $0.setupCodeState = .init(value: "")
             $0.status = "Apple Review demo mode enabled."
         }
     }
@@ -599,14 +600,14 @@ import Testing
             token: nil,
             password: nil)
         var initialState = OnboardingSetupCodeFeature.State()
-        initialState.setupCode = "  wss://gateway.example.com:443  "
+        initialState.setupCodeState = .init(value: "  wss://gateway.example.com:443  ")
         let store = TestStore(initialState: initialState) {
             OnboardingSetupCodeFeature()
         }
 
         await store.send(.applyRequested) {
             $0.applyResult = .gatewayLink(link)
-            $0.setupCode = ""
+            $0.setupCodeState = .init(value: "")
             $0.status = "Setup code applied. Connecting..."
         }
 
@@ -625,7 +626,7 @@ import Testing
         }
 
         await store.send(.setupCodeChanged(.init(code: .init(value: "not a setup code")))) {
-            $0.setupCode = "not a setup code"
+            $0.setupCodeState = .init(value: "not a setup code")
         }
 
         await store.send(.applyRequested) {
@@ -635,21 +636,21 @@ import Testing
 
     @Test @MainActor func `setup code reducer classifies apple review apply requests`() async {
         var initialState = OnboardingSetupCodeFeature.State()
-        initialState.setupCode = "  APPLE-REVIEW-DEMO  "
+        initialState.setupCodeState = .init(value: "  APPLE-REVIEW-DEMO  ")
         let store = TestStore(initialState: initialState) {
             OnboardingSetupCodeFeature()
         }
 
         await store.send(.applyRequested) {
             $0.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: "APPLE-REVIEW-DEMO")))
-            $0.setupCode = ""
+            $0.setupCodeState = .init(value: "")
             $0.status = "Apple Review demo mode enabled."
         }
     }
 
     @Test @MainActor func `setup code reducer classifies scanned apple review setup codes`() async {
         var initialState = OnboardingSetupCodeFeature.State()
-        initialState.setupCode = "stale code"
+        initialState.setupCodeState = .init(value: "stale code")
         let store = TestStore(initialState: initialState) {
             OnboardingSetupCodeFeature()
         }
@@ -674,7 +675,7 @@ import Testing
             token: nil,
             password: nil)
         var initialState = OnboardingSetupCodeFeature.State()
-        initialState.setupCode = "stale code"
+        initialState.setupCodeState = .init(value: "stale code")
         initialState.status = "stale status"
         let store = TestStore(initialState: initialState) {
             OnboardingSetupCodeFeature()
