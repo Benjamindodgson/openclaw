@@ -3245,6 +3245,10 @@ struct RootTabsSourceGuardTests {
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
             encoding: .utf8)
         let controllerSource = try String(contentsOf: Self.gatewayConnectionControllerSourceURL(), encoding: .utf8)
+        let stepStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var stepStore",
+            to: "@State private var credentialsStore")
         let credentialsStoreDeclaration = try Self.extract(
             onboardingSource,
             from: "@State private var credentialsStore",
@@ -3299,6 +3303,10 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.requestLocalNetworkAccessIfPastIntro(reason: \"onboarding_appear\")"))
         #expect(!onboardingSource.contains("@State private var pendingManualAuthOverride"))
         #expect(!onboardingSource.contains("discoveryRestartTask"))
+        #expect(stepStoreDeclaration.contains("@State private var stepStore: StoreOf<OnboardingStepFeature>"))
+        #expect(!stepStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("self._stepStore = State(wrappedValue: stepStore)"))
+        #expect(!onboardingSource.contains("self._stepStore = State(wrappedValue: Store("))
         #expect(credentialsStoreDeclaration
             .contains("@State private var credentialsStore: StoreOf<OnboardingCredentialsFeature>"))
         #expect(!credentialsStoreDeclaration.contains("= Store("))

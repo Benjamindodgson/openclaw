@@ -39,6 +39,12 @@ struct OnboardingWizardView: View {
         allowSkip: Bool,
         onRequestLocalNetworkAccess: @escaping (String) -> Void,
         onClose: @escaping () -> Void,
+        stepStore: StoreOf<OnboardingStepFeature> = Store(
+            initialState: OnboardingStepFeature.State(
+                step: OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome))
+        {
+            OnboardingStepFeature()
+        },
         credentialsStore: StoreOf<OnboardingCredentialsFeature> = Store(
             initialState: OnboardingCredentialsFeature.State())
         {
@@ -78,11 +84,7 @@ struct OnboardingWizardView: View {
         self.allowSkip = allowSkip
         self.onRequestLocalNetworkAccess = onRequestLocalNetworkAccess
         self.onClose = onClose
-        let initialStep: OnboardingStep =
-            OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome
-        self._stepStore = State(wrappedValue: Store(initialState: OnboardingStepFeature.State(step: initialStep)) {
-            OnboardingStepFeature()
-        })
+        self._stepStore = State(wrappedValue: stepStore)
         self._credentialsStore = State(wrappedValue: credentialsStore)
         self._statusStore = State(wrappedValue: statusStore)
         self._presentationStore = State(wrappedValue: presentationStore)
