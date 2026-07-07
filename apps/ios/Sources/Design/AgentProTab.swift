@@ -96,72 +96,6 @@ struct AgentProTab: View {
         }
     }
 
-    init(
-        directRoute: AgentRoute? = nil,
-        headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
-        headerTitle: String = "Agents",
-        openSettings: (() -> Void)? = nil,
-        navigationStore: StoreOf<AgentNavigationFeature> = Store(
-            initialState: AgentNavigationFeature.State())
-        {
-            AgentNavigationFeature()
-        },
-        overviewStore: StoreOf<AgentOverviewLoadFeature> = Store(
-            initialState: AgentOverviewLoadFeature.State())
-        {
-            AgentOverviewLoadFeature()
-        },
-        clawHubStore: StoreOf<AgentClawHubSearchFeature> = Store(
-            initialState: AgentClawHubSearchFeature.State())
-        {
-            AgentClawHubSearchFeature()
-        },
-        skillFilterStore: StoreOf<AgentSkillFilterFeature> = Store(
-            initialState: AgentSkillFilterFeature.State())
-        {
-            AgentSkillFilterFeature()
-        },
-        skillPolicyMutationStore: StoreOf<AgentSkillPolicyMutationFeature> = Store(
-            initialState: AgentSkillPolicyMutationFeature.State())
-        {
-            AgentSkillPolicyMutationFeature()
-        },
-        skillEditorStore: StoreOf<AgentSkillEditorFeature> = Store(
-            initialState: AgentSkillEditorFeature.State())
-        {
-            AgentSkillEditorFeature()
-        },
-        cronActionStore: StoreOf<AgentCronActionFeature> = Store(
-            initialState: AgentCronActionFeature.State())
-        {
-            AgentCronActionFeature()
-        },
-        selectionStore: StoreOf<AgentSelectionFeature> = Store(
-            initialState: AgentSelectionFeature.State())
-        {
-            AgentSelectionFeature()
-        },
-        filterStore: StoreOf<AgentOverviewFilterFeature> = Store(
-            initialState: AgentOverviewFilterFeature.State())
-        {
-            AgentOverviewFilterFeature()
-        })
-    {
-        self.directRoute = directRoute
-        self.headerLeadingAction = headerLeadingAction
-        self.headerTitle = headerTitle
-        self.openSettings = openSettings
-        self._navigationStore = State(wrappedValue: navigationStore)
-        self._overviewStore = State(wrappedValue: overviewStore)
-        self._clawHubStore = State(wrappedValue: clawHubStore)
-        self._skillFilterStore = State(wrappedValue: skillFilterStore)
-        self._skillPolicyMutationStore = State(wrappedValue: skillPolicyMutationStore)
-        self._skillEditorStore = State(wrappedValue: skillEditorStore)
-        self._cronActionStore = State(wrappedValue: cronActionStore)
-        self._selectionStore = State(wrappedValue: selectionStore)
-        self._filterStore = State(wrappedValue: filterStore)
-    }
-
     var body: some View {
         Group {
             if let directRoute {
@@ -315,6 +249,92 @@ struct AgentProTab: View {
             .toolbar(
                 route == .agents || self.directHeaderLeadingAction(for: route) != nil ? .hidden : .visible,
                 for: .navigationBar)
+    }
+}
+
+extension AgentProTab {
+    init(
+        directRoute: AgentRoute? = nil,
+        headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
+        headerTitle: String = "Agents",
+        openSettings: (() -> Void)? = nil,
+        navigationStore: StoreOf<AgentNavigationFeature>? = nil,
+        navigationStoreFactory: () -> StoreOf<AgentNavigationFeature> = {
+            Store(initialState: AgentNavigationFeature.State()) {
+                AgentNavigationFeature()
+            }
+        },
+        overviewStore: StoreOf<AgentOverviewLoadFeature>? = nil,
+        overviewStoreFactory: () -> StoreOf<AgentOverviewLoadFeature> = {
+            Store(initialState: AgentOverviewLoadFeature.State()) {
+                AgentOverviewLoadFeature()
+            }
+        },
+        clawHubStore: StoreOf<AgentClawHubSearchFeature>? = nil,
+        clawHubStoreFactory: () -> StoreOf<AgentClawHubSearchFeature> = {
+            Store(initialState: AgentClawHubSearchFeature.State()) {
+                AgentClawHubSearchFeature()
+            }
+        },
+        skillFilterStore: StoreOf<AgentSkillFilterFeature>? = nil,
+        skillFilterStoreFactory: () -> StoreOf<AgentSkillFilterFeature> = {
+            Store(initialState: AgentSkillFilterFeature.State()) {
+                AgentSkillFilterFeature()
+            }
+        },
+        skillPolicyMutationStore: StoreOf<AgentSkillPolicyMutationFeature>? = nil,
+        skillPolicyMutationStoreFactory: () -> StoreOf<AgentSkillPolicyMutationFeature> = {
+            Store(initialState: AgentSkillPolicyMutationFeature.State()) {
+                AgentSkillPolicyMutationFeature()
+            }
+        },
+        skillEditorStore: StoreOf<AgentSkillEditorFeature>? = nil,
+        skillEditorStoreFactory: () -> StoreOf<AgentSkillEditorFeature> = {
+            Store(initialState: AgentSkillEditorFeature.State()) {
+                AgentSkillEditorFeature()
+            }
+        },
+        cronActionStore: StoreOf<AgentCronActionFeature>? = nil,
+        cronActionStoreFactory: () -> StoreOf<AgentCronActionFeature> = {
+            Store(initialState: AgentCronActionFeature.State()) {
+                AgentCronActionFeature()
+            }
+        },
+        selectionStore: StoreOf<AgentSelectionFeature>? = nil,
+        selectionStoreFactory: () -> StoreOf<AgentSelectionFeature> = {
+            Store(initialState: AgentSelectionFeature.State()) {
+                AgentSelectionFeature()
+            }
+        },
+        filterStore: StoreOf<AgentOverviewFilterFeature>? = nil,
+        filterStoreFactory: () -> StoreOf<AgentOverviewFilterFeature> = {
+            Store(initialState: AgentOverviewFilterFeature.State()) {
+                AgentOverviewFilterFeature()
+            }
+        })
+    {
+        self.directRoute = directRoute
+        self.headerLeadingAction = headerLeadingAction
+        self.headerTitle = headerTitle
+        self.openSettings = openSettings
+        let resolvedNavigationStore = navigationStore ?? navigationStoreFactory()
+        let resolvedOverviewStore = overviewStore ?? overviewStoreFactory()
+        let resolvedClawHubStore = clawHubStore ?? clawHubStoreFactory()
+        let resolvedSkillFilterStore = skillFilterStore ?? skillFilterStoreFactory()
+        let resolvedSkillPolicyMutationStore = skillPolicyMutationStore ?? skillPolicyMutationStoreFactory()
+        let resolvedSkillEditorStore = skillEditorStore ?? skillEditorStoreFactory()
+        let resolvedCronActionStore = cronActionStore ?? cronActionStoreFactory()
+        let resolvedSelectionStore = selectionStore ?? selectionStoreFactory()
+        let resolvedFilterStore = filterStore ?? filterStoreFactory()
+        self._navigationStore = State(wrappedValue: resolvedNavigationStore)
+        self._overviewStore = State(wrappedValue: resolvedOverviewStore)
+        self._clawHubStore = State(wrappedValue: resolvedClawHubStore)
+        self._skillFilterStore = State(wrappedValue: resolvedSkillFilterStore)
+        self._skillPolicyMutationStore = State(wrappedValue: resolvedSkillPolicyMutationStore)
+        self._skillEditorStore = State(wrappedValue: resolvedSkillEditorStore)
+        self._cronActionStore = State(wrappedValue: resolvedCronActionStore)
+        self._selectionStore = State(wrappedValue: resolvedSelectionStore)
+        self._filterStore = State(wrappedValue: resolvedFilterStore)
     }
 }
 
