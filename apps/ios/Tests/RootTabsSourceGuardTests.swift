@@ -990,7 +990,14 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makeAgentSelectionStore()"))
         #expect(storesSource.contains("AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))"))
         #expect(rootSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 5)
+        #expect(phoneControlHubSource.contains("private let agentSelectionStoreFactory: @MainActor"))
+        #expect(phoneControlHubSource.contains("agentSelectionStoreFactory: @escaping @MainActor"))
+        #expect(phoneControlHubSource.contains("AgentSelectionFeature(selectionClient: .live(appModel: appModel))"))
+        #expect(phoneControlHubSource.contains("self.agentSelectionStoreFactory = agentSelectionStoreFactory"))
         #expect(phoneControlHubSource.contains("private func makeAgentSelectionStore()"))
+        #expect(phoneControlHubSource.contains("self.agentSelectionStoreFactory(self.appModel)"))
+        #expect(!phoneControlHubSource.contains(
+            "AgentSelectionFeature(selectionClient: .live(appModel: self.appModel))"))
         #expect(phoneControlHubSource.matches(of: /selectionStore: self\.makeAgentSelectionStore\(\)/).count >= 4)
     }
 
