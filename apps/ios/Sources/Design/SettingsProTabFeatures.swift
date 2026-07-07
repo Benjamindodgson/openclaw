@@ -757,9 +757,11 @@ struct SettingsManualGatewayPortFeature {
 @Reducer
 struct SettingsGatewayAutoConnectFeature {
     // swiftformat:disable redundantSendable
+    struct GatewayAutoConnectEnabled: Equatable, Sendable { var value: Bool }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var enabled = Action.GatewayAutoConnectEnabled(value: false)
+        var enabled = GatewayAutoConnectEnabled(value: false)
 
         var isEnabled: Bool {
             self.enabled.value
@@ -767,7 +769,6 @@ struct SettingsGatewayAutoConnectFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct GatewayAutoConnectEnabled: Equatable, Sendable { var value: Bool }
         struct EnabledChange: Equatable, Sendable { var enabled: GatewayAutoConnectEnabled }
         struct EnabledSync: Equatable, Sendable { var enabled: GatewayAutoConnectEnabled }
 
