@@ -35,9 +35,7 @@ struct SettingsProTab: View {
     @AppStorage("gateway.onboardingComplete") var storedOnboardingComplete: Bool = false
     @AppStorage("gateway.hasConnectedOnce") var storedHasConnectedOnce: Bool = false
     @AppStorage("onboarding.requestID") var storedOnboardingRequestID: Int = 0
-    @State var pushEnrollmentConsentStore = Store(initialState: PushEnrollmentConsentFeature.State()) {
-        PushEnrollmentConsentFeature()
-    }
+    @State var pushEnrollmentConsentStore: StoreOf<PushEnrollmentConsentFeature>
 
     @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
 
@@ -175,6 +173,11 @@ struct SettingsProTab: View {
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         ownsNavigationStack: Bool = true,
         navigateToRoute: ((SettingsRoute) -> Void)? = nil,
+        pushEnrollmentConsentStore: StoreOf<PushEnrollmentConsentFeature> = Store(
+            initialState: PushEnrollmentConsentFeature.State())
+        {
+            PushEnrollmentConsentFeature()
+        },
         execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature> = Store(
             initialState: ExecApprovalPromptFeature.State())
         {
@@ -247,6 +250,7 @@ struct SettingsProTab: View {
         self.headerLeadingAction = headerLeadingAction
         self.ownsNavigationStack = ownsNavigationStack
         self.navigateToRoute = navigateToRoute
+        self._pushEnrollmentConsentStore = State(wrappedValue: pushEnrollmentConsentStore)
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
         self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
         self._voiceControlStore = State(wrappedValue: voiceControlStore)
