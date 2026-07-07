@@ -455,9 +455,18 @@ struct RootTabsPresentationTests {
             gatewayDefaultAgentID: .init(value: "alpha"),
             activeAgentName: .init(value: "Gamma Agent"),
             agents: [
-                RootHomeCanvasFeature.AgentSnapshot(id: "beta", name: "Beta Agent", emoji: nil),
-                RootHomeCanvasFeature.AgentSnapshot(id: "gamma", name: "Gamma Agent", emoji: nil),
-                RootHomeCanvasFeature.AgentSnapshot(id: "alpha", name: "Alpha-Agent", emoji: nil),
+                RootHomeCanvasFeature.AgentSnapshot(
+                    id: .init(value: "beta"),
+                    name: .init(value: "Beta Agent"),
+                    emoji: .init(value: nil)),
+                RootHomeCanvasFeature.AgentSnapshot(
+                    id: .init(value: "gamma"),
+                    name: .init(value: "Gamma Agent"),
+                    emoji: .init(value: nil)),
+                RootHomeCanvasFeature.AgentSnapshot(
+                    id: .init(value: "alpha"),
+                    name: .init(value: "Alpha-Agent"),
+                    emoji: .init(value: nil)),
             ])
         let expectedPayload = RootHomeCanvasFeature.Payload(
             gatewayState: "connected",
@@ -515,7 +524,10 @@ struct RootTabsPresentationTests {
             gatewayDefaultAgentID: .init(value: "main"),
             activeAgentName: .init(value: "Ignored Agent"),
             agents: [
-                RootHomeCanvasFeature.AgentSnapshot(id: "main", name: "  Main  ", emoji: " M "),
+                RootHomeCanvasFeature.AgentSnapshot(
+                    id: .init(value: "main"),
+                    name: .init(value: "  Main  "),
+                    emoji: .init(value: " M ")),
             ])
         let expectedPayload = RootHomeCanvasFeature.Payload(
             gatewayState: "error",
