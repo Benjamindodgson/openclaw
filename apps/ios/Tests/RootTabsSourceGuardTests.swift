@@ -1259,12 +1259,24 @@ struct RootTabsSourceGuardTests {
 
     @Test func `privacy permission request completion action is typed`() throws {
         let source = try String(contentsOf: Self.privacyAccessSectionSourceURL(), encoding: .utf8)
+        let completion = try Self.extract(
+            source,
+            from: "struct PermissionRequestCompletion: Equatable, Sendable {",
+            to: "case appeared")
 
+        #expect(source.contains("struct PermissionGrant: Equatable, Sendable"))
         #expect(source.contains("struct PermissionRequestCompletion: Equatable, Sendable"))
+        #expect(completion.contains("var grant: PermissionGrant"))
         #expect(source.contains("case permissionRequestFinished(PermissionRequestCompletion)"))
         #expect(source.contains("state.apply(completion.snapshot)"))
+        #expect(source.contains("if completion.grant.isGranted"))
         #expect(source.contains("state.applyGranted(completion.permission)"))
+        #expect(source.contains("let grant = Action.PermissionGrant(isGranted: isGranted)"))
+        #expect(source.contains("grant: grant"))
         #expect(source.contains("await send(.permissionRequestFinished(.init("))
+        #expect(!completion.contains("var granted: Bool"))
+        #expect(!source.contains("if completion.granted"))
+        #expect(!source.contains("granted: granted"))
     }
 
     @Test func `privacy snapshot load action is typed`() throws {

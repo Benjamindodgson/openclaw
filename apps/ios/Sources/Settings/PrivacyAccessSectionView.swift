@@ -274,9 +274,13 @@ struct PrivacyAccessFeature {
             var snapshot: PrivacyAccessSnapshot
         }
 
+        struct PermissionGrant: Equatable, Sendable {
+            var isGranted: Bool
+        }
+
         struct PermissionRequestCompletion: Equatable, Sendable {
             var permission: PrivacyAccessPermission
-            var granted: Bool
+            var grant: PermissionGrant
             var snapshot: PrivacyAccessSnapshot
         }
 
@@ -347,7 +351,7 @@ struct PrivacyAccessFeature {
 
             case let .permissionRequestFinished(completion):
                 state.apply(completion.snapshot)
-                if completion.granted {
+                if completion.grant.isGranted {
                     state.applyGranted(completion.permission)
                 }
                 return .none
@@ -364,7 +368,7 @@ struct PrivacyAccessFeature {
 
     private func request(_ permission: PrivacyAccessPermission, client: PrivacyAccessClient) -> Effect<Action> {
         .run { send in
-            let granted: Bool = switch permission {
+            let isGranted = switch permission {
             case .contacts:
                 await client.requestContacts()
             case .calendarWrite:
@@ -374,9 +378,10 @@ struct PrivacyAccessFeature {
             case .reminders:
                 await client.requestRemindersFull()
             }
+            let grant = Action.PermissionGrant(isGranted: isGranted)
             await send(.permissionRequestFinished(.init(
                 permission: permission,
-                granted: granted,
+                grant: grant,
                 snapshot: client.snapshot())))
         }
     }
