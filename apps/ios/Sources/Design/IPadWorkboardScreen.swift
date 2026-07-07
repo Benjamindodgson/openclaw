@@ -81,12 +81,12 @@ struct IPadWorkboardScreen: View {
             ProMetric(
                 icon: "figure.run",
                 title: "Running",
-                value: "\(self.store.cards.count(where: { $0.status == "running" }))",
+                value: "\(self.store.runningCardCount)",
                 color: OpenClawBrand.ok),
             ProMetric(
                 icon: "exclamationmark.triangle",
                 title: "Blocked",
-                value: "\(self.store.cards.count(where: { $0.status == "blocked" }))",
+                value: "\(self.store.blockedCardCount)",
                 color: OpenClawBrand.warn),
         ]
     }

@@ -235,6 +235,14 @@ struct IPadWorkboardFeature {
             self.cardEntries.values
         }
 
+        var runningCardCount: Int {
+            self.cards.count(where: { $0.status == "running" })
+        }
+
+        var blockedCardCount: Int {
+            self.cards.count(where: { $0.status == "blocked" })
+        }
+
         var statuses: [IPadWorkboardStatus] {
             self.statusEntries.values
         }

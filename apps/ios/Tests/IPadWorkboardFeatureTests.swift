@@ -73,6 +73,19 @@ struct IPadWorkboardFeatureTests {
         #expect(state.cards(forKanbanStatus: "todo").map(\.id) == ["archived-match", "todo-match"])
     }
 
+    @Test func `workboard metric counts are derived by reducer state`() {
+        var state = IPadWorkboardFeature.State()
+        state.cardEntries = .init(values: [
+            Self.card(id: "running-1", status: "running", position: 10),
+            Self.card(id: "running-2", status: "running", position: 20),
+            Self.card(id: "blocked-1", status: "blocked", position: 30),
+            Self.card(id: "todo-1", status: "todo", position: 40),
+        ])
+
+        #expect(state.runningCardCount == 2)
+        #expect(state.blockedCardCount == 1)
+    }
+
     @Test func `refresh loads cards and board scopes through client`() async {
         let card = Self.card(id: "card-1", status: "todo", position: 20, boardID: "planning")
         let response = IPadWorkboardCardsResponse(cards: [card], statuses: ["todo", "done"])
