@@ -4367,6 +4367,10 @@ struct RootTabsSourceGuardTests {
             onboardingStateSource,
             from: "struct ConnectionActivityStart",
             to: "struct ScannerError")
+        let statusStateBlock = try Self.extract(
+            onboardingStateSource,
+            from: "@Reducer\nstruct OnboardingStatusFeature",
+            to: "        init(statusLine:")
 
         #expect(onboardingStateSource.contains("struct OnboardingConnectionID: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingConnectionMessage: Equatable, Sendable"))
@@ -4381,7 +4385,9 @@ struct RootTabsSourceGuardTests {
         #expect(connectionActivityStart.contains("var id: OnboardingConnectionID"))
         #expect(onboardingStateSource.contains("case connectionStarted(ConnectionStart)"))
         #expect(onboardingStateSource.contains("case connectionActivityStarted(ConnectionActivityStart)"))
-        #expect(onboardingStateSource.contains("state.connectingGatewayID = start.id.value"))
+        #expect(onboardingStateSource.contains("var connectingGatewayIDState: OnboardingConnectionID?"))
+        #expect(onboardingStateSource.contains("var connectingGatewayID: String? {\n            self.connectingGatewayIDState?.value"))
+        #expect(onboardingStateSource.contains("state.connectingGatewayIDState = start.id"))
         #expect(onboardingStateSource.contains("state.connectMessage = start.message.value"))
         #expect(onboardingStateSource.contains("state.statusLine = start.statusLine.value"))
         #expect(onboardingStateSource.contains("if start.clearsIssue.value"))
@@ -4392,6 +4398,8 @@ struct RootTabsSourceGuardTests {
         #expect(!connectionStart.contains("var statusLine: String\n"))
         #expect(!connectionStart.contains("var clearsIssue: Bool"))
         #expect(!connectionActivityStart.contains("var id: String"))
+        #expect(!statusStateBlock.contains("var connectingGatewayID: String?"))
+        #expect(!onboardingStateSource.contains("state.connectingGatewayID = start.id.value"))
         #expect(!onboardingSource.contains("self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))"))
     }
 
@@ -4425,6 +4433,10 @@ struct RootTabsSourceGuardTests {
             onboardingStateSource,
             from: "struct ConnectionIssueDetection",
             to: "struct ConnectionActivityStart")
+        let statusStateBlock = try Self.extract(
+            onboardingStateSource,
+            from: "@Reducer\nstruct OnboardingStatusFeature",
+            to: "        init(statusLine:")
 
         #expect(onboardingStateSource.contains("struct OnboardingConnectionIssueMessage: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingConnectionIssueRequestID: Equatable, Sendable"))
@@ -4437,6 +4449,9 @@ struct RootTabsSourceGuardTests {
         #expect(connectionIssueDetection.contains("var statusText: OnboardingConnectionIssueStatusText"))
         #expect(onboardingStateSource.contains("case connectionIssueDetected(ConnectionIssueDetection)"))
         #expect(onboardingStateSource.contains("detected: detection.issue"))
+        #expect(onboardingStateSource.contains("var pairingRequestIdState = OnboardingConnectionIssueRequestID(value: nil)"))
+        #expect(onboardingStateSource.contains("var pairingRequestId: String? {\n            self.pairingRequestIdState.value"))
+        #expect(onboardingStateSource.contains("state.pairingRequestIdState = .init(value: requestId)"))
         #expect(onboardingStateSource.contains("detection.pauseReconnect.value"))
         #expect(onboardingStateSource.contains("detection.statusText.value.trimmingCharacters"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionIssueDetected(.init("))
@@ -4448,6 +4463,8 @@ struct RootTabsSourceGuardTests {
         #expect(!connectionIssueDetection.contains("var pauseReconnect: Bool"))
         #expect(!connectionIssueDetection.contains("var message: String?"))
         #expect(!connectionIssueDetection.contains("var statusText: String"))
+        #expect(!statusStateBlock.contains("var pairingRequestId: String?"))
+        #expect(!onboardingStateSource.contains("state.pairingRequestId = requestId"))
     }
 
     @Test func `settings onboarding reset is reducer effect owned`() throws {
