@@ -6340,6 +6340,7 @@ struct RootTabsSourceGuardTests {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try Self.settingsProTabCombinedSource()
+        let discoveryDebugLogSource = try String(contentsOf: Self.gatewayDiscoveryDebugLogSourceURL(), encoding: .utf8)
         let updateFunction = try Self.extract(
             actionsSource,
             from: "func updateDiscoveryDebugLogsEnabled",
@@ -6366,6 +6367,10 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains("var canvasDebugStatusEnabled: Bool"))
         #expect(settingsSource.contains("self.discoveryDebugLogs.isEnabled"))
         #expect(settingsSource.contains("self.canvasDebugStatus.isEnabled"))
+        #expect(discoveryDebugLogSource.contains("store: StoreOf<GatewayDiscoveryDebugLogFeature>? = nil"))
+        #expect(discoveryDebugLogSource.contains("storeFactory: () -> StoreOf<GatewayDiscoveryDebugLogFeature>"))
+        #expect(discoveryDebugLogSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!discoveryDebugLogSource.contains("store: StoreOf<GatewayDiscoveryDebugLogFeature> = Store("))
         #expect(settingsSource.contains("state.discoveryDebugLogs = sync.discoveryDebugLogsEnabled"))
         #expect(settingsSource.contains("state.canvasDebugStatus = sync.canvasDebugStatusEnabled"))
         #expect(settingsSource.contains("state.discoveryDebugLogs = enabled"))
@@ -7035,6 +7040,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Gateway/GatewayQuickSetupSheet.swift")
+    }
+
+    private static func gatewayDiscoveryDebugLogSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Gateway/GatewayDiscoveryDebugLogView.swift")
     }
 
     private static func gatewayProblemSourceURL() -> URL {
