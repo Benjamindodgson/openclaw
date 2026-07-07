@@ -31,11 +31,7 @@ struct RootTabs: View {
         RootNavigationSelectionFeature()
     }
 
-    @State private var sidebarStore: StoreOf<RootSidebarFeature> = Store(
-        initialState: RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility))
-    {
-        RootSidebarFeature()
-    }
+    @State private var sidebarStore: StoreOf<RootSidebarFeature>
 
     @State private var launchStore: StoreOf<RootLaunchFeature>
 
@@ -48,6 +44,11 @@ struct RootTabs: View {
     @State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>
 
     init(
+        sidebarStore: StoreOf<RootSidebarFeature> = Store(
+            initialState: RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility))
+        {
+            RootSidebarFeature()
+        },
         launchStore: StoreOf<RootLaunchFeature> = Store(initialState: RootLaunchFeature.State()) {
             RootLaunchFeature()
         },
@@ -72,6 +73,7 @@ struct RootTabs: View {
             RootHomeCanvasFeature()
         })
     {
+        self._sidebarStore = State(wrappedValue: sidebarStore)
         self._launchStore = State(wrappedValue: launchStore)
         self._voiceWakeToastStore = State(wrappedValue: voiceWakeToastStore)
         self._presentationStore = State(wrappedValue: presentationStore)

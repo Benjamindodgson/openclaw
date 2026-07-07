@@ -35,8 +35,15 @@ struct RootTabsSidebarRegressionTests {
             navigationSource,
             from: "struct RootSidebarFeature",
             to: "struct RootNavigationSelectionFeature")
+        let sidebarStoreDeclaration = try Self.extract(
+            source,
+            from: "@State private var sidebarStore",
+            to: "@State private var launchStore")
 
+        #expect(source.contains("@State private var sidebarStore: StoreOf<RootSidebarFeature>"))
         #expect(source.contains("RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility)"))
+        #expect(sidebarStoreDeclaration.contains("@State private var sidebarStore: StoreOf<RootSidebarFeature>"))
+        #expect(!sidebarStoreDeclaration.contains("= Store("))
         #expect(reducer.contains("struct LayoutResolutionState: Equatable, Sendable"))
         #expect(reducer.contains("struct SidebarUserOverride: Equatable, Sendable"))
         #expect(reducer.contains("var layoutResolution: LayoutResolutionState"))
