@@ -16,16 +16,18 @@ struct IPadWorkboardScreen: View {
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         openChat: @escaping () -> Void,
         openSettings: @escaping () -> Void = {},
-        store: StoreOf<IPadWorkboardFeature> = Store(
-            initialState: IPadWorkboardFeature.State())
-        {
-            IPadWorkboardFeature()
+        store: StoreOf<IPadWorkboardFeature>? = nil,
+        storeFactory: () -> StoreOf<IPadWorkboardFeature> = {
+            Store(initialState: IPadWorkboardFeature.State()) {
+                IPadWorkboardFeature()
+            }
         })
     {
         self.headerLeadingAction = headerLeadingAction
         self.openChat = openChat
         self.openSettings = openSettings
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
