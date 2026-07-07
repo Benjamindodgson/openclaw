@@ -3465,6 +3465,11 @@ struct RootTabsSourceGuardTests {
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let settingsSource = try Self.settingsProTabCombinedSource()
+        let gatewaySetupLinkStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var gatewaySetupLinkStore",
+            to: "@State var gatewayCredentialsStore")
         let applyFunction = try Self.extract(
             actionsSource,
             from: "func applySetupCode() async -> Bool",
@@ -3513,6 +3518,9 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore()"))
         #expect(storesSource.contains(
             "SettingsGatewaySetupLinkFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
+        #expect(gatewaySetupLinkStoreDeclaration
+            .contains("@State var gatewaySetupLinkStore: StoreOf<SettingsGatewaySetupLinkFeature>"))
+        #expect(!gatewaySetupLinkStoreDeclaration.contains("= Store("))
         #expect(!actionsSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
         #expect(!actionsSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
         #expect(!applyFunction.contains("self.appModel.enterAppleReviewDemoMode()"))
