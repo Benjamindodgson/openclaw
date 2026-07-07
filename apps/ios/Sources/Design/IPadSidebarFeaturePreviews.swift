@@ -570,8 +570,11 @@ private struct IPadSkillWorkshopKanbanPreview: View {
                             IPadSkillProposalKanbanColumn(
                                 status: status,
                                 proposals: self.proposals.filter { $0.status == status },
-                                selectedProposalID: "preview-pending",
-                                inspectingProposalID: "preview-needs-review",
+                                proposalPresentation: { proposal in
+                                    IPadSkillProposalPresentation(
+                                        isSelected: proposal.id == "preview-pending",
+                                        isInspecting: proposal.id == "preview-needs-review")
+                                },
                                 canRunProposalActions: true,
                                 select: { _ in },
                                 inspect: { _ in },

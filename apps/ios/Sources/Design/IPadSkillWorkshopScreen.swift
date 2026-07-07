@@ -265,6 +265,16 @@ struct IPadSkillWorkshopFeature {
             self.proposals.first { $0.id == id }
         }
 
+        func proposalPresentation(for proposal: IPadSkillProposal) -> IPadSkillProposalPresentation {
+            .init(
+                isSelected: proposal.id == self.selectedProposalID?.value,
+                isInspecting: proposal.id == self.inspectingProposalID?.value)
+        }
+
+        var shouldEnableProposalInspectionControls: Bool {
+            self.inspectingProposalID == nil
+        }
+
         private func proposalCount(forStatus status: String) -> Int {
             self.proposals.count(where: { $0.status == status })
         }
@@ -922,8 +932,9 @@ struct IPadSkillWorkshopScreen: View {
                     IPadSkillProposalKanbanColumn(
                         status: status,
                         proposals: self.store.state.proposals(forLaneStatus: status),
-                        selectedProposalID: self.store.selectedProposalID?.value,
-                        inspectingProposalID: self.store.inspectingProposalID?.value,
+                        proposalPresentation: { proposal in
+                            self.store.state.proposalPresentation(for: proposal)
+                        },
                         canRunProposalActions: self.canRunProposalActions,
                         select: { proposal in
                             self.selectProposal(
@@ -963,6 +974,7 @@ struct IPadSkillWorkshopScreen: View {
                     if index > 0 {
                         Divider().padding(.leading, 58)
                     }
+                    let presentation = self.store.state.proposalPresentation(for: proposal)
                     Button {
                         self.selectProposal(
                             proposal,
@@ -971,8 +983,8 @@ struct IPadSkillWorkshopScreen: View {
                     } label: {
                         IPadSkillProposalRow(
                             proposal: proposal,
-                            isSelected: proposal.id == self.store.selectedProposalID?.value,
-                            isBusy: self.store.inspectingProposalID?.value == proposal.id)
+                            isSelected: presentation.isSelected,
+                            isBusy: presentation.isInspecting)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -1055,7 +1067,7 @@ struct IPadSkillWorkshopScreen: View {
                     ProValuePill(value: proposal.status, color: proposal.statusColor)
                 }
 
-                if self.store.inspectingProposalID?.value == proposal.id {
+                if self.store.state.proposalPresentation(for: proposal).isInspecting {
                     ProgressView().controlSize(.small)
                 }
 
@@ -1139,7 +1151,7 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .disabled(self.store.inspectingProposalID != nil)
+        .disabled(!self.store.shouldEnableProposalInspectionControls)
     }
 
     private var refreshTaskID: String {
@@ -1268,8 +1280,7 @@ struct IPadSkillWorkshopScreen: View {
 struct IPadSkillProposalKanbanColumn: View {
     let status: String
     let proposals: [IPadSkillProposal]
-    let selectedProposalID: String?
-    let inspectingProposalID: String?
+    let proposalPresentation: (IPadSkillProposal) -> IPadSkillProposalPresentation
     let canRunProposalActions: Bool
     let select: (IPadSkillProposal) -> Void
     let inspect: (IPadSkillProposal) -> Void
@@ -1300,10 +1311,11 @@ struct IPadSkillProposalKanbanColumn: View {
                         if index > 0 {
                             Divider().padding(.leading, 12)
                         }
+                        let presentation = self.proposalPresentation(proposal)
                         IPadSkillProposalKanbanCard(
                             proposal: proposal,
-                            isSelected: proposal.id == self.selectedProposalID,
-                            isInspecting: proposal.id == self.inspectingProposalID,
+                            isSelected: presentation.isSelected,
+                            isInspecting: presentation.isInspecting,
                             showsProposalActions: IPadSkillWorkshopFeature.State
                                 .shouldShowProposalActions(status: proposal.status),
                             canRunProposalActions: self.canRunProposalActions,
@@ -1445,6 +1457,11 @@ struct IPadSkillProposalRow: View {
 }
 
 // swiftformat:disable redundantSendable
+struct IPadSkillProposalPresentation: Equatable, Sendable {
+    let isSelected: Bool
+    let isInspecting: Bool
+}
+
 struct IPadSkillProposalSheetRoute: Equatable, Identifiable, Sendable {
     let proposalID: String
 
