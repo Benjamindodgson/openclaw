@@ -424,15 +424,17 @@ private struct AgentNodeDetailCopyButton: View {
     init(
         title: String,
         value: String,
-        store: StoreOf<AgentNodeDetailCopyFeature> = Store(
-            initialState: AgentNodeDetailCopyFeature.State())
-        {
-            AgentNodeDetailCopyFeature()
+        store: StoreOf<AgentNodeDetailCopyFeature>? = nil,
+        storeFactory: () -> StoreOf<AgentNodeDetailCopyFeature> = {
+            Store(initialState: AgentNodeDetailCopyFeature.State()) {
+                AgentNodeDetailCopyFeature()
+            }
         })
     {
         self.title = title
         self.value = value
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
