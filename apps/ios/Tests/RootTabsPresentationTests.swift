@@ -1081,8 +1081,8 @@ struct RootTabsPresentationTests {
     }
 
     @Test func `skill workshop agent scope normalizes gateway ids`() {
-        #expect(IPadSkillWorkshopScreen.normalizedScopeID("  aiden ") == "aiden")
-        #expect(IPadSkillWorkshopScreen.normalizedScopeID(nil) == "")
+        #expect(IPadSkillWorkshopFeature.State.normalizedScopeID("  aiden ") == "aiden")
+        #expect(IPadSkillWorkshopFeature.State.normalizedScopeID(nil) == "")
     }
 
     @Test func `channel lifecycle controls require admin scope`() {
