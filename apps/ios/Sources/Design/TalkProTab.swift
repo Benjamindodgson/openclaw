@@ -190,15 +190,19 @@ struct TalkProTab: View {
         ownsNavigationStack: Bool = true,
         openSettings: @escaping () -> Void,
         openVoiceSettings: (() -> Void)? = nil,
-        store: StoreOf<TalkProTabFeature> = Store(initialState: TalkProTabFeature.State()) {
-            TalkProTabFeature()
+        store: StoreOf<TalkProTabFeature>? = nil,
+        storeFactory: () -> StoreOf<TalkProTabFeature> = {
+            Store(initialState: TalkProTabFeature.State()) {
+                TalkProTabFeature()
+            }
         })
     {
         self.headerLeadingAction = headerLeadingAction
         self.ownsNavigationStack = ownsNavigationStack
         self.openSettings = openSettings
         self.openVoiceSettings = openVoiceSettings ?? openSettings
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     private var state: TalkProState {

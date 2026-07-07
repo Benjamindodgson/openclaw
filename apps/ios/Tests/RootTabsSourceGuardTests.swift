@@ -941,6 +941,10 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
         #expect(storesSource.contains("func makeTalkProTabStore()"))
         #expect(storesSource.contains("TalkProTabFeature(client: .live(appModel: self.appModel))"))
+        #expect(talkSource.contains("store: StoreOf<TalkProTabFeature>? = nil"))
+        #expect(talkSource.contains("storeFactory: () -> StoreOf<TalkProTabFeature>"))
+        #expect(talkSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!talkSource.contains("store: StoreOf<TalkProTabFeature> = Store(initialState: TalkProTabFeature.State())"))
         #expect(talkSource.contains("self.store.send(.gatewayConnectionChanged(.init(status: .init(isConnected: connected))))"))
         #expect(speakerphoneBinding.contains("self.talkSpeakerphoneEnabled = enabled"))
         #expect(speakerphoneBinding.contains(
