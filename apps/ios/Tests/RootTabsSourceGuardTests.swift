@@ -1316,6 +1316,7 @@ struct RootTabsSourceGuardTests {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let deepLinkSource = try String(contentsOf: Self.deepLinkAgentPromptAlertSourceURL(), encoding: .utf8)
+        let execApprovalSource = try String(contentsOf: Self.execApprovalPromptDialogSourceURL(), encoding: .utf8)
 
         #expect(storesSource.contains("extension RootTabs"))
         #expect(storesSource.contains("func makeGatewayQuickSetupStore()"))
@@ -1348,6 +1349,15 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
         #expect(rootSource.contains("pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore()"))
         #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
+        #expect(rootSource.contains("store: self.makeExecApprovalPromptStore()"))
+        #expect(storesSource.contains("func makeExecApprovalPromptStore()"))
+        #expect(storesSource.contains("ExecApprovalPromptFeature(client: .live(appModel: self.appModel))"))
+        #expect(execApprovalSource.contains("store: StoreOf<ExecApprovalPromptFeature>? = nil"))
+        #expect(execApprovalSource.contains("storeFactory: () -> StoreOf<ExecApprovalPromptFeature>"))
+        #expect(execApprovalSource.contains("storeFactory: @escaping () -> StoreOf<ExecApprovalPromptFeature>"))
+        #expect(execApprovalSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(execApprovalSource.contains("storeFactory: storeFactory"))
+        #expect(!execApprovalSource.contains("store: StoreOf<ExecApprovalPromptFeature> = Store("))
         #expect(rootSource.contains("approvalsStore: self.makeSettingsApprovalsStore()"))
         #expect(rootSource.contains("appearanceStore: self.makeSettingsAppearanceStore()"))
         #expect(rootSource.contains("deviceCapabilityStore: self.makeSettingsDeviceCapabilityStore()"))
@@ -1375,6 +1385,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makeSettingsPresentationStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(!rootSource.contains("func makeDeepLinkAgentPromptStore()"))
+        #expect(!rootSource.contains("func makeExecApprovalPromptStore()"))
         #expect(!rootSource.contains("withDependencies"))
     }
 
@@ -6999,6 +7010,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Gateway/DeepLinkAgentPromptAlert.swift")
+    }
+
+    private static func execApprovalPromptDialogSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Gateway/ExecApprovalPromptDialog.swift")
     }
 
     private static func gatewayQuickSetupSourceURL() -> URL {

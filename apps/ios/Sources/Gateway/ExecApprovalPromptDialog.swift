@@ -106,14 +106,16 @@ private struct ExecApprovalPromptDialogModifier: ViewModifier {
 
     init(
         suppressedApprovalID: String? = nil,
-        store: StoreOf<ExecApprovalPromptFeature> = Store(
-            initialState: ExecApprovalPromptFeature.State())
-        {
-            ExecApprovalPromptFeature()
+        store: StoreOf<ExecApprovalPromptFeature>? = nil,
+        storeFactory: () -> StoreOf<ExecApprovalPromptFeature> = {
+            Store(initialState: ExecApprovalPromptFeature.State()) {
+                ExecApprovalPromptFeature()
+            }
         })
     {
         self.suppressedApprovalID = suppressedApprovalID
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     func body(content: Content) -> some View {
@@ -299,12 +301,16 @@ private struct ExecApprovalPromptMetadataRow: View {
 extension View {
     func execApprovalPromptDialog(
         suppressedApprovalID: String? = nil,
-        store: StoreOf<ExecApprovalPromptFeature> = Store(
-            initialState: ExecApprovalPromptFeature.State())
-        {
-            ExecApprovalPromptFeature()
+        store: StoreOf<ExecApprovalPromptFeature>? = nil,
+        storeFactory: @escaping () -> StoreOf<ExecApprovalPromptFeature> = {
+            Store(initialState: ExecApprovalPromptFeature.State()) {
+                ExecApprovalPromptFeature()
+            }
         }) -> some View
     {
-        self.modifier(ExecApprovalPromptDialogModifier(suppressedApprovalID: suppressedApprovalID, store: store))
+        self.modifier(ExecApprovalPromptDialogModifier(
+            suppressedApprovalID: suppressedApprovalID,
+            store: store,
+            storeFactory: storeFactory))
     }
 }
