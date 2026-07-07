@@ -107,6 +107,12 @@ struct IPadSkillWorkshopFeature {
             self.loadingPhase == .inFlight
         }
 
+        var refreshControlPresentation: IPadSkillWorkshopRefreshControlPresentation {
+            .init(
+                isDisabled: self.isRefreshInFlight,
+                showsProgress: self.isRefreshInFlight)
+        }
+
         var shouldShowQueryClearButton: Bool {
             !self.query.value.isEmpty
         }
@@ -760,6 +766,7 @@ struct IPadSkillWorkshopScreen: View {
     private var filtersCard: some View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
+                let refreshPresentation = self.store.refreshControlPresentation
                 self.agentScopeMenu
                 self.proposalSearchField
                 Picker("Status", selection: self.statusFilterBinding) {
@@ -779,9 +786,9 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.isRefreshInFlight)
+                    .disabled(refreshPresentation.isDisabled)
 
-                    if self.store.isRefreshInFlight {
+                    if refreshPresentation.showsProgress {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -794,6 +801,7 @@ struct IPadSkillWorkshopScreen: View {
     private var compactFiltersCard: some View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
+                let refreshPresentation = self.store.refreshControlPresentation
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("\(self.store.filteredProposalCount) proposals")
@@ -803,7 +811,7 @@ struct IPadSkillWorkshopScreen: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 8)
-                    if self.store.isRefreshInFlight {
+                    if refreshPresentation.showsProgress {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -830,7 +838,7 @@ struct IPadSkillWorkshopScreen: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.isRefreshInFlight)
+                    .disabled(refreshPresentation.isDisabled)
                 }
                 self.feedbackMessageRows
             }
