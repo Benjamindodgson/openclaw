@@ -2299,6 +2299,18 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var gatewayRemoteAddress: String?\n    var gatewayServerName: String?"))
     }
 
+    @Test func `command center agent count is typed presentation state`() throws {
+        let source = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct CommandCenterGatewayAgentCount: Equatable, Sendable"))
+        #expect(source.contains("var gatewayAgentCountState = CommandCenterGatewayAgentCount(value: 0)"))
+        #expect(source.contains("gatewayAgentCount: Int = 0"))
+        #expect(source.contains("self.gatewayAgentCountState = .init(value: gatewayAgentCount)"))
+        #expect(source.contains("var gatewayAgentCount: Int"))
+        #expect(source.contains("self.gatewayAgentCountState.value"))
+        #expect(!source.contains("var gatewayAgentCount = 0"))
+    }
+
     @Test func `command center active agent name is typed presentation state`() throws {
         let source = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
 

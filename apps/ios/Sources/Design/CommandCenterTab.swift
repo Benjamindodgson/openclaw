@@ -574,6 +574,7 @@ struct CommandCenterGatewayPresentationFeature {
 // swiftformat:disable redundantSendable
 struct CommandCenterGatewayRemoteAddress: Equatable, Sendable { var value: String? }
 struct CommandCenterGatewayServerName: Equatable, Sendable { var value: String? }
+struct CommandCenterGatewayAgentCount: Equatable, Sendable { var value: Int }
 struct CommandCenterGatewayActiveAgentName: Equatable, Sendable { var value: String }
 struct CommandCenterGatewayDisplayStatusText: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
@@ -582,7 +583,7 @@ struct CommandCenterGatewayPresentationState: Equatable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
     var gatewayRemoteAddressState = CommandCenterGatewayRemoteAddress(value: nil)
     var gatewayServerNameState = CommandCenterGatewayServerName(value: nil)
-    var gatewayAgentCount = 0
+    var gatewayAgentCountState = CommandCenterGatewayAgentCount(value: 0)
     var activeAgentNameState = CommandCenterGatewayActiveAgentName(value: "Default Agent")
     var gatewayDisplayStatusTextState = CommandCenterGatewayDisplayStatusText(value: "Offline")
 
@@ -597,7 +598,7 @@ struct CommandCenterGatewayPresentationState: Equatable {
         self.gatewayDisplayState = gatewayDisplayState
         self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)
         self.gatewayServerNameState = .init(value: gatewayServerName)
-        self.gatewayAgentCount = gatewayAgentCount
+        self.gatewayAgentCountState = .init(value: gatewayAgentCount)
         self.activeAgentNameState = .init(value: activeAgentName)
         self.gatewayDisplayStatusTextState = .init(value: gatewayDisplayStatusText)
     }
@@ -612,6 +613,10 @@ struct CommandCenterGatewayPresentationState: Equatable {
 
     var gatewayServerName: String? {
         self.gatewayServerNameState.value
+    }
+
+    var gatewayAgentCount: Int {
+        self.gatewayAgentCountState.value
     }
 
     var activeAgentName: String {
