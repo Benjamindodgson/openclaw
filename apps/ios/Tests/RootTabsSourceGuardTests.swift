@@ -2250,6 +2250,18 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var gatewayDisplayStatusText = \"Offline\""))
     }
 
+    @Test func `iPad activity agent count is typed presentation state`() throws {
+        let source = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct IPadActivityGatewayAgentCount: Equatable, Sendable"))
+        #expect(source.contains("var gatewayAgentCountState = IPadActivityGatewayAgentCount(value: 0)"))
+        #expect(source.contains("gatewayAgentCount: Int = 0"))
+        #expect(source.contains("self.gatewayAgentCountState = .init(value: gatewayAgentCount)"))
+        #expect(source.contains("var gatewayAgentCount: Int"))
+        #expect(source.contains("self.gatewayAgentCountState.value"))
+        #expect(!source.contains("var gatewayAgentCount = 0"))
+    }
+
     @Test func `command sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
         let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
