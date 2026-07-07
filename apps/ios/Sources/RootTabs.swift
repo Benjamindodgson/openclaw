@@ -47,11 +47,7 @@ struct RootTabs: View {
         RootPresentationFeature()
     }
 
-    @State private var idleTimerStore: StoreOf<RootIdleTimerFeature> = Store(
-        initialState: RootIdleTimerFeature.State())
-    {
-        RootIdleTimerFeature(client: .live)
-    }
+    @State private var idleTimerStore: StoreOf<RootIdleTimerFeature>
 
     @State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature> = Store(
         initialState: RootHomeCanvasFeature.State())
@@ -67,10 +63,16 @@ struct RootTabs: View {
             initialState: RootVoiceWakeToastFeature.State())
         {
             RootVoiceWakeToastFeature()
+        },
+        idleTimerStore: StoreOf<RootIdleTimerFeature> = Store(
+            initialState: RootIdleTimerFeature.State())
+        {
+            RootIdleTimerFeature(client: .live)
         })
     {
         self._launchStore = State(wrappedValue: launchStore)
         self._voiceWakeToastStore = State(wrappedValue: voiceWakeToastStore)
+        self._idleTimerStore = State(wrappedValue: idleTimerStore)
     }
 
     private static var initialTab: AppTab {

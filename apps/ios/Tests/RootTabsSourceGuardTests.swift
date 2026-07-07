@@ -1160,6 +1160,10 @@ struct RootTabsSourceGuardTests {
             rootSource,
             from: "private func rootAppearLifecycle",
             to: "private func rootGatewayLifecycle")
+        let idleTimerStoreDeclaration = try Self.extract(
+            rootSource,
+            from: "@State private var idleTimerStore",
+            to: "@State private var homeCanvasStore")
         let updateFunction = try Self.extract(
             rootSource,
             from: "private func updateIdleTimer()",
@@ -1191,6 +1195,8 @@ struct RootTabsSourceGuardTests {
         #expect(!featureSource.contains("var talkModeEnabled: Bool"))
         #expect(rootSource.contains("@State private var idleTimerStore: StoreOf<RootIdleTimerFeature>"))
         #expect(rootSource.contains("RootIdleTimerFeature(client: .live)"))
+        #expect(idleTimerStoreDeclaration.contains("@State private var idleTimerStore: StoreOf<RootIdleTimerFeature>"))
+        #expect(!idleTimerStoreDeclaration.contains("= Store("))
         #expect(!rootSource.contains("Task { await self.applyIdleTimerSnapshot() }"))
         #expect(updateFunction.contains("self.idleTimerStore.send(.snapshotChanged(self.makeIdleTimerSnapshot()))"))
         #expect(rootSource.contains("RootIdleTimerFeature.Snapshot(\n            scenePhase: self.scenePhase"))
