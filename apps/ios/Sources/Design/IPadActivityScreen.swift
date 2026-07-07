@@ -383,6 +383,7 @@ struct IPadActivityScreen: View {
 struct IPadActivityGatewayRemoteAddress: Equatable, Sendable { var value: String? }
 struct IPadActivityGatewayServerName: Equatable, Sendable { var value: String? }
 struct IPadActivityGatewayDisplayStatusText: Equatable, Sendable { var value: String }
+struct IPadActivityGatewayAgentCount: Equatable, Sendable { var value: Int }
 // swiftformat:enable redundantSendable
 
 struct IPadActivityGatewayPresentationState: Equatable {
@@ -390,7 +391,7 @@ struct IPadActivityGatewayPresentationState: Equatable {
     var gatewayDisplayStatusTextState = IPadActivityGatewayDisplayStatusText(value: "Offline")
     var gatewayRemoteAddressState = IPadActivityGatewayRemoteAddress(value: nil)
     var gatewayServerNameState = IPadActivityGatewayServerName(value: nil)
-    var gatewayAgentCount = 0
+    var gatewayAgentCountState = IPadActivityGatewayAgentCount(value: 0)
 
     init(
         gatewayDisplayState: GatewayDisplayState = .disconnected,
@@ -403,7 +404,7 @@ struct IPadActivityGatewayPresentationState: Equatable {
         self.gatewayDisplayStatusTextState = .init(value: gatewayDisplayStatusText)
         self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)
         self.gatewayServerNameState = .init(value: gatewayServerName)
-        self.gatewayAgentCount = gatewayAgentCount
+        self.gatewayAgentCountState = .init(value: gatewayAgentCount)
     }
 
     var isConnected: Bool {
@@ -420,6 +421,10 @@ struct IPadActivityGatewayPresentationState: Equatable {
 
     var gatewayDisplayStatusText: String {
         self.gatewayDisplayStatusTextState.value
+    }
+
+    var gatewayAgentCount: Int {
+        self.gatewayAgentCountState.value
     }
 
     var metricIcon: String {
