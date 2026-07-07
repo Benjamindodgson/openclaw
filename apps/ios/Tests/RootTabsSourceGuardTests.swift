@@ -115,6 +115,24 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var gatewayAgents: [RootTabsPhoneControlHubAgent] = []"))
     }
 
+    @Test func `phone control hub gateway endpoints are typed presentation state`() throws {
+        let source = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct RootTabsPhoneControlHubGatewayServerName: Equatable, Sendable"))
+        #expect(source.contains("struct RootTabsPhoneControlHubGatewayRemoteAddress: Equatable, Sendable"))
+        #expect(source.contains("var gatewayServerNameState = RootTabsPhoneControlHubGatewayServerName(value: nil)"))
+        #expect(source.contains("var gatewayRemoteAddressState = RootTabsPhoneControlHubGatewayRemoteAddress(value: nil)"))
+        #expect(source.contains("gatewayServerName: String? = nil"))
+        #expect(source.contains("gatewayRemoteAddress: String? = nil"))
+        #expect(source.contains("self.gatewayServerNameState = .init(value: gatewayServerName)"))
+        #expect(source.contains("self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)"))
+        #expect(source.contains("var gatewayServerName: String?"))
+        #expect(source.contains("var gatewayRemoteAddress: String?"))
+        #expect(source.contains("self.gatewayServerNameState.value"))
+        #expect(source.contains("self.gatewayRemoteAddressState.value"))
+        #expect(!source.contains("var gatewayServerName: String?\n    var gatewayRemoteAddress: String?"))
+    }
+
     @Test func `gateway problem copy feedback is typed reducer state`() throws {
         let source = try String(contentsOf: Self.gatewayProblemSourceURL(), encoding: .utf8)
 
