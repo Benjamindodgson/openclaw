@@ -2390,6 +2390,11 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains("state.loadingPhase = .inFlight"))
         #expect(feature.contains("state.loadingPhase = .idle"))
         #expect(feature.contains("state.loadErrorText = .init(value: \"Try again after the gateway reconnects.\")"))
+        #expect(commandCenterSource.contains("store: StoreOf<CommandSessionsFeature>? = nil"))
+        #expect(commandCenterSource.contains("storeFactory: () -> StoreOf<CommandSessionsFeature>"))
+        #expect(commandCenterSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!commandCenterSource
+            .contains("store: StoreOf<CommandSessionsFeature> = Store(initialState: CommandSessionsFeature.State())"))
         #expect(commandCenterSource.contains("if self.store.loadingPhase == .inFlight"))
         #expect(commandCenterSource.contains("if self.store.loadingPhase == .inFlight, self.store.sessions.isEmpty"))
         #expect(commandCenterSource.contains("detail: loadErrorText.value"))

@@ -703,13 +703,17 @@ struct CommandSessionsScreen: View {
     init(
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         openChat: @escaping () -> Void,
-        store: StoreOf<CommandSessionsFeature> = Store(initialState: CommandSessionsFeature.State()) {
-            CommandSessionsFeature()
+        store: StoreOf<CommandSessionsFeature>? = nil,
+        storeFactory: () -> StoreOf<CommandSessionsFeature> = {
+            Store(initialState: CommandSessionsFeature.State()) {
+                CommandSessionsFeature()
+            }
         })
     {
         self.headerLeadingAction = headerLeadingAction
         self.openChat = openChat
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
