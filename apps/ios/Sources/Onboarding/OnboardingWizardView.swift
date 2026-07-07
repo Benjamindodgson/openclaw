@@ -17,11 +17,7 @@ struct OnboardingWizardView: View {
     @State private var credentialsStore: StoreOf<OnboardingCredentialsFeature>
 
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var statusStore: StoreOf<OnboardingStatusFeature> = Store(
-        initialState: OnboardingStatusFeature.State())
-    {
-        OnboardingStatusFeature()
-    }
+    @State private var statusStore: StoreOf<OnboardingStatusFeature>
 
     @State private var presentationStore: StoreOf<OnboardingPresentationFeature> = Store(
         initialState: OnboardingPresentationFeature.State())
@@ -67,6 +63,11 @@ struct OnboardingWizardView: View {
             initialState: OnboardingCredentialsFeature.State())
         {
             OnboardingCredentialsFeature()
+        },
+        statusStore: StoreOf<OnboardingStatusFeature> = Store(
+            initialState: OnboardingStatusFeature.State())
+        {
+            OnboardingStatusFeature()
         })
     {
         self.allowSkip = allowSkip
@@ -78,6 +79,7 @@ struct OnboardingWizardView: View {
             OnboardingStepFeature()
         })
         self._credentialsStore = State(wrappedValue: credentialsStore)
+        self._statusStore = State(wrappedValue: statusStore)
     }
 
     @MainActor
