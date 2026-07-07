@@ -6229,6 +6229,10 @@ struct RootTabsSourceGuardTests {
             featureSource,
             from: "struct AgentSnapshot: Equatable, Sendable {",
             to: "struct Payload")
+        let homeCanvasStoreDeclaration = try Self.extract(
+            rootSource,
+            from: "@State private var homeCanvasStore",
+            to: "init(")
 
         #expect(featureSource.contains("@Reducer\nstruct RootHomeCanvasFeature"))
         #expect(featureSource.contains("struct Snapshot: Equatable, Sendable"))
@@ -6278,6 +6282,8 @@ struct RootTabsSourceGuardTests {
         #expect(featureSource.contains("name: .init(value: agent.name)"))
         #expect(featureSource.contains("emoji: .init(value: agent.identity?[\"emoji\"]?.value as? String)"))
         #expect(rootSource.contains("@State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>"))
+        #expect(homeCanvasStoreDeclaration.contains("@State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>"))
+        #expect(!homeCanvasStoreDeclaration.contains("= Store("))
         #expect(rootSource.contains("self.homeCanvasStore.send(.snapshotChanged(self.makeHomeCanvasSnapshot()))"))
         #expect(rootSource.contains("self.appModel.screen.updateHomeCanvasState(json: self.homeCanvasStore.payloadJSON.value)"))
         #expect(rootSource.contains("RootHomeCanvasFeature.Snapshot(appModel: self.appModel, gatewayStatus: self.gatewayStatus)"))
