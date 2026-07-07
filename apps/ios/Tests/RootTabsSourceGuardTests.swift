@@ -2299,6 +2299,18 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var gatewayRemoteAddress: String?\n    var gatewayServerName: String?"))
     }
 
+    @Test func `command center active agent name is typed presentation state`() throws {
+        let source = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct CommandCenterGatewayActiveAgentName: Equatable, Sendable"))
+        #expect(source.contains("var activeAgentNameState = CommandCenterGatewayActiveAgentName(value: \"Default Agent\")"))
+        #expect(source.contains("activeAgentName: String = \"Default Agent\""))
+        #expect(source.contains("self.activeAgentNameState = .init(value: activeAgentName)"))
+        #expect(source.contains("var activeAgentName: String"))
+        #expect(source.contains("self.activeAgentNameState.value"))
+        #expect(!source.contains("var activeAgentName = \"Default Agent\""))
+    }
+
     @Test func `command center recent sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
         let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
