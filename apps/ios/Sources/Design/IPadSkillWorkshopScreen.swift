@@ -194,6 +194,10 @@ struct IPadSkillWorkshopFeature {
                 .sorted { $0.updatedAtMs > $1.updatedAtMs }
         }
 
+        func proposal(withID id: String) -> IPadSkillProposal? {
+            self.proposals.first { $0.id == id }
+        }
+
         private func proposalCount(forStatus status: String) -> Int {
             self.proposals.count(where: { $0.status == status })
         }
@@ -936,7 +940,7 @@ struct IPadSkillWorkshopScreen: View {
 
     @ViewBuilder
     private func presentedProposalDetail(proposalID: String) -> some View {
-        if let proposal = proposal(withID: proposalID) {
+        if let proposal = self.store.state.proposal(withID: proposalID) {
             self.proposalDetailCard(proposal)
         } else {
             ProCard(radius: OpenClawProMetric.cardRadius) {
@@ -1249,10 +1253,6 @@ struct IPadSkillWorkshopScreen: View {
 
     private var statusFilterLabel: String {
         self.store.statusFilterLabel
-    }
-
-    private func proposal(withID id: String) -> IPadSkillProposal? {
-        self.store.proposals.first { $0.id == id }
     }
 
     private func selectProposal(
