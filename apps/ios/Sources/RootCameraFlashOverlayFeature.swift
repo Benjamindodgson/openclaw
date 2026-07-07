@@ -8,14 +8,16 @@ struct RootCameraFlashOverlay: View {
 
     init(
         nonce: Int,
-        store: StoreOf<RootCameraFlashOverlayFeature> = Store(
-            initialState: RootCameraFlashOverlayFeature.State())
-        {
-            RootCameraFlashOverlayFeature()
+        store: StoreOf<RootCameraFlashOverlayFeature>? = nil,
+        storeFactory: () -> StoreOf<RootCameraFlashOverlayFeature> = {
+            Store(initialState: RootCameraFlashOverlayFeature.State()) {
+                RootCameraFlashOverlayFeature()
+            }
         })
     {
         self.nonce = nonce
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
