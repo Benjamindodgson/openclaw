@@ -88,6 +88,8 @@ struct IPadSkillWorkshopNoticeMessage: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopQuery: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopSelectedAgentScopeID: Equatable, Sendable { var value: String }
 struct IPadSkillWorkshopStatusFilter: Equatable, Sendable { var value: String }
+struct IPadSkillWorkshopGatewayDefaultAgentID: Equatable, Sendable { var value: String? }
+struct IPadSkillWorkshopActiveAgentName: Equatable, Sendable { var value: String }
 
 enum IPadSkillWorkshopLoadingPhase: Equatable, Sendable {
     case idle
@@ -119,6 +121,20 @@ struct IPadSkillWorkshopProposals: Equatable, Sendable {
     var values: [IPadSkillProposal] = []
 }
 
+struct IPadSkillWorkshopGatewayAgent: Equatable, Sendable {
+    var id: String
+    var name: String?
+}
+
+struct IPadSkillWorkshopGatewayAgents: Equatable, Sendable {
+    var values: [IPadSkillWorkshopGatewayAgent] = []
+}
+
+struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
+    let id: String
+    let title: String
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -135,6 +151,9 @@ struct IPadSkillWorkshopFeature {
         var proposalEntries = IPadSkillWorkshopProposals()
         var selectedProposalID: IPadSkillWorkshopProposalID?
         var selectedAgentScopeID = IPadSkillWorkshopSelectedAgentScopeID(value: "")
+        var gatewayDefaultAgentID = IPadSkillWorkshopGatewayDefaultAgentID(value: nil)
+        var gatewayAgentEntries = IPadSkillWorkshopGatewayAgents()
+        var activeAgentName = IPadSkillWorkshopActiveAgentName(value: "Default Agent")
         var statusFilter = IPadSkillWorkshopStatusFilter(value: "pending")
         var query = IPadSkillWorkshopQuery(value: "")
         var loadingPhase = IPadSkillWorkshopLoadingPhase.idle
@@ -151,6 +170,42 @@ struct IPadSkillWorkshopFeature {
         var selectedAgentParam: String? {
             let selected = IPadSkillWorkshopScreen.normalizedScopeID(self.selectedAgentScopeID.value)
             return selected.isEmpty ? nil : selected
+        }
+
+        var gatewayAgents: [IPadSkillWorkshopGatewayAgent] {
+            self.gatewayAgentEntries.values
+        }
+
+        var agentScopeOptions: [IPadSkillWorkshopAgentScopeOption] {
+            let defaultID = IPadSkillWorkshopScreen.normalizedScopeID(self.gatewayDefaultAgentID.value)
+            return self.gatewayAgents
+                .filter { IPadSkillWorkshopScreen.normalizedScopeID($0.id) != defaultID }
+                .map { agent in
+                    let name = IPadSkillWorkshopScreen.normalizedScopeID(agent.name)
+                    return IPadSkillWorkshopAgentScopeOption(
+                        id: IPadSkillWorkshopScreen.normalizedScopeID(agent.id),
+                        title: name.isEmpty ? agent.id : name)
+                }
+                .filter { !$0.id.isEmpty }
+                .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        }
+
+        var agentScopeLabel: String {
+            let selected = IPadSkillWorkshopScreen.normalizedScopeID(self.selectedAgentScopeID.value)
+            guard !selected.isEmpty else { return self.defaultAgentScopeLabel }
+            return self.agentScopeOptions.first(where: { $0.id == selected })?.title ?? selected
+        }
+
+        var defaultAgentScopeLabel: String {
+            let defaultID = IPadSkillWorkshopScreen.normalizedScopeID(self.gatewayDefaultAgentID.value)
+            if let match = self.gatewayAgents
+                .first(where: { IPadSkillWorkshopScreen.normalizedScopeID($0.id) == defaultID })
+            {
+                let name = IPadSkillWorkshopScreen.normalizedScopeID(match.name)
+                return name.isEmpty ? "Default agent" : name
+            }
+            let activeName = IPadSkillWorkshopScreen.normalizedScopeID(self.activeAgentName.value)
+            return activeName.isEmpty ? "Default agent" : activeName
         }
 
         var statusFilterLabel: String {
@@ -263,6 +318,14 @@ struct IPadSkillWorkshopFeature {
         }
 
         case agentScopeChanged(AgentScopeChange)
+
+        struct AgentScopeSnapshot: Equatable, Sendable {
+            var gatewayDefaultAgentID: IPadSkillWorkshopGatewayDefaultAgentID
+            var gatewayAgents: IPadSkillWorkshopGatewayAgents
+            var activeAgentName: IPadSkillWorkshopActiveAgentName
+        }
+
+        case agentScopeSnapshotChanged(AgentScopeSnapshot)
         case clearQueryTapped
 
         struct InspectRequest: Equatable, Sendable {
@@ -346,6 +409,12 @@ struct IPadSkillWorkshopFeature {
             case let .agentScopeChanged(change):
                 state.selectedAgentScopeID = .init(
                     value: IPadSkillWorkshopScreen.normalizedScopeID(change.agentID.value))
+                return .none
+
+            case let .agentScopeSnapshotChanged(snapshot):
+                state.gatewayDefaultAgentID = snapshot.gatewayDefaultAgentID
+                state.gatewayAgentEntries = snapshot.gatewayAgents
+                state.activeAgentName = snapshot.activeAgentName
                 return .none
 
             case .clearQueryTapped:
@@ -603,6 +672,9 @@ struct IPadSkillWorkshopScreen: View {
         .task(id: self.refreshID) {
             await self.loadProposals(force: false)
         }
+        .task(id: self.agentScopeSnapshot) {
+            self.store.send(.agentScopeSnapshotChanged(self.agentScopeSnapshot))
+        }
         .refreshable {
             await self.loadProposals(force: true)
         }
@@ -776,14 +848,14 @@ struct IPadSkillWorkshopScreen: View {
                 Button("Default agent") {
                     self.store.send(.agentScopeChanged(.init(agentID: .init(value: ""))))
                 }
-                ForEach(self.agentScopeOptions, id: \.id) { option in
+                ForEach(self.store.agentScopeOptions, id: \.id) { option in
                     Button(option.title) {
                         self.store.send(.agentScopeChanged(.init(agentID: .init(value: option.id))))
                     }
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text(self.agentScopeLabel)
+                    Text(self.store.agentScopeLabel)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
                     Image(systemName: "chevron.up.chevron.down")
@@ -794,7 +866,7 @@ struct IPadSkillWorkshopScreen: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .tint(self.neutralControlTint)
-            .disabled(self.agentScopeOptions.isEmpty)
+            .disabled(self.store.agentScopeOptions.isEmpty)
             .accessibilityLabel("Skill Workshop agent scope")
         }
     }
@@ -1082,34 +1154,13 @@ struct IPadSkillWorkshopScreen: View {
             hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)
     }
 
-    private var agentScopeOptions: [IPadSkillWorkshopAgentScopeOption] {
-        let defaultID = Self.normalizedScopeID(self.appModel.gatewayDefaultAgentId)
-        return self.appModel.gatewayAgents
-            .filter { Self.normalizedScopeID($0.id) != defaultID }
-            .map { agent in
-                let name = Self.normalizedScopeID(agent.name)
-                return IPadSkillWorkshopAgentScopeOption(
-                    id: Self.normalizedScopeID(agent.id),
-                    title: name.isEmpty ? agent.id : name)
-            }
-            .filter { !$0.id.isEmpty }
-            .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
-    }
-
-    private var agentScopeLabel: String {
-        let selected = Self.normalizedScopeID(self.store.selectedAgentScopeID.value)
-        guard !selected.isEmpty else { return self.defaultAgentScopeLabel }
-        return self.agentScopeOptions.first(where: { $0.id == selected })?.title ?? selected
-    }
-
-    private var defaultAgentScopeLabel: String {
-        let defaultID = Self.normalizedScopeID(self.appModel.gatewayDefaultAgentId)
-        if let match = appModel.gatewayAgents.first(where: { Self.normalizedScopeID($0.id) == defaultID }) {
-            let name = Self.normalizedScopeID(match.name)
-            return name.isEmpty ? "Default agent" : name
-        }
-        let activeName = Self.normalizedScopeID(self.appModel.activeAgentName)
-        return activeName.isEmpty ? "Default agent" : activeName
+    private var agentScopeSnapshot: IPadSkillWorkshopFeature.Action.AgentScopeSnapshot {
+        .init(
+            gatewayDefaultAgentID: .init(value: self.appModel.gatewayDefaultAgentId),
+            gatewayAgents: .init(values: self.appModel.gatewayAgents.map {
+                IPadSkillWorkshopGatewayAgent(id: $0.id, name: $0.name)
+            }),
+            activeAgentName: .init(value: self.appModel.activeAgentName))
     }
 
     nonisolated static func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool {
@@ -1502,11 +1553,6 @@ struct IPadSkillProposalManifestEntry: Decodable, Equatable, Sendable {
     let createdAt: String
     let updatedAt: String
     let scanState: String
-}
-
-private struct IPadSkillWorkshopAgentScopeOption: Identifiable {
-    let id: String
-    let title: String
 }
 
 private struct IPadSkillProposalListParams: Encodable {
