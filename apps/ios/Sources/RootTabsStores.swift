@@ -70,6 +70,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsDeviceIdentityStore() -> StoreOf<SettingsDeviceIdentityFeature> {
+        Store(initialState: SettingsDeviceIdentityFeature.State()) {
+            SettingsDeviceIdentityFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsShareInstructionStore() -> StoreOf<SettingsShareInstructionFeature> {
         Store(initialState: SettingsShareInstructionFeature.State()) {
             SettingsShareInstructionFeature()
