@@ -307,7 +307,7 @@ struct AgentProTab: View {
     private var navigationPathBinding: Binding<[AgentRoute]> {
         Binding(
             get: { self.navigationStore.navigationPath },
-            set: { self.navigationStore.send(.navigationPathChanged(.init(path: $0))) })
+            set: { self.navigationStore.send(.navigationPathChanged(.init(path: .init(routes: $0)))) })
     }
 
     private func directDestination(for route: AgentRoute) -> some View {
@@ -907,14 +907,22 @@ struct AgentOverviewLoadFeature {
 @Reducer
 struct AgentNavigationFeature {
     // swiftformat:disable redundantSendable
+    struct AgentNavigationPath: Equatable, Sendable {
+        var routes: [AgentRoute]
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var navigationPath: [AgentRoute] = []
+        var navigationPathState = AgentNavigationPath(routes: [])
+
+        var navigationPath: [AgentRoute] {
+            self.navigationPathState.routes
+        }
     }
 
     enum Action: Equatable, Sendable {
         struct NavigationPathChange: Equatable, Sendable {
-            var path: [AgentRoute]
+            var path: AgentNavigationPath
         }
 
         case navigationPathChanged(NavigationPathChange)
@@ -926,7 +934,7 @@ struct AgentNavigationFeature {
         Reduce { state, action in
             switch action {
             case let .navigationPathChanged(change):
-                state.navigationPath = change.path
+                state.navigationPathState = change.path
                 return .none
             }
         }
