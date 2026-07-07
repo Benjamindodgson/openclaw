@@ -5,9 +5,17 @@ import SwiftUI
 @Reducer
 struct SettingsNavigationFeature {
     // swiftformat:disable redundantSendable
+    struct SettingsNavigationPath: Equatable, Sendable {
+        var routes: [SettingsRoute]
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var navigationPath: [SettingsRoute] = []
+        var navigationPathState = SettingsNavigationPath(routes: [])
+
+        var navigationPath: [SettingsRoute] {
+            self.navigationPathState.routes
+        }
 
         static func title(for route: SettingsRoute) -> String {
             switch route {
@@ -41,7 +49,7 @@ struct SettingsNavigationFeature {
     enum Action: Equatable, Sendable {
         struct InitialRouteRequest: Equatable, Sendable { var route: SettingsRoute? }
 
-        struct NavigationPathChange: Equatable, Sendable { var path: [SettingsRoute] }
+        struct NavigationPathChange: Equatable, Sendable { var path: SettingsNavigationPath }
 
         struct RouteOpenRequest: Equatable, Sendable { var route: SettingsRoute }
 
@@ -57,16 +65,17 @@ struct SettingsNavigationFeature {
             switch action {
             case let .initialRouteRequested(request):
                 guard let route = request.route else { return .none }
-                guard state.navigationPath != [route] else { return .none }
-                state.navigationPath = [route]
+                let path = SettingsNavigationPath(routes: [route])
+                guard state.navigationPathState != path else { return .none }
+                state.navigationPathState = path
                 return .none
 
             case let .navigationPathChanged(change):
-                state.navigationPath = change.path
+                state.navigationPathState = change.path
                 return .none
 
             case let .routeOpened(request):
-                state.navigationPath = [request.route]
+                state.navigationPathState = .init(routes: [request.route])
                 return .none
             }
         }

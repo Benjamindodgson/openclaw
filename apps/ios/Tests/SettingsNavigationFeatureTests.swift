@@ -12,7 +12,7 @@ struct SettingsNavigationFeatureTests {
         }
 
         await store.send(.initialRouteRequested(.init(route: .voice))) {
-            $0.navigationPath = [.voice]
+            $0.navigationPathState = .init(routes: [.voice])
         }
         await store.send(.initialRouteRequested(.init(route: .voice)))
     }
@@ -27,25 +27,25 @@ struct SettingsNavigationFeatureTests {
 
     @Test func `route opened replaces navigation path`() async {
         var initialState = SettingsNavigationFeature.State()
-        initialState.navigationPath = [.gateway]
+        initialState.navigationPathState = .init(routes: [.gateway])
         let store = TestStore(initialState: initialState) {
             SettingsNavigationFeature()
         }
 
         await store.send(.routeOpened(.init(route: .notifications))) {
-            $0.navigationPath = [.notifications]
+            $0.navigationPathState = .init(routes: [.notifications])
         }
     }
 
     @Test func `swift ui path changes replace reducer path`() async {
         var initialState = SettingsNavigationFeature.State()
-        initialState.navigationPath = [.gateway]
+        initialState.navigationPathState = .init(routes: [.gateway])
         let store = TestStore(initialState: initialState) {
             SettingsNavigationFeature()
         }
 
-        await store.send(.navigationPathChanged(.init(path: [.gateway, .voice]))) {
-            $0.navigationPath = [.gateway, .voice]
+        await store.send(.navigationPathChanged(.init(path: .init(routes: [.gateway, .voice])))) {
+            $0.navigationPathState = .init(routes: [.gateway, .voice])
         }
     }
 
