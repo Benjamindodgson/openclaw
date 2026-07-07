@@ -500,9 +500,17 @@ struct OnboardingCredentialsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var gatewayPassword = ""
-        var gatewayToken = ""
+        var gatewayPasswordState = OnboardingGatewayPassword(value: "")
+        var gatewayTokenState = OnboardingGatewayToken(value: "")
         var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
+
+        var gatewayPassword: String {
+            self.gatewayPasswordState.value
+        }
+
+        var gatewayToken: String {
+            self.gatewayTokenState.value
+        }
 
         var hasGatewayPassword: Bool {
             !self.gatewayPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -539,16 +547,16 @@ struct OnboardingCredentialsFeature {
         Reduce { state, action in
             switch action {
             case let .credentialsLoaded(credentials):
-                state.gatewayToken = credentials.token.value
-                state.gatewayPassword = credentials.password.value
+                state.gatewayTokenState = credentials.token
+                state.gatewayPasswordState = credentials.password
                 return .none
 
             case let .gatewayPasswordChanged(change):
-                state.gatewayPassword = change.password.value
+                state.gatewayPasswordState = change.password
                 return .none
 
             case let .gatewayTokenChanged(change):
-                state.gatewayToken = change.token.value
+                state.gatewayTokenState = change.token
                 return .none
 
             case .pendingManualAuthOverrideConsumed:
@@ -556,17 +564,17 @@ struct OnboardingCredentialsFeature {
                 return .none
 
             case .reset:
-                state.gatewayToken = ""
-                state.gatewayPassword = ""
+                state.gatewayTokenState = .init(value: "")
+                state.gatewayPasswordState = .init(value: "")
                 state.pendingManualAuthOverride = nil
                 return .none
 
             case let .setupAuthApplied(application):
                 if application.setupAuth.shouldApplyTokenField {
-                    state.gatewayToken = application.setupAuth.token
+                    state.gatewayTokenState = .init(value: application.setupAuth.token)
                 }
                 if application.setupAuth.shouldApplyPasswordField {
-                    state.gatewayPassword = application.setupAuth.password
+                    state.gatewayPasswordState = .init(value: application.setupAuth.password)
                 }
                 state.pendingManualAuthOverride = application.setupAuth.manualAuthOverride
                 return .none

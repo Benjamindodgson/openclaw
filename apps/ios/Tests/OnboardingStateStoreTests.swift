@@ -491,21 +491,25 @@ import Testing
             token: .init(value: " token-1 "),
             password: .init(value: " password-1 "))))
         {
-            $0.gatewayToken = " token-1 "
-            $0.gatewayPassword = " password-1 "
+            $0.gatewayTokenState = .init(value: " token-1 ")
+            $0.gatewayPasswordState = .init(value: " password-1 ")
         }
 
+        #expect(store.state.gatewayToken == " token-1 ")
+        #expect(store.state.gatewayPassword == " password-1 ")
         #expect(store.state.hasGatewayToken)
         #expect(store.state.hasGatewayPassword)
 
         await store.send(.gatewayTokenChanged(.init(token: .init(value: "token-2")))) {
-            $0.gatewayToken = "token-2"
+            $0.gatewayTokenState = .init(value: "token-2")
         }
 
         await store.send(.gatewayPasswordChanged(.init(password: .init(value: "   ")))) {
-            $0.gatewayPassword = "   "
+            $0.gatewayPasswordState = .init(value: "   ")
         }
 
+        #expect(store.state.gatewayToken == "token-2")
+        #expect(store.state.gatewayPassword == "   ")
         #expect(!store.state.hasGatewayPassword)
 
         let link = GatewayConnectDeepLink(
@@ -518,8 +522,8 @@ import Testing
         let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
 
         await store.send(.setupAuthApplied(.init(setupAuth: setupAuth))) {
-            $0.gatewayToken = "token-3"
-            $0.gatewayPassword = "password-3"
+            $0.gatewayTokenState = .init(value: "token-3")
+            $0.gatewayPasswordState = .init(value: "password-3")
             $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
                 token: "token-3",
                 bootstrapToken: "bootstrap-1",
@@ -538,11 +542,13 @@ import Testing
         }
 
         await store.send(.reset) {
-            $0.gatewayToken = ""
-            $0.gatewayPassword = ""
+            $0.gatewayTokenState = .init(value: "")
+            $0.gatewayPasswordState = .init(value: "")
             $0.pendingManualAuthOverride = nil
         }
 
+        #expect(store.state.gatewayToken == "")
+        #expect(store.state.gatewayPassword == "")
         #expect(!store.state.hasGatewayToken)
         #expect(!store.state.hasGatewayPassword)
     }
