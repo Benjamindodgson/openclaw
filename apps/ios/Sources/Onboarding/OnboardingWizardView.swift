@@ -42,46 +42,56 @@ struct OnboardingWizardView: View {
         allowSkip: Bool,
         onRequestLocalNetworkAccess: @escaping (String) -> Void,
         onClose: @escaping () -> Void,
-        stepStore: StoreOf<OnboardingStepFeature> = Store(
-            initialState: OnboardingStepFeature.State(
-                step: OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome))
-        {
-            OnboardingStepFeature()
+        stepStore: StoreOf<OnboardingStepFeature>? = nil,
+        stepStoreFactory: () -> StoreOf<OnboardingStepFeature> = {
+            Store(
+                initialState: OnboardingStepFeature.State(
+                    step: OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome))
+            {
+                OnboardingStepFeature()
+            }
         },
-        credentialsStore: StoreOf<OnboardingCredentialsFeature> = Store(
-            initialState: OnboardingCredentialsFeature.State())
-        {
-            OnboardingCredentialsFeature()
+        credentialsStore: StoreOf<OnboardingCredentialsFeature>? = nil,
+        credentialsStoreFactory: () -> StoreOf<OnboardingCredentialsFeature> = {
+            Store(initialState: OnboardingCredentialsFeature.State()) {
+                OnboardingCredentialsFeature()
+            }
         },
-        statusStore: StoreOf<OnboardingStatusFeature> = Store(
-            initialState: OnboardingStatusFeature.State())
-        {
-            OnboardingStatusFeature()
+        statusStore: StoreOf<OnboardingStatusFeature>? = nil,
+        statusStoreFactory: () -> StoreOf<OnboardingStatusFeature> = {
+            Store(initialState: OnboardingStatusFeature.State()) {
+                OnboardingStatusFeature()
+            }
         },
-        presentationStore: StoreOf<OnboardingPresentationFeature> = Store(
-            initialState: OnboardingPresentationFeature.State())
-        {
-            OnboardingPresentationFeature()
+        presentationStore: StoreOf<OnboardingPresentationFeature>? = nil,
+        presentationStoreFactory: () -> StoreOf<OnboardingPresentationFeature> = {
+            Store(initialState: OnboardingPresentationFeature.State()) {
+                OnboardingPresentationFeature()
+            }
         },
-        discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature> = Store(
-            initialState: OnboardingDiscoveryRestartFeature.State())
-        {
-            OnboardingDiscoveryRestartFeature()
+        discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>? = nil,
+        discoveryRestartStoreFactory: () -> StoreOf<OnboardingDiscoveryRestartFeature> = {
+            Store(initialState: OnboardingDiscoveryRestartFeature.State()) {
+                OnboardingDiscoveryRestartFeature()
+            }
         },
-        connectionFormStore: StoreOf<OnboardingConnectionFormFeature> = Store(
-            initialState: OnboardingConnectionFormFeature.State())
-        {
-            OnboardingConnectionFormFeature()
+        connectionFormStore: StoreOf<OnboardingConnectionFormFeature>? = nil,
+        connectionFormStoreFactory: () -> StoreOf<OnboardingConnectionFormFeature> = {
+            Store(initialState: OnboardingConnectionFormFeature.State()) {
+                OnboardingConnectionFormFeature()
+            }
         },
-        setupCodeStore: StoreOf<OnboardingSetupCodeFeature> = Store(
-            initialState: OnboardingSetupCodeFeature.State())
-        {
-            OnboardingSetupCodeFeature()
+        setupCodeStore: StoreOf<OnboardingSetupCodeFeature>? = nil,
+        setupCodeStoreFactory: () -> StoreOf<OnboardingSetupCodeFeature> = {
+            Store(initialState: OnboardingSetupCodeFeature.State()) {
+                OnboardingSetupCodeFeature()
+            }
         },
-        photoImportStore: StoreOf<OnboardingQRPhotoImportFeature> = Store(
-            initialState: OnboardingQRPhotoImportFeature.State())
-        {
-            OnboardingQRPhotoImportFeature()
+        photoImportStore: StoreOf<OnboardingQRPhotoImportFeature>? = nil,
+        photoImportStoreFactory: () -> StoreOf<OnboardingQRPhotoImportFeature> = {
+            Store(initialState: OnboardingQRPhotoImportFeature.State()) {
+                OnboardingQRPhotoImportFeature()
+            }
         },
         gatewayTrustPromptStoreFactory: @escaping @MainActor (GatewayConnectionController) -> StoreOf<
             GatewayTrustPromptFeature,
@@ -95,14 +105,22 @@ struct OnboardingWizardView: View {
         self.onRequestLocalNetworkAccess = onRequestLocalNetworkAccess
         self.onClose = onClose
         self.gatewayTrustPromptStoreFactory = gatewayTrustPromptStoreFactory
-        self._stepStore = State(wrappedValue: stepStore)
-        self._credentialsStore = State(wrappedValue: credentialsStore)
-        self._statusStore = State(wrappedValue: statusStore)
-        self._presentationStore = State(wrappedValue: presentationStore)
-        self._discoveryRestartStore = State(wrappedValue: discoveryRestartStore)
-        self._connectionFormStore = State(wrappedValue: connectionFormStore)
-        self._setupCodeStore = State(wrappedValue: setupCodeStore)
-        self._photoImportStore = State(wrappedValue: photoImportStore)
+        let resolvedStepStore = stepStore ?? stepStoreFactory()
+        let resolvedCredentialsStore = credentialsStore ?? credentialsStoreFactory()
+        let resolvedStatusStore = statusStore ?? statusStoreFactory()
+        let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
+        let resolvedDiscoveryRestartStore = discoveryRestartStore ?? discoveryRestartStoreFactory()
+        let resolvedConnectionFormStore = connectionFormStore ?? connectionFormStoreFactory()
+        let resolvedSetupCodeStore = setupCodeStore ?? setupCodeStoreFactory()
+        let resolvedPhotoImportStore = photoImportStore ?? photoImportStoreFactory()
+        self._stepStore = State(wrappedValue: resolvedStepStore)
+        self._credentialsStore = State(wrappedValue: resolvedCredentialsStore)
+        self._statusStore = State(wrappedValue: resolvedStatusStore)
+        self._presentationStore = State(wrappedValue: resolvedPresentationStore)
+        self._discoveryRestartStore = State(wrappedValue: resolvedDiscoveryRestartStore)
+        self._connectionFormStore = State(wrappedValue: resolvedConnectionFormStore)
+        self._setupCodeStore = State(wrappedValue: resolvedSetupCodeStore)
+        self._photoImportStore = State(wrappedValue: resolvedPhotoImportStore)
     }
 
     @MainActor

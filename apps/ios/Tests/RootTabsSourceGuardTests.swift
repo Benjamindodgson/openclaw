@@ -3382,29 +3382,70 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("discoveryRestartTask"))
         #expect(stepStoreDeclaration.contains("@State private var stepStore: StoreOf<OnboardingStepFeature>"))
         #expect(!stepStoreDeclaration.contains("= Store("))
-        #expect(onboardingSource.contains("self._stepStore = State(wrappedValue: stepStore)"))
+        #expect(onboardingSource.contains("stepStore: StoreOf<OnboardingStepFeature>? = nil"))
+        #expect(onboardingSource.contains("stepStoreFactory: () -> StoreOf<OnboardingStepFeature>"))
+        #expect(onboardingSource.contains("let resolvedStepStore = stepStore ?? stepStoreFactory()"))
+        #expect(onboardingSource.contains("self._stepStore = State(wrappedValue: resolvedStepStore)"))
+        #expect(!onboardingSource.contains("stepStore: StoreOf<OnboardingStepFeature> = Store("))
         #expect(!onboardingSource.contains("self._stepStore = State(wrappedValue: Store("))
         #expect(credentialsStoreDeclaration
             .contains("@State private var credentialsStore: StoreOf<OnboardingCredentialsFeature>"))
         #expect(!credentialsStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("credentialsStore: StoreOf<OnboardingCredentialsFeature>? = nil"))
+        #expect(onboardingSource.contains("credentialsStoreFactory: () -> StoreOf<OnboardingCredentialsFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedCredentialsStore = credentialsStore ?? credentialsStoreFactory()"))
+        #expect(onboardingSource.contains("self._credentialsStore = State(wrappedValue: resolvedCredentialsStore)"))
         #expect(statusStoreDeclaration.contains("@State private var statusStore: StoreOf<OnboardingStatusFeature>"))
         #expect(!statusStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("statusStore: StoreOf<OnboardingStatusFeature>? = nil"))
+        #expect(onboardingSource.contains("statusStoreFactory: () -> StoreOf<OnboardingStatusFeature>"))
+        #expect(onboardingSource.contains("let resolvedStatusStore = statusStore ?? statusStoreFactory()"))
+        #expect(onboardingSource.contains("self._statusStore = State(wrappedValue: resolvedStatusStore)"))
         #expect(onboardingPresentationStoreDeclaration
             .contains("@State private var presentationStore: StoreOf<OnboardingPresentationFeature>"))
         #expect(!onboardingPresentationStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("presentationStore: StoreOf<OnboardingPresentationFeature>? = nil"))
+        #expect(onboardingSource.contains("presentationStoreFactory: () -> StoreOf<OnboardingPresentationFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()"))
+        #expect(onboardingSource.contains("self._presentationStore = State(wrappedValue: resolvedPresentationStore)"))
         #expect(onboardingSource.contains("@State private var discoveryRestartStore"))
         #expect(discoveryRestartStoreDeclaration
             .contains("@State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>"))
         #expect(!discoveryRestartStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource
+            .contains("discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>? = nil"))
+        #expect(onboardingSource
+            .contains("discoveryRestartStoreFactory: () -> StoreOf<OnboardingDiscoveryRestartFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedDiscoveryRestartStore = discoveryRestartStore ?? discoveryRestartStoreFactory()"))
+        #expect(onboardingSource
+            .contains("self._discoveryRestartStore = State(wrappedValue: resolvedDiscoveryRestartStore)"))
         #expect(connectionFormStoreDeclaration
             .contains("@State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature>"))
         #expect(!connectionFormStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("connectionFormStore: StoreOf<OnboardingConnectionFormFeature>? = nil"))
+        #expect(onboardingSource
+            .contains("connectionFormStoreFactory: () -> StoreOf<OnboardingConnectionFormFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedConnectionFormStore = connectionFormStore ?? connectionFormStoreFactory()"))
+        #expect(onboardingSource.contains("self._connectionFormStore = State(wrappedValue: resolvedConnectionFormStore)"))
         #expect(setupCodeStoreDeclaration
             .contains("@State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature>"))
         #expect(!setupCodeStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("setupCodeStore: StoreOf<OnboardingSetupCodeFeature>? = nil"))
+        #expect(onboardingSource.contains("setupCodeStoreFactory: () -> StoreOf<OnboardingSetupCodeFeature>"))
+        #expect(onboardingSource.contains("let resolvedSetupCodeStore = setupCodeStore ?? setupCodeStoreFactory()"))
+        #expect(onboardingSource.contains("self._setupCodeStore = State(wrappedValue: resolvedSetupCodeStore)"))
         #expect(photoImportStoreDeclaration
             .contains("@State private var photoImportStore: StoreOf<OnboardingQRPhotoImportFeature>"))
         #expect(!photoImportStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("photoImportStore: StoreOf<OnboardingQRPhotoImportFeature>? = nil"))
+        #expect(onboardingSource.contains("photoImportStoreFactory: () -> StoreOf<OnboardingQRPhotoImportFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedPhotoImportStore = photoImportStore ?? photoImportStoreFactory()"))
+        #expect(onboardingSource.contains("self._photoImportStore = State(wrappedValue: resolvedPhotoImportStore)"))
         #expect(onboardingSource.contains("private let gatewayTrustPromptStoreFactory: @MainActor"))
         #expect(onboardingSource.contains("gatewayTrustPromptStoreFactory: @escaping @MainActor"))
         #expect(onboardingSource.contains("GatewayTrustPromptFeature(client: .live(gatewayController: gatewayController))"))
