@@ -5,19 +5,25 @@ import SwiftUI
 @Reducer
 struct SettingsDiagnosticsFeature {
     // swiftformat:disable redundantSendable
+    struct AppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
     struct DiscoveryStatusText: Equatable, Sendable { var value: String }
     struct DiagnosticsIssueCount: Equatable, Sendable { var value: Int }
+    struct DiagnosticsGatewayConnected: Equatable, Sendable { var value: Bool }
+    struct DiscoveredGatewayCount: Equatable, Sendable { var value: Int }
     struct LastRunText: Equatable, Sendable { var value: String }
+    struct NotificationsAllowed: Equatable, Sendable { var value: Bool }
+    struct ScreenRecordActive: Equatable, Sendable { var value: Bool }
+    struct TalkConfigLoaded: Equatable, Sendable { var value: Bool }
 
     @ObservableState
     struct State: Equatable, Sendable {
-        var discoveredGatewayCount = Action.DiscoveredGatewayCount(value: 0)
+        var discoveredGatewayCount = DiscoveredGatewayCount(value: 0)
         var discoveryStatusText = DiscoveryStatusText(value: "Discovery idle")
-        var gatewayConnected = Action.DiagnosticsGatewayConnected(value: false)
+        var gatewayConnected = DiagnosticsGatewayConnected(value: false)
         var issueCount: DiagnosticsIssueCount?
-        var isAppleReviewDemoModeEnabled = Action.AppleReviewDemoModeEnabled(value: false)
+        var isAppleReviewDemoModeEnabled = AppleReviewDemoModeEnabled(value: false)
         var lastRunText = LastRunText(value: "Not run")
-        var screenRecordActive = Action.ScreenRecordActive(value: false)
+        var screenRecordActive = ScreenRecordActive(value: false)
 
         var detailText: String {
             "System checks"
@@ -68,13 +74,6 @@ struct SettingsDiagnosticsFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct AppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
-        struct DiagnosticsGatewayConnected: Equatable, Sendable { var value: Bool }
-        struct DiscoveredGatewayCount: Equatable, Sendable { var value: Int }
-        struct ScreenRecordActive: Equatable, Sendable { var value: Bool }
-        struct TalkConfigLoaded: Equatable, Sendable { var value: Bool }
-        struct NotificationsAllowed: Equatable, Sendable { var value: Bool }
-
         struct DiagnosticsContextSync: Equatable, Sendable {
             var isAppleReviewDemoModeEnabled: AppleReviewDemoModeEnabled
             var gatewayConnected: DiagnosticsGatewayConnected
