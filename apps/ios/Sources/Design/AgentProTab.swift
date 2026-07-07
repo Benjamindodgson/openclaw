@@ -474,6 +474,10 @@ struct AgentSkillEditorMessage: Equatable, Sendable {
     }
 }
 
+struct AgentSkillEditorMessages: Equatable, Sendable {
+    var values: [AgentSkillEditorMutationKey: AgentSkillEditorMessage] = [:]
+}
+
 struct AgentSkillEditorBusyKeys: Equatable, Sendable { var values: Set<AgentSkillEditorMutationKey> = [] }
 
 struct AgentSkillEditorSelection: Equatable, Identifiable, Sendable {
@@ -493,7 +497,7 @@ struct AgentSkillEditorFeature {
     struct State: Equatable, Sendable {
         var apiKeyDraftEntries = AgentSkillEditorAPIKeyDrafts()
         var busyKeyEntries = AgentSkillEditorBusyKeys()
-        var messages: [AgentSkillEditorMutationKey: AgentSkillEditorMessage] = [:]
+        var messageEntries = AgentSkillEditorMessages()
         var selection: AgentSkillEditorSelection?
 
         var apiKeyDrafts: [AgentSkillEditorAPIKeyDraftKey: AgentSkillEditorAPIKeyDraftValue] {
@@ -502,6 +506,10 @@ struct AgentSkillEditorFeature {
 
         var busyKeys: Set<AgentSkillEditorMutationKey> {
             self.busyKeyEntries.values
+        }
+
+        var messages: [AgentSkillEditorMutationKey: AgentSkillEditorMessage] {
+            self.messageEntries.values
         }
     }
 
@@ -575,11 +583,11 @@ struct AgentSkillEditorFeature {
 
             case let .mutationStarted(mutation):
                 state.busyKeyEntries.values.insert(mutation.key)
-                state.messages[mutation.key] = nil
+                state.messageEntries.values[mutation.key] = nil
                 return .none
 
             case let .mutationSucceeded(result):
-                state.messages[result.key] = AgentSkillEditorMessage(
+                state.messageEntries.values[result.key] = AgentSkillEditorMessage(
                     kind: .success,
                     text: .init(value: result.summary.message.value))
                 return .none
@@ -590,7 +598,7 @@ struct AgentSkillEditorFeature {
 
             case let .mutationFailed(failure):
                 state.busyKeyEntries.values.remove(failure.key)
-                state.messages[failure.key] = AgentSkillEditorMessage(
+                state.messageEntries.values[failure.key] = AgentSkillEditorMessage(
                     kind: .error,
                     text: .init(value: failure.message.value))
                 return .none
