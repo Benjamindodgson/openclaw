@@ -29,6 +29,23 @@ struct AgentDreamingDestinationFeatureTests {
         #expect(rows.last?.status.managedCronPresent == true)
     }
 
+    @Test func `selected dream diary day is derived by reducer state`() {
+        let days = [
+            DreamDiaryDay(id: "2026-07-01", title: "July 1, 2026", body: "First", entryCount: 1, hasDatedEntry: true),
+            DreamDiaryDay(id: "2026-07-02", title: "July 2, 2026", body: "Second", entryCount: 2, hasDatedEntry: true),
+        ]
+        var state = AgentDreamingDestinationFeature.State()
+
+        #expect(state.selectedDreamDiaryDay(from: days) == days[1])
+
+        state.selectedDreamDiaryDayID = .init(value: "2026-07-01")
+        #expect(state.selectedDreamDiaryDay(from: days) == days[0])
+
+        state.selectedDreamDiaryDayID = .init(value: "missing")
+        #expect(state.selectedDreamDiaryDay(from: days) == days[1])
+        #expect(state.selectedDreamDiaryDay(from: []) == nil)
+    }
+
     @Test func `maintenance action is ignored while gateway is disconnected`() async {
         let store = TestStore(initialState: AgentDreamingDestinationFeature.State()) {
             AgentDreamingDestinationFeature(client: Self.client())

@@ -136,6 +136,15 @@ struct AgentDreamingDestinationFeature {
                 return DreamingPhaseRow(id: id, title: id.capitalized, status: phase)
             }
         }
+
+        func selectedDreamDiaryDay(from days: [DreamDiaryDay]) -> DreamDiaryDay? {
+            if let selectedDreamDiaryDayID,
+               let match = days.first(where: { $0.id == selectedDreamDiaryDayID.value })
+            {
+                return match
+            }
+            return days.last
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -434,7 +443,7 @@ struct AgentProDreamingDestination: View {
                 if let diary = self.overview?.dreamDiary {
                     if diary.found, let content = self.normalizedMultiline(diary.content) {
                         let days = Self.dreamDiaryDays(from: content)
-                        let selectedDay = self.selectedDreamDiaryDay(from: days)
+                        let selectedDay = self.store.state.selectedDreamDiaryDay(from: days)
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
                                 ProIconBadge(systemName: "book.pages", color: OpenClawBrand.accent)
@@ -531,15 +540,6 @@ struct AgentProDreamingDestination: View {
         }
         .padding(10)
         .background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-    }
-
-    private func selectedDreamDiaryDay(from days: [DreamDiaryDay]) -> DreamDiaryDay? {
-        if let selectedDreamDiaryDayID = self.store.selectedDreamDiaryDayID,
-           let match = days.first(where: { $0.id == selectedDreamDiaryDayID.value })
-        {
-            return match
-        }
-        return days.last
     }
 
     private func dreamingEntriesList(
@@ -874,7 +874,7 @@ struct AgentProDreamingDestination: View {
     }
 }
 
-private struct DreamDiaryDay: Identifiable {
+struct DreamDiaryDay: Equatable, Identifiable {
     let id: String
     let title: String
     let body: String
