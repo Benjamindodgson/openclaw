@@ -2281,6 +2281,24 @@ struct RootTabsSourceGuardTests {
             "sessionsAvailability: .init(isAvailable: self.appModel.isCommandSessionListAvailable)"))
     }
 
+    @Test func `command center gateway endpoints are typed presentation state`() throws {
+        let source = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct CommandCenterGatewayRemoteAddress: Equatable, Sendable"))
+        #expect(source.contains("struct CommandCenterGatewayServerName: Equatable, Sendable"))
+        #expect(source.contains("var gatewayRemoteAddressState = CommandCenterGatewayRemoteAddress(value: nil)"))
+        #expect(source.contains("var gatewayServerNameState = CommandCenterGatewayServerName(value: nil)"))
+        #expect(source.contains("gatewayRemoteAddress: String? = nil"))
+        #expect(source.contains("gatewayServerName: String? = nil"))
+        #expect(source.contains("self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)"))
+        #expect(source.contains("self.gatewayServerNameState = .init(value: gatewayServerName)"))
+        #expect(source.contains("var gatewayRemoteAddress: String?"))
+        #expect(source.contains("var gatewayServerName: String?"))
+        #expect(source.contains("self.gatewayRemoteAddressState.value"))
+        #expect(source.contains("self.gatewayServerNameState.value"))
+        #expect(!source.contains("var gatewayRemoteAddress: String?\n    var gatewayServerName: String?"))
+    }
+
     @Test func `command center recent sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
         let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
