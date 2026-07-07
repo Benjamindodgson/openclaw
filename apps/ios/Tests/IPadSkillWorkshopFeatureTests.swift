@@ -121,6 +121,54 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
     }
 
+    @Test func `agent scope snapshot updates reducer presentation state`() async {
+        let snapshot = IPadSkillWorkshopFeature.Action.AgentScopeSnapshot(
+            gatewayDefaultAgentID: .init(value: " main "),
+            gatewayAgents: .init(values: [
+                .init(id: " main ", name: " Main Agent "),
+                .init(id: "agent-b", name: " Beta "),
+                .init(id: "agent-a", name: " "),
+            ]),
+            activeAgentName: .init(value: "Active Agent"))
+        let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
+            IPadSkillWorkshopFeature(client: Self.client())
+        }
+
+        await store.send(.agentScopeSnapshotChanged(snapshot)) {
+            $0.gatewayDefaultAgentID = .init(value: " main ")
+            $0.gatewayAgentEntries = .init(values: [
+                .init(id: " main ", name: " Main Agent "),
+                .init(id: "agent-b", name: " Beta "),
+                .init(id: "agent-a", name: " "),
+            ])
+            $0.activeAgentName = .init(value: "Active Agent")
+        }
+
+        var state = IPadSkillWorkshopFeature.State()
+        state.gatewayDefaultAgentID = snapshot.gatewayDefaultAgentID
+        state.gatewayAgentEntries = snapshot.gatewayAgents
+        state.activeAgentName = snapshot.activeAgentName
+
+        #expect(state.defaultAgentScopeLabel == "Main Agent")
+        #expect(state.agentScopeLabel == "Main Agent")
+        #expect(state.agentScopeOptions == [
+            IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
+            IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
+        ])
+
+        await store.send(.agentScopeChanged(.init(agentID: .init(value: "agent-b")))) {
+            $0.selectedAgentScopeID = .init(value: "agent-b")
+        }
+        state.selectedAgentScopeID = .init(value: "agent-b")
+        #expect(state.agentScopeLabel == "Beta")
+
+        await store.send(.agentScopeChanged(.init(agentID: .init(value: "missing")))) {
+            $0.selectedAgentScopeID = .init(value: "missing")
+        }
+        state.selectedAgentScopeID = .init(value: "missing")
+        #expect(state.agentScopeLabel == "missing")
+    }
+
     @Test func `proposal selection opening controls sheet presentation`() async {
         let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
             IPadSkillWorkshopFeature(client: Self.client())
