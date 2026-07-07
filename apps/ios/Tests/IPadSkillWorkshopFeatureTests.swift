@@ -103,6 +103,7 @@ struct IPadSkillWorkshopFeatureTests {
         state.query = .init(value: "gateway")
 
         #expect(state.filteredProposals.map(\.id) == ["pending-match"])
+        #expect(state.filteredProposalCount == 1)
         #expect(state.pendingProposalCount == 2)
         #expect(state.appliedProposalCount == 1)
         #expect(state.heldProposalCount == 1)
@@ -112,6 +113,7 @@ struct IPadSkillWorkshopFeatureTests {
 
         state.statusFilter = .init(value: "all")
         #expect(state.filteredProposals.map(\.id) == ["pending-match", "applied-match", "stale-match"])
+        #expect(state.filteredProposalCount == 3)
         #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
     }
 

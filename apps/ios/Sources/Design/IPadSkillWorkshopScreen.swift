@@ -164,6 +164,10 @@ struct IPadSkillWorkshopFeature {
                 query: self.query.value)
         }
 
+        var filteredProposalCount: Int {
+            self.filteredProposals.count
+        }
+
         var pendingProposalCount: Int {
             self.proposalCount(forStatus: "pending")
         }
@@ -687,7 +691,7 @@ struct IPadSkillWorkshopScreen: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("\(self.store.filteredProposals.count) proposals")
+                        Text("\(self.store.filteredProposalCount) proposals")
                             .font(.headline)
                         Text(self.statusFilterLabel)
                             .font(.caption)
@@ -866,7 +870,7 @@ struct IPadSkillWorkshopScreen: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: "Queue",
-                    value: "\(self.store.filteredProposals.count)",
+                    value: "\(self.store.filteredProposalCount)",
                     actionTitle: nil,
                     action: nil)
                 ForEach(Array(self.store.filteredProposals.enumerated()), id: \.element.id) { index, proposal in
