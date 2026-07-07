@@ -3139,6 +3139,13 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource.contains("state.transportMode = record.transportModeID"))
         #expect(chatSource.contains("self.viewModelLifecycleStore.send(.transportModeRecorded(.init("))
         #expect(chatSource.contains("transportModeID: .init(value: transportModeID))))"))
+        #expect(chatSource.contains("struct ChatProAgentDisplayName: Equatable, Sendable"))
+        #expect(chatSource.contains("var agentDisplayNameValue = ChatProAgentDisplayName(value: \"OpenClaw\")"))
+        #expect(chatSource.contains("agentDisplayName: String = \"OpenClaw\""))
+        #expect(chatSource.contains("self.agentDisplayNameValue = .init(value: agentDisplayName)"))
+        #expect(chatSource.contains("var agentDisplayName: String"))
+        #expect(chatSource.contains("self.agentDisplayNameValue.value"))
+        #expect(!chatSource.contains("var agentDisplayName = \"OpenClaw\""))
         #expect(!chatSource.contains("var transportModeID = \"\""))
         #expect(!chatSource.contains("state.transportModeID = record.transportModeID.value"))
         #expect(!chatSource.contains(
