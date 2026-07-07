@@ -164,6 +164,18 @@ struct IPadSkillWorkshopFeature {
                 query: self.query.value)
         }
 
+        var pendingProposalCount: Int {
+            self.proposalCount(forStatus: "pending")
+        }
+
+        var appliedProposalCount: Int {
+            self.proposalCount(forStatus: "applied")
+        }
+
+        var heldProposalCount: Int {
+            self.proposalCount(forStatus: "quarantined") + self.proposalCount(forStatus: "stale")
+        }
+
         var visibleProposalLaneStatuses: [String] {
             IPadSkillWorkshopScreen.proposalStatusBoardLanes(
                 filter: self.statusFilter.value,
@@ -176,6 +188,10 @@ struct IPadSkillWorkshopFeature {
                 statusFilter: "all",
                 query: self.query.value)
                 .sorted { $0.updatedAtMs > $1.updatedAtMs }
+        }
+
+        private func proposalCount(forStatus status: String) -> Int {
+            self.proposals.count(where: { $0.status == status })
         }
 
         mutating func syncSelectedProposalIDForVisibleProposals() {
@@ -608,17 +624,17 @@ struct IPadSkillWorkshopScreen: View {
             ProMetric(
                 icon: "clock",
                 title: "Pending",
-                value: "\(self.count("pending"))",
+                value: "\(self.store.pendingProposalCount)",
                 color: OpenClawBrand.warn),
             ProMetric(
                 icon: "checkmark.circle",
                 title: "Applied",
-                value: "\(self.count("applied"))",
+                value: "\(self.store.appliedProposalCount)",
                 color: OpenClawBrand.ok),
             ProMetric(
                 icon: "shield",
                 title: "Held",
-                value: "\(self.count("quarantined") + self.count("stale"))",
+                value: "\(self.store.heldProposalCount)",
                 color: .secondary),
         ]
     }
@@ -1229,10 +1245,6 @@ struct IPadSkillWorkshopScreen: View {
 
     private var statusFilterLabel: String {
         self.store.statusFilterLabel
-    }
-
-    private func count(_ status: String) -> Int {
-        self.store.proposals.count(where: { $0.status == status })
     }
 
     private func proposal(withID id: String) -> IPadSkillProposal? {
