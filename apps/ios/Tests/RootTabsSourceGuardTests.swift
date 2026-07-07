@@ -101,6 +101,20 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("state.didApplyInitialDestination = true"))
     }
 
+    @Test func `phone control hub gateway agents are typed presentation state`() throws {
+        let source = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct RootTabsPhoneControlHubAgents: Equatable"))
+        #expect(source.contains("var gatewayAgentEntries = RootTabsPhoneControlHubAgents()"))
+        #expect(source.contains("gatewayAgents: [RootTabsPhoneControlHubAgent] = []"))
+        #expect(source.contains("self.gatewayAgentEntries = .init(values: gatewayAgents)"))
+        #expect(source.contains("var gatewayAgents: [RootTabsPhoneControlHubAgent]"))
+        #expect(source.contains("self.gatewayAgentEntries.values"))
+        #expect(source.contains("self.appModel.gatewayAgents.map(RootTabsPhoneControlHubAgent.init)"))
+        #expect(source.contains("self.gatewayAgents.first(where: { $0.id == selectedID })"))
+        #expect(!source.contains("var gatewayAgents: [RootTabsPhoneControlHubAgent] = []"))
+    }
+
     @Test func `gateway problem copy feedback is typed reducer state`() throws {
         let source = try String(contentsOf: Self.gatewayProblemSourceURL(), encoding: .utf8)
 

@@ -407,6 +407,10 @@ struct RootTabsPhoneControlHub: View {
     }
 }
 
+struct RootTabsPhoneControlHubAgents: Equatable {
+    var values: [RootTabsPhoneControlHubAgent] = []
+}
+
 struct RootTabsPhoneControlHubPresentationState: Equatable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
     var gatewayServerName: String?
@@ -414,8 +418,32 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
     var gatewayDisplayStatusText = "Offline"
     var selectedAgentId: String?
     var gatewayDefaultAgentId: String?
-    var gatewayAgents: [RootTabsPhoneControlHubAgent] = []
+    var gatewayAgentEntries = RootTabsPhoneControlHubAgents()
     var activeAgentName = "Default Agent"
+
+    init(
+        gatewayDisplayState: GatewayDisplayState = .disconnected,
+        gatewayServerName: String? = nil,
+        gatewayRemoteAddress: String? = nil,
+        gatewayDisplayStatusText: String = "Offline",
+        selectedAgentId: String? = nil,
+        gatewayDefaultAgentId: String? = nil,
+        gatewayAgents: [RootTabsPhoneControlHubAgent] = [],
+        activeAgentName: String = "Default Agent")
+    {
+        self.gatewayDisplayState = gatewayDisplayState
+        self.gatewayServerName = gatewayServerName
+        self.gatewayRemoteAddress = gatewayRemoteAddress
+        self.gatewayDisplayStatusText = gatewayDisplayStatusText
+        self.selectedAgentId = selectedAgentId
+        self.gatewayDefaultAgentId = gatewayDefaultAgentId
+        self.gatewayAgentEntries = .init(values: gatewayAgents)
+        self.activeAgentName = activeAgentName
+    }
+
+    var gatewayAgents: [RootTabsPhoneControlHubAgent] {
+        self.gatewayAgentEntries.values
+    }
 
     var activeAgentTitle: String {
         let selectedID = Self.normalized(self.selectedAgentId)
