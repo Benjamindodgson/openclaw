@@ -230,6 +230,15 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.isRefreshInFlight)
     }
 
+    @Test func `query clear button follows reducer state`() {
+        var state = IPadSkillWorkshopFeature.State()
+
+        #expect(!state.shouldShowQueryClearButton)
+
+        state.query = .init(value: "gateway")
+        #expect(state.shouldShowQueryClearButton)
+    }
+
     @Test func `empty proposal presentation follows gateway read access`() {
         let state = IPadSkillWorkshopFeature.State()
         let connectedAccess = IPadSkillWorkshopFeature.State.gatewayAccess(

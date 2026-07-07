@@ -2127,7 +2127,8 @@ struct RootTabsSourceGuardTests {
     @Test func `skill workshop uses kanban lanes on wide I pad`() throws {
         let source = try String(contentsOf: Self.iPadSkillWorkshopScreenSourceURL(), encoding: .utf8)
         let typeSource = try String(contentsOf: Self.iPadSkillWorkshopTypesSourceURL(), encoding: .utf8)
-        let featureSource = [source, typeSource].joined(separator: "\n")
+        let clientSource = try String(contentsOf: Self.iPadSkillWorkshopClientSourceURL(), encoding: .utf8)
+        let featureSource = [source, typeSource, clientSource].joined(separator: "\n")
         let previewSource = try String(contentsOf: Self.iPadSidebarFeaturePreviewsSourceURL(), encoding: .utf8)
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let phoneSource = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
@@ -2197,7 +2198,7 @@ struct RootTabsSourceGuardTests {
             "struct Failure: Equatable, Sendable { var message: IPadSkillWorkshopFailureMessage }"))
         #expect(typeSource.contains("case failed(Failure)"))
         #expect(source.contains("private static func failure(for error: Error) -> IPadSkillWorkshopError"))
-        #expect(source.contains("message: .init(value: \"Proposal unavailable.\")"))
+        #expect(clientSource.contains("message: .init(value: \"Proposal unavailable.\")"))
         #expect(source.contains(".failed(.init(message: .init(value: self.message(for: error))))"))
         #expect(typeSource.contains("failure.message.value"))
         #expect(source.contains("result: .failure(Self.failure(for: error))"))
@@ -2382,7 +2383,9 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("state.query = change.query"))
         #expect(source.contains("state.query = .init(value: \"\")"))
         #expect(source.contains("get: { self.store.query.value }"))
-        #expect(source.contains("if !self.store.query.value.isEmpty"))
+        #expect(source.contains("var shouldShowQueryClearButton: Bool"))
+        #expect(source.contains("if self.store.shouldShowQueryClearButton"))
+        #expect(!source.contains("if !self.store.query.value.isEmpty"))
         #expect(!source.contains("var query = \"\""))
         #expect(!source.contains("state.query = \"\""))
         #expect(!source.contains("struct QueryChange: Equatable, Sendable {\n            var query: String"))
@@ -7159,6 +7162,7 @@ struct RootTabsSourceGuardTests {
             self.iPadWorkboardFeatureSourceURL(),
             self.iPadSkillWorkshopScreenSourceURL(),
             self.iPadSkillWorkshopTypesSourceURL(),
+            self.iPadSkillWorkshopClientSourceURL(),
             self.iPadSidebarFeatureScreensSourceURL(),
         ]
             .map { try String(contentsOf: $0, encoding: .utf8) }
@@ -7200,6 +7204,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Features/SkillWorkshop/IPadSkillWorkshopTypes.swift")
+    }
+
+    private static func iPadSkillWorkshopClientSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Features/SkillWorkshop/IPadSkillWorkshopClient.swift")
     }
 
     private static func iPadSidebarFeaturePreviewsSourceURL() -> URL {
