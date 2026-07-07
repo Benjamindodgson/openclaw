@@ -671,7 +671,7 @@ struct IPadSkillWorkshopScreen: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("\(self.filteredProposals.count) proposals")
+                        Text("\(self.store.filteredProposals.count) proposals")
                             .font(.headline)
                         Text(self.statusFilterLabel)
                             .font(.caption)
@@ -781,7 +781,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private var proposalContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if self.filteredProposals.isEmpty {
+            if self.store.filteredProposals.isEmpty {
                 ProCard(radius: OpenClawProMetric.cardRadius) {
                     ProStatusRow(
                         icon: self.canRead ? "hammer" : "wifi.slash",
@@ -811,10 +811,10 @@ struct IPadSkillWorkshopScreen: View {
     private var proposalBoard: some View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
-                ForEach(self.visibleProposalLaneStatuses, id: \.self) { status in
+                ForEach(self.store.visibleProposalLaneStatuses, id: \.self) { status in
                     IPadSkillProposalKanbanColumn(
                         status: status,
-                        proposals: self.proposals(forLaneStatus: status),
+                        proposals: self.store.state.proposals(forLaneStatus: status),
                         selectedProposalID: self.store.selectedProposalID?.value,
                         inspectingProposalID: self.store.inspectingProposalID?.value,
                         canApplyProposalMutations: self.canApplyProposalMutations,
@@ -850,10 +850,10 @@ struct IPadSkillWorkshopScreen: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: "Queue",
-                    value: "\(self.filteredProposals.count)",
+                    value: "\(self.store.filteredProposals.count)",
                     actionTitle: nil,
                     action: nil)
-                ForEach(Array(self.filteredProposals.enumerated()), id: \.element.id) { index, proposal in
+                ForEach(Array(self.store.filteredProposals.enumerated()), id: \.element.id) { index, proposal in
                     if index > 0 {
                         Divider().padding(.leading, 58)
                     }
@@ -1229,33 +1229,6 @@ struct IPadSkillWorkshopScreen: View {
 
     private var statusFilterLabel: String {
         self.store.statusFilterLabel
-    }
-
-    private var filteredProposals: [IPadSkillProposal] {
-        self.store.filteredProposals
-    }
-
-    private var visibleProposalLaneStatuses: [String] {
-        self.store.visibleProposalLaneStatuses
-    }
-
-    private func proposals(forLaneStatus status: String) -> [IPadSkillProposal] {
-        let trimmedQuery = self.store.query.value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return self.store.proposals
-            .filter { $0.status == status }
-            .filter { proposal in
-                guard !trimmedQuery.isEmpty else { return true }
-                return [
-                    proposal.title,
-                    proposal.description,
-                    proposal.skillName,
-                    proposal.skillKey,
-                ]
-                    .joined(separator: " ")
-                    .lowercased()
-                    .contains(trimmedQuery)
-            }
-            .sorted { $0.updatedAtMs > $1.updatedAtMs }
     }
 
     private func count(_ status: String) -> Int {
