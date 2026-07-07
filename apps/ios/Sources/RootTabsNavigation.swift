@@ -622,8 +622,12 @@ struct RootNavigationSelectionFeature {
         var promptID: ExecApprovalPromptSuppressionID?
     }
 
+    struct SidebarNavigationPath: Equatable, Sendable {
+        var routes: [SettingsRoute]
+    }
+
     struct SidebarNavigationPathChange: Equatable, Sendable {
-        var path: [SettingsRoute]
+        var path: SidebarNavigationPath
     }
 
     struct SidebarSettingsRoutePush: Equatable, Sendable {
@@ -656,7 +660,7 @@ struct RootNavigationSelectionFeature {
         var selectedSidebarDestination: RootTabs.SidebarDestination
         var selectedSettingsRoute: SettingsRoute?
         var selectedSettingsRouteRequestID: SettingsRouteRequestID
-        var sidebarNavigationPath: [SettingsRoute]
+        var sidebarNavigationPathState: SidebarNavigationPath
         var notificationSettingsPromptSuppression: ExecApprovalPromptSuppressionID?
 
         init(
@@ -667,8 +671,12 @@ struct RootNavigationSelectionFeature {
             self.selectedSidebarDestination = selectedSidebarDestination
             self.selectedSettingsRoute = selectedSidebarDestination.settingsRoute
             self.selectedSettingsRouteRequestID = .init()
-            self.sidebarNavigationPath = []
+            self.sidebarNavigationPathState = .init(routes: [])
             self.notificationSettingsPromptSuppression = nil
+        }
+
+        var sidebarNavigationPath: [SettingsRoute] {
+            self.sidebarNavigationPathState.routes
         }
 
         var activeExecApprovalPromptSuppressionID: String? {
@@ -699,7 +707,7 @@ struct RootNavigationSelectionFeature {
 
             case let .sidebarDestinationSelected(selection):
                 let destination = selection.destination
-                state.sidebarNavigationPath.removeAll()
+                state.sidebarNavigationPathState.routes.removeAll()
                 if destination.settingsRoute != .notifications {
                     state.notificationSettingsPromptSuppression = nil
                 }
@@ -713,11 +721,11 @@ struct RootNavigationSelectionFeature {
                 return .none
 
             case let .sidebarNavigationPathChanged(change):
-                state.sidebarNavigationPath = change.path
+                state.sidebarNavigationPathState = change.path
                 return .none
 
             case let .sidebarSettingsRoutePushed(push):
-                state.sidebarNavigationPath = [push.route]
+                state.sidebarNavigationPathState = .init(routes: [push.route])
                 self.handleSettingsRouteChange(push.route, state: &state)
                 return .none
 
@@ -744,7 +752,7 @@ struct RootNavigationSelectionFeature {
         _ route: SettingsRoute,
         state: inout State)
     {
-        state.sidebarNavigationPath.removeAll()
+        state.sidebarNavigationPathState.routes.removeAll()
         if route != .notifications {
             state.notificationSettingsPromptSuppression = nil
         }

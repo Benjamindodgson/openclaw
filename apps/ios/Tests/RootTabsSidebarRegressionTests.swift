@@ -88,11 +88,16 @@ struct RootTabsSidebarRegressionTests {
             navigationSource,
             from: "struct RootNavigationSelectionFeature",
             to: "extension RootTabs")
-        let resetRange = try #require(reducer.range(of: "state.sidebarNavigationPath.removeAll()"))
+        let resetRange = try #require(reducer.range(of: "state.sidebarNavigationPathState.routes.removeAll()"))
         let destinationRange = try #require(
             reducer.range(of: "state.selectedSidebarDestination = destination"))
 
+        #expect(navigationSource.contains("struct SidebarNavigationPath: Equatable, Sendable"))
+        #expect(navigationSource.contains("var sidebarNavigationPathState: SidebarNavigationPath"))
         #expect(navigationSource.contains("var sidebarNavigationPath: [SettingsRoute]"))
+        #expect(navigationSource.contains("self.sidebarNavigationPathState.routes"))
+        #expect(!navigationSource.contains(
+            "var sidebarNavigationPath: [SettingsRoute]\n        var notificationSettingsPromptSuppression"))
         #expect(navigationShell.contains("NavigationStack(path: self.sidebarNavigationPathBinding)"))
         #expect(sidebarDetail.contains("case .settings:"))
         #expect(sidebarDetail.contains("ownsNavigationStack: false"))

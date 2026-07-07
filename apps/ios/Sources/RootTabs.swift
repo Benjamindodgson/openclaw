@@ -951,7 +951,7 @@ extension RootTabs {
             get: { self.navigationStore.sidebarNavigationPath },
             set: {
                 self.navigationStore.send(.sidebarNavigationPathChanged(
-                    RootNavigationSelectionFeature.SidebarNavigationPathChange(path: $0)))
+                    RootNavigationSelectionFeature.SidebarNavigationPathChange(path: .init(routes: $0))))
             })
     }
 
