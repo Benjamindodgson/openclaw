@@ -14,11 +14,7 @@ struct OnboardingWizardView: View {
     @AppStorage("gateway.discovery.domain") private var discoveryDomain: String = ""
     @AppStorage("onboarding.developerMode") private var developerModeEnabled: Bool = false
     @State private var stepStore: StoreOf<OnboardingStepFeature>
-    @State private var credentialsStore: StoreOf<OnboardingCredentialsFeature> = Store(
-        initialState: OnboardingCredentialsFeature.State())
-    {
-        OnboardingCredentialsFeature()
-    }
+    @State private var credentialsStore: StoreOf<OnboardingCredentialsFeature>
 
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var statusStore: StoreOf<OnboardingStatusFeature> = Store(
@@ -66,7 +62,12 @@ struct OnboardingWizardView: View {
     init(
         allowSkip: Bool,
         onRequestLocalNetworkAccess: @escaping (String) -> Void,
-        onClose: @escaping () -> Void)
+        onClose: @escaping () -> Void,
+        credentialsStore: StoreOf<OnboardingCredentialsFeature> = Store(
+            initialState: OnboardingCredentialsFeature.State())
+        {
+            OnboardingCredentialsFeature()
+        })
     {
         self.allowSkip = allowSkip
         self.onRequestLocalNetworkAccess = onRequestLocalNetworkAccess
@@ -76,6 +77,7 @@ struct OnboardingWizardView: View {
         self._stepStore = State(wrappedValue: Store(initialState: OnboardingStepFeature.State(step: initialStep)) {
             OnboardingStepFeature()
         })
+        self._credentialsStore = State(wrappedValue: credentialsStore)
     }
 
     @MainActor
