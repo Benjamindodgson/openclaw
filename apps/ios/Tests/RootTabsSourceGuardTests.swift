@@ -1210,6 +1210,14 @@ struct RootTabsSourceGuardTests {
         let launchSource = try String(contentsOf: Self.rootLaunchSourceURL(), encoding: .utf8)
         let voiceWakeToastSource = try String(contentsOf: Self.rootVoiceWakeToastSourceURL(), encoding: .utf8)
         let cameraFlashSource = try String(contentsOf: Self.rootCameraFlashOverlaySourceURL(), encoding: .utf8)
+        let launchStoreDeclaration = try Self.extract(
+            rootSource,
+            from: "@State private var launchStore",
+            to: "@State private var voiceWakeToastStore")
+        let voiceWakeToastStoreDeclaration = try Self.extract(
+            rootSource,
+            from: "@State private var voiceWakeToastStore",
+            to: "@State private var presentationStore")
 
         #expect(launchSource.contains("@Reducer\nstruct RootLaunchFeature"))
         #expect(launchSource.contains("struct InitialAppearanceRequest: Equatable, Sendable"))
@@ -1251,6 +1259,11 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("@State private var launchStore: StoreOf<RootLaunchFeature>"))
         #expect(rootSource.contains("@State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature>"))
         #expect(rootSource.contains("RootCameraFlashOverlay(nonce: self.appModel.cameraFlashNonce)"))
+        #expect(launchStoreDeclaration.contains("@State private var launchStore: StoreOf<RootLaunchFeature>"))
+        #expect(!launchStoreDeclaration.contains("= Store("))
+        #expect(voiceWakeToastStoreDeclaration
+            .contains("@State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature>"))
+        #expect(!voiceWakeToastStoreDeclaration.contains("= Store("))
         #expect(!rootSource.contains("@Reducer\n"))
         #expect(!rootSource.contains("struct RootLaunchFeature"))
         #expect(!rootSource.contains("struct RootVoiceWakeToastFeature"))
