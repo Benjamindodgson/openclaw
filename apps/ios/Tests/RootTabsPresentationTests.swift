@@ -449,11 +449,11 @@ struct RootTabsPresentationTests {
     @Test func `home canvas reducer builds connected payload with active agent first`() async throws {
         let snapshot = RootHomeCanvasFeature.Snapshot(
             gatewayStatus: .connected,
-            gatewayServerName: "  Local Gateway  ",
-            gatewayRemoteAddress: "100.64.0.2",
-            selectedAgentID: "gamma",
-            gatewayDefaultAgentID: "alpha",
-            activeAgentName: "Gamma Agent",
+            gatewayServerName: .init(value: "  Local Gateway  "),
+            gatewayRemoteAddress: .init(value: "100.64.0.2"),
+            selectedAgentID: .init(value: "gamma"),
+            gatewayDefaultAgentID: .init(value: "alpha"),
+            activeAgentName: .init(value: "Gamma Agent"),
             agents: [
                 RootHomeCanvasFeature.AgentSnapshot(id: "beta", name: "Beta Agent", emoji: nil),
                 RootHomeCanvasFeature.AgentSnapshot(id: "gamma", name: "Gamma Agent", emoji: nil),
@@ -509,11 +509,11 @@ struct RootTabsPresentationTests {
     @Test func `home canvas reducer builds error payload with fallback active agent copy`() async throws {
         let snapshot = RootHomeCanvasFeature.Snapshot(
             gatewayStatus: .error,
-            gatewayServerName: "   ",
-            gatewayRemoteAddress: "  node.local  ",
-            selectedAgentID: nil,
-            gatewayDefaultAgentID: "main",
-            activeAgentName: "Ignored Agent",
+            gatewayServerName: .init(value: "   "),
+            gatewayRemoteAddress: .init(value: "  node.local  "),
+            selectedAgentID: .init(value: nil),
+            gatewayDefaultAgentID: .init(value: "main"),
+            activeAgentName: .init(value: "Ignored Agent"),
             agents: [
                 RootHomeCanvasFeature.AgentSnapshot(id: "main", name: "  Main  ", emoji: " M "),
             ])

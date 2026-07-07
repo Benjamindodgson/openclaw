@@ -19,13 +19,23 @@ struct RootHomeCanvasFeature {
         var payloadJSON = RootHomeCanvasPayloadJSON(value: nil)
     }
 
+    struct GatewayServerName: Equatable, Sendable { var value: String? }
+
+    struct GatewayRemoteAddress: Equatable, Sendable { var value: String? }
+
+    struct SelectedAgentID: Equatable, Sendable { var value: String? }
+
+    struct GatewayDefaultAgentID: Equatable, Sendable { var value: String? }
+
+    struct ActiveAgentName: Equatable, Sendable { var value: String }
+
     struct Snapshot: Equatable, Sendable {
         var gatewayStatus: GatewayDisplayState
-        var gatewayServerName: String?
-        var gatewayRemoteAddress: String?
-        var selectedAgentID: String?
-        var gatewayDefaultAgentID: String?
-        var activeAgentName: String
+        var gatewayServerName: GatewayServerName
+        var gatewayRemoteAddress: GatewayRemoteAddress
+        var selectedAgentID: SelectedAgentID
+        var gatewayDefaultAgentID: GatewayDefaultAgentID
+        var activeAgentName: ActiveAgentName
         var agents: [AgentSnapshot]
     }
 
@@ -86,8 +96,8 @@ struct RootHomeCanvasFeature {
     }
 
     static func payload(snapshot: Snapshot) -> Payload {
-        let gatewayName = self.normalized(snapshot.gatewayServerName)
-        let gatewayAddress = self.normalized(snapshot.gatewayRemoteAddress)
+        let gatewayName = self.normalized(snapshot.gatewayServerName.value)
+        let gatewayAddress = self.normalized(snapshot.gatewayRemoteAddress.value)
         let gatewayLabel = gatewayName ?? gatewayAddress ?? "Gateway"
         let activeAgentID = self.activeAgentID(snapshot: snapshot)
         let agents = self.agentCards(snapshot: snapshot, activeAgentID: activeAgentID)
@@ -101,7 +111,7 @@ struct RootHomeCanvasFeature {
                 subtitle:
                 "Use Chat for code work, Talk for realtime voice, and gateway tools for approved device actions.",
                 gatewayLabel: gatewayLabel,
-                activeAgentName: snapshot.activeAgentName,
+                activeAgentName: snapshot.activeAgentName.value,
                 activeAgentBadge: agents.first(where: { $0.isActive })?.badge ?? "OC",
                 activeAgentCaption: "Routes chat and talk",
                 agentCount: agents.count,
@@ -116,7 +126,7 @@ struct RootHomeCanvasFeature {
                 subtitle:
                 "Restoring the local node session, agent list, voice config, and device capability state.",
                 gatewayLabel: gatewayLabel,
-                activeAgentName: snapshot.activeAgentName,
+                activeAgentName: snapshot.activeAgentName.value,
                 activeAgentBadge: "OC",
                 activeAgentCaption: "Session in progress",
                 agentCount: agents.count,
@@ -142,7 +152,7 @@ struct RootHomeCanvasFeature {
     }
 
     private static func activeAgentID(snapshot: Snapshot) -> String {
-        let selected = self.normalized(snapshot.selectedAgentID) ?? ""
+        let selected = self.normalized(snapshot.selectedAgentID.value) ?? ""
         if !selected.isEmpty {
             return selected
         }
@@ -150,7 +160,7 @@ struct RootHomeCanvasFeature {
     }
 
     private static func defaultAgentID(snapshot: Snapshot) -> String {
-        self.normalized(snapshot.gatewayDefaultAgentID) ?? ""
+        self.normalized(snapshot.gatewayDefaultAgentID.value) ?? ""
     }
 
     private static func agentCards(snapshot: Snapshot, activeAgentID: String) -> [AgentCard] {
@@ -204,11 +214,11 @@ extension RootHomeCanvasFeature.Snapshot {
     init(appModel: NodeAppModel, gatewayStatus: GatewayDisplayState) {
         self.init(
             gatewayStatus: gatewayStatus,
-            gatewayServerName: appModel.gatewayServerName,
-            gatewayRemoteAddress: appModel.gatewayRemoteAddress,
-            selectedAgentID: appModel.selectedAgentId,
-            gatewayDefaultAgentID: appModel.gatewayDefaultAgentId,
-            activeAgentName: appModel.activeAgentName,
+            gatewayServerName: .init(value: appModel.gatewayServerName),
+            gatewayRemoteAddress: .init(value: appModel.gatewayRemoteAddress),
+            selectedAgentID: .init(value: appModel.selectedAgentId),
+            gatewayDefaultAgentID: .init(value: appModel.gatewayDefaultAgentId),
+            activeAgentName: .init(value: appModel.activeAgentName),
             agents: appModel.gatewayAgents.map(RootHomeCanvasFeature.AgentSnapshot.init(agent:)))
     }
 }
