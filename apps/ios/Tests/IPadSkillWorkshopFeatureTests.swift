@@ -103,6 +103,9 @@ struct IPadSkillWorkshopFeatureTests {
         state.query = .init(value: "gateway")
 
         #expect(state.filteredProposals.map(\.id) == ["pending-match"])
+        #expect(state.pendingProposalCount == 2)
+        #expect(state.appliedProposalCount == 1)
+        #expect(state.heldProposalCount == 1)
         #expect(state.visibleProposalLaneStatuses == ["pending"])
         #expect(state.proposals(forLaneStatus: "pending").map(\.id) == ["pending-match"])
         #expect(state.proposals(forLaneStatus: "applied").map(\.id) == ["applied-match"])
