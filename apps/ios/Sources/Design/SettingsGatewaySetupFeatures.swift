@@ -191,12 +191,16 @@ struct SettingsManualGatewayEndpointFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct ManualGatewayEnabled: Equatable, Sendable { var value: Bool }
+    struct ManualGatewayHost: Equatable, Sendable { var value: String }
+    struct ManualGatewayTLS: Equatable, Sendable { var value: Bool }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var manualConnectionResult: ManualConnectionResult?
-        var manualGatewayEnabled = Action.ManualGatewayEnabled(value: false)
-        var manualGatewayHost = Action.ManualGatewayHost(value: "")
-        var manualGatewayTLS = Action.ManualGatewayTLS(value: true)
+        var manualGatewayEnabled = ManualGatewayEnabled(value: false)
+        var manualGatewayHost = ManualGatewayHost(value: "")
+        var manualGatewayTLS = ManualGatewayTLS(value: true)
         var preflightResult: GatewayPreflightResult?
 
         func tailnetWarningText(hasTailnetIPv4: Bool) -> String? {
@@ -267,12 +271,9 @@ struct SettingsManualGatewayEndpointFeature {
             var useTLS: ManualGatewayTLS
         }
 
-        struct ManualGatewayEnabled: Equatable, Sendable { var value: Bool }
         struct ManualGatewayEnabledChange: Equatable, Sendable { var enabled: ManualGatewayEnabled }
-        struct ManualGatewayHost: Equatable, Sendable { var value: String }
         struct ManualGatewayHostDraft: Equatable, Sendable { var value: String }
         struct ManualGatewayHostChange: Equatable, Sendable { var draft: ManualGatewayHostDraft }
-        struct ManualGatewayTLS: Equatable, Sendable { var value: Bool }
         struct ManualGatewayTLSChange: Equatable, Sendable { var tls: ManualGatewayTLS }
         struct SetupLinkApplication: Equatable, Sendable {
             var host: ManualGatewayHost

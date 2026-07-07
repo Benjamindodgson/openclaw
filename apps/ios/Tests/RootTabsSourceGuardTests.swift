@@ -3947,15 +3947,18 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("struct EndpointSync: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayEnabled: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains(
-            "var manualGatewayEnabled = Action.ManualGatewayEnabled(value: false)"))
+            "var manualGatewayEnabled = ManualGatewayEnabled(value: false)"))
         #expect(gatewaySetupFeaturesSource.contains("var enabled: ManualGatewayEnabled"))
         #expect(gatewaySetupFeaturesSource.contains("struct ManualGatewayHost: Equatable, Sendable"))
         #expect(gatewaySetupFeaturesSource.contains(
-            "var manualGatewayHost = Action.ManualGatewayHost(value: \"\")"))
+            "var manualGatewayHost = ManualGatewayHost(value: \"\")"))
         #expect(gatewaySetupFeaturesSource.contains("var host: ManualGatewayHost"))
         #expect(gatewaySetupFeaturesSource.contains(
-            "var manualGatewayTLS = Action.ManualGatewayTLS(value: true)"))
+            "var manualGatewayTLS = ManualGatewayTLS(value: true)"))
         #expect(gatewaySetupFeaturesSource.contains("var useTLS: ManualGatewayTLS"))
+        #expect(!gatewaySetupFeaturesSource.contains("Action.ManualGatewayEnabled"))
+        #expect(!gatewaySetupFeaturesSource.contains("Action.ManualGatewayHost"))
+        #expect(!gatewaySetupFeaturesSource.contains("Action.ManualGatewayTLS"))
         #expect(gatewaySetupFeaturesSource.contains("state.manualGatewayEnabled = sync.enabled"))
         #expect(gatewaySetupFeaturesSource.contains("state.manualGatewayHost = sync.host"))
         #expect(gatewaySetupFeaturesSource.contains("state.manualGatewayTLS = sync.useTLS"))
