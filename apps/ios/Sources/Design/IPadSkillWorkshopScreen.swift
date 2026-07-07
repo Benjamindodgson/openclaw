@@ -236,6 +236,32 @@ struct IPadSkillWorkshopFeature {
             }
         }
 
+        static func proposalLaneLabel(_ status: String) -> String {
+            switch status {
+            case "quarantined": "Quarantined"
+            case "stale": "Stale"
+            case "pending", "applied", "rejected":
+                self.proposalStatusFilterLabel(status)
+            default:
+                self.titleCasedProposalStatus(status)
+            }
+        }
+
+        private static func titleCasedProposalStatus(_ status: String) -> String {
+            status
+                .replacingOccurrences(of: "_", with: " ")
+                .replacingOccurrences(of: "-", with: " ")
+                .split(separator: " ")
+                .map { word in
+                    let text = String(word)
+                    if text == text.uppercased() {
+                        return text
+                    }
+                    return text.prefix(1).uppercased() + text.dropFirst().lowercased()
+                }
+                .joined(separator: " ")
+        }
+
         var statusFilterLabel: String {
             Self.proposalStatusFilterLabel(self.statusFilter.value)
         }
@@ -1255,32 +1281,6 @@ struct IPadSkillWorkshopScreen: View {
         horizontalSizeClass == .compact || verticalSizeClass == .compact
     }
 
-    nonisolated static func proposalLaneLabel(_ status: String) -> String {
-        switch status {
-        case "quarantined": "Quarantined"
-        case "stale": "Stale"
-        case "pending", "applied", "rejected":
-            IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(status)
-        default:
-            self.titleCasedProposalStatus(status)
-        }
-    }
-
-    nonisolated static func titleCasedProposalStatus(_ status: String) -> String {
-        status
-            .replacingOccurrences(of: "_", with: " ")
-            .replacingOccurrences(of: "-", with: " ")
-            .split(separator: " ")
-            .map { word in
-                let text = String(word)
-                if text == text.uppercased() {
-                    return text
-                }
-                return text.prefix(1).uppercased() + text.dropFirst().lowercased()
-            }
-            .joined(separator: " ")
-    }
-
     private var presentedProposalRouteBinding: Binding<IPadSkillProposalSheetRoute?> {
         Binding(
             get: { self.store.presentedProposalRoute },
@@ -1355,10 +1355,11 @@ struct IPadSkillProposalKanbanColumn: View {
     let reject: (IPadSkillProposal) -> Void
 
     var body: some View {
+        let laneLabel = IPadSkillWorkshopFeature.State.proposalLaneLabel(self.status)
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 ProPanelHeader(
-                    title: IPadSkillWorkshopScreen.proposalLaneLabel(self.status),
+                    title: laneLabel,
                     value: "\(self.proposals.count)",
                     actionTitle: nil,
                     action: nil)
@@ -1366,7 +1367,7 @@ struct IPadSkillProposalKanbanColumn: View {
                 if self.proposals.isEmpty {
                     ProStatusRow(
                         icon: "hammer",
-                        title: "No \(IPadSkillWorkshopScreen.proposalLaneLabel(self.status).lowercased()) proposals",
+                        title: "No \(laneLabel.lowercased()) proposals",
                         detail: "Matching proposals appear here after gateway refresh.",
                         value: "empty",
                         color: .secondary,

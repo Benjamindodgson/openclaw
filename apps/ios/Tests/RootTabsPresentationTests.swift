@@ -1027,10 +1027,10 @@ struct RootTabsPresentationTests {
                 "rejected",
                 "needs-review",
             ])
-        #expect(IPadSkillWorkshopScreen.proposalLaneLabel("quarantined") == "Quarantined")
-        #expect(IPadSkillWorkshopScreen.proposalLaneLabel("pending") == "Pending")
-        #expect(IPadSkillWorkshopScreen.proposalLaneLabel("needs-review") == "Needs Review")
-        #expect(IPadSkillWorkshopScreen.proposalLaneLabel("manual_QA") == "Manual QA")
+        #expect(IPadSkillWorkshopFeature.State.proposalLaneLabel("quarantined") == "Quarantined")
+        #expect(IPadSkillWorkshopFeature.State.proposalLaneLabel("pending") == "Pending")
+        #expect(IPadSkillWorkshopFeature.State.proposalLaneLabel("needs-review") == "Needs Review")
+        #expect(IPadSkillWorkshopFeature.State.proposalLaneLabel("manual_QA") == "Manual QA")
     }
 
     @Test func `skill workshop selection stays inside active filter`() {
