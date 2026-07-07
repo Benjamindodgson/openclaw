@@ -3575,6 +3575,11 @@ struct RootTabsSourceGuardTests {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let settingsSource = try Self.settingsProTabCombinedSource()
+        let gatewayConnectionStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var gatewayConnectionStore",
+            to: "@State var gatewaySetupStatusStore")
         let openScannerFunction = try Self.extract(
             actionsSource,
             from: "func openGatewayQRScanner() async",
@@ -3592,6 +3597,9 @@ struct RootTabsSourceGuardTests {
         #expect(openScannerFunction.contains("self.gatewaySetupStatusStore.send(.qrScannerOpeningStarted)"))
         #expect(rootSource.contains("gatewayConnectionStore: self.makeSettingsGatewayConnectionStore()"))
         #expect(storesSource.contains("SettingsGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))"))
+        #expect(gatewayConnectionStoreDeclaration
+            .contains("@State var gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature>"))
+        #expect(!gatewayConnectionStoreDeclaration.contains("= Store("))
         #expect(!openScannerFunction.contains("self.appModel.disconnectGateway()"))
         #expect(!openScannerFunction.contains("Opening QR scanner..."))
     }

@@ -89,11 +89,7 @@ struct SettingsProTab: View {
 
     @State var onboardingStateStore: StoreOf<SettingsOnboardingStateFeature>
 
-    @State var gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
-        initialState: SettingsGatewayConnectionFeature.State())
-    {
-        SettingsGatewayConnectionFeature()
-    }
+    @State var gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature>
 
     @State var gatewaySetupStatusStore: StoreOf<SettingsGatewaySetupStatusFeature> = Store(
         initialState: SettingsGatewaySetupStatusFeature.State())
