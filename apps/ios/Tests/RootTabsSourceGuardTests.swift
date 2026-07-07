@@ -3947,7 +3947,12 @@ struct RootTabsSourceGuardTests {
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
             encoding: .utf8)
+        let settingsSource = try Self.settingsProTabCombinedSource()
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let manualEndpointStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var manualGatewayEndpointStore",
+            to: "@State var diagnosticsStore")
         let setupLinkApplication = try Self.extract(
             gatewaySetupFeaturesSource,
             from: "struct SetupLinkApplication",
@@ -4030,6 +4035,9 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySetupFeaturesSource.contains("port: .init(value: request.port.value)"))
         #expect(gatewaySetupFeaturesSource.contains(
             "useTLS: .init(value: state.manualGatewayTLS.value)"))
+        #expect(manualEndpointStoreDeclaration
+            .contains("@State var manualGatewayEndpointStore: StoreOf<SettingsManualGatewayEndpointFeature>"))
+        #expect(!manualEndpointStoreDeclaration.contains("= Store("))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.manualGatewayEnabled.value"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.manualGatewayHost.value"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.manualGatewayTLS.value"))
