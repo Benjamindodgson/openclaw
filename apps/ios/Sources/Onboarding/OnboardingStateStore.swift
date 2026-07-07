@@ -103,6 +103,8 @@ struct OnboardingQRPhotoImportFailureMessage: Equatable, Sendable { var value: S
 
 struct OnboardingSetupCode: Equatable, Sendable { var value: String }
 
+struct OnboardingSetupCodeStatusMessage: Equatable, Sendable { var value: String? }
+
 struct OnboardingManualHost: Equatable, Sendable { var value: String }
 
 struct OnboardingManualPort: Equatable, Sendable { var value: Int }
@@ -838,10 +840,14 @@ struct OnboardingSetupCodeFeature {
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
         var setupCodeState = OnboardingSetupCode(value: "")
-        var status: String?
+        var statusState = OnboardingSetupCodeStatusMessage(value: nil)
 
         var setupCode: String {
             self.setupCodeState.value
+        }
+
+        var status: String? {
+            self.statusState.value
         }
 
         var trimmedSetupCode: String {
@@ -886,31 +892,31 @@ struct OnboardingSetupCodeFeature {
             case .appleReviewDemoCodeAccepted:
                 state.applyResult = nil
                 state.setupCodeState = .init(value: "")
-                state.status = "Apple Review demo mode enabled."
+                state.statusState = .init(value: "Apple Review demo mode enabled.")
                 return .none
 
             case .applyRequested:
                 state.applyResult = nil
-                state.status = nil
+                state.statusState = .init(value: nil)
                 let raw = state.trimmedSetupCode
                 guard !raw.isEmpty else {
-                    state.status = "Paste a setup code to continue."
+                    state.statusState = .init(value: "Paste a setup code to continue.")
                     return .none
                 }
 
                 if AppleReviewDemoMode.isSetupCode(raw) {
                     state.setupCodeState = .init(value: "")
-                    state.status = "Apple Review demo mode enabled."
+                    state.statusState = .init(value: "Apple Review demo mode enabled.")
                     state.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: raw)))
                     return .none
                 }
 
                 guard let link = GatewayConnectDeepLink.fromSetupInput(raw) else {
-                    state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+                    state.statusState = .init(value: "Setup code not recognized or uses an insecure ws:// gateway URL.")
                     return .none
                 }
                 state.setupCodeState = .init(value: "")
-                state.status = "Setup code applied. Connecting..."
+                state.statusState = .init(value: "Setup code applied. Connecting...")
                 state.applyResult = .gatewayLink(link)
                 return .none
 
@@ -920,22 +926,22 @@ struct OnboardingSetupCodeFeature {
 
             case .applyStarted:
                 state.applyResult = nil
-                state.status = nil
+                state.statusState = .init(value: nil)
                 return .none
 
             case .emptyCodeSubmitted:
                 state.applyResult = nil
-                state.status = "Paste a setup code to continue."
+                state.statusState = .init(value: "Paste a setup code to continue.")
                 return .none
 
             case .invalidSetupCodeSubmitted:
                 state.applyResult = nil
-                state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+                state.statusState = .init(value: "Setup code not recognized or uses an insecure ws:// gateway URL.")
                 return .none
 
             case let .scannedGatewayLinkReceived(scan):
                 state.applyResult = nil
-                state.status = nil
+                state.statusState = .init(value: nil)
                 state.applyResult = .gatewayLink(scan.link)
                 return .none
 
@@ -951,7 +957,7 @@ struct OnboardingSetupCodeFeature {
             case .setupCodeAccepted:
                 state.applyResult = nil
                 state.setupCodeState = .init(value: "")
-                state.status = "Setup code applied. Connecting..."
+                state.statusState = .init(value: "Setup code applied. Connecting...")
                 return .none
 
             case let .setupCodeChanged(change):
@@ -959,7 +965,7 @@ struct OnboardingSetupCodeFeature {
                 return .none
 
             case .statusCleared:
-                state.status = nil
+                state.statusState = .init(value: nil)
                 return .none
             }
         }

@@ -582,16 +582,18 @@ import Testing
         await store.send(.applyStarted)
 
         await store.send(.invalidSetupCodeSubmitted) {
-            $0.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+            $0.statusState = .init(value: "Setup code not recognized or uses an insecure ws:// gateway URL.")
         }
 
+        #expect(store.state.status == "Setup code not recognized or uses an insecure ws:// gateway URL.")
+
         await store.send(.statusCleared) {
-            $0.status = nil
+            $0.statusState = .init(value: nil)
         }
 
         await store.send(.setupCodeAccepted) {
             $0.setupCodeState = .init(value: "")
-            $0.status = "Setup code applied. Connecting..."
+            $0.statusState = .init(value: "Setup code applied. Connecting...")
         }
 
         await store.send(.setupCodeChanged(.init(code: .init(value: "  ")))) {
@@ -601,12 +603,12 @@ import Testing
         #expect(!store.state.canApply)
 
         await store.send(.emptyCodeSubmitted) {
-            $0.status = "Paste a setup code to continue."
+            $0.statusState = .init(value: "Paste a setup code to continue.")
         }
 
         await store.send(.appleReviewDemoCodeAccepted) {
             $0.setupCodeState = .init(value: "")
-            $0.status = "Apple Review demo mode enabled."
+            $0.statusState = .init(value: "Apple Review demo mode enabled.")
         }
     }
 
@@ -627,7 +629,7 @@ import Testing
         await store.send(.applyRequested) {
             $0.applyResult = .gatewayLink(link)
             $0.setupCodeState = .init(value: "")
-            $0.status = "Setup code applied. Connecting..."
+            $0.statusState = .init(value: "Setup code applied. Connecting...")
         }
 
         await store.send(.applyResultHandled) {
@@ -641,7 +643,7 @@ import Testing
         }
 
         await store.send(.applyRequested) {
-            $0.status = "Paste a setup code to continue."
+            $0.statusState = .init(value: "Paste a setup code to continue.")
         }
 
         await store.send(.setupCodeChanged(.init(code: .init(value: "not a setup code")))) {
@@ -649,7 +651,7 @@ import Testing
         }
 
         await store.send(.applyRequested) {
-            $0.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
+            $0.statusState = .init(value: "Setup code not recognized or uses an insecure ws:// gateway URL.")
         }
     }
 
@@ -663,7 +665,7 @@ import Testing
         await store.send(.applyRequested) {
             $0.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: "APPLE-REVIEW-DEMO")))
             $0.setupCodeState = .init(value: "")
-            $0.status = "Apple Review demo mode enabled."
+            $0.statusState = .init(value: "Apple Review demo mode enabled.")
         }
     }
 
@@ -695,14 +697,14 @@ import Testing
             password: nil)
         var initialState = OnboardingSetupCodeFeature.State()
         initialState.setupCodeState = .init(value: "stale code")
-        initialState.status = "stale status"
+        initialState.statusState = .init(value: "stale status")
         let store = TestStore(initialState: initialState) {
             OnboardingSetupCodeFeature()
         }
 
         await store.send(.scannedGatewayLinkReceived(.init(link: link))) {
             $0.applyResult = .gatewayLink(link)
-            $0.status = nil
+            $0.statusState = .init(value: nil)
         }
 
         await store.send(.applyResultHandled) {
