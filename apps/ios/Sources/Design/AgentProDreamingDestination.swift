@@ -127,6 +127,15 @@ struct AgentDreamingDestinationFeature {
         var selectedDreamDiaryDayID: AgentDreamDiaryDayID?
         var busyAction: AgentDreamAction?
         var statusText = AgentDreamingMaintenanceStatusText(value: nil)
+
+        func dreamingPhases(from phases: [String: DreamingPhaseStatusLite]?) -> [DreamingPhaseRow] {
+            let phaseOrder = ["light", "deep", "rem"]
+            let phases = phases ?? [:]
+            return phaseOrder.compactMap { id in
+                guard let phase = phases[id] else { return nil }
+                return DreamingPhaseRow(id: id, title: id.capitalized, status: phase)
+            }
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -594,7 +603,7 @@ struct AgentProDreamingDestination: View {
         VStack(alignment: .leading, spacing: 8) {
             ProSectionHeader(title: "Phases")
             ProCard(padding: 0) {
-                let phases = self.dreamingPhases
+                let phases = self.store.state.dreamingPhases(from: self.overview?.dreaming?.phases)
                 if phases.isEmpty {
                     self.emptyDetailRow(
                         icon: "moon.zzz",
@@ -615,15 +624,6 @@ struct AgentProDreamingDestination: View {
                 }
             }
             .padding(.horizontal, OpenClawProMetric.pagePadding)
-        }
-    }
-
-    private var dreamingPhases: [DreamingPhaseRow] {
-        let phaseOrder = ["light", "deep", "rem"]
-        let phases = self.overview?.dreaming?.phases ?? [:]
-        return phaseOrder.compactMap { id in
-            guard let phase = phases[id] else { return nil }
-            return DreamingPhaseRow(id: id, title: id.capitalized, status: phase)
         }
     }
 

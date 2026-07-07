@@ -790,6 +790,9 @@ struct RootTabsSourceGuardTests {
         #expect(!dreamingSource.contains("store: StoreOf<AgentDreamingDestinationFeature> = Store("))
         #expect(dreamingSource.contains("await self.store.send(.dreamActionTapped("))
         #expect(dreamingSource.contains("self.store.send(.dreamDiaryDaySelected(.init(dayID: .init(value: day.id))))"))
+        #expect(dreamingSource.contains(
+            "let phases = self.store.state.dreamingPhases(from: self.overview?.dreaming?.phases)"))
+        #expect(!dreamingSource.contains("private var dreamingPhases: [DreamingPhaseRow]"))
         #expect(destinationsSource.contains("self.directHeader(\n                        for: .usage"))
         #expect(destinationsSource.contains("self.directHeader(\n                        for: .cron"))
         #expect(destinationsSource.contains("self.directRoute == route ? self.headerLeadingAction : nil"))
@@ -818,6 +821,9 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct AgentDreamDiaryDayID: Equatable, Sendable"))
         #expect(feature.contains("var selectedDreamDiaryDayID: AgentDreamDiaryDayID?"))
         #expect(feature.contains("var statusText = AgentDreamingMaintenanceStatusText(value: nil)"))
+        #expect(feature.contains(
+            "func dreamingPhases(from phases: [String: DreamingPhaseStatusLite]?) -> [DreamingPhaseRow]"))
+        #expect(feature.contains("let phaseOrder = [\"light\", \"deep\", \"rem\"]"))
         #expect(feature.contains("var dayID: AgentDreamDiaryDayID"))
         #expect(feature.contains("struct GatewayConnectionStatus: Equatable, Sendable { var isConnected: Bool }"))
         #expect(feature.contains("var gatewayConnection: GatewayConnectionStatus"))
