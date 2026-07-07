@@ -586,6 +586,7 @@ struct AgentCronActionID: Equatable, Hashable, Sendable { var value: String }
 struct AgentCronActionFailureMessage: Equatable, Sendable { var value: String }
 struct AgentCronActionStatusText: Equatable, Sendable { var value: String? }
 struct AgentCronActionSuccessMessage: Equatable, Sendable { var value: String }
+struct AgentCronActionBusyIDs: Equatable, Sendable { var values: Set<AgentCronActionID> = [] }
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -593,8 +594,12 @@ struct AgentCronActionFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var busyIDs: Set<AgentCronActionID> = []
+        var busyIDEntries = AgentCronActionBusyIDs()
         var statusText = AgentCronActionStatusText(value: nil)
+
+        var busyIDs: Set<AgentCronActionID> {
+            self.busyIDEntries.values
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -623,7 +628,7 @@ struct AgentCronActionFeature {
         Reduce { state, action in
             switch action {
             case let .actionStarted(action):
-                state.busyIDs.insert(action.id)
+                state.busyIDEntries.values.insert(action.id)
                 state.statusText = .init(value: nil)
                 return .none
 
@@ -632,11 +637,11 @@ struct AgentCronActionFeature {
                 return .none
 
             case let .actionFinished(action):
-                state.busyIDs.remove(action.id)
+                state.busyIDEntries.values.remove(action.id)
                 return .none
 
             case let .actionFailed(failure):
-                state.busyIDs.remove(failure.id)
+                state.busyIDEntries.values.remove(failure.id)
                 state.statusText = .init(value: failure.message.value)
                 return .none
             }

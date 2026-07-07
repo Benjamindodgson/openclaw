@@ -195,40 +195,39 @@ struct AgentCronActionFeatureTests {
         }
 
         await store.send(.actionStarted(.init(id: .init(value: "job-1")))) {
-            $0.busyIDs = [.init(value: "job-1")]
+            $0.busyIDEntries = .init(values: [.init(value: "job-1")])
             $0.statusText = .init(value: nil)
         }
     }
 
     @Test func `action success stores status while busy id remains active`() async {
         var initialState = AgentCronActionFeature.State()
-        initialState.busyIDs = [.init(value: "job-1"), .init(value: "job-2")]
+        initialState.busyIDEntries = .init(values: [.init(value: "job-1"), .init(value: "job-2")])
         let store = TestStore(initialState: initialState) {
             AgentCronActionFeature()
         }
 
         await store.send(.actionSucceeded(.init(message: .init(value: "Queued job.")))) {
-            $0.busyIDs = [.init(value: "job-1"), .init(value: "job-2")]
             $0.statusText = .init(value: "Queued job.")
         }
     }
 
     @Test func `action finish clears busy id`() async {
         var initialState = AgentCronActionFeature.State()
-        initialState.busyIDs = [.init(value: "job-1"), .init(value: "job-2")]
+        initialState.busyIDEntries = .init(values: [.init(value: "job-1"), .init(value: "job-2")])
         initialState.statusText = .init(value: "Queued job.")
         let store = TestStore(initialState: initialState) {
             AgentCronActionFeature()
         }
 
         await store.send(.actionFinished(.init(id: .init(value: "job-1")))) {
-            $0.busyIDs = [.init(value: "job-2")]
+            $0.busyIDEntries = .init(values: [.init(value: "job-2")])
         }
     }
 
     @Test func `action failure clears busy id and stores error`() async {
         var initialState = AgentCronActionFeature.State()
-        initialState.busyIDs = [.init(value: "job-1")]
+        initialState.busyIDEntries = .init(values: [.init(value: "job-1")])
         let store = TestStore(initialState: initialState) {
             AgentCronActionFeature()
         }
@@ -237,7 +236,7 @@ struct AgentCronActionFeatureTests {
             id: .init(value: "job-1"),
             message: .init(value: "Cron failed."))))
         {
-            $0.busyIDs = []
+            $0.busyIDEntries = .init()
             $0.statusText = .init(value: "Cron failed.")
         }
     }
