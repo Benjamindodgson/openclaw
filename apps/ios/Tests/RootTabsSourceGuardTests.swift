@@ -4131,6 +4131,14 @@ struct RootTabsSourceGuardTests {
     @Test func `onboarding setup code apply result is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let setupCodeFeatureSource = try Self.extract(
+            onboardingStateSource,
+            from: "struct OnboardingSetupCodeFeature",
+            to: "struct OnboardingConnectionFormFeature")
+        let setupCodeStateBlock = try Self.extract(
+            setupCodeFeatureSource,
+            from: "struct State: Equatable, Sendable",
+            to: "enum ApplyResult")
         let loadedCredentials = try Self.extract(
             onboardingStateSource,
             from: "struct LoadedCredentials",
@@ -4155,6 +4163,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct OnboardingSetupCode: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayToken: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayPassword: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingSetupCodeStatusMessage: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct GatewayPasswordChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct GatewayTokenChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct LoadedCredentials: Equatable, Sendable"))
@@ -4166,7 +4175,9 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct SetupCodeChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("var setupCodeState = OnboardingSetupCode(value: \"\")"))
+        #expect(onboardingStateSource.contains("var statusState = OnboardingSetupCodeStatusMessage(value: nil)"))
         #expect(onboardingStateSource.contains("var setupCode: String {\n            self.setupCodeState.value"))
+        #expect(onboardingStateSource.contains("var status: String? {\n            self.statusState.value"))
         #expect(setupCodeChange.contains("var code: OnboardingSetupCode"))
         #expect(appleReviewDemoSetupCode.contains("var code: OnboardingSetupCode"))
         #expect(onboardingStateSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
@@ -4203,6 +4214,11 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.setupCodeState = .init(value: \"\")"))
         #expect(onboardingStateSource.contains("state.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: raw)))"))
         #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(link)"))
+        #expect(onboardingStateSource.contains("state.statusState = .init(value: \"Paste a setup code to continue.\")"))
+        #expect(onboardingStateSource.contains(
+            "state.statusState = .init(value: \"Setup code not recognized or uses an insecure ws:// gateway URL.\")"))
+        #expect(onboardingStateSource.contains("state.statusState = .init(value: \"Setup code applied. Connecting...\")"))
+        #expect(onboardingSource.contains("self.setupCodeStore.status"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.applyRequested)"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.applyResultHandled)"))
         #expect(!onboardingStateSource.contains("case appleReviewDemoSetupCode(String)"))
@@ -4223,6 +4239,8 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("self.credentialsStore.send(.gatewayTokenChanged(.init(value: $0)))"))
         #expect(!onboardingSource.contains("self.credentialsStore.send(.gatewayPasswordChanged(.init(value: $0)))"))
         #expect(!onboardingStateSource.contains("var setupCode = \"\""))
+        #expect(!setupCodeStateBlock.contains("var status: String?\n"))
+        #expect(!setupCodeFeatureSource.contains("state.status ="))
         #expect(!onboardingStateSource.contains("state.setupCode = \"\""))
         #expect(!onboardingStateSource.contains("state.setupCode = change.code.value"))
         #expect(!onboardingSource.contains("let raw = self.setupCodeStore.trimmedSetupCode"))
