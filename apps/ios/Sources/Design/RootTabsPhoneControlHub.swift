@@ -417,6 +417,7 @@ struct RootTabsPhoneControlHubGatewayRemoteAddress: Equatable, Sendable { var va
 struct RootTabsPhoneControlHubSelectedAgentID: Equatable, Sendable { var value: String? }
 struct RootTabsPhoneControlHubGatewayDefaultAgentID: Equatable, Sendable { var value: String? }
 struct RootTabsPhoneControlHubGatewayDisplayStatusText: Equatable, Sendable { var value: String }
+struct RootTabsPhoneControlHubActiveAgentName: Equatable, Sendable { var value: String }
 // swiftformat:enable redundantSendable
 
 struct RootTabsPhoneControlHubPresentationState: Equatable {
@@ -427,7 +428,7 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
     var selectedAgentIDState = RootTabsPhoneControlHubSelectedAgentID(value: nil)
     var gatewayDefaultAgentIDState = RootTabsPhoneControlHubGatewayDefaultAgentID(value: nil)
     var gatewayAgentEntries = RootTabsPhoneControlHubAgents()
-    var activeAgentName = "Default Agent"
+    var activeAgentNameState = RootTabsPhoneControlHubActiveAgentName(value: "Default Agent")
 
     init(
         gatewayDisplayState: GatewayDisplayState = .disconnected,
@@ -446,7 +447,7 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
         self.selectedAgentIDState = .init(value: selectedAgentId)
         self.gatewayDefaultAgentIDState = .init(value: gatewayDefaultAgentId)
         self.gatewayAgentEntries = .init(values: gatewayAgents)
-        self.activeAgentName = activeAgentName
+        self.activeAgentNameState = .init(value: activeAgentName)
     }
 
     var gatewayAgents: [RootTabsPhoneControlHubAgent] {
@@ -471,6 +472,10 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
 
     var gatewayDisplayStatusText: String {
         self.gatewayDisplayStatusTextState.value
+    }
+
+    var activeAgentName: String {
+        self.activeAgentNameState.value
     }
 
     var activeAgentTitle: String {
