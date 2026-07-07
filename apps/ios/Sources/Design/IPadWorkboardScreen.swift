@@ -568,9 +568,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var createUnavailableMessage: String? {
-        IPadWorkboardFeature.State.createUnavailableMessage(
-            cardCreationPhase: self.store.cardCreationPhase,
-            trimmedDraftTitle: self.store.trimmedDraftTitle,
+        self.store.state.createUnavailableMessage(
             canRead: self.canRead,
             canWrite: self.canWrite)
     }
