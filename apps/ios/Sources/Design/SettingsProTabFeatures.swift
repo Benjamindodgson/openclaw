@@ -1009,10 +1009,12 @@ struct SettingsDebugOptionsFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct SettingsDebugOptionEnabled: Equatable, Sendable { var isEnabled: Bool }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var canvasDebugStatus = Action.SettingsDebugOptionEnabled(isEnabled: false)
-        var discoveryDebugLogs = Action.SettingsDebugOptionEnabled(isEnabled: false)
+        var canvasDebugStatus = SettingsDebugOptionEnabled(isEnabled: false)
+        var discoveryDebugLogs = SettingsDebugOptionEnabled(isEnabled: false)
 
         var canvasDebugStatusEnabled: Bool {
             self.canvasDebugStatus.isEnabled
@@ -1029,7 +1031,6 @@ struct SettingsDebugOptionsFeature {
             var canvasDebugStatusEnabled: SettingsDebugOptionEnabled
         }
 
-        struct SettingsDebugOptionEnabled: Equatable, Sendable { var isEnabled: Bool }
         struct DebugOptionToggleChange: Equatable, Sendable { var enabled: SettingsDebugOptionEnabled }
 
         case canvasDebugStatusChanged(DebugOptionToggleChange)
