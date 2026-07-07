@@ -65,7 +65,7 @@ struct VoiceWakePreferencesTests {
         }
 
         await store.send(.appeared) {
-            $0.triggerWords = ["openclaw", "computer"]
+            $0.words = .init(values: ["openclaw", "computer"])
         }
         await store.finish()
 
@@ -83,7 +83,7 @@ struct VoiceWakePreferencesTests {
         }
 
         await store.send(.removeWords(.init(offsets: IndexSet(integer: 0)))) {
-            $0.triggerWords = [" claude "]
+            $0.words = .init(values: [" claude "])
         }
         await store.finish()
 
@@ -104,7 +104,7 @@ struct VoiceWakePreferencesTests {
             $0.focusedTriggerIndex = .init(value: 0)
         }
         await store.send(.triggerWordChanged(.init(index: .init(value: 0), word: .init(value: " openclaw ")))) {
-            $0.triggerWords = [" openclaw "]
+            $0.words = .init(values: [" openclaw "])
         }
         await store.send(.focusedTriggerIndexChanged(.init(index: nil))) {
             $0.focusedTriggerIndex = nil
@@ -126,7 +126,7 @@ struct VoiceWakePreferencesTests {
 
         await store.send(.commitTriggerWords)
         await store.send(.triggerWordChanged(.init(index: .init(value: 0), word: .init(value: " claude ")))) {
-            $0.triggerWords = [" claude "]
+            $0.words = .init(values: [" claude "])
         }
         await store.send(.commitTriggerWords)
         await store.finish()
@@ -142,7 +142,7 @@ struct VoiceWakePreferencesTests {
         }
 
         await store.send(.externalPreferencesChanged) {
-            $0.triggerWords = [" openclaw "]
+            $0.words = .init(values: [" openclaw "])
         }
     }
 

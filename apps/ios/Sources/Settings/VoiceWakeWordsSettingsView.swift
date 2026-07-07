@@ -95,16 +95,20 @@ struct VoiceWakeWordsSettingsFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var triggerWords: [String]
+        var words: VoiceWakeWords
         var focusedTriggerIndex: VoiceWakeTriggerIndex?
 
         init(triggerWords: [String]) {
-            self.triggerWords = triggerWords
+            self.words = VoiceWakeWords(values: triggerWords)
             self.focusedTriggerIndex = nil
         }
 
+        var triggerWords: [String] {
+            self.words.values
+        }
+
         var canAddWord: Bool {
-            !self.triggerWords
+            !self.words.values
                 .contains { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         }
     }
@@ -144,28 +148,28 @@ struct VoiceWakeWordsSettingsFeature {
 
             switch action {
             case .appeared:
-                guard state.triggerWords.isEmpty else { return .none }
-                state.triggerWords = preferences.defaultTriggerWords().values
+                guard state.words.values.isEmpty else { return .none }
+                state.words = preferences.defaultTriggerWords()
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case .addWordButtonTapped:
-                state.triggerWords.append("")
+                state.words.values.append("")
                 return .none
 
             case let .removeWords(removal):
-                state.triggerWords.remove(atOffsets: removal.offsets)
-                if state.triggerWords.isEmpty {
-                    state.triggerWords = preferences.defaultTriggerWords().values
+                state.words.values.remove(atOffsets: removal.offsets)
+                if state.words.values.isEmpty {
+                    state.words = preferences.defaultTriggerWords()
                 }
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case let .triggerWordChanged(change):
-                guard state.triggerWords.indices.contains(change.index.value) else { return .none }
-                state.triggerWords[change.index.value] = change.word.value
+                guard state.words.values.indices.contains(change.index.value) else { return .none }
+                state.words.values[change.index.value] = change.word.value
                 return .none
 
             case .resetDefaultsButtonTapped:
-                state.triggerWords = preferences.defaultTriggerWords().values
+                state.words = preferences.defaultTriggerWords()
                 return .none
 
             case let .focusedTriggerIndexChanged(change):
@@ -177,9 +181,9 @@ struct VoiceWakeWordsSettingsFeature {
                 return self.commit(&state, preferences: preferences, gateway: gateway)
 
             case .externalPreferencesChanged:
-                let updated = preferences.load().values
-                guard updated != state.triggerWords else { return .none }
-                state.triggerWords = updated
+                let updated = preferences.load()
+                guard updated != state.words else { return .none }
+                state.words = updated
                 return .none
             }
         }
@@ -191,7 +195,7 @@ struct VoiceWakeWordsSettingsFeature {
         preferences: VoiceWakeWordsPreferencesClient,
         gateway: VoiceWakeWordsGatewayClient) -> Effect<Action>
     {
-        let words = VoiceWakeWords(values: state.triggerWords)
+        let words = state.words
         let snapshot = preferences.sanitize(words)
         return .merge(
             .run { _ in
