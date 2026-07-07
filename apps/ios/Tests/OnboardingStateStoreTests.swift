@@ -467,9 +467,11 @@ import Testing
         }
 
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: firstAttempt)))) {
-            $0.lastPairingAutoResumeAttemptAt = firstAttempt
+            $0.lastPairingAutoResumeAttemptState = .init(value: firstAttempt)
             $0.automaticPairingResume = .init(shouldResume: true)
         }
+
+        #expect(store.state.lastPairingAutoResumeAttemptAt == firstAttempt)
 
         let throttledAttempt = firstAttempt.addingTimeInterval(3)
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: throttledAttempt)))) {
@@ -478,7 +480,7 @@ import Testing
 
         let laterAttempt = firstAttempt.addingTimeInterval(7)
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: laterAttempt)))) {
-            $0.lastPairingAutoResumeAttemptAt = laterAttempt
+            $0.lastPairingAutoResumeAttemptState = .init(value: laterAttempt)
             $0.automaticPairingResume = .init(shouldResume: true)
         }
 
