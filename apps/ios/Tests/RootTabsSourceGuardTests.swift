@@ -2256,6 +2256,11 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct IPadActivitySessionsAvailable: Equatable, Sendable"))
         #expect(source.contains("struct IPadActivitySessionEntries: Equatable, Sendable"))
         #expect(source.contains("var entries: [OpenClawChatSessionEntry] = []"))
+        #expect(source.contains("store: StoreOf<IPadActivitySessionsFeature>? = nil"))
+        #expect(source.contains("storeFactory: () -> StoreOf<IPadActivitySessionsFeature>"))
+        #expect(source.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!source.contains(
+            "store: StoreOf<IPadActivitySessionsFeature> = Store(\n            initialState: IPadActivitySessionsFeature.State())"))
         #expect(feature.contains("var sessionEntries = IPadActivitySessionEntries()"))
         #expect(feature.contains("var sessions: [OpenClawChatSessionEntry] {"))
         #expect(feature.contains("sessionEntries.entries"))
