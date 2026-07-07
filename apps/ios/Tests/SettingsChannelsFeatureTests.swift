@@ -47,6 +47,26 @@ struct SettingsChannelsFeatureTests {
         }
     }
 
+    @Test func `summary values are derived by reducer state`() {
+        var state = SettingsChannelsFeature.State()
+        state.channelEntries = Self.connectedEntries
+
+        #expect(state.configuredEntryCount == 1)
+        #expect(state.hasActiveEntry)
+        #expect(state.headerValue(canRead: true) == "1")
+        #expect(state.headerValue(canRead: false) == "Offline")
+        #expect(state.summaryValue(canRead: true) == "1/1")
+        #expect(state.summaryValue(canRead: false) == "offline")
+
+        state.loadingPhase = .inFlight
+        #expect(state.headerValue(canRead: true) == "Loading")
+        #expect(state.summaryValue(canRead: true) == "loading")
+
+        state.loadingPhase = .idle
+        state.errorText = .init(value: "boom")
+        #expect(state.summaryValue(canRead: true) == "error")
+    }
+
     @Test func `soft refresh failure preserves existing entries`() async {
         var initialState = SettingsChannelsFeature.State()
         initialState.channelEntries = Self.connectedEntries
