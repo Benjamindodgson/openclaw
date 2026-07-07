@@ -171,16 +171,18 @@ struct GatewayProblemDetailsSheet: View {
         problem: GatewayConnectionProblem,
         primaryActionTitle: String? = nil,
         onPrimaryAction: (() -> Void)? = nil,
-        store: StoreOf<GatewayProblemDetailsFeature> = Store(
-            initialState: GatewayProblemDetailsFeature.State())
-        {
-            GatewayProblemDetailsFeature()
+        store: StoreOf<GatewayProblemDetailsFeature>? = nil,
+        storeFactory: () -> StoreOf<GatewayProblemDetailsFeature> = {
+            Store(initialState: GatewayProblemDetailsFeature.State()) {
+                GatewayProblemDetailsFeature()
+            }
         })
     {
         self.problem = problem
         self.primaryActionTitle = primaryActionTitle
         self.onPrimaryAction = onPrimaryAction
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
