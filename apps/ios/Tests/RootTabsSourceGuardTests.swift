@@ -964,6 +964,20 @@ struct RootTabsSourceGuardTests {
         #expect(!talkSource.contains("state.talkEnabled = change.enabled.isEnabled"))
     }
 
+    @Test func `talk runtime issue details sheet uses injectable store factory`() throws {
+        let source = try String(contentsOf: Self.talkRuntimeIssueBannerSourceURL(), encoding: .utf8)
+        let initializer = try Self.extract(
+            source,
+            from: "init(\n        issue: TalkRuntimeIssue,",
+            to: "var body: some View")
+
+        #expect(initializer.contains(
+            "storeFactory: (TalkRuntimeIssue) -> StoreOf<TalkRuntimeIssueDetailsFeature>"))
+        #expect(initializer.contains("Store(initialState: TalkRuntimeIssueDetailsFeature.State(issue: issue))"))
+        #expect(initializer.contains("let resolvedStore = store ?? storeFactory(issue)"))
+        #expect(!initializer.contains("let resolvedStore = store ?? Store("))
+    }
+
     @Test func `agent row selection is reducer effect owned`() throws {
         let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
@@ -6681,6 +6695,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Design/TalkProTab.swift")
+    }
+
+    private static func talkRuntimeIssueBannerSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Design/TalkRuntimeIssueBanner.swift")
     }
 
     private static func docsSourceURL() -> URL {
