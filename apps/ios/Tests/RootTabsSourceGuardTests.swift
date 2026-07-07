@@ -3167,6 +3167,13 @@ struct RootTabsSourceGuardTests {
         #expect(chatSource.contains("var showsAgentBadge: Bool"))
         #expect(chatSource.contains("self.showsAgentBadgeValue.value"))
         #expect(!chatSource.contains("var showsAgentBadge = true"))
+        #expect(chatSource.contains("struct ChatProAgentBadgeOverride: Equatable, Sendable"))
+        #expect(chatSource.contains("var agentBadgeOverrideValue = ChatProAgentBadgeOverride(value: nil)"))
+        #expect(chatSource.contains("agentBadgeOverride: String? = nil"))
+        #expect(chatSource.contains("self.agentBadgeOverrideValue = .init(value: agentBadgeOverride)"))
+        #expect(chatSource.contains("var agentBadgeOverride: String?"))
+        #expect(chatSource.contains("self.agentBadgeOverrideValue.value"))
+        #expect(!chatSource.contains("var agentBadgeOverride: String?\n\n    init("))
         #expect(!chatSource.contains("var transportModeID = \"\""))
         #expect(!chatSource.contains("state.transportModeID = record.transportModeID.value"))
         #expect(!chatSource.contains(
