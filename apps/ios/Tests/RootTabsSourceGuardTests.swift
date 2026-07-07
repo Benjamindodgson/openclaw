@@ -1107,6 +1107,11 @@ struct RootTabsSourceGuardTests {
         #expect(voiceWakeToastSource.contains("var rootVoiceWakeToastSleep: RootVoiceWakeToastSleepClient"))
         #expect(cameraFlashSource.contains("struct RootCameraFlashOverlay: View"))
         #expect(cameraFlashSource.contains("@Reducer\nstruct RootCameraFlashOverlayFeature"))
+        #expect(cameraFlashSource.contains("struct RootCameraFlashOverlayOpacity: Equatable, Sendable"))
+        #expect(cameraFlashSource.contains("var opacityState = RootCameraFlashOverlayOpacity(value: 0)"))
+        #expect(cameraFlashSource.contains("var opacity: Double"))
+        #expect(cameraFlashSource.contains("state.opacityState = .init(value: 0.85)"))
+        #expect(cameraFlashSource.contains("state.opacityState = .init(value: 0)"))
         #expect(cameraFlashSource.contains("struct RootCameraFlashOverlaySleepClient"))
         #expect(cameraFlashSource.contains("var rootCameraFlashOverlaySleep: RootCameraFlashOverlaySleepClient"))
         #expect(rootSource.contains("@State private var launchStore: StoreOf<RootLaunchFeature>"))
@@ -1120,6 +1125,9 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("struct RootCameraFlashOverlaySleepClient"))
         #expect(!launchSource.contains("var didApplyInitialAppearance = false"))
         #expect(!launchSource.contains("var didApplyInitialChatSession = false"))
+        #expect(!cameraFlashSource.contains("var opacity: Double = 0"))
+        #expect(!cameraFlashSource.contains("state.opacity = 0.85"))
+        #expect(!cameraFlashSource.contains("state.opacity = 0"))
     }
 
     @Test func `root tca store factories live outside root tabs`() throws {

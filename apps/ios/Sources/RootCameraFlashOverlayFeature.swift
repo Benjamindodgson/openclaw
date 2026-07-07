@@ -48,9 +48,17 @@ struct RootCameraFlashOverlayFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct RootCameraFlashOverlayOpacity: Equatable, Sendable {
+        var value: Double
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var opacity: Double = 0
+        var opacityState = RootCameraFlashOverlayOpacity(value: 0)
+
+        var opacity: Double {
+            self.opacityState.value
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -68,7 +76,7 @@ struct RootCameraFlashOverlayFeature {
 
             switch action {
             case .nonceChanged:
-                state.opacity = 0.85
+                state.opacityState = .init(value: 0.85)
                 return .run { send in
                     try await sleeper.sleep()
                     await send(.fadeOutDelayElapsed)
@@ -76,7 +84,7 @@ struct RootCameraFlashOverlayFeature {
                 .cancellable(id: CancelID.flash, cancelInFlight: true)
 
             case .fadeOutDelayElapsed:
-                state.opacity = 0
+                state.opacityState = .init(value: 0)
                 return .none
 
             case .disappeared:
