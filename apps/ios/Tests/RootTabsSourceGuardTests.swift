@@ -1195,21 +1195,36 @@ struct RootTabsSourceGuardTests {
 
     @Test func `voice wake trigger word change action is typed`() throws {
         let source = try String(contentsOf: Self.voiceWakeWordsSettingsSourceURL(), encoding: .utf8)
+        let featureSource = try Self.extract(
+            source,
+            from: "@Reducer\nstruct VoiceWakeWordsSettingsFeature",
+            to: "enum VoiceWakeWordsSettingsStoreFactory")
 
+        #expect(source.contains("struct VoiceWakeTriggerIndex: Equatable, Sendable"))
         #expect(source.contains("struct TriggerWordChange: Equatable, Sendable"))
         #expect(source.contains("case triggerWordChanged(TriggerWordChange)"))
-        #expect(source.contains("state.triggerWords[change.index] = change.value"))
+        #expect(featureSource.contains("var focusedTriggerIndex: VoiceWakeTriggerIndex?"))
+        #expect(featureSource.contains("var index: VoiceWakeTriggerIndex\n"))
+        #expect(featureSource.contains("state.triggerWords[change.index.value] = change.value"))
         #expect(source.contains(
-            "self.store.send(.triggerWordChanged(.init(index: index, value: newValue)))"))
+            ".triggerWordChanged(.init(index: .init(value: index), value: newValue))"))
+        #expect(!featureSource.contains("var focusedTriggerIndex: Int?"))
+        #expect(!featureSource.contains("var index: Int\n"))
     }
 
     @Test func `voice wake focus change action is typed`() throws {
         let source = try String(contentsOf: Self.voiceWakeWordsSettingsSourceURL(), encoding: .utf8)
+        let featureSource = try Self.extract(
+            source,
+            from: "@Reducer\nstruct VoiceWakeWordsSettingsFeature",
+            to: "enum VoiceWakeWordsSettingsStoreFactory")
 
         #expect(source.contains("struct FocusedTriggerIndexChange: Equatable, Sendable"))
         #expect(source.contains("case focusedTriggerIndexChanged(FocusedTriggerIndexChange)"))
+        #expect(featureSource.contains("var index: VoiceWakeTriggerIndex?"))
         #expect(source.contains("state.focusedTriggerIndex = change.index"))
-        #expect(source.contains("self.store.send(.focusedTriggerIndexChanged(.init(index: newValue)))"))
+        #expect(source.contains("index: newValue.map { VoiceWakeTriggerIndex(value: $0) }"))
+        #expect(!featureSource.contains("var index: Int?"))
     }
 
     @Test func `voice wake word removal action is typed`() throws {
