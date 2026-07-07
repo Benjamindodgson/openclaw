@@ -94,6 +94,8 @@ struct SettingsNotificationFeature {
     }
 
     struct HostedRelayHost: Equatable, Sendable { var value: String? }
+    struct HostedRelayEnabled: Equatable, Sendable { var value: Bool }
+    struct RemoteRegistrationDisclosureAccepted: Equatable, Sendable { var value: Bool }
 
     @ObservableState
     struct State: Equatable, Sendable {
@@ -108,7 +110,7 @@ struct SettingsNotificationFeature {
         var authorizationRequestPhase = AuthorizationRequestPhase.idle
         var status: SettingsNotificationStatus = .checking
         var statusRefreshResult: SettingsNotificationStatus?
-        var usesOpenClawHostedRelay = Action.HostedRelayEnabled(value: false)
+        var usesOpenClawHostedRelay = HostedRelayEnabled(value: false)
 
         var actionText: String {
             self.status.actionTitle
@@ -172,9 +174,6 @@ struct SettingsNotificationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct HostedRelayEnabled: Equatable, Sendable { var value: Bool }
-        struct RemoteRegistrationDisclosureAccepted: Equatable, Sendable { var value: Bool }
-
         struct RelayConfigSync: Equatable, Sendable {
             var usesOpenClawHostedRelay: HostedRelayEnabled
             var hostedRelayHost: HostedRelayHost

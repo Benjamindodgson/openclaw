@@ -5430,7 +5430,7 @@ struct RootTabsSourceGuardTests {
         #expect(notificationSource.contains("struct HostedRelayEnabled: Equatable, Sendable"))
         #expect(notificationSource.contains("struct HostedRelayHost: Equatable, Sendable"))
         #expect(notificationSource.contains("var authorizationRequestPhase = AuthorizationRequestPhase.idle"))
-        #expect(notificationSource.contains("var usesOpenClawHostedRelay = Action.HostedRelayEnabled(value: false)"))
+        #expect(notificationSource.contains("var usesOpenClawHostedRelay = HostedRelayEnabled(value: false)"))
         #expect(notificationSource.contains("var usesOpenClawHostedRelay: HostedRelayEnabled"))
         #expect(notificationSource.contains("var hostedRelayHost: HostedRelayHost"))
         #expect(notificationSource.contains("private static let defaultHostedRelayHost = \"ios-push-relay.openclaw.ai\""))
@@ -5456,6 +5456,7 @@ struct RootTabsSourceGuardTests {
             "var isRequestingAuthorization = Action.AuthorizationRequestInFlight(value: false)"))
         #expect(!notificationSource.contains("var isRequestingAuthorization = false"))
         #expect(!notificationSource.contains("var usesOpenClawHostedRelay = false"))
+        #expect(!notificationSource.contains("Action.HostedRelayEnabled"))
         #expect(!notificationSource.contains(
             "guard state.status == .notSet, !state.isRequestingAuthorization.value else { return .none }"))
         #expect(!notificationSource.contains("guard state.status == .notSet, !state.isRequestingAuthorization else"))
