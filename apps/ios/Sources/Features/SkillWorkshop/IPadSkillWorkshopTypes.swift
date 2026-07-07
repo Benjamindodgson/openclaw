@@ -54,6 +54,13 @@ struct IPadSkillWorkshopGatewayAccess: Equatable, Sendable {
     var hasOperatorAdminScope: Bool
 }
 
+struct IPadSkillWorkshopEmptyProposalPresentation: Equatable, Sendable {
+    var icon: String
+    var title: String
+    var detail: String
+    var value: String?
+}
+
 struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String

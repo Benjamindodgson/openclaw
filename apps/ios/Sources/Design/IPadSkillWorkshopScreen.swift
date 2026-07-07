@@ -179,6 +179,23 @@ struct IPadSkillWorkshopFeature {
             gatewayAccess.canWrite && gatewayAccess.hasOperatorAdminScope
         }
 
+        func emptyProposalPresentation(
+            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopEmptyProposalPresentation
+        {
+            if gatewayAccess.canRead {
+                return .init(
+                    icon: "hammer",
+                    title: "No proposals",
+                    detail: "New proposals will appear here when agents draft skills.",
+                    value: "empty")
+            }
+            return .init(
+                icon: "wifi.slash",
+                title: "No proposals loaded",
+                detail: "Connect from Settings to load Skill Workshop proposals.",
+                value: nil)
+        }
+
         static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
         static let defaultProposalStatusBoardLanes = ["pending", "quarantined", "stale", "applied", "rejected"]
 
@@ -933,12 +950,10 @@ struct IPadSkillWorkshopScreen: View {
             if self.store.filteredProposals.isEmpty {
                 ProCard(radius: OpenClawProMetric.cardRadius) {
                     ProStatusRow(
-                        icon: self.gatewayAccess.canRead ? "hammer" : "wifi.slash",
-                        title: self.gatewayAccess.canRead ? "No proposals" : "No proposals loaded",
-                        detail: self.gatewayAccess.canRead
-                            ? "New proposals will appear here when agents draft skills."
-                            : "Connect from Settings to load Skill Workshop proposals.",
-                        value: self.gatewayAccess.canRead ? "empty" : nil,
+                        icon: self.emptyProposalPresentation.icon,
+                        title: self.emptyProposalPresentation.title,
+                        detail: self.emptyProposalPresentation.detail,
+                        value: self.emptyProposalPresentation.value,
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)
@@ -1200,6 +1215,11 @@ struct IPadSkillWorkshopScreen: View {
 
     private var canApplyProposalMutations: Bool {
         self.store.state.shouldEnableProposalMutation(
+            gatewayAccess: self.gatewayAccess)
+    }
+
+    private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation {
+        self.store.state.emptyProposalPresentation(
             gatewayAccess: self.gatewayAccess)
     }
 
