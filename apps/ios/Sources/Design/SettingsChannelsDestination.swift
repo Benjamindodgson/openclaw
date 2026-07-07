@@ -397,12 +397,16 @@ struct SettingsChannelsDestination: View {
 
     init(
         showsSummaryCard: Bool = true,
-        store: StoreOf<SettingsChannelsFeature> = Store(initialState: SettingsChannelsFeature.State()) {
-            SettingsChannelsFeature()
+        store: StoreOf<SettingsChannelsFeature>? = nil,
+        storeFactory: () -> StoreOf<SettingsChannelsFeature> = {
+            Store(initialState: SettingsChannelsFeature.State()) {
+                SettingsChannelsFeature()
+            }
         })
     {
         self.showsSummaryCard = showsSummaryCard
-        self._store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
