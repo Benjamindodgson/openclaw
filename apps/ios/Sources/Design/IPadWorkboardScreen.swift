@@ -33,7 +33,7 @@ struct IPadWorkboardScreen: View {
     var body: some View {
         IPadSidebarScreenChrome(
             title: "Workboard",
-            subtitle: self.currentWorkboardSubtitle,
+            subtitle: self.store.workboardSubtitle,
             headerLeadingAction: self.headerLeadingAction,
             gatewayAction: self.openSettings)
         {
@@ -559,12 +559,6 @@ struct IPadWorkboardScreen: View {
             .isAppleReviewDemoModeEnabled
     }
 
-    private var currentWorkboardSubtitle: String {
-        Self.workboardSubtitle(
-            boardScopeLabel: self.boardScopeLabel,
-            selectedStatus: self.store.selectedStatus.value)
-    }
-
     private var boardScopeOptions: [String] {
         self.store.boardScopeOptions
     }
@@ -592,10 +586,6 @@ struct IPadWorkboardScreen: View {
         verticalSizeClass: UserInterfaceSizeClass?) -> Bool
     {
         horizontalSizeClass == .compact || verticalSizeClass == .compact
-    }
-
-    nonisolated static func workboardSubtitle(boardScopeLabel: String, selectedStatus: String) -> String {
-        "\(boardScopeLabel) / \(IPadWorkboardDefaults.label(for: selectedStatus))"
     }
 
     nonisolated static func compactWriteUnavailableMessage(canRead: Bool) -> String {

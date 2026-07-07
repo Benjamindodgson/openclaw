@@ -57,6 +57,16 @@ struct IPadWorkboardFeatureTests {
             .createUnavailableMessage(canRead: true, canWrite: true) == "Card creation is already in progress.")
     }
 
+    @Test func `workboard subtitle is derived by reducer state`() {
+        var state = IPadWorkboardFeature.State()
+        #expect(state.workboardSubtitle == "All boards / Active")
+
+        state.selectedBoardID = .init(value: "planning")
+        state.selectedStatus = .init(value: "blocked")
+
+        #expect(state.workboardSubtitle == "planning / Blocked")
+    }
+
     @Test func `kanban cards are filtered by reducer state`() {
         var state = IPadWorkboardFeature.State()
         state.cardEntries = .init(values: [
