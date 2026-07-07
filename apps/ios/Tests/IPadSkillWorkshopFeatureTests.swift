@@ -171,12 +171,21 @@ struct IPadSkillWorkshopFeatureTests {
 
     @Test func `refresh task identifier is reducer state`() {
         var state = IPadSkillWorkshopFeature.State()
+        let connectedAccess = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: true)
+        let offlineAccess = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: false,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: false)
 
-        #expect(state.refreshTaskID(canRead: true, sceneIsActive: true) == "connected:active:default")
-        #expect(state.refreshTaskID(canRead: false, sceneIsActive: false) == "offline:inactive:default")
+        #expect(state.refreshTaskID(gatewayAccess: connectedAccess, sceneIsActive: true) == "connected:active:default")
+        #expect(state.refreshTaskID(gatewayAccess: offlineAccess, sceneIsActive: false) == "offline:inactive:default")
 
         state.selectedAgentScopeID = .init(value: "agent-b")
-        #expect(state.refreshTaskID(canRead: true, sceneIsActive: false) == "connected:inactive:agent-b")
+        #expect(state
+            .refreshTaskID(gatewayAccess: connectedAccess, sceneIsActive: false) == "connected:inactive:agent-b")
     }
 
     @Test func `proposal selection opening controls sheet presentation`() async {
