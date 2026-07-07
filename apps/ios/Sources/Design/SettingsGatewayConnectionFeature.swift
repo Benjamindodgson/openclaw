@@ -18,6 +18,9 @@ struct SettingsGatewayConnectionFeature {
 
     // swiftformat:disable redundantSendable
     struct DiscoveredGatewayConnectionFailureMessage: Equatable, Sendable { var value: String }
+    struct GatewayAgentCount: Equatable, Sendable { var value: Int }
+    struct GatewayAppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
+    struct GatewayConnectionStatusConnected: Equatable, Sendable { var value: Bool }
     struct GatewayConnectionID: Equatable, Sendable { var value: String }
     struct GatewayDisplayStatusText: Equatable, Sendable { var value: String }
     struct GatewayRemoteAddress: Equatable, Sendable { var value: String? }
@@ -33,13 +36,13 @@ struct SettingsGatewayConnectionFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var connectingGatewayID: GatewayConnectionID?
-        var gatewayAgentCount = Action.GatewayAgentCount(value: 0)
+        var gatewayAgentCount = GatewayAgentCount(value: 0)
         var gatewayDisplayStatusText = GatewayDisplayStatusText(value: "Offline")
         var gatewayRemoteAddress = GatewayRemoteAddress(value: nil)
         var gatewayServerName = GatewayServerName(value: nil)
-        var gatewayStatusConnected = Action.GatewayConnectionStatusConnected(value: false)
+        var gatewayStatusConnected = GatewayConnectionStatusConnected(value: false)
         var discoveredGatewayConnectionResult: DiscoveredGatewayConnectionResult?
-        var isAppleReviewDemoModeEnabled = Action.GatewayAppleReviewDemoModeEnabled(value: false)
+        var isAppleReviewDemoModeEnabled = GatewayAppleReviewDemoModeEnabled(value: false)
 
         var gatewayConnected: Bool {
             !self.isAppleReviewDemoModeEnabled.value && self.gatewayStatusConnected.value
@@ -107,10 +110,6 @@ struct SettingsGatewayConnectionFeature {
         struct DiscoveredGatewayPersistenceRequest: Equatable, Sendable {
             var stableID: SettingsGatewayStableID
         }
-
-        struct GatewayAppleReviewDemoModeEnabled: Equatable, Sendable { var value: Bool }
-        struct GatewayConnectionStatusConnected: Equatable, Sendable { var value: Bool }
-        struct GatewayAgentCount: Equatable, Sendable { var value: Int }
 
         struct GatewayStatusSync: Equatable, Sendable {
             var isAppleReviewDemoModeEnabled: GatewayAppleReviewDemoModeEnabled
