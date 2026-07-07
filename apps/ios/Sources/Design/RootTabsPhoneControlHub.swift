@@ -9,11 +9,19 @@ struct RootTabsInitialDestinationApplication: Equatable, Sendable { var didApply
 @Reducer
 struct RootTabsPhoneControlHubFeature {
     // swiftformat:disable redundantSendable
+    struct PhoneControlHubNavigationPath: Equatable, Sendable {
+        var destinations: [RootTabs.SidebarDestination]
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
-        var navigationPath: [RootTabs.SidebarDestination] = []
+        var navigationPathState = PhoneControlHubNavigationPath(destinations: [])
         var initialDestinationApplication = RootTabsInitialDestinationApplication(didApply: false)
         var presentation = RootTabsPhoneControlHubPresentationState()
+
+        var navigationPath: [RootTabs.SidebarDestination] {
+            self.navigationPathState.destinations
+        }
 
         var didApplyInitialDestination: Bool {
             self.initialDestinationApplication.didApply
@@ -32,7 +40,7 @@ struct RootTabsPhoneControlHubFeature {
         }
 
         struct NavigationPathChange: Equatable, Sendable {
-            var path: [RootTabs.SidebarDestination]
+            var path: PhoneControlHubNavigationPath
         }
 
         case detailBackTapped
@@ -49,12 +57,12 @@ struct RootTabsPhoneControlHubFeature {
         Reduce { state, action in
             switch action {
             case .detailBackTapped:
-                guard !state.navigationPath.isEmpty else { return .none }
-                state.navigationPath.removeLast()
+                guard !state.navigationPathState.destinations.isEmpty else { return .none }
+                state.navigationPathState.destinations.removeLast()
                 return .none
 
             case let .detailDestinationTapped(destination):
-                state.navigationPath.append(destination)
+                state.navigationPathState.destinations.append(destination)
                 return .none
 
             case let .initialDestinationAppeared(appearance):
@@ -66,16 +74,16 @@ struct RootTabsPhoneControlHubFeature {
                     return .none
 
                 case let .detail(destination):
-                    state.navigationPath = [destination]
+                    state.navigationPathState = .init(destinations: [destination])
                     return .none
 
                 case .rootTab:
-                    state.navigationPath = []
+                    state.navigationPathState = .init(destinations: [])
                     return .none
                 }
 
             case let .navigationPathChanged(change):
-                state.navigationPath = change.path
+                state.navigationPathState = change.path
                 return .none
 
             case let .presentationChanged(change):
@@ -83,7 +91,7 @@ struct RootTabsPhoneControlHubFeature {
                 return .none
 
             case .rootDestinationTapped:
-                state.navigationPath = []
+                state.navigationPathState = .init(destinations: [])
                 return .none
             }
         }
@@ -151,7 +159,7 @@ struct RootTabsPhoneControlHub: View {
     private var navigationPathBinding: Binding<[RootTabs.SidebarDestination]> {
         Binding(
             get: { self.store.navigationPath },
-            set: { self.store.send(.navigationPathChanged(.init(path: $0))) })
+            set: { self.store.send(.navigationPathChanged(.init(path: .init(destinations: $0)))) })
     }
 
     private var headerCard: some View {

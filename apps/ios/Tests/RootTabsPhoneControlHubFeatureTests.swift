@@ -11,31 +11,31 @@ struct RootTabsPhoneControlHubFeatureTests {
         }
 
         await store.send(.detailDestinationTapped(.sessions)) {
-            $0.navigationPath = [.sessions]
+            $0.navigationPathState = .init(destinations: [.sessions])
         }
     }
 
     @Test func `root destination clears detail path`() async {
         var initialState = RootTabsPhoneControlHubFeature.State()
-        initialState.navigationPath = [.overview, .sessions]
+        initialState.navigationPathState = .init(destinations: [.overview, .sessions])
         let store = TestStore(initialState: initialState) {
             RootTabsPhoneControlHubFeature()
         }
 
         await store.send(.rootDestinationTapped(.gateway)) {
-            $0.navigationPath = []
+            $0.navigationPathState = .init(destinations: [])
         }
     }
 
     @Test func `back action pops the last detail destination`() async {
         var initialState = RootTabsPhoneControlHubFeature.State()
-        initialState.navigationPath = [.overview, .sessions]
+        initialState.navigationPathState = .init(destinations: [.overview, .sessions])
         let store = TestStore(initialState: initialState) {
             RootTabsPhoneControlHubFeature()
         }
 
         await store.send(.detailBackTapped) {
-            $0.navigationPath = [.overview]
+            $0.navigationPathState = .init(destinations: [.overview])
         }
     }
 
@@ -46,33 +46,33 @@ struct RootTabsPhoneControlHubFeatureTests {
 
         await store.send(.initialDestinationAppeared(.detail(.sessions))) {
             $0.initialDestinationApplication = .init(didApply: true)
-            $0.navigationPath = [.sessions]
+            $0.navigationPathState = .init(destinations: [.sessions])
         }
         await store.send(.initialDestinationAppeared(.detail(.docs)))
     }
 
     @Test func `initial root destination only marks initial application`() async {
         var initialState = RootTabsPhoneControlHubFeature.State()
-        initialState.navigationPath = [.sessions]
+        initialState.navigationPathState = .init(destinations: [.sessions])
         let store = TestStore(initialState: initialState) {
             RootTabsPhoneControlHubFeature()
         }
 
         await store.send(.initialDestinationAppeared(.rootTab(.gateway))) {
             $0.initialDestinationApplication = .init(didApply: true)
-            $0.navigationPath = []
+            $0.navigationPathState = .init(destinations: [])
         }
     }
 
     @Test func `swift ui path changes replace reducer path`() async {
         var initialState = RootTabsPhoneControlHubFeature.State()
-        initialState.navigationPath = [.overview]
+        initialState.navigationPathState = .init(destinations: [.overview])
         let store = TestStore(initialState: initialState) {
             RootTabsPhoneControlHubFeature()
         }
 
-        await store.send(.navigationPathChanged(.init(path: [.overview, .sessions]))) {
-            $0.navigationPath = [.overview, .sessions]
+        await store.send(.navigationPathChanged(.init(path: .init(destinations: [.overview, .sessions])))) {
+            $0.navigationPathState = .init(destinations: [.overview, .sessions])
         }
     }
 
