@@ -411,10 +411,15 @@ struct RootTabsPhoneControlHubAgents: Equatable {
     var values: [RootTabsPhoneControlHubAgent] = []
 }
 
+// swiftformat:disable redundantSendable
+struct RootTabsPhoneControlHubGatewayServerName: Equatable, Sendable { var value: String? }
+struct RootTabsPhoneControlHubGatewayRemoteAddress: Equatable, Sendable { var value: String? }
+// swiftformat:enable redundantSendable
+
 struct RootTabsPhoneControlHubPresentationState: Equatable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
-    var gatewayServerName: String?
-    var gatewayRemoteAddress: String?
+    var gatewayServerNameState = RootTabsPhoneControlHubGatewayServerName(value: nil)
+    var gatewayRemoteAddressState = RootTabsPhoneControlHubGatewayRemoteAddress(value: nil)
     var gatewayDisplayStatusText = "Offline"
     var selectedAgentId: String?
     var gatewayDefaultAgentId: String?
@@ -432,8 +437,8 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
         activeAgentName: String = "Default Agent")
     {
         self.gatewayDisplayState = gatewayDisplayState
-        self.gatewayServerName = gatewayServerName
-        self.gatewayRemoteAddress = gatewayRemoteAddress
+        self.gatewayServerNameState = .init(value: gatewayServerName)
+        self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)
         self.gatewayDisplayStatusText = gatewayDisplayStatusText
         self.selectedAgentId = selectedAgentId
         self.gatewayDefaultAgentId = gatewayDefaultAgentId
@@ -443,6 +448,14 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
 
     var gatewayAgents: [RootTabsPhoneControlHubAgent] {
         self.gatewayAgentEntries.values
+    }
+
+    var gatewayServerName: String? {
+        self.gatewayServerNameState.value
+    }
+
+    var gatewayRemoteAddress: String? {
+        self.gatewayRemoteAddressState.value
     }
 
     var activeAgentTitle: String {
