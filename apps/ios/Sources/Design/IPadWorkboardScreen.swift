@@ -432,7 +432,7 @@ struct IPadWorkboardScreen: View {
                 ForEach(self.store.visibleKanbanStatuses, id: \.self) { status in
                     IPadWorkboardKanbanColumn(
                         status: status,
-                        cards: self.cards(forKanbanStatus: status),
+                        cards: self.store.state.cards(forKanbanStatus: status),
                         statuses: self.store.statusValues,
                         busyCardID: self.store.busyCardID?.value,
                         openSession: { card in
@@ -605,14 +605,6 @@ struct IPadWorkboardScreen: View {
     nonisolated static func boardScopeOptions(knownBoardIDs: [String], cardBoardIDs: [String]) -> [String] {
         Array(Set((knownBoardIDs + cardBoardIDs).map { self.normalizedScopeID($0) }.filter { !$0.isEmpty }))
             .sorted()
-    }
-
-    private func cards(forKanbanStatus status: String) -> [IPadWorkboardCard] {
-        IPadWorkboardFeature.State.cardsForKanbanStatus(
-            cards: self.store.cards,
-            status: status,
-            selectedStatus: self.store.selectedStatus.value,
-            query: self.store.query.value)
     }
 
     private func loadCards(force: Bool) async {
