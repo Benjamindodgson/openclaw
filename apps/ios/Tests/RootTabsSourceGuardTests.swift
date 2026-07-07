@@ -3328,6 +3328,13 @@ struct RootTabsSourceGuardTests {
         #expect(photoImportStoreDeclaration
             .contains("@State private var photoImportStore: StoreOf<OnboardingQRPhotoImportFeature>"))
         #expect(!photoImportStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource.contains("private let gatewayTrustPromptStoreFactory: @MainActor"))
+        #expect(onboardingSource.contains("gatewayTrustPromptStoreFactory: @escaping @MainActor"))
+        #expect(onboardingSource.contains("GatewayTrustPromptFeature(client: .live(gatewayController: gatewayController))"))
+        #expect(onboardingSource.contains("self.gatewayTrustPromptStoreFactory = gatewayTrustPromptStoreFactory"))
+        #expect(onboardingSource.contains("self.gatewayTrustPromptStoreFactory(self.gatewayController)"))
+        #expect(!onboardingSource.contains(
+            "GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.disappeared)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.discoveryDomainChanged)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.restartRequestID"))

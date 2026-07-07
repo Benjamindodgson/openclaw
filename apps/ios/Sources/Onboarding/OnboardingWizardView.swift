@@ -34,6 +34,9 @@ struct OnboardingWizardView: View {
     let allowSkip: Bool
     let onRequestLocalNetworkAccess: (String) -> Void
     let onClose: () -> Void
+    private let gatewayTrustPromptStoreFactory: @MainActor (GatewayConnectionController) -> StoreOf<
+        GatewayTrustPromptFeature,
+    >
 
     init(
         allowSkip: Bool,
@@ -79,11 +82,19 @@ struct OnboardingWizardView: View {
             initialState: OnboardingQRPhotoImportFeature.State())
         {
             OnboardingQRPhotoImportFeature()
+        },
+        gatewayTrustPromptStoreFactory: @escaping @MainActor (GatewayConnectionController) -> StoreOf<
+            GatewayTrustPromptFeature,
+        > = { gatewayController in
+            Store(initialState: GatewayTrustPromptFeature.State()) {
+                GatewayTrustPromptFeature(client: .live(gatewayController: gatewayController))
+            }
         })
     {
         self.allowSkip = allowSkip
         self.onRequestLocalNetworkAccess = onRequestLocalNetworkAccess
         self.onClose = onClose
+        self.gatewayTrustPromptStoreFactory = gatewayTrustPromptStoreFactory
         self._stepStore = State(wrappedValue: stepStore)
         self._credentialsStore = State(wrappedValue: credentialsStore)
         self._statusStore = State(wrappedValue: statusStore)
@@ -96,9 +107,7 @@ struct OnboardingWizardView: View {
 
     @MainActor
     private func makeGatewayTrustPromptStore() -> StoreOf<GatewayTrustPromptFeature> {
-        Store(initialState: GatewayTrustPromptFeature.State()) {
-            GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))
-        }
+        self.gatewayTrustPromptStoreFactory(self.gatewayController)
     }
 
     private var isFullScreenStep: Bool {
