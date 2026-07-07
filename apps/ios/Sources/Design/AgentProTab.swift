@@ -696,6 +696,7 @@ struct AgentClawHubErrorText: Equatable, Sendable { var value: String? }
 struct AgentClawHubInstallFailureMessage: Equatable, Sendable { var value: String }
 struct AgentClawHubSearchQuery: Equatable, Sendable { var value: String }
 struct AgentClawHubSearchFailureMessage: Equatable, Sendable { var value: String }
+struct AgentClawHubSearchResults: Equatable, Sendable { var values: [ClawHubSearchResultLite] = [] }
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -709,10 +710,14 @@ struct AgentClawHubSearchFeature {
         }
 
         var query = AgentClawHubSearchQuery(value: "")
-        var results: [ClawHubSearchResultLite] = []
+        var resultEntries = AgentClawHubSearchResults()
         var loadingPhase = SearchLoadingPhase.idle
         var errorText = AgentClawHubErrorText(value: nil)
         var installingSlug: AgentClawHubInstallSlug?
+
+        var results: [ClawHubSearchResultLite] {
+            self.resultEntries.values
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -761,7 +766,7 @@ struct AgentClawHubSearchFeature {
                 return .none
 
             case let .searchFinished(response):
-                state.results = response.results
+                state.resultEntries = .init(values: response.results)
                 state.loadingPhase = .idle
                 return .none
 
