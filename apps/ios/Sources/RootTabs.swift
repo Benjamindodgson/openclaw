@@ -37,17 +37,9 @@ struct RootTabs: View {
         RootSidebarFeature()
     }
 
-    @State private var launchStore: StoreOf<RootLaunchFeature> = Store(
-        initialState: RootLaunchFeature.State())
-    {
-        RootLaunchFeature()
-    }
+    @State private var launchStore: StoreOf<RootLaunchFeature>
 
-    @State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature> = Store(
-        initialState: RootVoiceWakeToastFeature.State())
-    {
-        RootVoiceWakeToastFeature()
-    }
+    @State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature>
 
     @State private var presentationStore: StoreOf<RootPresentationFeature> = Store(
         initialState: RootPresentationFeature.State())
@@ -65,6 +57,20 @@ struct RootTabs: View {
         initialState: RootHomeCanvasFeature.State())
     {
         RootHomeCanvasFeature()
+    }
+
+    init(
+        launchStore: StoreOf<RootLaunchFeature> = Store(initialState: RootLaunchFeature.State()) {
+            RootLaunchFeature()
+        },
+        voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature> = Store(
+            initialState: RootVoiceWakeToastFeature.State())
+        {
+            RootVoiceWakeToastFeature()
+        })
+    {
+        self._launchStore = State(wrappedValue: launchStore)
+        self._voiceWakeToastStore = State(wrappedValue: voiceWakeToastStore)
     }
 
     private static var initialTab: AppTab {
