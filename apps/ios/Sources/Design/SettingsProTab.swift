@@ -79,11 +79,7 @@ struct SettingsProTab: View {
 
     @State var talkPreferencesStore: StoreOf<SettingsTalkPreferencesFeature>
 
-    @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature> = Store(
-        initialState: SettingsGatewayActivityFeature.State())
-    {
-        SettingsGatewayActivityFeature()
-    }
+    @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature>
 
     @State var gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature> = Store(
         initialState: SettingsGatewayAutoConnectFeature.State())
