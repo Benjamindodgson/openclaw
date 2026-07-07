@@ -314,11 +314,11 @@ import Testing
         #expect(store.state.statusLine == OnboardingStatusFeature.defaultStatusLine)
 
         await store.send(.qrScannerOpeningStarted) {
-            $0.statusLine = "Opening QR scanner…"
+            $0.statusLineState = .init(value: "Opening QR scanner…")
         }
 
         await store.send(.scannerErrorReceived(.init(message: .init(value: "Camera unavailable")))) {
-            $0.statusLine = "Scanner error: Camera unavailable"
+            $0.statusLineState = .init(value: "Scanner error: Camera unavailable")
         }
 
         await store.send(.connectionStarted(.init(
@@ -328,18 +328,20 @@ import Testing
             clearsIssue: .init(value: true))))
         {
             $0.connectingGatewayIDState = .init(value: "manual")
-            $0.connectMessage = "Connecting to gateway…"
-            $0.statusLine = "Connecting to gateway:18789…"
+            $0.connectMessageState = .init(value: "Connecting to gateway…")
+            $0.statusLineState = .init(value: "Connecting to gateway:18789…")
         }
 
+        #expect(store.state.connectMessage == "Connecting to gateway…")
         #expect(store.state.connectingGatewayID == "manual")
+        #expect(store.state.statusLine == "Connecting to gateway:18789…")
 
         await store.send(.connectionStatusUpdated(.init(
             message: .init(value: "Connecting via QR code..."),
             statusLine: .init(value: "QR loaded. Connecting to gateway.local:18789..."))))
         {
-            $0.connectMessage = "Connecting via QR code..."
-            $0.statusLine = "QR loaded. Connecting to gateway.local:18789..."
+            $0.connectMessageState = .init(value: "Connecting via QR code...")
+            $0.statusLineState = .init(value: "QR loaded. Connecting to gateway.local:18789...")
         }
 
         await store.send(.connectionActivityStarted(.init(id: .init(value: "retry-auto")))) {
@@ -354,19 +356,19 @@ import Testing
 
         await store.send(.gatewayConnected(.init(markedCompleted: .init(value: true)))) {
             $0.completionMark = .init(value: true)
-            $0.statusLine = "Connected."
+            $0.statusLineState = .init(value: "Connected.")
         }
 
         await store.send(.freshQRScanStarted) {
-            $0.connectMessage = nil
+            $0.connectMessageState = .init(value: nil)
             $0.issue = .none
             $0.pairingRequestIdState = .init(value: nil)
             $0.authStepPresentation = .init(shouldShow: false)
-            $0.statusLine = "Opening QR scanner…"
+            $0.statusLineState = .init(value: "Opening QR scanner…")
         }
 
         await store.send(.noSavedPairingFound) {
-            $0.statusLine = OnboardingStatusFeature.noSavedPairingStatusLine
+            $0.statusLineState = .init(value: OnboardingStatusFeature.noSavedPairingStatusLine)
         }
     }
 
@@ -382,13 +384,14 @@ import Testing
             message: .init(value: "Pairing required"),
             statusText: .init(value: ""))))
         {
-            $0.connectMessage = "Pairing required"
+            $0.connectMessageState = .init(value: "Pairing required")
             $0.issue = .pairingRequired(requestId: "pair-1")
             $0.pairingRequestIdState = .init(value: "pair-1")
             $0.authStepPresentation = .init(shouldShow: true)
-            $0.statusLine = "Pairing required"
+            $0.statusLineState = .init(value: "Pairing required")
         }
 
+        #expect(store.state.connectMessage == "Pairing required")
         #expect(store.state.pairingRequestId == "pair-1")
 
         await store.send(.connectionIssueDetected(.init(
@@ -398,18 +401,18 @@ import Testing
             message: .init(value: nil),
             statusText: .init(value: "Connecting"))))
         {
-            $0.connectMessage = "Connecting"
-            $0.statusLine = "Connecting"
+            $0.connectMessageState = .init(value: "Connecting")
+            $0.statusLineState = .init(value: "Connecting")
         }
 
         #expect(store.state.issue == .pairingRequired(requestId: "pair-1"))
         #expect(store.state.shouldShowAuthStep)
 
         await store.send(.pairingResumeStarted) {
-            $0.connectMessage = "Retrying after approval…"
+            $0.connectMessageState = .init(value: "Retrying after approval…")
             $0.issue = .none
             $0.authStepPresentation = .init(shouldShow: false)
-            $0.statusLine = "Retrying after approval…"
+            $0.statusLineState = .init(value: "Retrying after approval…")
         }
 
         await store.send(.connectionIssueDetected(.init(
@@ -419,10 +422,10 @@ import Testing
             message: .init(value: nil),
             statusText: .init(value: "Unauthorized"))))
         {
-            $0.connectMessage = "Unauthorized"
+            $0.connectMessageState = .init(value: "Unauthorized")
             $0.issue = .unauthorized
             $0.authStepPresentation = .init(shouldShow: true)
-            $0.statusLine = "Unauthorized"
+            $0.statusLineState = .init(value: "Unauthorized")
         }
 
         await store.send(.connectionIssueDetected(.init(
@@ -432,8 +435,8 @@ import Testing
             message: .init(value: nil),
             statusText: .init(value: "Offline"))))
         {
-            $0.connectMessage = "Offline"
-            $0.statusLine = "Offline"
+            $0.connectMessageState = .init(value: "Offline")
+            $0.statusLineState = .init(value: "Offline")
         }
 
         #expect(store.state.issue == .unauthorized)
@@ -456,11 +459,11 @@ import Testing
             message: .init(value: "Pairing required"),
             statusText: .init(value: ""))))
         {
-            $0.connectMessage = "Pairing required"
+            $0.connectMessageState = .init(value: "Pairing required")
             $0.issue = .pairingRequired(requestId: "pair-1")
             $0.pairingRequestIdState = .init(value: "pair-1")
             $0.authStepPresentation = .init(shouldShow: true)
-            $0.statusLine = "Pairing required"
+            $0.statusLineState = .init(value: "Pairing required")
         }
 
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: firstAttempt)))) {
