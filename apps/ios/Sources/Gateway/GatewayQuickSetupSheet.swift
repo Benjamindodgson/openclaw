@@ -176,12 +176,16 @@ struct GatewayQuickSetupSheet: View {
     @AppStorage("onboarding.quickSetupDismissed") private var quickSetupDismissed: Bool = false
     @State private var store: StoreOf<GatewayQuickSetupFeature>
 
-    init(store: StoreOf<GatewayQuickSetupFeature> = Store(
-        initialState: GatewayQuickSetupFeature.State())
+    init(
+        store: StoreOf<GatewayQuickSetupFeature>? = nil,
+        storeFactory: () -> StoreOf<GatewayQuickSetupFeature> = {
+            Store(initialState: GatewayQuickSetupFeature.State()) {
+                GatewayQuickSetupFeature()
+            }
+        })
     {
-        GatewayQuickSetupFeature()
-    }) {
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
