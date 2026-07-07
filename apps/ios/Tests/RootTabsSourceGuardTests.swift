@@ -1226,15 +1226,22 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct TriggerWordChange: Equatable, Sendable"))
         #expect(source.contains("case triggerWordChanged(TriggerWordChange)"))
         #expect(featureSource.contains("var focusedTriggerIndex: VoiceWakeTriggerIndex?"))
+        #expect(featureSource.contains("var words: VoiceWakeWords"))
+        #expect(featureSource.contains("var triggerWords: [String]"))
+        #expect(featureSource.contains("self.words.values"))
+        #expect(featureSource.contains("let words = state.words"))
         #expect(featureSource.contains("var index: VoiceWakeTriggerIndex\n"))
         #expect(featureSource.contains("var word: VoiceWakeTriggerWord"))
-        #expect(featureSource.contains("state.triggerWords[change.index.value] = change.word.value"))
+        #expect(featureSource.contains("guard state.words.values.indices.contains(change.index.value)"))
+        #expect(featureSource.contains("state.words.values[change.index.value] = change.word.value"))
         #expect(source.contains(
             ".triggerWordChanged(.init(\n                    index: .init(value: index),\n                    word: .init(value: newValue)))"))
         #expect(!featureSource.contains("var focusedTriggerIndex: Int?"))
+        #expect(!featureSource.contains("var triggerWords: [String]\n"))
         #expect(!featureSource.contains("var index: Int\n"))
         #expect(!featureSource.contains("var value: String"))
-        #expect(!featureSource.contains("state.triggerWords[change.index.value] = change.value"))
+        #expect(!featureSource.contains("state.triggerWords[change.index.value]"))
+        #expect(!featureSource.contains("let words = VoiceWakeWords(values: state.triggerWords)"))
     }
 
     @Test func `voice wake focus change action is typed`() throws {
@@ -1257,7 +1264,8 @@ struct RootTabsSourceGuardTests {
 
         #expect(source.contains("struct WordRemoval: Equatable, Sendable"))
         #expect(source.contains("case removeWords(WordRemoval)"))
-        #expect(source.contains("state.triggerWords.remove(atOffsets: removal.offsets)"))
+        #expect(source.contains("state.words.values.remove(atOffsets: removal.offsets)"))
+        #expect(source.contains("state.words = preferences.defaultTriggerWords()"))
         #expect(source.contains("self.store.send(.removeWords(.init(offsets: offsets)))"))
     }
 
