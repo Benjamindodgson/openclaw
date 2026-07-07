@@ -464,6 +464,7 @@ struct ChatProPresentationFeature {
 }
 
 // swiftformat:disable redundantSendable
+struct ChatProGatewayUsability: Equatable, Sendable { var value: Bool }
 struct ChatProAgentDisplayName: Equatable, Sendable { var value: String }
 struct ChatProHeaderTitle: Equatable, Sendable { var value: String? }
 struct ChatProHeaderSubtitle: Equatable, Sendable { var value: String? }
@@ -473,7 +474,7 @@ struct ChatProAgentBadgeOverride: Equatable, Sendable { var value: String? }
 
 struct ChatProPresentationState: Equatable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
-    var isGatewayUsable = false
+    var gatewayUsabilityValue = ChatProGatewayUsability(value: false)
     var agentDisplayNameValue = ChatProAgentDisplayName(value: "OpenClaw")
     var headerTitleValue = ChatProHeaderTitle(value: nil)
     var headerSubtitleValue = ChatProHeaderSubtitle(value: nil)
@@ -490,7 +491,7 @@ struct ChatProPresentationState: Equatable {
         agentBadgeOverride: String? = nil)
     {
         self.gatewayDisplayState = gatewayDisplayState
-        self.isGatewayUsable = isGatewayUsable
+        self.gatewayUsabilityValue = .init(value: isGatewayUsable)
         self.agentDisplayNameValue = .init(value: agentDisplayName)
         self.headerTitleValue = .init(value: headerTitle)
         self.headerSubtitleValue = .init(value: headerSubtitle)
@@ -500,6 +501,10 @@ struct ChatProPresentationState: Equatable {
 
     var agentDisplayName: String {
         self.agentDisplayNameValue.value
+    }
+
+    var isGatewayUsable: Bool {
+        self.gatewayUsabilityValue.value
     }
 
     var headerTitle: String? {
