@@ -225,13 +225,19 @@ struct VoiceWakeWordsSettingsView: View {
     @State private var store: StoreOf<VoiceWakeWordsSettingsFeature>
     @FocusState private var focusedTriggerIndex: Int?
 
-    init(store: StoreOf<VoiceWakeWordsSettingsFeature> = Store(
-        initialState: VoiceWakeWordsSettingsFeature.State(
-            triggerWords: VoiceWakePreferences.loadTriggerWords()))
+    init(
+        store: StoreOf<VoiceWakeWordsSettingsFeature>? = nil,
+        storeFactory: () -> StoreOf<VoiceWakeWordsSettingsFeature> = {
+            Store(
+                initialState: VoiceWakeWordsSettingsFeature.State(
+                    triggerWords: VoiceWakePreferences.loadTriggerWords()))
+            {
+                VoiceWakeWordsSettingsFeature()
+            }
+        })
     {
-        VoiceWakeWordsSettingsFeature()
-    }) {
-        self._store = SwiftUI.State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
