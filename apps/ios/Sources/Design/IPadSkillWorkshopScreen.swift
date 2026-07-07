@@ -59,6 +59,10 @@ struct IPadSkillWorkshopFeature {
             !self.agentScopeOptions.isEmpty
         }
 
+        var agentScopeMenuOptions: [IPadSkillWorkshopAgentScopeOption] {
+            [IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent")] + self.agentScopeOptions
+        }
+
         var agentScopeLabel: String {
             let selected = Self.normalizedScopeID(self.selectedAgentScopeID.value)
             guard !selected.isEmpty else { return self.defaultAgentScopeLabel }
@@ -868,10 +872,7 @@ struct IPadSkillWorkshopScreen: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Menu {
-                Button("Default agent") {
-                    self.store.send(.agentScopeChanged(.init(agentID: .init(value: ""))))
-                }
-                ForEach(self.store.agentScopeOptions, id: \.id) { option in
+                ForEach(self.store.agentScopeMenuOptions, id: \.id) { option in
                     Button(option.title) {
                         self.store.send(.agentScopeChanged(.init(agentID: .init(value: option.id))))
                     }
