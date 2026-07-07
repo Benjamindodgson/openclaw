@@ -208,6 +208,13 @@ struct IPadSkillWorkshopFeature {
             return activeName.isEmpty ? "Default agent" : activeName
         }
 
+        func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String {
+            let connection = canRead ? "connected" : "offline"
+            let scene = sceneIsActive ? "active" : "inactive"
+            let agent = self.selectedAgentScopeID.value.isEmpty ? "default" : self.selectedAgentScopeID.value
+            return [connection, scene, agent].joined(separator: ":")
+        }
+
         var statusFilterLabel: String {
             IPadSkillWorkshopScreen.proposalStatusFilterLabel(self.statusFilter.value)
         }
@@ -669,7 +676,7 @@ struct IPadSkillWorkshopScreen: View {
             }
             self.proposalContent
         }
-        .task(id: self.refreshID) {
+        .task(id: self.refreshTaskID) {
             await self.loadProposals(force: false)
         }
         .task(id: self.agentScopeSnapshot) {
@@ -1132,12 +1139,10 @@ struct IPadSkillWorkshopScreen: View {
         .disabled(self.store.inspectingProposalID != nil)
     }
 
-    private var refreshID: String {
-        [
-            self.canRead ? "connected" : "offline",
-            self.scenePhase == .active ? "active" : "inactive",
-            self.store.selectedAgentScopeID.value.isEmpty ? "default" : self.store.selectedAgentScopeID.value,
-        ].joined(separator: ":")
+    private var refreshTaskID: String {
+        self.store.state.refreshTaskID(
+            canRead: self.canRead,
+            sceneIsActive: self.scenePhase == .active)
     }
 
     private var canRead: Bool {

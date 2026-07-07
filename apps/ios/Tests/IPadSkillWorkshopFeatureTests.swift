@@ -169,6 +169,16 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.agentScopeLabel == "missing")
     }
 
+    @Test func `refresh task identifier is reducer state`() {
+        var state = IPadSkillWorkshopFeature.State()
+
+        #expect(state.refreshTaskID(canRead: true, sceneIsActive: true) == "connected:active:default")
+        #expect(state.refreshTaskID(canRead: false, sceneIsActive: false) == "offline:inactive:default")
+
+        state.selectedAgentScopeID = .init(value: "agent-b")
+        #expect(state.refreshTaskID(canRead: true, sceneIsActive: false) == "connected:inactive:agent-b")
+    }
+
     @Test func `proposal selection opening controls sheet presentation`() async {
         let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
             IPadSkillWorkshopFeature(client: Self.client())
