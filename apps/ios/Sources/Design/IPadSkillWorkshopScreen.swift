@@ -239,6 +239,14 @@ struct IPadSkillWorkshopFeature {
             Self.proposalStatusFilterLabel(self.statusFilter.value)
         }
 
+        static func proposalStatusMatchesFilter(status: String, filter: String) -> Bool {
+            switch filter {
+            case "all": true
+            case "held": status == "quarantined" || status == "stale"
+            default: status == filter
+            }
+        }
+
         var filteredProposals: [IPadSkillProposal] {
             Self.filteredProposals(
                 proposals: self.proposals,
@@ -309,7 +317,7 @@ struct IPadSkillWorkshopFeature {
             let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             return proposals
                 .filter { proposal in
-                    IPadSkillWorkshopScreen.proposalStatusMatchesFilter(
+                    Self.proposalStatusMatchesFilter(
                         status: proposal.status,
                         filter: statusFilter)
                 }
@@ -1257,23 +1265,14 @@ struct IPadSkillWorkshopScreen: View {
         }
     }
 
-    nonisolated static func proposalStatusMatchesFilter(status: String, filter: String) -> Bool {
-        switch filter {
-        case "all":
-            true
-        case "held":
-            status == "quarantined" || status == "stale"
-        default:
-            status == filter
-        }
-    }
-
     nonisolated static func nextSelectedProposalID(
         current: String?,
         proposals: [(id: String, status: String)],
         filter: String) -> String?
     {
-        let filtered = proposals.filter { Self.proposalStatusMatchesFilter(status: $0.status, filter: filter) }
+        let filtered = proposals.filter {
+            IPadSkillWorkshopFeature.State.proposalStatusMatchesFilter(status: $0.status, filter: filter)
+        }
         return Self.nextSelectedProposalID(current: current, visibleProposalIDs: filtered.map(\.id))
     }
 

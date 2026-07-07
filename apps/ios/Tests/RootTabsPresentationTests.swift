@@ -1002,9 +1002,9 @@ struct RootTabsPresentationTests {
 
     @Test func `skill workshop held filter includes quarantined and stale`() {
         #expect(IPadSkillWorkshopFeature.State.proposalStatusFilters.contains("held"))
-        #expect(IPadSkillWorkshopScreen.proposalStatusMatchesFilter(status: "quarantined", filter: "held"))
-        #expect(IPadSkillWorkshopScreen.proposalStatusMatchesFilter(status: "stale", filter: "held"))
-        #expect(!IPadSkillWorkshopScreen.proposalStatusMatchesFilter(status: "pending", filter: "held"))
+        #expect(IPadSkillWorkshopFeature.State.proposalStatusMatchesFilter(status: "quarantined", filter: "held"))
+        #expect(IPadSkillWorkshopFeature.State.proposalStatusMatchesFilter(status: "stale", filter: "held"))
+        #expect(!IPadSkillWorkshopFeature.State.proposalStatusMatchesFilter(status: "pending", filter: "held"))
     }
 
     @Test func `skill workshop board lanes match status filter`() {
