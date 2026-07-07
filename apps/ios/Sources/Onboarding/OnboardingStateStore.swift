@@ -942,10 +942,22 @@ struct OnboardingConnectionFormFeature {
     struct State: Equatable, Sendable {
         var manualConnectionRequest: ManualConnectionRequest?
         var selectedMode: OnboardingConnectionMode?
-        var manualHost = ""
-        var manualPort = 18789
-        var manualPortText = "18789"
+        var manualHostState = OnboardingManualHost(value: "")
+        var manualPortState = OnboardingManualPort(value: 18789)
+        var manualPortTextState = OnboardingManualPortText(value: "18789")
         var manualTLSState = OnboardingManualTLS(value: true)
+
+        var manualHost: String {
+            self.manualHostState.value
+        }
+
+        var manualPort: Int {
+            self.manualPortState.value
+        }
+
+        var manualPortText: String {
+            self.manualPortTextState.value
+        }
 
         var normalizedManualHost: String {
             self.manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -960,7 +972,7 @@ struct OnboardingConnectionFormFeature {
         }
 
         mutating func syncManualPortText() {
-            self.manualPortText = self.manualPort > 0 ? String(self.manualPort) : ""
+            self.manualPortTextState = .init(value: self.manualPort > 0 ? String(self.manualPort) : "")
         }
 
         mutating func applyModeDefaults(_ mode: OnboardingConnectionMode) {
@@ -969,18 +981,18 @@ struct OnboardingConnectionFormFeature {
 
             switch mode {
             case .homeNetwork:
-                if hostIsDefaultLike { self.manualHost = "openclaw.local" }
+                if hostIsDefaultLike { self.manualHostState = .init(value: "openclaw.local") }
                 self.manualTLSState = .init(value: true)
             case .remoteDomain:
-                if host == "openclaw.local" || host == "localhost" { self.manualHost = "" }
+                if host == "openclaw.local" || host == "localhost" { self.manualHostState = .init(value: "") }
                 self.manualTLSState = .init(value: true)
             case .developerLocal:
-                if hostIsDefaultLike { self.manualHost = "localhost" }
+                if hostIsDefaultLike { self.manualHostState = .init(value: "localhost") }
                 self.manualTLSState = .init(value: false)
             }
 
             if self.manualPort <= 0 || self.manualPort > 65535 {
-                self.manualPort = 18789
+                self.manualPortState = .init(value: 18789)
             }
             self.syncManualPortText()
         }
@@ -1035,8 +1047,8 @@ struct OnboardingConnectionFormFeature {
                 return .none
 
             case let .gatewayLinkApplied(application):
-                state.manualHost = application.host.value
-                state.manualPort = application.port.value
+                state.manualHostState = application.host
+                state.manualPortState = application.port
                 state.syncManualPortText()
                 state.manualTLSState = application.tls
                 if state.selectedMode == nil {
@@ -1046,8 +1058,8 @@ struct OnboardingConnectionFormFeature {
 
             case let .initialized(initialization):
                 if state.normalizedManualHost.isEmpty {
-                    state.manualHost = initialization.host.value
-                    state.manualPort = initialization.port.value
+                    state.manualHostState = initialization.host
+                    state.manualPortState = initialization.port
                     state.manualTLSState = initialization.tls
                 }
                 state.syncManualPortText()
@@ -1055,7 +1067,7 @@ struct OnboardingConnectionFormFeature {
                     state.selectedMode = initialization.lastMode
                 }
                 if state.selectedMode == .developerLocal, state.manualHost == "openclaw.local" {
-                    state.manualHost = "localhost"
+                    state.manualHostState = .init(value: "localhost")
                     state.manualTLSState = .init(value: false)
                 }
                 return .none
@@ -1068,7 +1080,7 @@ struct OnboardingConnectionFormFeature {
                 }
                 state.manualConnectionRequest = ManualConnectionRequest(
                     host: .init(value: host),
-                    port: .init(value: state.manualPort),
+                    port: state.manualPortState,
                     useTLS: .init(value: state.manualTLS))
                 return .none
 
@@ -1077,17 +1089,17 @@ struct OnboardingConnectionFormFeature {
                 return .none
 
             case let .manualHostChanged(change):
-                state.manualHost = change.host.value
+                state.manualHostState = change.host
                 return .none
 
             case let .manualPortTextChanged(change):
                 let digits = change.text.value.filter(\.isNumber)
                 guard let parsed = Int(digits), parsed > 0 else {
-                    state.manualPort = 0
-                    state.manualPortText = ""
+                    state.manualPortState = .init(value: 0)
+                    state.manualPortTextState = .init(value: "")
                     return .none
                 }
-                state.manualPort = min(parsed, 65535)
+                state.manualPortState = .init(value: min(parsed, 65535))
                 state.syncManualPortText()
                 return .none
 
