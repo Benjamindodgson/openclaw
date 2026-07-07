@@ -110,6 +110,8 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.visibleProposalLaneStatuses == ["pending"])
         #expect(state.proposals(forLaneStatus: "pending").map(\.id) == ["pending-match"])
         #expect(state.proposals(forLaneStatus: "applied").map(\.id) == ["applied-match"])
+        #expect(state.proposal(withID: "pending-match")?.id == "pending-match")
+        #expect(state.proposal(withID: "missing") == nil)
 
         state.statusFilter = .init(value: "all")
         #expect(state.filteredProposals.map(\.id) == ["pending-match", "applied-match", "stale-match"])
