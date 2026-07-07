@@ -53,18 +53,26 @@ struct CommandSessionsFeature {
     private let clientOverride: CommandSessionsClient?
 
     init(client: CommandSessionsClient? = nil) {
-        clientOverride = client
+        self.clientOverride = client
     }
 
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var sessionEntries = CommandSessionEntries()
+        var currentSession = CommandSessionReferenceKey(value: "")
+        var defaultSession = CommandSessionReferenceKey(value: "")
         var loadingPhase = CommandSessionsLoadingPhase.idle
         var loadErrorText: CommandSessionsFailureMessage?
 
         var sessions: [OpenClawChatSessionEntry] {
-            sessionEntries.entries
+            self.sessionEntries.entries
+        }
+
+        var visibleSessions: [OpenClawChatSessionEntry] {
+            self.sessionEntries.entries
+                .filter { CommandCenterTab.isRecentChatSession($0.key, defaultSessionKey: self.defaultSession.value) }
+                .sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
         }
     }
 
@@ -75,10 +83,16 @@ struct CommandSessionsFeature {
 
         struct RefreshRequest: Equatable, Sendable {
             var sessionsAvailability: SessionsAvailability
+            var currentSession: SessionReference
+            var defaultSession: SessionReference
         }
 
         struct RefreshResponse: Equatable, Sendable {
             var result: Result<CommandSessionEntries, CommandSessionsError>
+        }
+
+        struct SessionReference: Equatable, Sendable {
+            var key: CommandSessionReferenceKey
         }
 
         case refreshRequested(RefreshRequest)
@@ -94,6 +108,9 @@ struct CommandSessionsFeature {
 
             switch action {
             case let .refreshRequested(request):
+                state.currentSession = request.currentSession.key
+                state.defaultSession = request.defaultSession.key
+
                 guard request.sessionsAvailability.isAvailable.value else {
                     state.loadingPhase = .idle
                     state.sessionEntries = .init()
@@ -146,7 +163,7 @@ struct CommandCenterRecentSessionsFeature {
     private let clientOverride: CommandSessionsClient?
 
     init(client: CommandSessionsClient? = nil) {
-        clientOverride = client
+        self.clientOverride = client
     }
 
     // swiftformat:disable redundantSendable
@@ -156,7 +173,7 @@ struct CommandCenterRecentSessionsFeature {
         var recentChatSessionEntries = CommandSessionEntries()
 
         var recentChatSessions: [OpenClawChatSessionEntry] {
-            recentChatSessionEntries.entries
+            self.recentChatSessionEntries.entries
         }
     }
 
@@ -215,8 +232,7 @@ struct CommandCenterRecentSessionsFeature {
                         let snapshot = Self.snapshot(
                             from: sessions,
                             currentSessionKey: request.currentSession.key.value,
-                            defaultSessionKey: request.defaultSession.key.value
-                        )
+                            defaultSessionKey: request.defaultSession.key.value)
                         await send(.refreshResponse(.init(result: .success(snapshot))))
                     } catch {
                         await send(.refreshResponse(.init(result: .failure(.failed))))
@@ -243,23 +259,21 @@ struct CommandCenterRecentSessionsFeature {
     private static func snapshot(
         from sessions: [OpenClawChatSessionEntry],
         currentSessionKey: String,
-        defaultSessionKey: String
-    ) -> Snapshot {
+        defaultSessionKey: String) -> Snapshot
+    {
         Snapshot(
             defaultChatSessionEntry: sessions.first { $0.key == defaultSessionKey },
-            recentChatSessionEntries: .init(entries: sessionChoices(
+            recentChatSessionEntries: .init(entries: self.sessionChoices(
                 sessions,
                 currentSessionKey: currentSessionKey,
-                defaultSessionKey: defaultSessionKey
-            ))
-        )
+                defaultSessionKey: defaultSessionKey)))
     }
 
     private static func sessionChoices(
         _ sessions: [OpenClawChatSessionEntry],
         currentSessionKey: String,
-        defaultSessionKey: String
-    ) -> [OpenClawChatSessionEntry] {
+        defaultSessionKey: String) -> [OpenClawChatSessionEntry]
+    {
         let sorted = sessions.sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
         var result: [OpenClawChatSessionEntry] = []
         var included = Set<String>()
