@@ -73,11 +73,7 @@ struct SettingsProTab: View {
         SettingsDeviceIdentityFeature()
     }
 
-    @State var debugOptionsStore: StoreOf<SettingsDebugOptionsFeature> = Store(
-        initialState: SettingsDebugOptionsFeature.State())
-    {
-        SettingsDebugOptionsFeature()
-    }
+    @State var debugOptionsStore: StoreOf<SettingsDebugOptionsFeature>
 
     @State var voiceControlStore: StoreOf<SettingsVoiceControlFeature>
 

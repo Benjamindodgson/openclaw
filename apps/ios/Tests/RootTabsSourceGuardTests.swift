@@ -5933,6 +5933,10 @@ struct RootTabsSourceGuardTests {
             settingsSource,
             from: ".onChange(of: self.storedDiscoveryDebugLogsEnabled)",
             to: ".onChange(of: self.storedCanvasDebugStatusEnabled)")
+        let debugOptionsStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var debugOptionsStore",
+            to: "@State var voiceControlStore")
 
         #expect(settingsSource.contains("struct SettingsDiscoveryDebugLoggingClient: Sendable"))
         #expect(settingsSource.contains("var settingsDiscoveryDebugLogging: SettingsDiscoveryDebugLoggingClient"))
@@ -5961,6 +5965,9 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("debugOptionsStore: self.makeSettingsDebugOptionsStore()"))
         #expect(storesSource.contains("func makeSettingsDebugOptionsStore()"))
         #expect(storesSource.contains("discoveryDebugLoggingClient: .live(gatewayController: self.gatewayController)"))
+        #expect(debugOptionsStoreDeclaration
+            .contains("@State var debugOptionsStore: StoreOf<SettingsDebugOptionsFeature>"))
+        #expect(!debugOptionsStoreDeclaration.contains("= Store("))
         #expect(actionsSource.contains(
             "discoveryDebugLogsEnabled: .init(isEnabled: self.storedDiscoveryDebugLogsEnabled)"))
         #expect(actionsSource.contains(
