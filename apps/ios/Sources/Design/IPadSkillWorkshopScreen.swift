@@ -215,6 +215,10 @@ struct IPadSkillWorkshopFeature {
             return [connection, scene, agent].joined(separator: ":")
         }
 
+        func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool {
+            canWrite && hasOperatorAdminScope
+        }
+
         var statusFilterLabel: String {
             IPadSkillWorkshopScreen.proposalStatusFilterLabel(self.statusFilter.value)
         }
@@ -450,7 +454,7 @@ struct IPadSkillWorkshopFeature {
                 }
 
             case let .proposalMutationRequested(request):
-                guard IPadSkillWorkshopScreen.shouldEnableProposalMutation(
+                guard state.shouldEnableProposalMutation(
                     canWrite: request.writeAccess.canWrite,
                     hasOperatorAdminScope: request.adminAccess.hasOperatorAdminScope),
                     state.busyAction == nil
@@ -1154,7 +1158,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var canApplyProposalMutations: Bool {
-        Self.shouldEnableProposalMutation(
+        self.store.state.shouldEnableProposalMutation(
             canWrite: self.canWrite,
             hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)
     }
@@ -1166,10 +1170,6 @@ struct IPadSkillWorkshopScreen: View {
                 IPadSkillWorkshopGatewayAgent(id: $0.id, name: $0.name)
             }),
             activeAgentName: .init(value: self.appModel.activeAgentName))
-    }
-
-    nonisolated static func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool {
-        canWrite && hasOperatorAdminScope
     }
 
     private var adminScopeNotice: some View {

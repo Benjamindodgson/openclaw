@@ -993,9 +993,11 @@ struct RootTabsPresentationTests {
     }
 
     @Test func `skill workshop mutations require admin scope`() {
-        #expect(IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: true))
-        #expect(!IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: false))
-        #expect(!IPadSkillWorkshopScreen.shouldEnableProposalMutation(canWrite: false, hasOperatorAdminScope: true))
+        let state = IPadSkillWorkshopFeature.State()
+
+        #expect(state.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: true))
+        #expect(!state.shouldEnableProposalMutation(canWrite: true, hasOperatorAdminScope: false))
+        #expect(!state.shouldEnableProposalMutation(canWrite: false, hasOperatorAdminScope: true))
     }
 
     @Test func `skill workshop held filter includes quarantined and stale`() {
