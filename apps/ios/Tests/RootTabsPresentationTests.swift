@@ -1009,15 +1009,15 @@ struct RootTabsPresentationTests {
 
     @Test func `skill workshop board lanes match status filter`() {
         #expect(
-            IPadSkillWorkshopScreen.proposalStatusBoardLanes(
+            IPadSkillWorkshopFeature.State.proposalStatusBoardLanes(
                 filter: "pending",
                 proposalStatuses: ["pending", "applied"]) == ["pending"])
         #expect(
-            IPadSkillWorkshopScreen.proposalStatusBoardLanes(
+            IPadSkillWorkshopFeature.State.proposalStatusBoardLanes(
                 filter: "held",
                 proposalStatuses: ["quarantined", "stale"]) == ["quarantined", "stale"])
         #expect(
-            IPadSkillWorkshopScreen.proposalStatusBoardLanes(
+            IPadSkillWorkshopFeature.State.proposalStatusBoardLanes(
                 filter: "all",
                 proposalStatuses: ["pending", "needs-review"]) == [
                 "pending",
