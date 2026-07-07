@@ -371,7 +371,7 @@ struct AgentOverviewLoadFeatureTests {
             activeAgent: .init(value: "mobile"))))
         {
             $0.loadingPhase = .inFlight
-            $0.nextRefreshRequestID = 1
+            $0.nextRefreshRequestID = .init(value: 1)
             $0.refreshRequest = AgentOverviewLoadFeature.RefreshRequest(
                 id: .init(value: 1),
                 activeAgentID: .init(value: "mobile"))
