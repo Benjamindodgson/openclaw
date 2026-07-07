@@ -164,6 +164,18 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var gatewayDisplayStatusText = \"Offline\""))
     }
 
+    @Test func `phone control hub active agent name is typed presentation state`() throws {
+        let source = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct RootTabsPhoneControlHubActiveAgentName: Equatable, Sendable"))
+        #expect(source.contains("var activeAgentNameState = RootTabsPhoneControlHubActiveAgentName(value: \"Default Agent\")"))
+        #expect(source.contains("activeAgentName: String = \"Default Agent\""))
+        #expect(source.contains("self.activeAgentNameState = .init(value: activeAgentName)"))
+        #expect(source.contains("var activeAgentName: String"))
+        #expect(source.contains("self.activeAgentNameState.value"))
+        #expect(!source.contains("var activeAgentName = \"Default Agent\""))
+    }
+
     @Test func `gateway problem copy feedback is typed reducer state`() throws {
         let source = try String(contentsOf: Self.gatewayProblemSourceURL(), encoding: .utf8)
 
