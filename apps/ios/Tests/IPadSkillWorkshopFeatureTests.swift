@@ -131,6 +131,29 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(!state.shouldShowProposalActions(for: Self.proposal(id: "rejected-1", status: "rejected")))
     }
 
+    @Test func `proposal action controls require mutation access and idle state`() {
+        var state = IPadSkillWorkshopFeature.State()
+        let writableAdmin = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: true)
+        let writableNonAdmin = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: false)
+        let reviewModeAdmin = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: true,
+            hasOperatorAdminScope: true)
+
+        #expect(state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
+        #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableNonAdmin))
+        #expect(!state.shouldEnableProposalActionControls(gatewayAccess: reviewModeAdmin))
+
+        state.busyAction = IPadSkillProposalAction(kind: .apply, proposalID: "pending-1")
+        #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
+    }
+
     @Test func `agent scope snapshot updates reducer presentation state`() async {
         let snapshot = IPadSkillWorkshopFeature.Action.AgentScopeSnapshot(
             gatewayDefaultAgentID: .init(value: " main "),
@@ -349,6 +372,23 @@ struct IPadSkillWorkshopFeatureTests {
             $0.busyAction = nil
             $0.errorText = .init(value: "skill boom")
         }
+    }
+
+    @Test func `proposal mutation request is ignored while busy`() async {
+        let operation = IPadSkillProposalAction(kind: .apply, proposalID: "pending-1")
+        var initialState = IPadSkillWorkshopFeature.State()
+        initialState.busyAction = operation
+        let store = TestStore(initialState: initialState) {
+            IPadSkillWorkshopFeature(client: Self.client())
+        }
+
+        await store.send(.proposalMutationRequested(.init(
+            kind: .reject,
+            proposalID: .init(value: "pending-2"),
+            sceneActivity: .init(isActive: true),
+            readAccess: .init(canRead: true),
+            writeAccess: .init(canWrite: true),
+            adminAccess: .init(hasOperatorAdminScope: true))))
     }
 
     private static func client(
