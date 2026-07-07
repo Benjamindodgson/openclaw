@@ -1041,21 +1041,21 @@ struct RootTabsPresentationTests {
         ]
 
         #expect(
-            IPadSkillWorkshopScreen.nextSelectedProposalID(
+            IPadSkillWorkshopFeature.State.nextSelectedProposalID(
                 current: "applied-1",
                 proposals: proposals,
                 filter: "pending") == "pending-1")
         #expect(
-            IPadSkillWorkshopScreen.nextSelectedProposalID(
+            IPadSkillWorkshopFeature.State.nextSelectedProposalID(
                 current: "held-1",
                 proposals: proposals,
                 filter: "held") == "held-1")
         #expect(
-            IPadSkillWorkshopScreen.nextSelectedProposalID(
+            IPadSkillWorkshopFeature.State.nextSelectedProposalID(
                 current: "pending-1",
                 visibleProposalIDs: ["held-1"]) == "held-1")
         #expect(
-            IPadSkillWorkshopScreen.nextSelectedProposalID(
+            IPadSkillWorkshopFeature.State.nextSelectedProposalID(
                 current: "pending-1",
                 visibleProposalIDs: []) == nil)
     }
