@@ -115,6 +115,10 @@ struct IPadSkillWorkshopProposalID: Equatable, Sendable {
     var value: String
 }
 
+struct IPadSkillWorkshopProposals: Equatable, Sendable {
+    var values: [IPadSkillProposal] = []
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -128,7 +132,7 @@ struct IPadSkillWorkshopFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var proposals: [IPadSkillProposal] = []
+        var proposalEntries = IPadSkillWorkshopProposals()
         var selectedProposalID: IPadSkillWorkshopProposalID?
         var selectedAgentScopeID = IPadSkillWorkshopSelectedAgentScopeID(value: "")
         var statusFilter = IPadSkillWorkshopStatusFilter(value: "pending")
@@ -139,6 +143,10 @@ struct IPadSkillWorkshopFeature {
         var errorText: IPadSkillWorkshopFailureMessage?
         var noticeText: IPadSkillWorkshopNoticeMessage?
         var presentedProposalRoute: IPadSkillProposalSheetRoute?
+
+        var proposals: [IPadSkillProposal] {
+            self.proposalEntries.values
+        }
 
         var selectedAgentParam: String? {
             let selected = IPadSkillWorkshopScreen.normalizedScopeID(self.selectedAgentScopeID.value)
@@ -180,9 +188,11 @@ struct IPadSkillWorkshopFeature {
         }
 
         mutating func merge(_ proposal: IPadSkillProposal) {
-            self.proposals.removeAll { $0.id == proposal.id }
-            self.proposals.append(proposal)
-            self.proposals.sort { $0.updatedAtMs > $1.updatedAtMs }
+            var proposalValues = self.proposalEntries.values
+            proposalValues.removeAll { $0.id == proposal.id }
+            proposalValues.append(proposal)
+            proposalValues.sort { $0.updatedAtMs > $1.updatedAtMs }
+            self.proposalEntries = .init(values: proposalValues)
         }
 
         private static func filteredProposals(
@@ -416,7 +426,7 @@ struct IPadSkillWorkshopFeature {
                     return .none
                 }
                 guard request.readAccess.canRead else {
-                    state.proposals = []
+                    state.proposalEntries = .init()
                     state.errorText = nil
                     state.loadingPhase = .idle
                     state.inspectingProposalID = nil
@@ -445,9 +455,10 @@ struct IPadSkillWorkshopFeature {
                 switch response.result {
                 case let .success(manifest):
                     let previousByID = Dictionary(uniqueKeysWithValues: state.proposals.map { ($0.id, $0) })
-                    state.proposals = manifest.proposals
+                    let proposalValues = manifest.proposals
                         .map { IPadSkillProposal(entry: $0, previous: previousByID[$0.id]) }
                         .sorted { $0.updatedAtMs > $1.updatedAtMs }
+                    state.proposalEntries = .init(values: proposalValues)
                     state.syncSelectedProposalIDForVisibleProposals()
                     guard let proposalID = state.selectedProposalID else { return .none }
                     return self.inspectEffect(
