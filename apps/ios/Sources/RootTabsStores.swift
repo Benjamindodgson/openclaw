@@ -137,6 +137,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsGatewayAutoConnectStore() -> StoreOf<SettingsGatewayAutoConnectFeature> {
+        Store(initialState: SettingsGatewayAutoConnectFeature.State()) {
+            SettingsGatewayAutoConnectFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewayConnectionStore() -> StoreOf<SettingsGatewayConnectionFeature> {
         Store(initialState: SettingsGatewayConnectionFeature.State()) {
             SettingsGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))

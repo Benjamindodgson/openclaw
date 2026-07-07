@@ -81,11 +81,7 @@ struct SettingsProTab: View {
 
     @State var gatewayActivityStore: StoreOf<SettingsGatewayActivityFeature>
 
-    @State var gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature> = Store(
-        initialState: SettingsGatewayAutoConnectFeature.State())
-    {
-        SettingsGatewayAutoConnectFeature()
-    }
+    @State var gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature>
 
     @State var onboardingStateStore: StoreOf<SettingsOnboardingStateFeature>
 
@@ -184,6 +180,11 @@ struct SettingsProTab: View {
         {
             SettingsGatewayActivityFeature()
         },
+        gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature> = Store(
+            initialState: SettingsGatewayAutoConnectFeature.State())
+        {
+            SettingsGatewayAutoConnectFeature()
+        },
         gatewayConnectionStore: StoreOf<SettingsGatewayConnectionFeature> = Store(
             initialState: SettingsGatewayConnectionFeature.State())
         {
@@ -232,6 +233,7 @@ struct SettingsProTab: View {
         self._manualGatewayPortStore = State(wrappedValue: manualGatewayPortStore)
         self._manualGatewayEndpointStore = State(wrappedValue: manualGatewayEndpointStore)
         self._gatewayActivityStore = State(wrappedValue: gatewayActivityStore)
+        self._gatewayAutoConnectStore = State(wrappedValue: gatewayAutoConnectStore)
         self._gatewayConnectionStore = State(wrappedValue: gatewayConnectionStore)
         self._gatewayCredentialsStore = State(wrappedValue: gatewayCredentialsStore)
         self._gatewaySetupLinkStore = State(wrappedValue: gatewaySetupLinkStore)

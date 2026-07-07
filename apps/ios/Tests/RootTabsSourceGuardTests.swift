@@ -1275,6 +1275,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(storesSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
+        #expect(storesSource.contains("func makeSettingsGatewayAutoConnectStore()"))
         #expect(storesSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(storesSource.contains("withDependencies"))
         #expect(storesSource.contains("openNotifications: { approvalId in"))
@@ -1285,12 +1286,14 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("approvalsStore: self.makeSettingsApprovalsStore()"))
         #expect(rootSource.contains("shareInstructionStore: self.makeSettingsShareInstructionStore()"))
         #expect(rootSource.contains("manualGatewayPortStore: self.makeSettingsManualGatewayPortStore()"))
+        #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
         #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
         #expect(!rootSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(!rootSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
+        #expect(!rootSource.contains("func makeSettingsGatewayAutoConnectStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(!rootSource.contains("withDependencies"))
     }
@@ -4213,10 +4216,16 @@ struct RootTabsSourceGuardTests {
     @Test func `settings gateway auto connect toggle is reducer typed`() throws {
         let settingsSource = try Self.settingsProTabCombinedSource()
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let autoConnectFeature = try Self.extract(
             settingsSource,
             from: "struct SettingsGatewayAutoConnectFeature",
             to: "struct SettingsOnboardingStateFeature")
+        let gatewayAutoConnectStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var gatewayAutoConnectStore",
+            to: "@State var onboardingStateStore")
 
         #expect(autoConnectFeature.contains("struct GatewayAutoConnectEnabled: Equatable, Sendable"))
         #expect(autoConnectFeature.contains("struct EnabledChange: Equatable, Sendable"))
@@ -4234,6 +4243,11 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("enabled: .init(value: self.storedGatewayAutoConnect)"))
         #expect(settingsSource.contains(
             "self.gatewayAutoConnectStore.send(.enabledSynced(.init(enabled: .init(value: newValue))))"))
+        #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
+        #expect(storesSource.contains("func makeSettingsGatewayAutoConnectStore()"))
+        #expect(gatewayAutoConnectStoreDeclaration
+            .contains("@State var gatewayAutoConnectStore: StoreOf<SettingsGatewayAutoConnectFeature>"))
+        #expect(!gatewayAutoConnectStoreDeclaration.contains("= Store("))
         #expect(!autoConnectFeature.contains("var isEnabled = false"))
         #expect(!autoConnectFeature.contains("state.isEnabled = change.enabled.value"))
         #expect(!autoConnectFeature.contains("state.isEnabled = sync.enabled.value"))
