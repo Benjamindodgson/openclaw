@@ -25,11 +25,7 @@ struct OnboardingWizardView: View {
 
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature>
 
-    @State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature> = Store(
-        initialState: OnboardingSetupCodeFeature.State())
-    {
-        OnboardingSetupCodeFeature()
-    }
+    @State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature>
 
     @State private var photoImportStore: StoreOf<OnboardingQRPhotoImportFeature> = Store(
         initialState: OnboardingQRPhotoImportFeature.State())
@@ -71,6 +67,11 @@ struct OnboardingWizardView: View {
             initialState: OnboardingConnectionFormFeature.State())
         {
             OnboardingConnectionFormFeature()
+        },
+        setupCodeStore: StoreOf<OnboardingSetupCodeFeature> = Store(
+            initialState: OnboardingSetupCodeFeature.State())
+        {
+            OnboardingSetupCodeFeature()
         })
     {
         self.allowSkip = allowSkip
@@ -86,6 +87,7 @@ struct OnboardingWizardView: View {
         self._presentationStore = State(wrappedValue: presentationStore)
         self._discoveryRestartStore = State(wrappedValue: discoveryRestartStore)
         self._connectionFormStore = State(wrappedValue: connectionFormStore)
+        self._setupCodeStore = State(wrappedValue: setupCodeStore)
     }
 
     @MainActor
