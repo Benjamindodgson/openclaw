@@ -1271,6 +1271,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("extension RootTabs"))
         #expect(storesSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(storesSource.contains("func makePushEnrollmentConsentStore()"))
+        #expect(storesSource.contains("func makeSettingsApprovalsStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(storesSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(storesSource.contains("withDependencies"))
@@ -1279,8 +1280,10 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("store: self.makeTalkProTabStore()"))
         #expect(rootSource.contains("pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore()"))
         #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
+        #expect(rootSource.contains("approvalsStore: self.makeSettingsApprovalsStore()"))
         #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
+        #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(!rootSource.contains("withDependencies"))
@@ -3002,6 +3005,7 @@ struct RootTabsSourceGuardTests {
         #expect(approvalsFeature.contains(
             "state.pendingApprovalAllowsAllowAlways = sync.pendingApprovalAllowsAllowAlways"))
         #expect(settingsSource.contains("case approvalsSynced(ApprovalsSync)"))
+        #expect(settingsSource.contains("@State var approvalsStore: StoreOf<SettingsApprovalsFeature>"))
         #expect(actionsSource.contains("self.approvalsStore.send(.approvalsSynced(.init("))
         #expect(actionsSource.contains(
             "isAppleReviewDemoModeEnabled: .init(value: self.appModel.isAppleReviewDemoModeEnabled)"))

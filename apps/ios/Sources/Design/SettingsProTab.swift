@@ -39,11 +39,7 @@ struct SettingsProTab: View {
 
     @State var execApprovalPromptStore: StoreOf<ExecApprovalPromptFeature>
 
-    @State var approvalsStore: StoreOf<SettingsApprovalsFeature> = Store(
-        initialState: SettingsApprovalsFeature.State())
-    {
-        SettingsApprovalsFeature()
-    }
+    @State var approvalsStore: StoreOf<SettingsApprovalsFeature>
 
     @State var agentSelectionStore: StoreOf<SettingsAgentSelectionFeature>
 
@@ -183,6 +179,11 @@ struct SettingsProTab: View {
         {
             ExecApprovalPromptFeature()
         },
+        approvalsStore: StoreOf<SettingsApprovalsFeature> = Store(
+            initialState: SettingsApprovalsFeature.State())
+        {
+            SettingsApprovalsFeature()
+        },
         debugOptionsStore: StoreOf<SettingsDebugOptionsFeature> = Store(
             initialState: SettingsDebugOptionsFeature.State())
         {
@@ -252,6 +253,7 @@ struct SettingsProTab: View {
         self.navigateToRoute = navigateToRoute
         self._pushEnrollmentConsentStore = State(wrappedValue: pushEnrollmentConsentStore)
         self._execApprovalPromptStore = State(wrappedValue: execApprovalPromptStore)
+        self._approvalsStore = State(wrappedValue: approvalsStore)
         self._debugOptionsStore = State(wrappedValue: debugOptionsStore)
         self._voiceControlStore = State(wrappedValue: voiceControlStore)
         self._talkPreferencesStore = State(wrappedValue: talkPreferencesStore)

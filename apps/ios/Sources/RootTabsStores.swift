@@ -56,6 +56,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsApprovalsStore() -> StoreOf<SettingsApprovalsFeature> {
+        Store(initialState: SettingsApprovalsFeature.State()) {
+            SettingsApprovalsFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsManualGatewayEndpointStore() -> StoreOf<SettingsManualGatewayEndpointFeature> {
         Store(initialState: SettingsManualGatewayEndpointFeature.State()) {
             SettingsManualGatewayEndpointFeature(
