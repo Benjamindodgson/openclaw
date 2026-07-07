@@ -463,14 +463,40 @@ struct ChatProPresentationFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct ChatProAgentDisplayName: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
 struct ChatProPresentationState: Equatable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
     var isGatewayUsable = false
-    var agentDisplayName = "OpenClaw"
+    var agentDisplayNameValue = ChatProAgentDisplayName(value: "OpenClaw")
     var headerTitle: String?
     var headerSubtitle: String?
     var showsAgentBadge = true
     var agentBadgeOverride: String?
+
+    init(
+        gatewayDisplayState: GatewayDisplayState = .disconnected,
+        isGatewayUsable: Bool = false,
+        agentDisplayName: String = "OpenClaw",
+        headerTitle: String? = nil,
+        headerSubtitle: String? = nil,
+        showsAgentBadge: Bool = true,
+        agentBadgeOverride: String? = nil)
+    {
+        self.gatewayDisplayState = gatewayDisplayState
+        self.isGatewayUsable = isGatewayUsable
+        self.agentDisplayNameValue = .init(value: agentDisplayName)
+        self.headerTitle = headerTitle
+        self.headerSubtitle = headerSubtitle
+        self.showsAgentBadge = showsAgentBadge
+        self.agentBadgeOverride = agentBadgeOverride
+    }
+
+    var agentDisplayName: String {
+        self.agentDisplayNameValue.value
+    }
 
     var gatewayPillTitle: String {
         switch self.gatewayDisplayState {
