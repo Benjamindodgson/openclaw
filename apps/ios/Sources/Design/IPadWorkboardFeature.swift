@@ -157,6 +157,10 @@ struct IPadWorkboardCards: Equatable, Sendable {
     var values: [IPadWorkboardCard] = []
 }
 
+struct IPadWorkboardStatuses: Equatable, Sendable {
+    var values: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -208,7 +212,7 @@ struct IPadWorkboardFeature {
         }
 
         var cardEntries = IPadWorkboardCards()
-        var statuses: [IPadWorkboardStatus] = IPadWorkboardDefaults.statuses.map { .init(value: $0) }
+        var statusEntries = IPadWorkboardStatuses()
         var knownBoardIDs: [IPadWorkboardKnownBoardID] = []
         var refreshPhase = RefreshPhase.idle
         var dispatchPhase = DispatchPhase.idle
@@ -225,6 +229,10 @@ struct IPadWorkboardFeature {
 
         var cards: [IPadWorkboardCard] {
             self.cardEntries.values
+        }
+
+        var statuses: [IPadWorkboardStatus] {
+            self.statusEntries.values
         }
 
         var boardScopeLabel: String {
@@ -302,7 +310,7 @@ struct IPadWorkboardFeature {
 
         mutating func applyCardsResponse(_ response: IPadWorkboardCardsResponse) {
             self.cardEntries = .init(values: response.cards.sorted { $0.position < $1.position })
-            self.statuses = Self.normalizedStatuses(response.statuses)
+            self.statusEntries = .init(values: Self.normalizedStatuses(response.statuses))
             self.rememberBoardIDs(from: response.cards)
             self.validateSelectedStatus()
         }
