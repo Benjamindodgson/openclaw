@@ -123,7 +123,7 @@ struct OnboardingStateFeature {
         var firstRunIntroSeenState: OnboardingFirstRunIntroSeen
         var lastMode: OnboardingConnectionMode?
         var savedGatewayConnection: OnboardingHasSavedGatewayConnection
-        var gatewayServerName: String?
+        var gatewayServerNameState: OnboardingGatewayServerName
         var launchPresentation: OnboardingLaunchPresentation
         var firstRunIntroPresentation: OnboardingFirstRunIntroPresentation
 
@@ -138,10 +138,14 @@ struct OnboardingStateFeature {
             self.firstRunIntroSeenState = .init(value: firstRunIntroSeen)
             self.lastMode = lastMode
             self.savedGatewayConnection = .init(value: hasSavedGatewayConnection)
-            self.gatewayServerName = gatewayServerName
+            self.gatewayServerNameState = .init(value: gatewayServerName)
             self.launchPresentation = .init(shouldPresent: false)
             self.firstRunIntroPresentation = .init(shouldPresent: true)
             self.refreshPresentation()
+        }
+
+        var gatewayServerName: String? {
+            self.gatewayServerNameState.value
         }
 
         var shouldPresentOnLaunch: Bool {
@@ -186,7 +190,7 @@ struct OnboardingStateFeature {
                 return .none
 
             case let .gatewaySnapshotChanged(snapshot):
-                state.gatewayServerName = snapshot.gatewayServerName.value
+                state.gatewayServerNameState = snapshot.gatewayServerName
                 state.savedGatewayConnection = snapshot.hasSavedGatewayConnection
                 state.refreshPresentation()
                 return .none

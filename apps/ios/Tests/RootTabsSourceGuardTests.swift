@@ -3267,11 +3267,16 @@ struct RootTabsSourceGuardTests {
         #expect(gatewaySnapshotChange.contains("var gatewayServerName: OnboardingGatewayServerName"))
         #expect(gatewaySnapshotChange.contains("var hasSavedGatewayConnection: OnboardingHasSavedGatewayConnection"))
         #expect(onboardingStateSource.contains("case gatewaySnapshotChanged(GatewaySnapshotChange)"))
-        #expect(onboardingStateSource.contains("state.gatewayServerName = snapshot.gatewayServerName.value"))
+        #expect(onboardingStateSource.contains("var gatewayServerNameState: OnboardingGatewayServerName"))
+        #expect(onboardingStateSource.contains("self.gatewayServerNameState = .init(value: gatewayServerName)"))
+        #expect(onboardingStateSource.contains("var gatewayServerName: String? {\n            self.gatewayServerNameState.value"))
+        #expect(onboardingStateSource.contains("state.gatewayServerNameState = snapshot.gatewayServerName"))
         #expect(onboardingStateSource.contains("state.savedGatewayConnection = snapshot.hasSavedGatewayConnection"))
         #expect(onboardingStateSource.contains("var savedGatewayConnection: OnboardingHasSavedGatewayConnection"))
         #expect(!gatewaySnapshotChange.contains("var gatewayServerName: String?"))
         #expect(!gatewaySnapshotChange.contains("var hasSavedGatewayConnection: Bool"))
+        #expect(!onboardingStateBlock.contains("var gatewayServerName: String?"))
+        #expect(!onboardingStateSource.contains("state.gatewayServerName = snapshot.gatewayServerName.value"))
         #expect(!onboardingStateBlock.contains("var hasSavedGatewayConnection: Bool"))
     }
 
