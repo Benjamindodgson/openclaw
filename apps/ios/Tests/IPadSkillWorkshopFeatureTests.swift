@@ -188,6 +188,29 @@ struct IPadSkillWorkshopFeatureTests {
             .refreshTaskID(gatewayAccess: connectedAccess, sceneIsActive: false) == "connected:inactive:agent-b")
     }
 
+    @Test func `empty proposal presentation follows gateway read access`() {
+        let state = IPadSkillWorkshopFeature.State()
+        let connectedAccess = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: false)
+        let offlineAccess = IPadSkillWorkshopFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: false,
+            isAppleReviewDemoModeEnabled: false,
+            hasOperatorAdminScope: false)
+
+        #expect(state.emptyProposalPresentation(gatewayAccess: connectedAccess) == .init(
+            icon: "hammer",
+            title: "No proposals",
+            detail: "New proposals will appear here when agents draft skills.",
+            value: "empty"))
+        #expect(state.emptyProposalPresentation(gatewayAccess: offlineAccess) == .init(
+            icon: "wifi.slash",
+            title: "No proposals loaded",
+            detail: "Connect from Settings to load Skill Workshop proposals.",
+            value: nil))
+    }
+
     @Test func `proposal selection opening controls sheet presentation`() async {
         let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
             IPadSkillWorkshopFeature(client: Self.client())

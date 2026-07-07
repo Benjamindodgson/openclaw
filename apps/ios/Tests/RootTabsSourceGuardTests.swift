@@ -2269,6 +2269,7 @@ struct RootTabsSourceGuardTests {
         #expect(typeSource.contains("struct IPadSkillWorkshopGatewayAgent: Equatable, Sendable"))
         #expect(typeSource.contains("struct IPadSkillWorkshopGatewayAgents: Equatable, Sendable"))
         #expect(typeSource.contains("struct IPadSkillWorkshopGatewayAccess: Equatable, Sendable"))
+        #expect(typeSource.contains("struct IPadSkillWorkshopEmptyProposalPresentation: Equatable, Sendable"))
         #expect(typeSource.contains("struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable"))
         #expect(source.contains("var gatewayDefaultAgentID = IPadSkillWorkshopGatewayDefaultAgentID(value: nil)"))
         #expect(source.contains("var gatewayAgentEntries = IPadSkillWorkshopGatewayAgents()"))
@@ -2289,8 +2290,16 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.store.state.refreshTaskID("))
         #expect(source.contains(
             "func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
+        #expect(source.contains(
+            "func emptyProposalPresentation(\n            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopEmptyProposalPresentation"))
         #expect(source.contains("guard state.shouldEnableProposalMutation("))
         #expect(source.contains("self.store.state.shouldEnableProposalMutation("))
+        #expect(source.contains("private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation"))
+        #expect(source.contains("self.store.state.emptyProposalPresentation("))
+        #expect(source.contains("icon: self.emptyProposalPresentation.icon"))
+        #expect(source.contains("title: self.emptyProposalPresentation.title"))
+        #expect(source.contains("detail: self.emptyProposalPresentation.detail"))
+        #expect(source.contains("value: self.emptyProposalPresentation.value"))
         #expect(!source.contains("var selectedAgentScopeID = \"\""))
         #expect(!source.contains("struct AgentScopeChange: Equatable, Sendable {\n            var agentID: String"))
         #expect(!source.contains("private var agentScopeOptions: [IPadSkillWorkshopAgentScopeOption]"))
@@ -2302,6 +2311,8 @@ struct RootTabsSourceGuardTests {
             "func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String"))
         #expect(!source.contains(
             "func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool"))
+        #expect(!source.contains("icon: self.gatewayAccess.canRead ? \"hammer\" : \"wifi.slash\""))
+        #expect(!source.contains("title: self.gatewayAccess.canRead ? \"No proposals\" : \"No proposals loaded\""))
         #expect(!source.contains("static func shouldEnableProposalMutation"))
         #expect(!source.contains("IPadSkillWorkshopScreen.normalizedScopeID("))
         #expect(!source.contains("@State private var statusFilter"))
