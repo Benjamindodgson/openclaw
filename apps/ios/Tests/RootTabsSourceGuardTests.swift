@@ -4989,6 +4989,10 @@ struct RootTabsSourceGuardTests {
             actionsSource,
             from: "func resetOnboarding() async",
             to: "func retryGatewayConnectionFromProblem()")
+        let onboardingStateStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var onboardingStateStore",
+            to: "@State var gatewayConnectionStore")
 
         #expect(supportSource.contains("struct SettingsOnboardingRequestID: Equatable, Sendable { var value: Int }"))
         #expect(settingsSource.contains("struct OnboardingRequestIDChange: Equatable, Sendable"))
@@ -5045,6 +5049,9 @@ struct RootTabsSourceGuardTests {
         #expect(supportSource.contains("GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId.value)"))
         #expect(rootSource.contains("self.makeSettingsOnboardingStateStore()"))
         #expect(storesSource.contains("SettingsOnboardingStateFeature(resetClient: .live(appModel: self.appModel))"))
+        #expect(onboardingStateStoreDeclaration
+            .contains("@State var onboardingStateStore: StoreOf<SettingsOnboardingStateFeature>"))
+        #expect(!onboardingStateStoreDeclaration.contains("= Store("))
         #expect(resetFunction.contains(".send(.onboardingResetRequested(.init("))
         #expect(resetFunction.contains("instanceId: .init(value: self.instanceId)"))
         #expect(actionsSource.contains(".finish()"))
