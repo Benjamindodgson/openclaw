@@ -316,6 +316,10 @@ struct IPadWorkboardFeature {
                 query: self.query.value)
         }
 
+        var filteredCardCount: Int {
+            self.filteredCards.count
+        }
+
         func cards(forKanbanStatus status: String) -> [IPadWorkboardCard] {
             Self.cardsForKanbanStatus(
                 cards: self.cards,

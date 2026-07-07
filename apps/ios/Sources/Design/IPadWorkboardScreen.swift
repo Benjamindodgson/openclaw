@@ -173,7 +173,7 @@ struct IPadWorkboardScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text("\(self.store.filteredCards.count) cards")
+                    Text("\(self.store.filteredCardCount) cards")
                         .font(.headline)
                     Spacer(minLength: 8)
                     self.compactRefreshButton

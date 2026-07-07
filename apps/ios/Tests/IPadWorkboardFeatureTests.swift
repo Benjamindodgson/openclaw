@@ -68,9 +68,11 @@ struct IPadWorkboardFeatureTests {
         state.query = .init(value: "gateway")
 
         #expect(state.cards(forKanbanStatus: "todo").map(\.id) == ["todo-match"])
+        #expect(state.filteredCardCount == 1)
 
         state.selectedStatus = .init(value: "todo")
         #expect(state.cards(forKanbanStatus: "todo").map(\.id) == ["archived-match", "todo-match"])
+        #expect(state.filteredCardCount == 2)
     }
 
     @Test func `workboard metric counts are derived by reducer state`() {
