@@ -1272,6 +1272,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(storesSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(storesSource.contains("func makeSettingsApprovalsStore()"))
+        #expect(storesSource.contains("func makeSettingsAppearanceStore()"))
         #expect(storesSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(storesSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
@@ -1287,6 +1288,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("pushEnrollmentConsentStore: self.makePushEnrollmentConsentStore()"))
         #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
         #expect(rootSource.contains("approvalsStore: self.makeSettingsApprovalsStore()"))
+        #expect(rootSource.contains("appearanceStore: self.makeSettingsAppearanceStore()"))
         #expect(rootSource.contains("shareInstructionStore: self.makeSettingsShareInstructionStore()"))
         #expect(rootSource.contains("manualGatewayPortStore: self.makeSettingsManualGatewayPortStore()"))
         #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
@@ -1296,6 +1298,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
+        #expect(!rootSource.contains("func makeSettingsAppearanceStore()"))
         #expect(!rootSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(!rootSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
@@ -5156,6 +5159,12 @@ struct RootTabsSourceGuardTests {
         let settingsSource = try Self.settingsProTabCombinedSource()
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let appearanceStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var appearanceStore",
+            to: "@State var deviceCapabilityStore")
 
         #expect(settingsSource.contains("struct SettingsAppearanceFeature"))
         #expect(settingsSource
@@ -5176,6 +5185,10 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSource.contains(
             "self.appearanceStore.send(.appearancePreferenceSynced(.init(rawValue: .init(value: newValue))))"))
         #expect(actionsSource.contains("self.storedAppearancePreferenceRaw = preference.rawValue"))
+        #expect(rootSource.contains("appearanceStore: self.makeSettingsAppearanceStore()"))
+        #expect(storesSource.contains("func makeSettingsAppearanceStore()"))
+        #expect(appearanceStoreDeclaration.contains("@State var appearanceStore: StoreOf<SettingsAppearanceFeature>"))
+        #expect(!appearanceStoreDeclaration.contains("= Store("))
         #expect(!settingsSource.contains("var appearancePreferenceRaw = AppAppearancePreference.system.rawValue"))
         #expect(!settingsSource.contains("state.appearancePreferenceRaw = change.preference.rawValue"))
         #expect(!settingsSource.contains("state.appearancePreferenceRaw = sync.rawValue.value"))
