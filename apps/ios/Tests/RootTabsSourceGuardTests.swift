@@ -1295,6 +1295,9 @@ struct RootTabsSourceGuardTests {
         #expect(cameraFlashSource.contains("state.opacityState = .init(value: 0)"))
         #expect(cameraFlashSource.contains("struct RootCameraFlashOverlaySleepClient"))
         #expect(cameraFlashSource.contains("var rootCameraFlashOverlaySleep: RootCameraFlashOverlaySleepClient"))
+        #expect(cameraFlashSource.contains("store: StoreOf<RootCameraFlashOverlayFeature>? = nil"))
+        #expect(cameraFlashSource.contains("storeFactory: () -> StoreOf<RootCameraFlashOverlayFeature>"))
+        #expect(cameraFlashSource.contains("let resolvedStore = store ?? storeFactory()"))
         #expect(rootSource.contains("@State private var launchStore: StoreOf<RootLaunchFeature>"))
         #expect(rootSource.contains("@State private var voiceWakeToastStore: StoreOf<RootVoiceWakeToastFeature>"))
         #expect(rootSource.contains("RootCameraFlashOverlay(nonce: self.appModel.cameraFlashNonce)"))
@@ -1314,6 +1317,7 @@ struct RootTabsSourceGuardTests {
         #expect(!cameraFlashSource.contains("var opacity: Double = 0"))
         #expect(!cameraFlashSource.contains("state.opacity = 0.85"))
         #expect(!cameraFlashSource.contains("state.opacity = 0"))
+        #expect(!cameraFlashSource.contains("store: StoreOf<RootCameraFlashOverlayFeature> = Store("))
     }
 
     @Test func `root tca store factories live outside root tabs`() throws {
