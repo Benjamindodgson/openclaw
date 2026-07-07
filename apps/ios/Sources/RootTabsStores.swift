@@ -151,6 +151,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsGatewaySetupStatusStore() -> StoreOf<SettingsGatewaySetupStatusFeature> {
+        Store(initialState: SettingsGatewaySetupStatusFeature.State()) {
+            SettingsGatewaySetupStatusFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewayCredentialsStore() -> StoreOf<SettingsGatewayCredentialsFeature> {
         Store(initialState: SettingsGatewayCredentialsFeature.State()) {
             SettingsGatewayCredentialsFeature(
