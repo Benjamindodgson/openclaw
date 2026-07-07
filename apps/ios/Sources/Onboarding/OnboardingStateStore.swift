@@ -271,17 +271,25 @@ struct OnboardingStatusFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var connectMessage: String?
-        var connectingGatewayID: String?
+        var connectingGatewayIDState: OnboardingConnectionID?
         var completionMark = OnboardingGatewayMarkedCompleted(value: false)
         var issue: GatewayConnectionIssue = .none
         var lastPairingAutoResumeAttemptAt: Date?
-        var pairingRequestId: String?
+        var pairingRequestIdState = OnboardingConnectionIssueRequestID(value: nil)
         var automaticPairingResume = OnboardingAutomaticPairingResume(shouldResume: false)
         var authStepPresentation = OnboardingAuthStepPresentation(shouldShow: false)
         var statusLine: String
 
         init(statusLine: String = OnboardingStatusFeature.defaultStatusLine) {
             self.statusLine = statusLine
+        }
+
+        var connectingGatewayID: String? {
+            self.connectingGatewayIDState?.value
+        }
+
+        var pairingRequestId: String? {
+            self.pairingRequestIdState.value
         }
 
         var didMarkCompleted: Bool {
@@ -364,13 +372,13 @@ struct OnboardingStatusFeature {
                 return .none
 
             case .appleReviewDemoModeEnabled:
-                state.connectingGatewayID = nil
+                state.connectingGatewayIDState = nil
                 state.connectMessage = "Apple Review demo mode enabled."
                 state.statusLine = "Apple Review demo mode enabled."
                 return .none
 
             case .connectionFinished:
-                state.connectingGatewayID = nil
+                state.connectingGatewayIDState = nil
                 return .none
 
             case let .connectionIssueDetected(detection):
@@ -379,7 +387,7 @@ struct OnboardingStatusFeature {
                     detected: detection.issue,
                     pairingRequestId: state.pairingRequestId)
                 if let requestId = detection.requestId.value, !requestId.isEmpty {
-                    state.pairingRequestId = requestId
+                    state.pairingRequestIdState = .init(value: requestId)
                 }
                 state.authStepPresentation = .init(shouldShow:
                     state.issue.needsAuthToken
@@ -399,7 +407,7 @@ struct OnboardingStatusFeature {
                 return .none
 
             case let .connectionStarted(start):
-                state.connectingGatewayID = start.id.value
+                state.connectingGatewayIDState = start.id
                 if start.clearsIssue.value {
                     state.issue = .none
                     state.authStepPresentation = .init(shouldShow: false)
@@ -409,7 +417,7 @@ struct OnboardingStatusFeature {
                 return .none
 
             case let .connectionActivityStarted(start):
-                state.connectingGatewayID = start.id.value
+                state.connectingGatewayIDState = start.id
                 return .none
 
             case let .connectionStatusUpdated(update):
@@ -418,11 +426,11 @@ struct OnboardingStatusFeature {
                 return .none
 
             case .freshQRScanStarted:
-                state.connectingGatewayID = nil
+                state.connectingGatewayIDState = nil
                 state.connectMessage = nil
                 state.issue = .none
                 state.lastPairingAutoResumeAttemptAt = nil
-                state.pairingRequestId = nil
+                state.pairingRequestIdState = .init(value: nil)
                 state.automaticPairingResume = .init(shouldResume: false)
                 state.authStepPresentation = .init(shouldShow: false)
                 state.statusLine = "Opening QR scanner…"
@@ -436,11 +444,11 @@ struct OnboardingStatusFeature {
                 return .none
 
             case .gatewayProblemResetScanStarted:
-                state.connectingGatewayID = nil
+                state.connectingGatewayIDState = nil
                 state.connectMessage = nil
                 state.issue = .none
                 state.lastPairingAutoResumeAttemptAt = nil
-                state.pairingRequestId = nil
+                state.pairingRequestIdState = .init(value: nil)
                 state.automaticPairingResume = .init(shouldResume: false)
                 state.authStepPresentation = .init(shouldShow: false)
                 state.statusLine = "Scan a fresh setup QR code from this gateway."
@@ -451,7 +459,7 @@ struct OnboardingStatusFeature {
                 return .none
 
             case .navigationBackStarted:
-                state.connectingGatewayID = nil
+                state.connectingGatewayIDState = nil
                 state.connectMessage = nil
                 return .none
 

@@ -327,10 +327,12 @@ import Testing
             statusLine: .init(value: "Connecting to gateway:18789…"),
             clearsIssue: .init(value: true))))
         {
-            $0.connectingGatewayID = "manual"
+            $0.connectingGatewayIDState = .init(value: "manual")
             $0.connectMessage = "Connecting to gateway…"
             $0.statusLine = "Connecting to gateway:18789…"
         }
+
+        #expect(store.state.connectingGatewayID == "manual")
 
         await store.send(.connectionStatusUpdated(.init(
             message: .init(value: "Connecting via QR code..."),
@@ -341,12 +343,14 @@ import Testing
         }
 
         await store.send(.connectionActivityStarted(.init(id: .init(value: "retry-auto")))) {
-            $0.connectingGatewayID = "retry-auto"
+            $0.connectingGatewayIDState = .init(value: "retry-auto")
         }
 
         await store.send(.connectionFinished) {
-            $0.connectingGatewayID = nil
+            $0.connectingGatewayIDState = nil
         }
+
+        #expect(store.state.connectingGatewayID == nil)
 
         await store.send(.gatewayConnected(.init(markedCompleted: .init(value: true)))) {
             $0.completionMark = .init(value: true)
@@ -356,7 +360,7 @@ import Testing
         await store.send(.freshQRScanStarted) {
             $0.connectMessage = nil
             $0.issue = .none
-            $0.pairingRequestId = nil
+            $0.pairingRequestIdState = .init(value: nil)
             $0.authStepPresentation = .init(shouldShow: false)
             $0.statusLine = "Opening QR scanner…"
         }
@@ -380,10 +384,12 @@ import Testing
         {
             $0.connectMessage = "Pairing required"
             $0.issue = .pairingRequired(requestId: "pair-1")
-            $0.pairingRequestId = "pair-1"
+            $0.pairingRequestIdState = .init(value: "pair-1")
             $0.authStepPresentation = .init(shouldShow: true)
             $0.statusLine = "Pairing required"
         }
+
+        #expect(store.state.pairingRequestId == "pair-1")
 
         await store.send(.connectionIssueDetected(.init(
             issue: .none,
@@ -452,7 +458,7 @@ import Testing
         {
             $0.connectMessage = "Pairing required"
             $0.issue = .pairingRequired(requestId: "pair-1")
-            $0.pairingRequestId = "pair-1"
+            $0.pairingRequestIdState = .init(value: "pair-1")
             $0.authStepPresentation = .init(shouldShow: true)
             $0.statusLine = "Pairing required"
         }
@@ -474,7 +480,7 @@ import Testing
         }
 
         await store.send(.connectionActivityStarted(.init(id: .init(value: "retry-auto")))) {
-            $0.connectingGatewayID = "retry-auto"
+            $0.connectingGatewayIDState = .init(value: "retry-auto")
         }
 
         let blockedAttempt = laterAttempt.addingTimeInterval(7)
