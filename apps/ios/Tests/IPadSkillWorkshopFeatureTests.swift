@@ -147,11 +147,27 @@ struct IPadSkillWorkshopFeatureTests {
             hasOperatorAdminScope: true)
 
         #expect(state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
+        #expect(state.proposalActionControlsPresentation(gatewayAccess: writableAdmin) == .init(
+            canApplyMutations: true,
+            canRunActions: true,
+            showsAdminScopeNotice: false))
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableNonAdmin))
+        #expect(state.proposalActionControlsPresentation(gatewayAccess: writableNonAdmin) == .init(
+            canApplyMutations: false,
+            canRunActions: false,
+            showsAdminScopeNotice: true))
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: reviewModeAdmin))
+        #expect(state.proposalActionControlsPresentation(gatewayAccess: reviewModeAdmin) == .init(
+            canApplyMutations: false,
+            canRunActions: false,
+            showsAdminScopeNotice: true))
 
         state.busyAction = IPadSkillProposalAction(kind: .apply, proposalID: "pending-1")
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
+        #expect(state.proposalActionControlsPresentation(gatewayAccess: writableAdmin) == .init(
+            canApplyMutations: true,
+            canRunActions: false,
+            showsAdminScopeNotice: false))
     }
 
     @Test func `proposal inspection presentation follows selected and inspecting state`() {

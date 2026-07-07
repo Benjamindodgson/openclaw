@@ -80,6 +80,12 @@ struct IPadSkillWorkshopRefreshControlPresentation: Equatable, Sendable {
     let showsProgress: Bool
 }
 
+struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable {
+    let canApplyMutations: Bool
+    let canRunActions: Bool
+    let showsAdminScopeNotice: Bool
+}
+
 struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
