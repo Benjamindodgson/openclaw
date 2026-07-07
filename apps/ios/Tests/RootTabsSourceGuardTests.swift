@@ -5871,6 +5871,10 @@ struct RootTabsSourceGuardTests {
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try Self.settingsProTabCombinedSource()
         let sectionsSource = try String(contentsOf: Self.settingsProTabSectionsSourceURL(), encoding: .utf8)
+        let locationStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var locationStore",
+            to: "@State var notificationStore")
         let requestFunction = try Self.extract(
             actionsSource,
             from: "func handleLocationModeRequest",
@@ -5924,6 +5928,8 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("locationStore: self.makeSettingsLocationStore()"))
         #expect(storesSource.contains("func makeSettingsLocationStore()"))
         #expect(storesSource.contains("gatewayRefreshClient: .live(gatewayController: self.gatewayController)"))
+        #expect(locationStoreDeclaration.contains("@State var locationStore: StoreOf<SettingsLocationFeature>"))
+        #expect(!locationStoreDeclaration.contains("= Store("))
         #expect(actionsSource.contains("self.locationStore.send(.locationModeApplyResultHandled)"))
         #expect(actionsSource.contains("if case let .denied(denied) = result"))
         #expect(actionsSource.contains("self.storedLocationModeRaw = denied.previousValue.rawValue"))
