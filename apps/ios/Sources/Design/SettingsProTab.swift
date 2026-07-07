@@ -99,11 +99,7 @@ struct SettingsProTab: View {
 
     @State var gatewaySetupLinkStore: StoreOf<SettingsGatewaySetupLinkFeature>
 
-    @State var gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature> = Store(
-        initialState: SettingsGatewayCredentialsFeature.State())
-    {
-        SettingsGatewayCredentialsFeature()
-    }
+    @State var gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature>
 
     @State var locationStore: StoreOf<SettingsLocationFeature> = Store(
         initialState: SettingsLocationFeature.State())

@@ -4303,6 +4303,10 @@ struct RootTabsSourceGuardTests {
             actionsSource,
             from: "func applyGatewayLink(_ link: GatewayConnectDeepLink) async",
             to: "func openGatewayQRScanner()")
+        let gatewayCredentialsStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var gatewayCredentialsStore",
+            to: "@State var locationStore")
 
         #expect(supportSource.contains("struct SettingsGatewaySetupAuthPersistenceRequest: Equatable"))
         #expect(settingsSource.contains("var setupAuthPersistenceRequest: SettingsGatewaySetupAuthPersistenceRequest?"))
@@ -4338,6 +4342,9 @@ struct RootTabsSourceGuardTests {
         #expect(supportSource.contains("GatewaySettingsStore.saveGatewayPassword("))
         #expect(rootSource.contains("self.makeSettingsGatewayCredentialsStore()"))
         #expect(storesSource.contains("setupAuthPersistenceClient: .live(appModel: self.appModel)"))
+        #expect(gatewayCredentialsStoreDeclaration
+            .contains("@State var gatewayCredentialsStore: StoreOf<SettingsGatewayCredentialsFeature>"))
+        #expect(!gatewayCredentialsStoreDeclaration.contains("= Store("))
         #expect(actionsSource.contains("guard await self.applySetupCode() else { return }"))
         #expect(actionsSource.contains("await self.applyGatewayLink(link)"))
         #expect(actionsSource.contains("await self.applyGatewayLink(scannedLink)"))
