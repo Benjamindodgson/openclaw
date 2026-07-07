@@ -703,7 +703,7 @@ import Testing
         {
             $0.selectedMode = .developerLocal
             $0.manualHost = "localhost"
-            $0.manualTLS = false
+            $0.manualTLSState = .init(value: false)
         }
 
         await store.send(.manualPortTextChanged(.init(text: .init(value: "65abc536")))) {
@@ -725,7 +725,7 @@ import Testing
             $0.manualHost = ""
             $0.manualPort = 18789
             $0.manualPortText = "18789"
-            $0.manualTLS = true
+            $0.manualTLSState = .init(value: true)
         }
 
         await store.send(.manualHostChanged(.init(host: .init(value: "gateway.example.com")))) {
@@ -733,8 +733,10 @@ import Testing
         }
 
         await store.send(.manualTLSChanged(.init(useTLS: .init(value: false)))) {
-            $0.manualTLS = false
+            $0.manualTLSState = .init(value: false)
         }
+
+        #expect(!store.state.manualTLS)
 
         #expect(store.state.canConnectManual)
 
@@ -746,7 +748,7 @@ import Testing
             $0.manualHost = "studio.local"
             $0.manualPort = 19000
             $0.manualPortText = "19000"
-            $0.manualTLS = false
+            $0.manualTLSState = .init(value: false)
         }
 
         await store.send(.manualConnectionRequested) {

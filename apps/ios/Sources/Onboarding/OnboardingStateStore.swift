@@ -945,10 +945,14 @@ struct OnboardingConnectionFormFeature {
         var manualHost = ""
         var manualPort = 18789
         var manualPortText = "18789"
-        var manualTLS = true
+        var manualTLSState = OnboardingManualTLS(value: true)
 
         var normalizedManualHost: String {
             self.manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        var manualTLS: Bool {
+            self.manualTLSState.value
         }
 
         var canConnectManual: Bool {
@@ -966,13 +970,13 @@ struct OnboardingConnectionFormFeature {
             switch mode {
             case .homeNetwork:
                 if hostIsDefaultLike { self.manualHost = "openclaw.local" }
-                self.manualTLS = true
+                self.manualTLSState = .init(value: true)
             case .remoteDomain:
                 if host == "openclaw.local" || host == "localhost" { self.manualHost = "" }
-                self.manualTLS = true
+                self.manualTLSState = .init(value: true)
             case .developerLocal:
                 if hostIsDefaultLike { self.manualHost = "localhost" }
-                self.manualTLS = false
+                self.manualTLSState = .init(value: false)
             }
 
             if self.manualPort <= 0 || self.manualPort > 65535 {
@@ -1034,7 +1038,7 @@ struct OnboardingConnectionFormFeature {
                 state.manualHost = application.host.value
                 state.manualPort = application.port.value
                 state.syncManualPortText()
-                state.manualTLS = application.tls.value
+                state.manualTLSState = application.tls
                 if state.selectedMode == nil {
                     state.selectedMode = application.tls.value ? .remoteDomain : .homeNetwork
                 }
@@ -1044,7 +1048,7 @@ struct OnboardingConnectionFormFeature {
                 if state.normalizedManualHost.isEmpty {
                     state.manualHost = initialization.host.value
                     state.manualPort = initialization.port.value
-                    state.manualTLS = initialization.tls.value
+                    state.manualTLSState = initialization.tls
                 }
                 state.syncManualPortText()
                 if state.selectedMode == nil {
@@ -1052,7 +1056,7 @@ struct OnboardingConnectionFormFeature {
                 }
                 if state.selectedMode == .developerLocal, state.manualHost == "openclaw.local" {
                     state.manualHost = "localhost"
-                    state.manualTLS = false
+                    state.manualTLSState = .init(value: false)
                 }
                 return .none
 
@@ -1088,7 +1092,7 @@ struct OnboardingConnectionFormFeature {
                 return .none
 
             case let .manualTLSChanged(change):
-                state.manualTLS = change.useTLS.value
+                state.manualTLSState = change.useTLS
                 return .none
 
             case let .modeSelected(selection):
