@@ -3319,9 +3319,11 @@ struct RootTabsSourceGuardTests {
         #expect(gatewayConnectionCompletion.contains("var markedCompleted: OnboardingGatewayMarkedCompleted"))
         #expect(onboardingStateSource.contains("case gatewayConnected(GatewayConnectionCompletion)"))
         #expect(onboardingStateSource.contains("if completion.markedCompleted.value"))
+        #expect(onboardingStateSource.contains("state.completionMark = completion.markedCompleted"))
         #expect(onboardingSource.contains("self.statusStore.send(.gatewayConnected(.init("))
         #expect(onboardingSource.contains("markedCompleted: .init(value: shouldMarkCompleted && selectedMode != nil)"))
         #expect(!gatewayConnectionCompletion.contains("var markedCompleted: Bool"))
+        #expect(!onboardingStateSource.contains("state.didMarkCompleted = true"))
     }
 
     @Test func `onboarding automatic pairing resume action is typed`() throws {
@@ -3333,14 +3335,39 @@ struct RootTabsSourceGuardTests {
             to: "struct ConnectionStart")
 
         #expect(onboardingStateSource.contains("struct OnboardingPairingResumeRequestTime: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingAutomaticPairingResume: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct AutomaticPairingResumeRequest: Equatable, Sendable"))
         #expect(automaticPairingResumeRequest.contains("var now: OnboardingPairingResumeRequestTime"))
         #expect(onboardingStateSource.contains("case automaticPairingResumeRequested(AutomaticPairingResumeRequest)"))
         #expect(onboardingStateSource.contains("request.now.value.timeIntervalSince(last)"))
         #expect(onboardingStateSource.contains("state.lastPairingAutoResumeAttemptAt = request.now.value"))
+        #expect(onboardingStateSource.contains("state.automaticPairingResume = .init(shouldResume: true)"))
         #expect(onboardingSource.contains(
             "self.statusStore.send(.automaticPairingResumeRequested(.init(now: .init(value: Date()))))"))
         #expect(!automaticPairingResumeRequest.contains("var now: Date"))
+        #expect(!onboardingStateSource.contains("state.shouldResumePairingAutomatically = true"))
+    }
+
+    @Test func `onboarding status reducer stores flow flags as typed state`() throws {
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let statusFeatureSource = try Self.extract(
+            onboardingStateSource,
+            from: "@Reducer\nstruct OnboardingStatusFeature",
+            to: "    enum Action: Equatable, Sendable")
+        let statusStateBlock = try Self.extract(
+            statusFeatureSource,
+            from: "@ObservableState\n    struct State: Equatable, Sendable",
+            to: "        init(statusLine:")
+
+        #expect(onboardingStateSource.contains("struct OnboardingAuthStepPresentation: Equatable, Sendable"))
+        #expect(statusStateBlock.contains("var completionMark = OnboardingGatewayMarkedCompleted(value: false)"))
+        #expect(statusStateBlock.contains("var automaticPairingResume = OnboardingAutomaticPairingResume(shouldResume: false)"))
+        #expect(statusStateBlock.contains("var authStepPresentation = OnboardingAuthStepPresentation(shouldShow: false)"))
+        #expect(onboardingStateSource.contains("state.authStepPresentation = .init(shouldShow:"))
+        #expect(!statusStateBlock.contains("var didMarkCompleted = false"))
+        #expect(!statusStateBlock.contains("var shouldResumePairingAutomatically = false"))
+        #expect(!statusStateBlock.contains("var shouldShowAuthStep = false"))
+        #expect(!onboardingStateSource.contains("state.shouldShowAuthStep = false"))
     }
 
     @Test func `onboarding step changes are typed`() throws {

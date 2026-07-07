@@ -345,7 +345,7 @@ import Testing
         }
 
         await store.send(.gatewayConnected(.init(markedCompleted: .init(value: true)))) {
-            $0.didMarkCompleted = true
+            $0.completionMark = .init(value: true)
             $0.statusLine = "Connected."
         }
 
@@ -353,7 +353,7 @@ import Testing
             $0.connectMessage = nil
             $0.issue = .none
             $0.pairingRequestId = nil
-            $0.shouldShowAuthStep = false
+            $0.authStepPresentation = .init(shouldShow: false)
             $0.statusLine = "Opening QR scanner…"
         }
 
@@ -377,7 +377,7 @@ import Testing
             $0.connectMessage = "Pairing required"
             $0.issue = .pairingRequired(requestId: "pair-1")
             $0.pairingRequestId = "pair-1"
-            $0.shouldShowAuthStep = true
+            $0.authStepPresentation = .init(shouldShow: true)
             $0.statusLine = "Pairing required"
         }
 
@@ -398,7 +398,7 @@ import Testing
         await store.send(.pairingResumeStarted) {
             $0.connectMessage = "Retrying after approval…"
             $0.issue = .none
-            $0.shouldShowAuthStep = false
+            $0.authStepPresentation = .init(shouldShow: false)
             $0.statusLine = "Retrying after approval…"
         }
 
@@ -411,7 +411,7 @@ import Testing
         {
             $0.connectMessage = "Unauthorized"
             $0.issue = .unauthorized
-            $0.shouldShowAuthStep = true
+            $0.authStepPresentation = .init(shouldShow: true)
             $0.statusLine = "Unauthorized"
         }
 
@@ -449,24 +449,24 @@ import Testing
             $0.connectMessage = "Pairing required"
             $0.issue = .pairingRequired(requestId: "pair-1")
             $0.pairingRequestId = "pair-1"
-            $0.shouldShowAuthStep = true
+            $0.authStepPresentation = .init(shouldShow: true)
             $0.statusLine = "Pairing required"
         }
 
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: firstAttempt)))) {
             $0.lastPairingAutoResumeAttemptAt = firstAttempt
-            $0.shouldResumePairingAutomatically = true
+            $0.automaticPairingResume = .init(shouldResume: true)
         }
 
         let throttledAttempt = firstAttempt.addingTimeInterval(3)
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: throttledAttempt)))) {
-            $0.shouldResumePairingAutomatically = false
+            $0.automaticPairingResume = .init(shouldResume: false)
         }
 
         let laterAttempt = firstAttempt.addingTimeInterval(7)
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: laterAttempt)))) {
             $0.lastPairingAutoResumeAttemptAt = laterAttempt
-            $0.shouldResumePairingAutomatically = true
+            $0.automaticPairingResume = .init(shouldResume: true)
         }
 
         await store.send(.connectionActivityStarted(.init(id: .init(value: "retry-auto")))) {
@@ -475,7 +475,7 @@ import Testing
 
         let blockedAttempt = laterAttempt.addingTimeInterval(7)
         await store.send(.automaticPairingResumeRequested(.init(now: .init(value: blockedAttempt)))) {
-            $0.shouldResumePairingAutomatically = false
+            $0.automaticPairingResume = .init(shouldResume: false)
         }
     }
 
