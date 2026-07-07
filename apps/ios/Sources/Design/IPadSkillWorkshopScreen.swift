@@ -111,6 +111,17 @@ struct IPadSkillWorkshopFeature {
             !self.query.value.isEmpty
         }
 
+        var feedbackMessages: [IPadSkillWorkshopFeedbackPresentation] {
+            var messages: [IPadSkillWorkshopFeedbackPresentation] = []
+            if let noticeText {
+                messages.append(.init(tone: .notice, text: noticeText.value))
+            }
+            if let errorText {
+                messages.append(.init(tone: .error, text: errorText.value))
+            }
+            return messages
+        }
+
         func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool {
             gatewayAccess.canWrite && gatewayAccess.hasOperatorAdminScope
         }
@@ -774,16 +785,7 @@ struct IPadSkillWorkshopScreen: View {
                         ProgressView().controlSize(.small)
                     }
                 }
-                if let noticeText = self.store.noticeText {
-                    Text(noticeText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.accent)
-                }
-                if let errorText = self.store.errorText {
-                    Text(errorText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.warn)
-                }
+                self.feedbackMessageRows
             }
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
@@ -830,19 +832,18 @@ struct IPadSkillWorkshopScreen: View {
                     .tint(self.neutralControlTint)
                     .disabled(self.store.isRefreshInFlight)
                 }
-                if let noticeText = self.store.noticeText {
-                    Text(noticeText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.accent)
-                }
-                if let errorText = self.store.errorText {
-                    Text(errorText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.warn)
-                }
+                self.feedbackMessageRows
             }
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
+    }
+
+    private var feedbackMessageRows: some View {
+        ForEach(self.store.feedbackMessages) { message in
+            Text(message.text)
+                .font(.caption2)
+                .foregroundStyle(message.color)
+        }
     }
 
     private var proposalSearchField: some View {
@@ -1454,6 +1455,17 @@ struct IPadSkillProposalRow: View {
         .background(
             self.isSelected ? OpenClawBrand.danger.opacity(0.08) : Color.clear,
             in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
+extension IPadSkillWorkshopFeedbackPresentation {
+    fileprivate var color: Color {
+        switch self.tone {
+        case .notice:
+            OpenClawBrand.accent
+        case .error:
+            OpenClawBrand.warn
+        }
     }
 }
 
