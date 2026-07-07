@@ -414,6 +414,8 @@ struct RootTabsPhoneControlHubAgents: Equatable {
 // swiftformat:disable redundantSendable
 struct RootTabsPhoneControlHubGatewayServerName: Equatable, Sendable { var value: String? }
 struct RootTabsPhoneControlHubGatewayRemoteAddress: Equatable, Sendable { var value: String? }
+struct RootTabsPhoneControlHubSelectedAgentID: Equatable, Sendable { var value: String? }
+struct RootTabsPhoneControlHubGatewayDefaultAgentID: Equatable, Sendable { var value: String? }
 // swiftformat:enable redundantSendable
 
 struct RootTabsPhoneControlHubPresentationState: Equatable {
@@ -421,8 +423,8 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
     var gatewayServerNameState = RootTabsPhoneControlHubGatewayServerName(value: nil)
     var gatewayRemoteAddressState = RootTabsPhoneControlHubGatewayRemoteAddress(value: nil)
     var gatewayDisplayStatusText = "Offline"
-    var selectedAgentId: String?
-    var gatewayDefaultAgentId: String?
+    var selectedAgentIDState = RootTabsPhoneControlHubSelectedAgentID(value: nil)
+    var gatewayDefaultAgentIDState = RootTabsPhoneControlHubGatewayDefaultAgentID(value: nil)
     var gatewayAgentEntries = RootTabsPhoneControlHubAgents()
     var activeAgentName = "Default Agent"
 
@@ -440,8 +442,8 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
         self.gatewayServerNameState = .init(value: gatewayServerName)
         self.gatewayRemoteAddressState = .init(value: gatewayRemoteAddress)
         self.gatewayDisplayStatusText = gatewayDisplayStatusText
-        self.selectedAgentId = selectedAgentId
-        self.gatewayDefaultAgentId = gatewayDefaultAgentId
+        self.selectedAgentIDState = .init(value: selectedAgentId)
+        self.gatewayDefaultAgentIDState = .init(value: gatewayDefaultAgentId)
         self.gatewayAgentEntries = .init(values: gatewayAgents)
         self.activeAgentName = activeAgentName
     }
@@ -456,6 +458,14 @@ struct RootTabsPhoneControlHubPresentationState: Equatable {
 
     var gatewayRemoteAddress: String? {
         self.gatewayRemoteAddressState.value
+    }
+
+    var selectedAgentId: String? {
+        self.selectedAgentIDState.value
+    }
+
+    var gatewayDefaultAgentId: String? {
+        self.gatewayDefaultAgentIDState.value
     }
 
     var activeAgentTitle: String {
