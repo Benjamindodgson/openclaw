@@ -809,8 +809,12 @@ struct OnboardingSetupCodeFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
-        var setupCode = ""
+        var setupCodeState = OnboardingSetupCode(value: "")
         var status: String?
+
+        var setupCode: String {
+            self.setupCodeState.value
+        }
 
         var trimmedSetupCode: String {
             self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -853,7 +857,7 @@ struct OnboardingSetupCodeFeature {
             switch action {
             case .appleReviewDemoCodeAccepted:
                 state.applyResult = nil
-                state.setupCode = ""
+                state.setupCodeState = .init(value: "")
                 state.status = "Apple Review demo mode enabled."
                 return .none
 
@@ -867,7 +871,7 @@ struct OnboardingSetupCodeFeature {
                 }
 
                 if AppleReviewDemoMode.isSetupCode(raw) {
-                    state.setupCode = ""
+                    state.setupCodeState = .init(value: "")
                     state.status = "Apple Review demo mode enabled."
                     state.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: raw)))
                     return .none
@@ -877,7 +881,7 @@ struct OnboardingSetupCodeFeature {
                     state.status = "Setup code not recognized or uses an insecure ws:// gateway URL."
                     return .none
                 }
-                state.setupCode = ""
+                state.setupCodeState = .init(value: "")
                 state.status = "Setup code applied. Connecting..."
                 state.applyResult = .gatewayLink(link)
                 return .none
@@ -918,12 +922,12 @@ struct OnboardingSetupCodeFeature {
 
             case .setupCodeAccepted:
                 state.applyResult = nil
-                state.setupCode = ""
+                state.setupCodeState = .init(value: "")
                 state.status = "Setup code applied. Connecting..."
                 return .none
 
             case let .setupCodeChanged(change):
-                state.setupCode = change.code.value
+                state.setupCodeState = change.code
                 return .none
 
             case .statusCleared:
