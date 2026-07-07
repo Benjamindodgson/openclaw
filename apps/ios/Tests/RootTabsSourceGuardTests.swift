@@ -96,9 +96,13 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.initialDestinationApplication.didApply"))
         #expect(source.contains("guard !state.initialDestinationApplication.didApply else { return .none }"))
         #expect(source.contains("state.initialDestinationApplication = .init(didApply: true)"))
+        #expect(source.contains("store: StoreOf<RootTabsPhoneControlHubFeature>? = nil"))
+        #expect(source.contains("storeFactory: () -> StoreOf<RootTabsPhoneControlHubFeature>"))
+        #expect(source.contains("let resolvedStore = store ?? storeFactory()"))
         #expect(!source.contains("var didApplyInitialDestination = false"))
         #expect(!source.contains("guard !state.didApplyInitialDestination else { return .none }"))
         #expect(!source.contains("state.didApplyInitialDestination = true"))
+        #expect(!source.contains("store: StoreOf<RootTabsPhoneControlHubFeature> = Store("))
     }
 
     @Test func `phone control hub gateway agents are typed presentation state`() throws {
