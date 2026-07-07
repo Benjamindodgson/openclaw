@@ -3253,6 +3253,10 @@ struct RootTabsSourceGuardTests {
             onboardingSource,
             from: "@State private var statusStore",
             to: "@State private var presentationStore")
+        let onboardingPresentationStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var presentationStore",
+            to: "@State private var discoveryRestartStore")
 
         #expect(appSource.contains("deferDiscoveryUntilLocalNetworkRequest: true"))
         #expect(controllerSource.contains("func requestLocalNetworkAccess(reason: String)"))
@@ -3284,6 +3288,9 @@ struct RootTabsSourceGuardTests {
         #expect(!credentialsStoreDeclaration.contains("= Store("))
         #expect(statusStoreDeclaration.contains("@State private var statusStore: StoreOf<OnboardingStatusFeature>"))
         #expect(!statusStoreDeclaration.contains("= Store("))
+        #expect(onboardingPresentationStoreDeclaration
+            .contains("@State private var presentationStore: StoreOf<OnboardingPresentationFeature>"))
+        #expect(!onboardingPresentationStoreDeclaration.contains("= Store("))
         #expect(onboardingSource.contains("@State private var discoveryRestartStore"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.disappeared)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.discoveryDomainChanged)"))
