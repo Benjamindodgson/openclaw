@@ -2602,6 +2602,10 @@ struct RootTabsSourceGuardTests {
             sidebarFeature,
             from: "struct State: Equatable, Sendable {",
             to: "enum Action")
+        let navigationStoreDeclaration = try Self.extract(
+            rootSource,
+            from: "@State private var navigationStore",
+            to: "@State private var sidebarStore")
         let presentationStoreDeclaration = try Self.extract(
             rootSource,
             from: "@State private var presentationStore",
@@ -2852,6 +2856,11 @@ struct RootTabsSourceGuardTests {
         #expect(!navigationSource.contains("state.isVisible = change.visibility.isVisible"))
         #expect(!rootSource.contains("self.sidebarStore.isVisible"))
         #expect(rootSource.contains("@State private var navigationStore: StoreOf<RootNavigationSelectionFeature>"))
+        #expect(navigationStoreDeclaration.contains(
+            "@State private var navigationStore: StoreOf<RootNavigationSelectionFeature>"))
+        #expect(!navigationStoreDeclaration.contains("= Store("))
+        #expect(rootSource.contains("selectedTab: Self.initialTab"))
+        #expect(rootSource.contains("selectedSidebarDestination: Self.initialSidebarDestination"))
         #expect(navigationSource.contains("struct RootNavigationSelectionFeature"))
         #expect(navigationSource.contains("struct SettingsRouteRequestID: Equatable, Sendable"))
         #expect(navigationSource.contains("struct ExecApprovalPromptSuppressionID: Equatable, Sendable"))
