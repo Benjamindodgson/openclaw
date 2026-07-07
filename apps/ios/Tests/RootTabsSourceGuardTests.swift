@@ -5578,14 +5578,10 @@ struct RootTabsSourceGuardTests {
         #expect(diagnosticsSource.contains("var issueCount: DiagnosticsIssueCount?"))
         #expect(diagnosticsSource.contains("issueCount.value == 0"))
         #expect(diagnosticsSource.contains("\\(issueCount.value)"))
-        #expect(diagnosticsSource
-            .contains("var discoveredGatewayCount = Action.DiscoveredGatewayCount(value: 0)"))
-        #expect(diagnosticsSource
-            .contains("var gatewayConnected = Action.DiagnosticsGatewayConnected(value: false)"))
-        #expect(diagnosticsSource.contains(
-            "var isAppleReviewDemoModeEnabled = Action.AppleReviewDemoModeEnabled(value: false)"))
-        #expect(diagnosticsSource.contains(
-            "var screenRecordActive = Action.ScreenRecordActive(value: false)"))
+        #expect(diagnosticsSource.contains("var discoveredGatewayCount = DiscoveredGatewayCount(value: 0)"))
+        #expect(diagnosticsSource.contains("var gatewayConnected = DiagnosticsGatewayConnected(value: false)"))
+        #expect(diagnosticsSource.contains("var isAppleReviewDemoModeEnabled = AppleReviewDemoModeEnabled(value: false)"))
+        #expect(diagnosticsSource.contains("var screenRecordActive = ScreenRecordActive(value: false)"))
         #expect(diagnosticsSource.contains("var gatewayConnected: DiagnosticsGatewayConnected"))
         #expect(diagnosticsSource.contains("var discoveredGatewayCount: DiscoveredGatewayCount"))
         #expect(diagnosticsSource.contains("var discoveryStatusText: DiscoveryStatusText"))
@@ -5608,6 +5604,10 @@ struct RootTabsSourceGuardTests {
         #expect(!diagnosticsSource.contains("var isAppleReviewDemoModeEnabled = false"))
         #expect(!diagnosticsSource.contains("var lastRunText = \"Not run\""))
         #expect(!diagnosticsSource.contains("var screenRecordActive = false"))
+        #expect(!diagnosticsSource.contains("Action.DiscoveredGatewayCount"))
+        #expect(!diagnosticsSource.contains("Action.DiagnosticsGatewayConnected"))
+        #expect(!diagnosticsSource.contains("Action.AppleReviewDemoModeEnabled"))
+        #expect(!diagnosticsSource.contains("Action.ScreenRecordActive"))
         #expect(!diagnosticsSource.contains("var issueCount: Int?"))
         #expect(!diagnosticsSource.contains("return issueCount == 0"))
         #expect(!diagnosticsSource.contains("\"\\(issueCount)\""))
