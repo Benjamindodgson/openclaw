@@ -77,9 +77,17 @@ struct OnboardingGatewayMarkedCompleted: Equatable, Sendable { var value: Bool }
 
 struct OnboardingPairingResumeRequestTime: Equatable, Sendable { var value: Date }
 
+struct OnboardingCompletion: Equatable, Sendable { var isCompleted: Bool }
+
+struct OnboardingFirstRunIntroSeen: Equatable, Sendable { var value: Bool }
+
 struct OnboardingGatewayServerName: Equatable, Sendable { var value: String? }
 
 struct OnboardingHasSavedGatewayConnection: Equatable, Sendable { var value: Bool }
+
+struct OnboardingLaunchPresentation: Equatable, Sendable { var shouldPresent: Bool }
+
+struct OnboardingFirstRunIntroPresentation: Equatable, Sendable { var shouldPresent: Bool }
 
 struct OnboardingGatewayToken: Equatable, Sendable { var value: String }
 
@@ -107,13 +115,13 @@ struct OnboardingStateFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var isCompleted: Bool
-        var firstRunIntroSeen: Bool
+        var completion: OnboardingCompletion
+        var firstRunIntroSeenState: OnboardingFirstRunIntroSeen
         var lastMode: OnboardingConnectionMode?
-        var hasSavedGatewayConnection: Bool
+        var savedGatewayConnection: OnboardingHasSavedGatewayConnection
         var gatewayServerName: String?
-        var shouldPresentOnLaunch: Bool
-        var shouldPresentFirstRunIntro: Bool
+        var launchPresentation: OnboardingLaunchPresentation
+        var firstRunIntroPresentation: OnboardingFirstRunIntroPresentation
 
         init(
             isCompleted: Bool = false,
@@ -122,22 +130,30 @@ struct OnboardingStateFeature {
             hasSavedGatewayConnection: Bool = false,
             gatewayServerName: String? = nil)
         {
-            self.isCompleted = isCompleted
-            self.firstRunIntroSeen = firstRunIntroSeen
+            self.completion = .init(isCompleted: isCompleted)
+            self.firstRunIntroSeenState = .init(value: firstRunIntroSeen)
             self.lastMode = lastMode
-            self.hasSavedGatewayConnection = hasSavedGatewayConnection
+            self.savedGatewayConnection = .init(value: hasSavedGatewayConnection)
             self.gatewayServerName = gatewayServerName
-            self.shouldPresentOnLaunch = false
-            self.shouldPresentFirstRunIntro = true
+            self.launchPresentation = .init(shouldPresent: false)
+            self.firstRunIntroPresentation = .init(shouldPresent: true)
             self.refreshPresentation()
         }
 
+        var shouldPresentOnLaunch: Bool {
+            self.launchPresentation.shouldPresent
+        }
+
+        var shouldPresentFirstRunIntro: Bool {
+            self.firstRunIntroPresentation.shouldPresent
+        }
+
         mutating func refreshPresentation() {
-            self.shouldPresentOnLaunch =
-                !self.isCompleted &&
-                !self.hasSavedGatewayConnection &&
-                self.gatewayServerName == nil
-            self.shouldPresentFirstRunIntro = !self.firstRunIntroSeen
+            self.launchPresentation = .init(shouldPresent:
+                !self.completion.isCompleted &&
+                    !self.savedGatewayConnection.value &&
+                    self.gatewayServerName == nil)
+            self.firstRunIntroPresentation = .init(shouldPresent: !self.firstRunIntroSeenState.value)
         }
     }
 
@@ -167,12 +183,12 @@ struct OnboardingStateFeature {
 
             case let .gatewaySnapshotChanged(snapshot):
                 state.gatewayServerName = snapshot.gatewayServerName.value
-                state.hasSavedGatewayConnection = snapshot.hasSavedGatewayConnection.value
+                state.savedGatewayConnection = snapshot.hasSavedGatewayConnection
                 state.refreshPresentation()
                 return .none
 
             case let .markCompleted(mark):
-                state.isCompleted = true
+                state.completion = .init(isCompleted: true)
                 if let mode = mark.mode {
                     state.lastMode = mode
                 }
@@ -180,13 +196,13 @@ struct OnboardingStateFeature {
                 return .none
 
             case .markFirstRunIntroSeen:
-                state.firstRunIntroSeen = true
+                state.firstRunIntroSeenState = .init(value: true)
                 state.refreshPresentation()
                 return .none
 
             case .reset:
-                state.isCompleted = false
-                state.firstRunIntroSeen = false
+                state.completion = .init(isCompleted: false)
+                state.firstRunIntroSeenState = .init(value: false)
                 state.refreshPresentation()
                 return .none
             }

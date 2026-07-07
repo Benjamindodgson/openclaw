@@ -107,7 +107,7 @@ import Testing
             hasSavedGatewayConnection: .init(value: false))))
         {
             $0.gatewayServerName = "gateway"
-            $0.shouldPresentOnLaunch = false
+            $0.launchPresentation = .init(shouldPresent: false)
         }
 
         await store.send(.gatewaySnapshotChanged(.init(
@@ -115,32 +115,32 @@ import Testing
             hasSavedGatewayConnection: .init(value: true))))
         {
             $0.gatewayServerName = nil
-            $0.hasSavedGatewayConnection = true
+            $0.savedGatewayConnection = .init(value: true)
         }
 
         await store.send(.gatewaySnapshotChanged(.init(
             gatewayServerName: .init(value: nil),
             hasSavedGatewayConnection: .init(value: false))))
         {
-            $0.hasSavedGatewayConnection = false
-            $0.shouldPresentOnLaunch = true
+            $0.savedGatewayConnection = .init(value: false)
+            $0.launchPresentation = .init(shouldPresent: true)
         }
 
         await store.send(.markCompleted(.init(mode: .remoteDomain))) {
-            $0.isCompleted = true
+            $0.completion = .init(isCompleted: true)
             $0.lastMode = .remoteDomain
-            $0.shouldPresentOnLaunch = false
+            $0.launchPresentation = .init(shouldPresent: false)
         }
 
         await store.send(.reset) {
-            $0.isCompleted = false
-            $0.firstRunIntroSeen = false
-            $0.shouldPresentOnLaunch = true
+            $0.completion = .init(isCompleted: false)
+            $0.firstRunIntroSeenState = .init(value: false)
+            $0.launchPresentation = .init(shouldPresent: true)
         }
 
         await store.send(.markFirstRunIntroSeen) {
-            $0.firstRunIntroSeen = true
-            $0.shouldPresentFirstRunIntro = false
+            $0.firstRunIntroSeenState = .init(value: true)
+            $0.firstRunIntroPresentation = .init(shouldPresent: false)
         }
     }
 
