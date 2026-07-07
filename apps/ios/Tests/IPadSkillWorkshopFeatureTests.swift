@@ -154,6 +154,28 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
     }
 
+    @Test func `proposal inspection presentation follows selected and inspecting state`() {
+        var state = IPadSkillWorkshopFeature.State()
+        let selectedProposal = Self.proposal(id: "pending-1", status: "pending")
+        let inspectingProposal = Self.proposal(id: "pending-2", status: "pending")
+
+        #expect(state.shouldEnableProposalInspectionControls)
+        #expect(state.proposalPresentation(for: selectedProposal) == .init(
+            isSelected: false,
+            isInspecting: false))
+
+        state.selectedProposalID = .init(value: selectedProposal.id)
+        state.inspectingProposalID = .init(value: inspectingProposal.id)
+
+        #expect(!state.shouldEnableProposalInspectionControls)
+        #expect(state.proposalPresentation(for: selectedProposal) == .init(
+            isSelected: true,
+            isInspecting: false))
+        #expect(state.proposalPresentation(for: inspectingProposal) == .init(
+            isSelected: false,
+            isInspecting: true))
+    }
+
     @Test func `agent scope snapshot updates reducer presentation state`() async {
         #expect(!IPadSkillWorkshopFeature.State().shouldEnableAgentScopeMenu)
 
