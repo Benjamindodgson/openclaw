@@ -2291,9 +2291,13 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains(
             "func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
         #expect(source.contains(
+            "func shouldEnableProposalActionControls(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
+        #expect(source.contains(
             "func emptyProposalPresentation(\n            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopEmptyProposalPresentation"))
-        #expect(source.contains("guard state.shouldEnableProposalMutation("))
+        #expect(source.contains("guard state.shouldEnableProposalActionControls("))
         #expect(source.contains("self.store.state.shouldEnableProposalMutation("))
+        #expect(source.contains("private var canRunProposalActions: Bool"))
+        #expect(source.contains("self.store.state.shouldEnableProposalActionControls("))
         #expect(source.contains("private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation"))
         #expect(source.contains("self.store.state.emptyProposalPresentation("))
         #expect(source.contains("icon: self.emptyProposalPresentation.icon"))
@@ -2311,6 +2315,8 @@ struct RootTabsSourceGuardTests {
             "func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String"))
         #expect(!source.contains(
             "func shouldEnableProposalMutation(canWrite: Bool, hasOperatorAdminScope: Bool) -> Bool"))
+        #expect(!source.contains(".disabled(!self.canApplyProposalMutations || self.store.busyAction != nil)"))
+        #expect(!source.contains(".disabled(!self.canApplyProposalMutations || self.isBusy)"))
         #expect(!source.contains("icon: self.gatewayAccess.canRead ? \"hammer\" : \"wifi.slash\""))
         #expect(!source.contains("title: self.gatewayAccess.canRead ? \"No proposals\" : \"No proposals loaded\""))
         #expect(!source.contains("static func shouldEnableProposalMutation"))
@@ -2334,7 +2340,9 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.store.state.shouldShowProposalActions(for: proposal)"))
         #expect(source.contains(".shouldShowProposalActions(status: proposal.status)"))
         #expect(source.contains("let showsProposalActions: Bool"))
+        #expect(source.contains("let canRunProposalActions: Bool"))
         #expect(source.contains("if self.showsProposalActions"))
+        #expect(source.contains(".disabled(!self.canRunProposalActions)"))
         #expect(source.contains("let nextID = Self.nextSelectedProposalID("))
         #expect(source.contains("IPadSkillWorkshopFeature.State.proposalStatusFilters"))
         #expect(source.contains("IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(filter)"))
@@ -2475,6 +2483,7 @@ struct RootTabsSourceGuardTests {
         #expect(previewSource.contains("#Preview(\n    \"Skill Workshop iPad kanban lanes\""))
         #expect(previewSource.contains("private struct IPadSkillWorkshopKanbanPreview"))
         #expect(previewSource.contains("IPadSkillProposalKanbanColumn("))
+        #expect(previewSource.contains("canRunProposalActions: true"))
         #expect(previewSource.contains("status: \"needs-review\""))
         #expect(previewSource.contains("status: \"manual_QA\""))
     }
