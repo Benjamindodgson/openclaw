@@ -140,6 +140,27 @@ struct SettingsChannelsFeature {
         var entries: [SettingsChannelEntry] {
             self.channelEntries.values
         }
+
+        var configuredEntryCount: Int {
+            self.entries.count(where: { $0.configured })
+        }
+
+        var hasActiveEntry: Bool {
+            self.entries.contains(where: { $0.running || $0.connected })
+        }
+
+        func headerValue(canRead: Bool) -> String? {
+            if self.loadingPhase == .inFlight { return "Loading" }
+            guard canRead else { return "Offline" }
+            return "\(self.entries.count)"
+        }
+
+        func summaryValue(canRead: Bool) -> String {
+            guard canRead else { return "offline" }
+            if self.loadingPhase == .inFlight { return "loading" }
+            if self.errorText != nil { return "error" }
+            return "\(self.configuredEntryCount)/\(self.entries.count)"
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -437,7 +458,7 @@ struct SettingsChannelsDestination: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
-                ProValuePill(value: self.summaryValue, color: self.summaryColor)
+                ProValuePill(value: self.store.state.summaryValue(canRead: self.canRead), color: self.summaryColor)
             }
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
@@ -448,7 +469,7 @@ struct SettingsChannelsDestination: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: "Message Routing",
-                    value: self.headerValue,
+                    value: self.store.state.headerValue(canRead: self.canRead),
                     actionIcon: self.store.loadingPhase == .inFlight ? "hourglass" : "arrow.clockwise",
                     actionAccessibilityLabel: "Refresh Channels",
                     isActionDisabled: self.store.loadingPhase == .inFlight,
@@ -477,7 +498,7 @@ struct SettingsChannelsDestination: View {
                         detail: "Fetching installed channels, accounts, and routing status from the gateway.",
                         value: "loading",
                         color: OpenClawBrand.accent)
-                } else if self.channelEntries.isEmpty {
+                } else if self.store.entries.isEmpty {
                     ProStatusRow(
                         icon: "tray",
                         title: "No channel plugins reported",
@@ -485,7 +506,7 @@ struct SettingsChannelsDestination: View {
                         value: "empty",
                         color: .secondary)
                 } else {
-                    ForEach(Array(self.channelEntries.enumerated()), id: \.element.id) { index, entry in
+                    ForEach(Array(self.store.entries.enumerated()), id: \.element.id) { index, entry in
                         if index > 0 {
                             Divider().padding(.leading, 58)
                         }
@@ -528,12 +549,6 @@ struct SettingsChannelsDestination: View {
         canRead && hasOperatorAdminScope
     }
 
-    private var headerValue: String? {
-        if self.store.loadingPhase == .inFlight { return "Loading" }
-        guard self.canRead else { return "Offline" }
-        return "\(self.channelEntries.count)"
-    }
-
     private var summaryDetail: String {
         guard self.canRead else {
             return "Connect to load channel integrations."
@@ -544,23 +559,10 @@ struct SettingsChannelsDestination: View {
         return "Installed channel clients, account state, and message-routing readiness."
     }
 
-    private var summaryValue: String {
-        guard self.canRead else { return "offline" }
-        if self.store.loadingPhase == .inFlight { return "loading" }
-        if self.store.errorText != nil { return "error" }
-        let configured = self.channelEntries.count(where: { $0.configured })
-        return "\(configured)/\(self.channelEntries.count)"
-    }
-
     private var summaryColor: Color {
         guard self.canRead else { return .secondary }
         if self.store.errorText != nil { return OpenClawBrand.warn }
-        return self.channelEntries.contains(where: { $0.running || $0.connected }) ? OpenClawBrand.ok : OpenClawBrand
-            .accent
-    }
-
-    private var channelEntries: [SettingsChannelEntry] {
-        self.store.entries
+        return self.store.hasActiveEntry ? OpenClawBrand.ok : OpenClawBrand.accent
     }
 
     private func refreshChannels(force: Bool) async {
