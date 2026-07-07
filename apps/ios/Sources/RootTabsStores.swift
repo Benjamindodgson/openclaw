@@ -63,6 +63,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsAppearanceStore() -> StoreOf<SettingsAppearanceFeature> {
+        Store(initialState: SettingsAppearanceFeature.State()) {
+            SettingsAppearanceFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsShareInstructionStore() -> StoreOf<SettingsShareInstructionFeature> {
         Store(initialState: SettingsShareInstructionFeature.State()) {
             SettingsShareInstructionFeature()
