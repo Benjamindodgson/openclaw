@@ -133,6 +133,24 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("var gatewayServerName: String?\n    var gatewayRemoteAddress: String?"))
     }
 
+    @Test func `phone control hub agent identifiers are typed presentation state`() throws {
+        let source = try String(contentsOf: Self.phoneHubSourceURL(), encoding: .utf8)
+
+        #expect(source.contains("struct RootTabsPhoneControlHubSelectedAgentID: Equatable, Sendable"))
+        #expect(source.contains("struct RootTabsPhoneControlHubGatewayDefaultAgentID: Equatable, Sendable"))
+        #expect(source.contains("var selectedAgentIDState = RootTabsPhoneControlHubSelectedAgentID(value: nil)"))
+        #expect(source.contains("var gatewayDefaultAgentIDState = RootTabsPhoneControlHubGatewayDefaultAgentID(value: nil)"))
+        #expect(source.contains("selectedAgentId: String? = nil"))
+        #expect(source.contains("gatewayDefaultAgentId: String? = nil"))
+        #expect(source.contains("self.selectedAgentIDState = .init(value: selectedAgentId)"))
+        #expect(source.contains("self.gatewayDefaultAgentIDState = .init(value: gatewayDefaultAgentId)"))
+        #expect(source.contains("var selectedAgentId: String?"))
+        #expect(source.contains("var gatewayDefaultAgentId: String?"))
+        #expect(source.contains("self.selectedAgentIDState.value"))
+        #expect(source.contains("self.gatewayDefaultAgentIDState.value"))
+        #expect(!source.contains("var selectedAgentId: String?\n    var gatewayDefaultAgentId: String?"))
+    }
+
     @Test func `gateway problem copy feedback is typed reducer state`() throws {
         let source = try String(contentsOf: Self.gatewayProblemSourceURL(), encoding: .utf8)
 
