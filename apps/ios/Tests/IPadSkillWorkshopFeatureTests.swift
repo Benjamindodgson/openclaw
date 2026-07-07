@@ -272,6 +272,20 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.shouldShowQueryClearButton)
     }
 
+    @Test func `feedback messages follow reducer notice and error state`() {
+        var state = IPadSkillWorkshopFeature.State()
+
+        #expect(state.feedbackMessages.isEmpty)
+
+        state.noticeText = .init(value: "Proposal applied.")
+        state.errorText = .init(value: "Refresh failed.")
+
+        #expect(state.feedbackMessages == [
+            IPadSkillWorkshopFeedbackPresentation(tone: .notice, text: "Proposal applied."),
+            IPadSkillWorkshopFeedbackPresentation(tone: .error, text: "Refresh failed."),
+        ])
+    }
+
     @Test func `empty proposal presentation follows gateway read access`() {
         let state = IPadSkillWorkshopFeature.State()
         let connectedAccess = IPadSkillWorkshopFeature.State.gatewayAccess(

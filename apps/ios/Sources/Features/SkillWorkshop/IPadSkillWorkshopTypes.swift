@@ -61,6 +61,20 @@ struct IPadSkillWorkshopEmptyProposalPresentation: Equatable, Sendable {
     var value: String?
 }
 
+enum IPadSkillWorkshopFeedbackTone: Equatable, Sendable {
+    case notice
+    case error
+}
+
+struct IPadSkillWorkshopFeedbackPresentation: Equatable, Identifiable, Sendable {
+    let tone: IPadSkillWorkshopFeedbackTone
+    let text: String
+
+    var id: IPadSkillWorkshopFeedbackTone {
+        self.tone
+    }
+}
+
 struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
