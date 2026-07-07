@@ -264,6 +264,23 @@ struct IPadSkillWorkshopFeature {
             }
         }
 
+        static func nextSelectedProposalID(
+            current: String?,
+            proposals: [(id: String, status: String)],
+            filter: String) -> String?
+        {
+            let filtered = proposals.filter { Self.proposalStatusMatchesFilter(status: $0.status, filter: filter) }
+            return Self.nextSelectedProposalID(current: current, visibleProposalIDs: filtered.map(\.id))
+        }
+
+        static func nextSelectedProposalID(current: String?, visibleProposalIDs: [String]) -> String? {
+            guard !visibleProposalIDs.isEmpty else { return nil }
+            if let current, visibleProposalIDs.contains(current) {
+                return current
+            }
+            return visibleProposalIDs.first
+        }
+
         var filteredProposals: [IPadSkillProposal] {
             Self.filteredProposals(
                 proposals: self.proposals,
@@ -310,7 +327,7 @@ struct IPadSkillWorkshopFeature {
         }
 
         mutating func syncSelectedProposalIDForVisibleProposals() {
-            let nextID = IPadSkillWorkshopScreen.nextSelectedProposalID(
+            let nextID = Self.nextSelectedProposalID(
                 current: self.selectedProposalID?.value,
                 visibleProposalIDs: self.filteredProposals.map(\.id))
             let nextProposalID = nextID.map { IPadSkillWorkshopProposalID(value: $0) }
@@ -1262,25 +1279,6 @@ struct IPadSkillWorkshopScreen: View {
                 return text.prefix(1).uppercased() + text.dropFirst().lowercased()
             }
             .joined(separator: " ")
-    }
-
-    nonisolated static func nextSelectedProposalID(
-        current: String?,
-        proposals: [(id: String, status: String)],
-        filter: String) -> String?
-    {
-        let filtered = proposals.filter {
-            IPadSkillWorkshopFeature.State.proposalStatusMatchesFilter(status: $0.status, filter: filter)
-        }
-        return Self.nextSelectedProposalID(current: current, visibleProposalIDs: filtered.map(\.id))
-    }
-
-    nonisolated static func nextSelectedProposalID(current: String?, visibleProposalIDs: [String]) -> String? {
-        guard !visibleProposalIDs.isEmpty else { return nil }
-        if let current, visibleProposalIDs.contains(current) {
-            return current
-        }
-        return visibleProposalIDs.first
     }
 
     private var presentedProposalRouteBinding: Binding<IPadSkillProposalSheetRoute?> {
