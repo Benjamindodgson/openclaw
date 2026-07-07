@@ -132,6 +132,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeSettingsPresentationStore() -> StoreOf<SettingsPresentationFeature> {
+        Store(initialState: SettingsPresentationFeature.State()) {
+            SettingsPresentationFeature()
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewayActivityStore() -> StoreOf<SettingsGatewayActivityFeature> {
         Store(initialState: SettingsGatewayActivityFeature.State()) {
             SettingsGatewayActivityFeature(

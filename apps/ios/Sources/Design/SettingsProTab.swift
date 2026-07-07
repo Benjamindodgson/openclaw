@@ -97,11 +97,7 @@ struct SettingsProTab: View {
 
     @State var notificationStore: StoreOf<SettingsNotificationFeature>
 
-    @State var presentationStore: StoreOf<SettingsPresentationFeature> = Store(
-        initialState: SettingsPresentationFeature.State())
-    {
-        SettingsPresentationFeature()
-    }
+    @State var presentationStore: StoreOf<SettingsPresentationFeature>
 
     @State private var navigationStore: StoreOf<SettingsNavigationFeature>
     let initialRoute: SettingsRoute?
@@ -207,6 +203,11 @@ struct SettingsProTab: View {
         {
             SettingsNotificationFeature()
         },
+        presentationStore: StoreOf<SettingsPresentationFeature> = Store(
+            initialState: SettingsPresentationFeature.State())
+        {
+            SettingsPresentationFeature()
+        },
         onboardingStateStore: StoreOf<SettingsOnboardingStateFeature> = Store(
             initialState: SettingsOnboardingStateFeature.State())
         {
@@ -242,6 +243,7 @@ struct SettingsProTab: View {
         self._gatewaySetupLinkStore = State(wrappedValue: gatewaySetupLinkStore)
         self._locationStore = State(wrappedValue: locationStore)
         self._notificationStore = State(wrappedValue: notificationStore)
+        self._presentationStore = State(wrappedValue: presentationStore)
         self._onboardingStateStore = State(wrappedValue: onboardingStateStore)
         self._navigationStore = State(wrappedValue: navigationStore)
         self.onRouteChange = onRouteChange

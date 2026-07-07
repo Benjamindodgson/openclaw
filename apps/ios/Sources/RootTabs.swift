@@ -216,6 +216,7 @@ struct RootTabs: View {
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 locationStore: self.makeSettingsLocationStore(),
                 notificationStore: self.makeSettingsNotificationStore(),
+                presentationStore: self.makeSettingsPresentationStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
                 .id(self.settingsTabViewID)
@@ -523,6 +524,7 @@ struct RootTabs: View {
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     locationStore: self.makeSettingsLocationStore(),
                     notificationStore: self.makeSettingsNotificationStore(),
+                    presentationStore: self.makeSettingsPresentationStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             } else {
@@ -548,6 +550,7 @@ struct RootTabs: View {
                     gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                     locationStore: self.makeSettingsLocationStore(),
                     notificationStore: self.makeSettingsNotificationStore(),
+                    presentationStore: self.makeSettingsPresentationStore(),
                     onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                     onRouteChange: self.handleSettingsRouteChange)
             }
@@ -575,6 +578,7 @@ struct RootTabs: View {
                 gatewaySetupLinkStore: self.makeSettingsGatewaySetupLinkStore(),
                 locationStore: self.makeSettingsLocationStore(),
                 notificationStore: self.makeSettingsNotificationStore(),
+                presentationStore: self.makeSettingsPresentationStore(),
                 onboardingStateStore: self.makeSettingsOnboardingStateStore(),
                 onRouteChange: self.handleSettingsRouteChange)
         }
