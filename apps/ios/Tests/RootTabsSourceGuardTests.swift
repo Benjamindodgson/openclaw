@@ -1497,6 +1497,20 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("await send(.snapshotLoaded(.init(snapshot: client.snapshot())))"))
     }
 
+    @Test func `privacy access section view uses injectable store factory`() throws {
+        let source = try String(contentsOf: Self.privacyAccessSectionSourceURL(), encoding: .utf8)
+        let initializer = try Self.extract(
+            source,
+            from: "init(",
+            to: "var body: some View")
+
+        #expect(initializer.contains("store: StoreOf<PrivacyAccessFeature>? = nil"))
+        #expect(initializer.contains("storeFactory: () -> StoreOf<PrivacyAccessFeature>"))
+        #expect(initializer.contains("Store(initialState: PrivacyAccessFeature.State())"))
+        #expect(initializer.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!initializer.contains("init(store: StoreOf<PrivacyAccessFeature> = Store("))
+    }
+
     @Test func `routed headers use shared adaptive layout`() throws {
         let componentsSource = try String(contentsOf: Self.proComponentsSourceURL(), encoding: .utf8)
         let featureChromeSource = try String(contentsOf: Self.iPadSidebarScreenChromeSourceURL(), encoding: .utf8)

@@ -421,10 +421,16 @@ struct PrivacyAccessSectionView: View {
     @State private var store: StoreOf<PrivacyAccessFeature>
     @Environment(\.scenePhase) private var scenePhase
 
-    init(store: StoreOf<PrivacyAccessFeature> = Store(initialState: PrivacyAccessFeature.State()) {
-        PrivacyAccessFeature()
-    }) {
-        self._store = SwiftUI.State(wrappedValue: store)
+    init(
+        store: StoreOf<PrivacyAccessFeature>? = nil,
+        storeFactory: () -> StoreOf<PrivacyAccessFeature> = {
+            Store(initialState: PrivacyAccessFeature.State()) {
+                PrivacyAccessFeature()
+            }
+        })
+    {
+        let resolvedStore = store ?? storeFactory()
+        self._store = SwiftUI.State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
