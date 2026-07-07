@@ -23,13 +23,7 @@ struct RootTabs: View {
     @AppStorage("canvas.debugStatusEnabled") private var canvasDebugStatusEnabled: Bool = false
     @AppStorage(AppAppearancePreference.storageKey) private var appearancePreferenceRaw: String =
         AppAppearancePreference.system.rawValue
-    @State private var navigationStore: StoreOf<RootNavigationSelectionFeature> = Store(
-        initialState: RootNavigationSelectionFeature.State(
-            selectedTab: Self.initialTab,
-            selectedSidebarDestination: Self.initialSidebarDestination))
-    {
-        RootNavigationSelectionFeature()
-    }
+    @State private var navigationStore: StoreOf<RootNavigationSelectionFeature>
 
     @State private var sidebarStore: StoreOf<RootSidebarFeature>
 
@@ -44,6 +38,13 @@ struct RootTabs: View {
     @State private var homeCanvasStore: StoreOf<RootHomeCanvasFeature>
 
     init(
+        navigationStore: StoreOf<RootNavigationSelectionFeature> = Store(
+            initialState: RootNavigationSelectionFeature.State(
+                selectedTab: Self.initialTab,
+                selectedSidebarDestination: Self.initialSidebarDestination))
+        {
+            RootNavigationSelectionFeature()
+        },
         sidebarStore: StoreOf<RootSidebarFeature> = Store(
             initialState: RootSidebarFeature.State(initialVisibility: Self.initialSidebarVisibility))
         {
@@ -73,6 +74,7 @@ struct RootTabs: View {
             RootHomeCanvasFeature()
         })
     {
+        self._navigationStore = State(wrappedValue: navigationStore)
         self._sidebarStore = State(wrappedValue: sidebarStore)
         self._launchStore = State(wrappedValue: launchStore)
         self._voiceWakeToastStore = State(wrappedValue: voiceWakeToastStore)
