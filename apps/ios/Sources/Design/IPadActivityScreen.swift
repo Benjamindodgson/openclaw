@@ -168,16 +168,18 @@ struct IPadActivityScreen: View {
         headerLeadingAction: OpenClawSidebarHeaderAction? = nil,
         openChat: @escaping () -> Void,
         openSettings: @escaping () -> Void,
-        store: StoreOf<IPadActivitySessionsFeature> = Store(
-            initialState: IPadActivitySessionsFeature.State())
-        {
-            IPadActivitySessionsFeature()
+        store: StoreOf<IPadActivitySessionsFeature>? = nil,
+        storeFactory: () -> StoreOf<IPadActivitySessionsFeature> = {
+            Store(initialState: IPadActivitySessionsFeature.State()) {
+                IPadActivitySessionsFeature()
+            }
         })
     {
         self.headerLeadingAction = headerLeadingAction
         self.openChat = openChat
         self.openSettings = openSettings
-        _store = State(wrappedValue: store)
+        let resolvedStore = store ?? storeFactory()
+        _store = State(wrappedValue: resolvedStore)
     }
 
     var body: some View {
