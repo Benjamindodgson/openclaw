@@ -224,6 +224,7 @@ struct IPadSkillWorkshopFeature {
         }
 
         static let proposalStatusFilters = ["pending", "held", "applied", "rejected", "all"]
+        static let defaultProposalStatusBoardLanes = ["pending", "quarantined", "stale", "applied", "rejected"]
 
         static func proposalStatusFilterLabel(_ filter: String) -> String {
             switch filter {
@@ -244,6 +245,22 @@ struct IPadSkillWorkshopFeature {
             case "all": true
             case "held": status == "quarantined" || status == "stale"
             default: status == filter
+            }
+        }
+
+        static func proposalStatusBoardLanes(filter: String, proposalStatuses: [String]) -> [String] {
+            let customStatuses = proposalStatuses
+                .filter { !self.defaultProposalStatusBoardLanes.contains($0) }
+                .sorted()
+            switch filter {
+            case "all":
+                return self.defaultProposalStatusBoardLanes + customStatuses
+            case "held":
+                return ["quarantined", "stale"]
+            case "pending", "applied", "rejected":
+                return [filter]
+            default:
+                return [filter]
             }
         }
 
@@ -271,7 +288,7 @@ struct IPadSkillWorkshopFeature {
         }
 
         var visibleProposalLaneStatuses: [String] {
-            IPadSkillWorkshopScreen.proposalStatusBoardLanes(
+            Self.proposalStatusBoardLanes(
                 filter: self.statusFilter.value,
                 proposalStatuses: self.proposals.map(\.status))
         }
@@ -1221,8 +1238,6 @@ struct IPadSkillWorkshopScreen: View {
         horizontalSizeClass == .compact || verticalSizeClass == .compact
     }
 
-    nonisolated static let defaultProposalStatusBoardLanes = ["pending", "quarantined", "stale", "applied", "rejected"]
-
     nonisolated static func proposalLaneLabel(_ status: String) -> String {
         switch status {
         case "quarantined": "Quarantined"
@@ -1247,22 +1262,6 @@ struct IPadSkillWorkshopScreen: View {
                 return text.prefix(1).uppercased() + text.dropFirst().lowercased()
             }
             .joined(separator: " ")
-    }
-
-    nonisolated static func proposalStatusBoardLanes(filter: String, proposalStatuses: [String]) -> [String] {
-        let customStatuses = proposalStatuses
-            .filter { !self.defaultProposalStatusBoardLanes.contains($0) }
-            .sorted()
-        switch filter {
-        case "all":
-            return self.defaultProposalStatusBoardLanes + customStatuses
-        case "held":
-            return ["quarantined", "stale"]
-        case "pending", "applied", "rejected":
-            return [filter]
-        default:
-            return [filter]
-        }
     }
 
     nonisolated static func nextSelectedProposalID(
