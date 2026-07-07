@@ -1278,6 +1278,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makeSettingsGatewayAutoConnectStore()"))
         #expect(storesSource.contains("func makeSettingsGatewaySetupStatusStore()"))
         #expect(storesSource.contains("func makeSettingsNotificationStore()"))
+        #expect(storesSource.contains("func makeSettingsPresentationStore()"))
         #expect(storesSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(storesSource.contains("withDependencies"))
         #expect(storesSource.contains("openNotifications: { approvalId in"))
@@ -1291,6 +1292,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
         #expect(rootSource.contains("gatewaySetupStatusStore: self.makeSettingsGatewaySetupStatusStore()"))
         #expect(rootSource.contains("notificationStore: self.makeSettingsNotificationStore()"))
+        #expect(rootSource.contains("presentationStore: self.makeSettingsPresentationStore()"))
         #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
@@ -1300,6 +1302,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makeSettingsGatewayAutoConnectStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewaySetupStatusStore()"))
         #expect(!rootSource.contains("func makeSettingsNotificationStore()"))
+        #expect(!rootSource.contains("func makeSettingsPresentationStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(!rootSource.contains("withDependencies"))
     }
@@ -5653,6 +5656,21 @@ struct RootTabsSourceGuardTests {
         #expect(refreshFunction.contains("UNUserNotificationCenter.current().getNotificationSettings") == false)
         #expect(refreshFunction.contains("Task {") == false)
         #expect(resultFunction.contains("UNUserNotificationCenter") == false)
+    }
+
+    @Test func `settings presentation store is root injected`() throws {
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let settingsSource = try Self.settingsProTabCombinedSource()
+        let presentationStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var presentationStore",
+            to: "@State private var navigationStore")
+
+        #expect(rootSource.contains("presentationStore: self.makeSettingsPresentationStore()"))
+        #expect(storesSource.contains("func makeSettingsPresentationStore()"))
+        #expect(presentationStoreDeclaration.contains("@State var presentationStore: StoreOf<SettingsPresentationFeature>"))
+        #expect(!presentationStoreDeclaration.contains("= Store("))
     }
 
     @Test func `settings diagnostics completion is reducer owned`() throws {
