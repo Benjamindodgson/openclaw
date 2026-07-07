@@ -16,10 +16,14 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: .init(value: false)),
-            sessionsAvailability: .init(isAvailable: .init(value: true)))))
+        await store.send(.refreshRequested(Self.refreshRequest(
+            isActive: false,
+            isAvailable: true,
+            currentSessionKey: "chat-current",
+            defaultSessionKey: "main")))
         {
+            $0.currentSession = .init(value: "chat-current")
+            $0.defaultSession = .init(value: "main")
             $0.loadingPhase = .idle
         }
         await store.finish()
@@ -37,10 +41,14 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: .init(value: true)),
-            sessionsAvailability: .init(isAvailable: .init(value: false)))))
+        await store.send(.refreshRequested(Self.refreshRequest(
+            isActive: true,
+            isAvailable: false,
+            currentSessionKey: "chat-current",
+            defaultSessionKey: "main")))
         {
+            $0.currentSession = .init(value: "chat-current")
+            $0.defaultSession = .init(value: "main")
             $0.loadingPhase = .idle
             $0.sessionEntries = .init()
             $0.loadErrorText = nil
@@ -52,7 +60,19 @@ struct IPadActivitySessionsFeatureTests {
 
     @Test func `available refresh loads recent sessions`() async {
         let probe = IPadActivitySessionsProbe()
-        let loadedSessions = [Self.session(key: "chat-loaded")]
+        let loadedSessions = [
+            Self.session(key: "main", updatedAt: 20),
+            Self.session(key: "agent:main:main", updatedAt: 19),
+            Self.session(key: "chat-1", updatedAt: 1),
+            Self.session(key: "chat-2", updatedAt: 2),
+            Self.session(key: "chat-3", updatedAt: 3),
+            Self.session(key: "chat-4", updatedAt: 4),
+            Self.session(key: "chat-5", updatedAt: 5),
+            Self.session(key: "chat-6", updatedAt: 6),
+            Self.session(key: "chat-7", updatedAt: 7),
+            Self.session(key: "chat-8", updatedAt: 8),
+            Self.session(key: "chat-9", updatedAt: 9),
+        ]
         probe.result = .success(loadedSessions)
         var initialState = IPadActivitySessionsFeature.State()
         initialState.loadErrorText = .init(value: "Previous error")
@@ -60,10 +80,14 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: .init(value: true)),
-            sessionsAvailability: .init(isAvailable: .init(value: true)))))
+        await store.send(.refreshRequested(Self.refreshRequest(
+            isActive: true,
+            isAvailable: true,
+            currentSessionKey: "chat-9",
+            defaultSessionKey: "main")))
         {
+            $0.currentSession = .init(value: "chat-9")
+            $0.defaultSession = .init(value: "main")
             $0.loadingPhase = .inFlight
             $0.loadErrorText = nil
         }
@@ -74,6 +98,16 @@ struct IPadActivitySessionsFeatureTests {
         await store.finish()
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
+        #expect(store.state.visibleSessions.map(\.key) == [
+            "chat-9",
+            "chat-8",
+            "chat-7",
+            "chat-6",
+            "chat-5",
+            "chat-4",
+            "chat-3",
+            "chat-2",
+        ])
     }
 
     @Test func `available refresh clears sessions and shows reconnect copy on failure`() async {
@@ -85,10 +119,14 @@ struct IPadActivitySessionsFeatureTests {
             IPadActivitySessionsFeature(client: probe.client)
         }
 
-        await store.send(.refreshRequested(.init(
-            sceneActivity: .init(isActive: .init(value: true)),
-            sessionsAvailability: .init(isAvailable: .init(value: true)))))
+        await store.send(.refreshRequested(Self.refreshRequest(
+            isActive: true,
+            isAvailable: true,
+            currentSessionKey: "chat-current",
+            defaultSessionKey: "main")))
         {
+            $0.currentSession = .init(value: "chat-current")
+            $0.defaultSession = .init(value: "main")
             $0.loadingPhase = .inFlight
             $0.loadErrorText = nil
         }
@@ -156,7 +194,20 @@ struct IPadActivitySessionsFeatureTests {
         #expect(empty.gatewayDetailText == "No gateway connection")
     }
 
-    private static func session(key: String) -> OpenClawChatSessionEntry {
+    private static func refreshRequest(
+        isActive: Bool,
+        isAvailable: Bool,
+        currentSessionKey: String = "chat-current",
+        defaultSessionKey: String = "main") -> IPadActivitySessionsFeature.Action.RefreshRequest
+    {
+        .init(
+            sceneActivity: .init(isActive: .init(value: isActive)),
+            sessionsAvailability: .init(isAvailable: .init(value: isAvailable)),
+            currentSession: .init(key: .init(value: currentSessionKey)),
+            defaultSession: .init(key: .init(value: defaultSessionKey)))
+    }
+
+    private static func session(key: String, updatedAt: Double = 1) -> OpenClawChatSessionEntry {
         OpenClawChatSessionEntry(
             key: key,
             kind: "chat",
@@ -165,7 +216,7 @@ struct IPadActivitySessionsFeatureTests {
             subject: "Test session",
             room: nil,
             space: nil,
-            updatedAt: 1,
+            updatedAt: updatedAt,
             sessionId: key,
             systemSent: true,
             abortedLastRun: false,
