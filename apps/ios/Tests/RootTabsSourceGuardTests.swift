@@ -3522,6 +3522,11 @@ struct RootTabsSourceGuardTests {
         #expect(settingsSectionsSource.contains("Connected services and message routing"))
         #expect(settingsSectionsSource.contains("SettingsChannelsStoreFactory.live(appModel: self.appModel)"))
         #expect(channelsSource.contains("@Reducer\nstruct SettingsChannelsFeature"))
+        #expect(channelsSource.contains("store: StoreOf<SettingsChannelsFeature>? = nil"))
+        #expect(channelsSource.contains("storeFactory: () -> StoreOf<SettingsChannelsFeature>"))
+        #expect(channelsSource.contains("let resolvedStore = store ?? storeFactory()"))
+        #expect(!channelsSource.contains(
+            "store: StoreOf<SettingsChannelsFeature> = Store(initialState: SettingsChannelsFeature.State())"))
         #expect(channelsSource.contains("struct SettingsChannelsFailureMessage: Equatable, Sendable"))
         #expect(channelsSource.contains("struct SettingsChannelEntries: Equatable, Sendable"))
         #expect(channelsSource.contains("var values: [SettingsChannelEntry] = []"))
