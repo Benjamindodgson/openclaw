@@ -91,7 +91,7 @@ struct IPadWorkboardFeatureTests {
             result: .success(response))))
         {
             $0.refreshPhase = .idle
-            $0.cards = [card]
+            $0.cardEntries = .init(values: [card])
             $0.statuses = [.init(value: "todo"), .init(value: "done")]
             $0.knownBoardIDs = [.init(value: "planning")]
         }
@@ -105,7 +105,7 @@ struct IPadWorkboardFeatureTests {
         let staleCard = Self.card(id: "stale", status: "done", position: 20, boardID: "old")
         var initialState = IPadWorkboardFeature.State()
         initialState.selectedBoardID = .init(value: "current")
-        initialState.cards = [currentCard]
+        initialState.cardEntries = .init(values: [currentCard])
         initialState.refreshPhase = .inFlight(boardID: .init(value: "old"))
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: Self.failingClient())
@@ -125,7 +125,7 @@ struct IPadWorkboardFeatureTests {
         let currentCard = Self.card(id: "current", status: "todo", position: 10)
         let staleCard = Self.card(id: "stale", status: "done", position: 20)
         var initialState = IPadWorkboardFeature.State()
-        initialState.cards = [currentCard]
+        initialState.cardEntries = .init(values: [currentCard])
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: Self.failingClient())
         }
@@ -174,7 +174,7 @@ struct IPadWorkboardFeatureTests {
             return created
         }
         var initialState = IPadWorkboardFeature.State()
-        initialState.cards = [existing]
+        initialState.cardEntries = .init(values: [existing])
         initialState.statuses = [.init(value: "todo"), .init(value: "ready")]
         initialState.selectedStatus = .init(value: "ready")
         initialState.selectedBoardID = .init(value: "planning")
@@ -197,7 +197,7 @@ struct IPadWorkboardFeatureTests {
             $0.draftTitle = .init(value: "")
             $0.draftNotes = .init(value: "")
             $0.presentedSheet = nil
-            $0.cards = [existing, created]
+            $0.cardEntries = .init(values: [existing, created])
             $0.knownBoardIDs = [.init(value: "planning")]
         }
     }
@@ -243,7 +243,7 @@ struct IPadWorkboardFeatureTests {
             return archived
         }
         var initialState = IPadWorkboardFeature.State()
-        initialState.cards = [card]
+        initialState.cardEntries = .init(values: [card])
         let store = TestStore(initialState: initialState) {
             IPadWorkboardFeature(client: client)
         }
@@ -258,7 +258,7 @@ struct IPadWorkboardFeatureTests {
         }
         await store.receive(.moveResponse(.init(result: .success(moved)))) {
             $0.busyCardID = nil
-            $0.cards = [moved]
+            $0.cardEntries = .init(values: [moved])
             $0.knownBoardIDs = [.init(value: "default")]
         }
         await store.send(.archiveRequested(.init(card: moved, writeAccess: .init(canWrite: true)))) {
@@ -267,7 +267,7 @@ struct IPadWorkboardFeatureTests {
         }
         await store.receive(.archiveResponse(.init(result: .success(archived)))) {
             $0.busyCardID = nil
-            $0.cards = [archived]
+            $0.cardEntries = .init(values: [archived])
             $0.knownBoardIDs = [.init(value: "default")]
         }
     }
@@ -302,7 +302,7 @@ struct IPadWorkboardFeatureTests {
         {
             $0.dispatchPhase = .idle
             $0.dispatchSummaryText = .init(value: "1 dispatched: 1 started.")
-            $0.cards = [refreshed]
+            $0.cardEntries = .init(values: [refreshed])
             $0.statuses = [.init(value: "running")]
             $0.knownBoardIDs = [.init(value: "default")]
         }
@@ -326,7 +326,7 @@ struct IPadWorkboardFeatureTests {
             result: .success(response))))
         {
             $0.refreshPhase = .idle
-            $0.cards = [refreshed]
+            $0.cardEntries = .init(values: [refreshed])
             $0.statuses = [.init(value: "todo")]
             $0.knownBoardIDs = [.init(value: "default")]
         }
