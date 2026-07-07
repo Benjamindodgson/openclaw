@@ -103,7 +103,7 @@ struct VoiceWakePreferencesTests {
         await store.send(.focusedTriggerIndexChanged(.init(index: .init(value: 0)))) {
             $0.focusedTriggerIndex = .init(value: 0)
         }
-        await store.send(.triggerWordChanged(.init(index: .init(value: 0), value: " openclaw "))) {
+        await store.send(.triggerWordChanged(.init(index: .init(value: 0), word: .init(value: " openclaw ")))) {
             $0.triggerWords = [" openclaw "]
         }
         await store.send(.focusedTriggerIndexChanged(.init(index: nil))) {
@@ -125,7 +125,7 @@ struct VoiceWakePreferencesTests {
         }
 
         await store.send(.commitTriggerWords)
-        await store.send(.triggerWordChanged(.init(index: .init(value: 0), value: " claude "))) {
+        await store.send(.triggerWordChanged(.init(index: .init(value: 0), word: .init(value: " claude ")))) {
             $0.triggerWords = [" claude "]
         }
         await store.send(.commitTriggerWords)

@@ -1222,15 +1222,19 @@ struct RootTabsSourceGuardTests {
             to: "enum VoiceWakeWordsSettingsStoreFactory")
 
         #expect(source.contains("struct VoiceWakeTriggerIndex: Equatable, Sendable"))
+        #expect(source.contains("struct VoiceWakeTriggerWord: Equatable, Sendable"))
         #expect(source.contains("struct TriggerWordChange: Equatable, Sendable"))
         #expect(source.contains("case triggerWordChanged(TriggerWordChange)"))
         #expect(featureSource.contains("var focusedTriggerIndex: VoiceWakeTriggerIndex?"))
         #expect(featureSource.contains("var index: VoiceWakeTriggerIndex\n"))
-        #expect(featureSource.contains("state.triggerWords[change.index.value] = change.value"))
+        #expect(featureSource.contains("var word: VoiceWakeTriggerWord"))
+        #expect(featureSource.contains("state.triggerWords[change.index.value] = change.word.value"))
         #expect(source.contains(
-            ".triggerWordChanged(.init(index: .init(value: index), value: newValue))"))
+            ".triggerWordChanged(.init(\n                    index: .init(value: index),\n                    word: .init(value: newValue)))"))
         #expect(!featureSource.contains("var focusedTriggerIndex: Int?"))
         #expect(!featureSource.contains("var index: Int\n"))
+        #expect(!featureSource.contains("var value: String"))
+        #expect(!featureSource.contains("state.triggerWords[change.index.value] = change.value"))
     }
 
     @Test func `voice wake focus change action is typed`() throws {

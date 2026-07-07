@@ -11,6 +11,10 @@ struct VoiceWakeTriggerIndex: Equatable, Sendable {
     var value: Int
 }
 
+struct VoiceWakeTriggerWord: Equatable, Sendable {
+    var value: String
+}
+
 // swiftformat:enable redundantSendable
 
 struct VoiceWakeWordsPreferencesClient {
@@ -108,7 +112,7 @@ struct VoiceWakeWordsSettingsFeature {
     enum Action: Equatable, Sendable {
         struct TriggerWordChange: Equatable, Sendable {
             var index: VoiceWakeTriggerIndex
-            var value: String
+            var word: VoiceWakeTriggerWord
         }
 
         struct FocusedTriggerIndexChange: Equatable, Sendable {
@@ -157,7 +161,7 @@ struct VoiceWakeWordsSettingsFeature {
 
             case let .triggerWordChanged(change):
                 guard state.triggerWords.indices.contains(change.index.value) else { return .none }
-                state.triggerWords[change.index.value] = change.value
+                state.triggerWords[change.index.value] = change.word.value
                 return .none
 
             case .resetDefaultsButtonTapped:
@@ -282,7 +286,9 @@ struct VoiceWakeWordsSettingsView: View {
                 return self.store.triggerWords[index]
             },
             set: { newValue in
-                self.store.send(.triggerWordChanged(.init(index: .init(value: index), value: newValue)))
+                self.store.send(.triggerWordChanged(.init(
+                    index: .init(value: index),
+                    word: .init(value: newValue))))
             })
     }
 }
