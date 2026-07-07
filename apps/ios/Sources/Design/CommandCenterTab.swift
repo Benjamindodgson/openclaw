@@ -54,15 +54,17 @@ struct CommandCenterTab: View {
         openChat: @escaping () -> Void,
         openSettings: @escaping () -> Void,
         openSessions: (() -> Void)? = nil,
-        gatewayStore: StoreOf<CommandCenterGatewayPresentationFeature> = Store(
-            initialState: CommandCenterGatewayPresentationFeature.State())
-        {
-            CommandCenterGatewayPresentationFeature()
+        gatewayStore: StoreOf<CommandCenterGatewayPresentationFeature>? = nil,
+        gatewayStoreFactory: () -> StoreOf<CommandCenterGatewayPresentationFeature> = {
+            Store(initialState: CommandCenterGatewayPresentationFeature.State()) {
+                CommandCenterGatewayPresentationFeature()
+            }
         },
-        recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature> = Store(
-            initialState: CommandCenterRecentSessionsFeature.State())
-        {
-            CommandCenterRecentSessionsFeature()
+        recentSessionsStore: StoreOf<CommandCenterRecentSessionsFeature>? = nil,
+        recentSessionsStoreFactory: () -> StoreOf<CommandCenterRecentSessionsFeature> = {
+            Store(initialState: CommandCenterRecentSessionsFeature.State()) {
+                CommandCenterRecentSessionsFeature()
+            }
         })
     {
         self.ownsNavigationStack = ownsNavigationStack
@@ -72,8 +74,10 @@ struct CommandCenterTab: View {
         self.openChat = openChat
         self.openSettings = openSettings
         self.openSessions = openSessions
-        self._gatewayStore = State(wrappedValue: gatewayStore)
-        self._recentSessionsStore = State(wrappedValue: recentSessionsStore)
+        let resolvedGatewayStore = gatewayStore ?? gatewayStoreFactory()
+        let resolvedRecentSessionsStore = recentSessionsStore ?? recentSessionsStoreFactory()
+        self._gatewayStore = State(wrappedValue: resolvedGatewayStore)
+        self._recentSessionsStore = State(wrappedValue: resolvedRecentSessionsStore)
     }
 
     var body: some View {
