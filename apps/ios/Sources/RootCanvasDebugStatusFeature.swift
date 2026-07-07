@@ -55,11 +55,23 @@ struct RootCanvasDebugStatusFeature {
 
     struct DebugStatusEnabled: Equatable, Sendable { var isEnabled: Bool }
 
+    struct GatewayDisplayStatusText: Equatable, Sendable {
+        var value: String
+
+        var trimmed: String {
+            self.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
+    struct GatewayServerName: Equatable, Sendable { var value: String? }
+
+    struct GatewayRemoteAddress: Equatable, Sendable { var value: String? }
+
     struct Snapshot: Equatable, Sendable {
         var enabled: DebugStatusEnabled
-        var gatewayDisplayStatusText: String
-        var gatewayServerName: String?
-        var gatewayRemoteAddress: String?
+        var gatewayDisplayStatusText: GatewayDisplayStatusText
+        var gatewayServerName: GatewayServerName
+        var gatewayRemoteAddress: GatewayRemoteAddress
     }
 
     enum Action: Equatable, Sendable {
@@ -79,8 +91,8 @@ struct RootCanvasDebugStatusFeature {
                     await client.setDebugStatusEnabled(snapshot.enabled.isEnabled)
                     guard snapshot.enabled.isEnabled else { return }
 
-                    let title = snapshot.gatewayDisplayStatusText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let subtitle = snapshot.gatewayServerName ?? snapshot.gatewayRemoteAddress
+                    let title = snapshot.gatewayDisplayStatusText.trimmed
+                    let subtitle = snapshot.gatewayServerName.value ?? snapshot.gatewayRemoteAddress.value
                     await client.updateDebugStatus(.init(title: title, subtitle: subtitle))
                 }
             }
@@ -94,8 +106,8 @@ extension RootCanvasDebugStatusFeature.Snapshot {
     init(appModel: NodeAppModel, enabled: RootCanvasDebugStatusFeature.DebugStatusEnabled) {
         self.init(
             enabled: enabled,
-            gatewayDisplayStatusText: appModel.gatewayDisplayStatusText,
-            gatewayServerName: appModel.gatewayServerName,
-            gatewayRemoteAddress: appModel.gatewayRemoteAddress)
+            gatewayDisplayStatusText: .init(value: appModel.gatewayDisplayStatusText),
+            gatewayServerName: .init(value: appModel.gatewayServerName),
+            gatewayRemoteAddress: .init(value: appModel.gatewayRemoteAddress))
     }
 }
