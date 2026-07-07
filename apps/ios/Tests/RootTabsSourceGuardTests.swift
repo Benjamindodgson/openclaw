@@ -1273,6 +1273,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(storesSource.contains("func makeSettingsApprovalsStore()"))
         #expect(storesSource.contains("func makeSettingsAppearanceStore()"))
+        #expect(storesSource.contains("func makeSettingsDeviceIdentityStore()"))
         #expect(storesSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(storesSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
@@ -1289,6 +1290,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("execApprovalPromptStore: self.makeExecApprovalPromptStore()"))
         #expect(rootSource.contains("approvalsStore: self.makeSettingsApprovalsStore()"))
         #expect(rootSource.contains("appearanceStore: self.makeSettingsAppearanceStore()"))
+        #expect(rootSource.contains("deviceIdentityStore: self.makeSettingsDeviceIdentityStore()"))
         #expect(rootSource.contains("shareInstructionStore: self.makeSettingsShareInstructionStore()"))
         #expect(rootSource.contains("manualGatewayPortStore: self.makeSettingsManualGatewayPortStore()"))
         #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
@@ -1299,6 +1301,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
         #expect(!rootSource.contains("func makeSettingsAppearanceStore()"))
+        #expect(!rootSource.contains("func makeSettingsDeviceIdentityStore()"))
         #expect(!rootSource.contains("func makeSettingsShareInstructionStore()"))
         #expect(!rootSource.contains("func makeSettingsManualGatewayPortStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
@@ -5201,6 +5204,12 @@ struct RootTabsSourceGuardTests {
         let settingsSource = try Self.settingsProTabCombinedSource()
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let deviceIdentityStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var deviceIdentityStore",
+            to: "@State var debugOptionsStore")
 
         #expect(supportSource.contains("struct SettingsGatewayCurrentInstanceID: Equatable, Sendable"))
         #expect(supportSource.contains("struct SettingsDeviceDisplayName: Equatable, Sendable { var value: String }"))
@@ -5229,6 +5238,10 @@ struct RootTabsSourceGuardTests {
             "self.deviceIdentityStore.send(.displayNameSynced(.init(displayName: .init(value: newValue))))"))
         #expect(settingsSource.contains(
             "self.deviceIdentityStore.send(.instanceIdSynced(.init(instanceId: .init(value: newValue))))"))
+        #expect(rootSource.contains("deviceIdentityStore: self.makeSettingsDeviceIdentityStore()"))
+        #expect(storesSource.contains("func makeSettingsDeviceIdentityStore()"))
+        #expect(deviceIdentityStoreDeclaration.contains("@State var deviceIdentityStore: StoreOf<SettingsDeviceIdentityFeature>"))
+        #expect(!deviceIdentityStoreDeclaration.contains("= Store("))
         #expect(!settingsSource.contains("struct DisplayNameChange: Equatable, Sendable { var displayName: String }"))
         #expect(!settingsSource.contains("struct DisplayNameSync: Equatable, Sendable { var displayName: String }"))
         #expect(!settingsSource.contains("struct InstanceIDSync: Equatable, Sendable { var instanceId: String }"))
