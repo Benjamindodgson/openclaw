@@ -1277,6 +1277,7 @@ struct RootTabsSourceGuardTests {
         #expect(storesSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(storesSource.contains("func makeSettingsGatewayAutoConnectStore()"))
         #expect(storesSource.contains("func makeSettingsGatewaySetupStatusStore()"))
+        #expect(storesSource.contains("func makeSettingsNotificationStore()"))
         #expect(storesSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(storesSource.contains("withDependencies"))
         #expect(storesSource.contains("openNotifications: { approvalId in"))
@@ -1289,6 +1290,7 @@ struct RootTabsSourceGuardTests {
         #expect(rootSource.contains("manualGatewayPortStore: self.makeSettingsManualGatewayPortStore()"))
         #expect(rootSource.contains("gatewayAutoConnectStore: self.makeSettingsGatewayAutoConnectStore()"))
         #expect(rootSource.contains("gatewaySetupStatusStore: self.makeSettingsGatewaySetupStatusStore()"))
+        #expect(rootSource.contains("notificationStore: self.makeSettingsNotificationStore()"))
         #expect(!rootSource.contains("func makeGatewayQuickSetupStore()"))
         #expect(!rootSource.contains("func makePushEnrollmentConsentStore()"))
         #expect(!rootSource.contains("func makeSettingsApprovalsStore()"))
@@ -1297,6 +1299,7 @@ struct RootTabsSourceGuardTests {
         #expect(!rootSource.contains("func makeSettingsGatewayActivityStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewayAutoConnectStore()"))
         #expect(!rootSource.contains("func makeSettingsGatewaySetupStatusStore()"))
+        #expect(!rootSource.contains("func makeSettingsNotificationStore()"))
         #expect(!rootSource.contains("func makeNotificationPermissionGuidanceStore()"))
         #expect(!rootSource.contains("withDependencies"))
     }
@@ -5618,7 +5621,13 @@ struct RootTabsSourceGuardTests {
     @Test func `settings notification status refresh is reducer effect owned`() throws {
         let notificationSource = try String(contentsOf: Self.settingsNotificationFeatureSourceURL(), encoding: .utf8)
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let settingsSource = try Self.settingsProTabCombinedSource()
+        let notificationStoreDeclaration = try Self.extract(
+            settingsSource,
+            from: "@State var notificationStore",
+            to: "@State var presentationStore")
         let refreshFunction = try Self.extract(
             actionsSource,
             from: "func refreshNotificationSettings()",
@@ -5637,6 +5646,10 @@ struct RootTabsSourceGuardTests {
         #expect(actionsSource.contains("self.notificationStore.send(.statusRefreshRequested)"))
         #expect(actionsSource.contains("self.notificationStore.send(.statusRefreshResultHandled)"))
         #expect(actionsSource.contains("await self.notificationStore.send(.statusRefreshRequested).finish()"))
+        #expect(rootSource.contains("notificationStore: self.makeSettingsNotificationStore()"))
+        #expect(storesSource.contains("func makeSettingsNotificationStore()"))
+        #expect(notificationStoreDeclaration.contains("@State var notificationStore: StoreOf<SettingsNotificationFeature>"))
+        #expect(!notificationStoreDeclaration.contains("= Store("))
         #expect(refreshFunction.contains("UNUserNotificationCenter.current().getNotificationSettings") == false)
         #expect(refreshFunction.contains("Task {") == false)
         #expect(resultFunction.contains("UNUserNotificationCenter") == false)
