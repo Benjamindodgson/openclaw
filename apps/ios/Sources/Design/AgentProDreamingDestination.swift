@@ -145,6 +145,21 @@ struct AgentDreamingDestinationFeature {
             }
             return days.last
         }
+
+        func dreamingEntryTitle(_ entry: DreamingEntryLite) -> String {
+            let path = entry.path.split(separator: "/").last.map(String.init) ?? entry.path
+            return "\(path):\(entry.startLine)"
+        }
+
+        func dreamingEntryDetail(_ entry: DreamingEntryLite) -> String {
+            let parts = [
+                entry.promotedAt.map { "promoted \($0)" },
+                entry.lastRecalledAt.map { "recalled \($0)" },
+                "\(entry.recallCount) recalls",
+                "\(entry.groundedCount) grounded",
+            ].compactMap(\.self)
+            return parts.joined(separator: " • ")
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -576,7 +591,7 @@ struct AgentProDreamingDestination: View {
         HStack(alignment: .top, spacing: 12) {
             ProIconBadge(systemName: "text.page", color: OpenClawBrand.accent)
             VStack(alignment: .leading, spacing: 4) {
-                Text(self.dreamingEntryTitle(entry))
+                Text(self.store.state.dreamingEntryTitle(entry))
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
                 Text(entry.snippet)
@@ -584,7 +599,7 @@ struct AgentProDreamingDestination: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(4)
                     .textSelection(.enabled)
-                Text(self.dreamingEntryDetail(entry))
+                Text(self.store.state.dreamingEntryDetail(entry))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -684,21 +699,6 @@ struct AgentProDreamingDestination: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
         .background(Color.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-    }
-
-    private func dreamingEntryTitle(_ entry: DreamingEntryLite) -> String {
-        let path = entry.path.split(separator: "/").last.map(String.init) ?? entry.path
-        return "\(path):\(entry.startLine)"
-    }
-
-    private func dreamingEntryDetail(_ entry: DreamingEntryLite) -> String {
-        let parts = [
-            entry.promotedAt.map { "promoted \($0)" },
-            entry.lastRecalledAt.map { "recalled \($0)" },
-            "\(entry.recallCount) recalls",
-            "\(entry.groundedCount) grounded",
-        ].compactMap(\.self)
-        return parts.joined(separator: " • ")
     }
 
     private func dreamingPhaseDetail(_ phase: DreamingPhaseStatusLite) -> String {

@@ -793,8 +793,12 @@ struct RootTabsSourceGuardTests {
         #expect(dreamingSource.contains(
             "let phases = self.store.state.dreamingPhases(from: self.overview?.dreaming?.phases)"))
         #expect(dreamingSource.contains("self.store.state.selectedDreamDiaryDay(from: days)"))
+        #expect(dreamingSource.contains("self.store.state.dreamingEntryTitle(entry)"))
+        #expect(dreamingSource.contains("self.store.state.dreamingEntryDetail(entry)"))
         #expect(!dreamingSource.contains("private var dreamingPhases: [DreamingPhaseRow]"))
         #expect(!dreamingSource.contains("private func selectedDreamDiaryDay(from days: [DreamDiaryDay])"))
+        #expect(!dreamingSource.contains("private func dreamingEntryTitle(_ entry: DreamingEntryLite)"))
+        #expect(!dreamingSource.contains("private func dreamingEntryDetail(_ entry: DreamingEntryLite)"))
         #expect(destinationsSource.contains("self.directHeader(\n                        for: .usage"))
         #expect(destinationsSource.contains("self.directHeader(\n                        for: .cron"))
         #expect(destinationsSource.contains("self.directRoute == route ? self.headerLeadingAction : nil"))
@@ -826,6 +830,8 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains(
             "func dreamingPhases(from phases: [String: DreamingPhaseStatusLite]?) -> [DreamingPhaseRow]"))
         #expect(feature.contains("func selectedDreamDiaryDay(from days: [DreamDiaryDay]) -> DreamDiaryDay?"))
+        #expect(feature.contains("func dreamingEntryTitle(_ entry: DreamingEntryLite) -> String"))
+        #expect(feature.contains("func dreamingEntryDetail(_ entry: DreamingEntryLite) -> String"))
         #expect(source.contains("struct DreamDiaryDay: Equatable, Identifiable"))
         #expect(feature.contains("let phaseOrder = [\"light\", \"deep\", \"rem\"]"))
         #expect(feature.contains("var dayID: AgentDreamDiaryDayID"))
