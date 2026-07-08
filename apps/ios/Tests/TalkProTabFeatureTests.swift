@@ -43,6 +43,37 @@ struct TalkProTabFeatureTests {
         }
     }
 
+    @Test func `presentation snapshot drives talk pro state`() async {
+        let snapshot = TalkProPresentationSnapshot(
+            isDemoMode: false,
+            isEnabled: true,
+            statusText: "Listening",
+            isConfigLoaded: true,
+            isListening: true,
+            isSpeaking: false,
+            isUserSpeechDetected: true,
+            permissionState: .ready,
+            voiceModeTitle: "Realtime",
+            voiceModeSubtitle: "Talk to OpenClaw",
+            agentName: "Joshtimus Prime",
+            micLevel: 0.7)
+        let store = TestStore(initialState: TalkProTabFeature.State()) {
+            TalkProTabFeature()
+        }
+
+        await store.send(.gatewayConnectionChanged(.init(status: .init(isConnected: true)))) {
+            $0.gatewayConnectionState = .init(isConnected: true)
+        }
+        await store.send(.presentationSnapshotChanged(.init(snapshot: snapshot))) {
+            $0.presentationSnapshot = snapshot
+        }
+
+        #expect(store.state.presentation.title == "Listening")
+        #expect(store.state.presentation.headerSubtitle == "Joshtimus Prime • Realtime")
+        #expect(store.state.presentation.primaryAction == .stop)
+        #expect(store.state.waveformMode == .inputSpeech)
+    }
+
     @Test func `speakerphone toggle persists through client`() async {
         let probe = TalkProTabProbe()
         let store = TestStore(initialState: TalkProTabFeature.State()) {

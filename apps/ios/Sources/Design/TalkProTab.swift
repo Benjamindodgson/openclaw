@@ -68,6 +68,7 @@ struct TalkProTabFeature {
 
         var destination: Destination?
         var gatewayConnectionState = TalkProGatewayConnectionState(isConnected: false)
+        var presentationSnapshot = TalkProPresentationSnapshot()
         var speakerphoneState = TalkProSpeakerphoneState(isEnabled: TalkDefaults.speakerphoneEnabledByDefault)
         var talkEnabledState = TalkProEnabledState(isEnabled: false)
 
@@ -90,12 +91,22 @@ struct TalkProTabFeature {
         var showTalkIssueDetails: Bool {
             self.destination == .talkIssueDetails
         }
+
+        var presentation: TalkProState {
+            .init(gatewayConnected: self.gatewayConnected, snapshot: self.presentationSnapshot)
+        }
+
+        var waveformMode: TalkProWaveformMode {
+            self.presentation.waveformMode(micLevel: self.presentationSnapshot.micLevel)
+        }
     }
 
     enum Action: Equatable, Sendable {
         struct GatewayConnectionStatus: Equatable, Sendable { var isConnected: Bool }
 
         struct GatewayConnectionChange: Equatable, Sendable { var status: GatewayConnectionStatus }
+
+        struct PresentationSnapshotChange: Equatable, Sendable { var snapshot: TalkProPresentationSnapshot }
 
         struct SpeakerphoneEnabled: Equatable, Sendable { var isEnabled: Bool }
 
@@ -111,6 +122,7 @@ struct TalkProTabFeature {
         case permissionRequired
         case permissionPromptDismissed
         case permissionReady
+        case presentationSnapshotChanged(PresentationSnapshotChange)
         case runtimeIssueDetailsButtonTapped
         case runtimeIssueDetailsDismissed
         case speakerphoneEnabledChanged(SpeakerphoneEnabledChange)
@@ -138,6 +150,10 @@ struct TalkProTabFeature {
                 if state.destination == .permissionPrompt {
                     state.destination = nil
                 }
+                return .none
+
+            case let .presentationSnapshotChanged(change):
+                state.presentationSnapshot = change.snapshot
                 return .none
 
             case .runtimeIssueDetailsButtonTapped:
@@ -173,6 +189,52 @@ struct TalkProTabFeature {
     }
 }
 
+// swiftformat:disable redundantSendable
+struct TalkProPresentationSnapshot: Equatable, Sendable {
+    var isDemoMode = false
+    var isEnabled = false
+    var statusText = ""
+    var isConfigLoaded = false
+    var isListening = false
+    var isSpeaking = false
+    var isUserSpeechDetected = false
+    var permissionState: TalkGatewayPermissionState = .unknown
+    var voiceModeTitle = "Not loaded"
+    var voiceModeSubtitle: String?
+    var agentName = ""
+    var micLevel = 0.0
+
+    init(
+        isDemoMode: Bool = false,
+        isEnabled: Bool = false,
+        statusText: String = "",
+        isConfigLoaded: Bool = false,
+        isListening: Bool = false,
+        isSpeaking: Bool = false,
+        isUserSpeechDetected: Bool = false,
+        permissionState: TalkGatewayPermissionState = .unknown,
+        voiceModeTitle: String = "Not loaded",
+        voiceModeSubtitle: String? = nil,
+        agentName: String = "",
+        micLevel: Double = 0.0)
+    {
+        self.isDemoMode = isDemoMode
+        self.isEnabled = isEnabled
+        self.statusText = statusText
+        self.isConfigLoaded = isConfigLoaded
+        self.isListening = isListening
+        self.isSpeaking = isSpeaking
+        self.isUserSpeechDetected = isUserSpeechDetected
+        self.permissionState = permissionState
+        self.voiceModeTitle = voiceModeTitle
+        self.voiceModeSubtitle = voiceModeSubtitle
+        self.agentName = agentName
+        self.micLevel = micLevel
+    }
+}
+
+// swiftformat:enable redundantSendable
+
 struct TalkProTab: View {
     @Environment(NodeAppModel.self) private var appModel
     @AppStorage("talk.enabled") private var talkEnabled: Bool = false
@@ -206,8 +268,27 @@ struct TalkProTab: View {
     }
 
     private var state: TalkProState {
-        TalkProState(
-            gatewayConnected: self.store.gatewayConnected,
+        let current = self.currentPresentationState
+        guard self.store.presentation == current else {
+            return current
+        }
+        return self.store.presentation
+    }
+
+    private var waveformMode: TalkProWaveformMode {
+        let snapshot = self.currentPresentationSnapshot
+        guard self.store.presentationSnapshot == snapshot else {
+            return self.currentPresentationState.waveformMode(micLevel: snapshot.micLevel)
+        }
+        return self.store.waveformMode
+    }
+
+    private var currentPresentationState: TalkProState {
+        .init(gatewayConnected: self.store.gatewayConnected, snapshot: self.currentPresentationSnapshot)
+    }
+
+    private var currentPresentationSnapshot: TalkProPresentationSnapshot {
+        TalkProPresentationSnapshot(
             isDemoMode: self.appModel.isAppleReviewDemoModeEnabled,
             isEnabled: self.appModel.talkMode.isEnabled || self.talkEnabled,
             statusText: self.appModel.talkMode.statusText,
@@ -218,7 +299,8 @@ struct TalkProTab: View {
             permissionState: self.appModel.talkMode.gatewayTalkPermissionState,
             voiceModeTitle: self.appModel.talkMode.gatewayTalkVoiceModeTitle,
             voiceModeSubtitle: self.appModel.talkMode.gatewayTalkVoiceModeSubtitle,
-            agentName: self.appModel.chatAgentName)
+            agentName: self.appModel.chatAgentName,
+            micLevel: self.appModel.talkMode.micLevel)
     }
 
     var body: some View {
@@ -262,10 +344,14 @@ struct TalkProTab: View {
         }
         .onAppear {
             self.syncGatewayConnection()
+            self.syncPresentationState()
             self.alignPersistedTalkState()
         }
         .onChange(of: self.currentGatewayConnected) { _, _ in
             self.syncGatewayConnection()
+        }
+        .onChange(of: self.currentPresentationSnapshot) { _, _ in
+            self.syncPresentationState()
         }
     }
 
@@ -315,7 +401,7 @@ struct TalkProTab: View {
         CommandPanel(isProminent: true, padding: 16) {
             VStack(alignment: .center, spacing: 14) {
                 TalkProOrb(
-                    mode: self.state.waveformMode(micLevel: self.appModel.talkMode.micLevel),
+                    mode: self.waveformMode,
                     color: self.state.color,
                     systemImage: self.state.icon)
                     .frame(height: 132)
@@ -403,6 +489,12 @@ struct TalkProTab: View {
         let connected = self.currentGatewayConnected
         guard self.store.gatewayConnected != connected else { return }
         self.store.send(.gatewayConnectionChanged(.init(status: .init(isConnected: connected))))
+    }
+
+    private func syncPresentationState() {
+        let snapshot = self.currentPresentationSnapshot
+        guard self.store.presentationSnapshot != snapshot else { return }
+        self.store.send(.presentationSnapshotChanged(.init(snapshot: snapshot)))
     }
 
     private func alignPersistedTalkState() {
@@ -700,6 +792,24 @@ struct TalkProState: Equatable {
             return .indeterminate
         }
         return self.isEnabled ? .indeterminate : .still
+    }
+}
+
+extension TalkProState {
+    init(gatewayConnected: Bool, snapshot: TalkProPresentationSnapshot) {
+        self.init(
+            gatewayConnected: gatewayConnected,
+            isDemoMode: snapshot.isDemoMode,
+            isEnabled: snapshot.isEnabled,
+            statusText: snapshot.statusText,
+            isConfigLoaded: snapshot.isConfigLoaded,
+            isListening: snapshot.isListening,
+            isSpeaking: snapshot.isSpeaking,
+            isUserSpeechDetected: snapshot.isUserSpeechDetected,
+            permissionState: snapshot.permissionState,
+            voiceModeTitle: snapshot.voiceModeTitle,
+            voiceModeSubtitle: snapshot.voiceModeSubtitle,
+            agentName: snapshot.agentName)
     }
 }
 
