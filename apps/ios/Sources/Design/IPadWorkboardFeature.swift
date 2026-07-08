@@ -197,6 +197,17 @@ enum IPadWorkboardMetricTone: Equatable, Sendable {
     case warn
 }
 
+enum IPadWorkboardStatusMessageTone: Equatable, Sendable {
+    case accent
+    case warn
+}
+
+struct IPadWorkboardStatusMessagePresentation: Equatable, Identifiable, Sendable {
+    let id: String
+    let text: String
+    let tone: IPadWorkboardStatusMessageTone
+}
+
 enum IPadWorkboardCardTone: Equatable, Sendable {
     case accent
     case accentHot
@@ -500,6 +511,17 @@ struct IPadWorkboardFeature {
                 compactAccessibilityLabel: "Refresh workboard",
                 isDisabled: self.isLoading,
                 showsProgress: self.isLoading)
+        }
+
+        var statusMessagePresentations: [IPadWorkboardStatusMessagePresentation] {
+            var messages: [IPadWorkboardStatusMessagePresentation] = []
+            if let dispatchSummaryText {
+                messages.append(.init(id: "dispatch", text: dispatchSummaryText.value, tone: .accent))
+            }
+            if let errorText {
+                messages.append(.init(id: "error", text: errorText.value, tone: .warn))
+            }
+            return messages
         }
 
         func dispatchControlPresentation(canWrite: Bool) -> IPadWorkboardDispatchControlPresentation {

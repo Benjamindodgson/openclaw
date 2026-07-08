@@ -93,6 +93,15 @@ struct IPadWorkboardScreen: View {
         }
     }
 
+    private static func statusMessageColor(for tone: IPadWorkboardStatusMessageTone) -> Color {
+        switch tone {
+        case .accent:
+            OpenClawBrand.accent
+        case .warn:
+            OpenClawBrand.warn
+        }
+    }
+
     private var controlsCard: some View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
@@ -142,16 +151,7 @@ struct IPadWorkboardScreen: View {
                     }
                 }
 
-                if let dispatchSummaryText = self.store.dispatchSummaryText {
-                    Text(dispatchSummaryText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.accent)
-                }
-                if let errorText = self.store.errorText {
-                    Text(errorText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.warn)
-                }
+                self.statusMessageRows
             }
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
@@ -193,19 +193,18 @@ struct IPadWorkboardScreen: View {
                         .lineLimit(2)
                 }
 
-                if let dispatchSummaryText = self.store.dispatchSummaryText {
-                    Text(dispatchSummaryText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.accent)
-                }
-                if let errorText = self.store.errorText {
-                    Text(errorText.value)
-                        .font(.caption2)
-                        .foregroundStyle(OpenClawBrand.warn)
-                }
+                self.statusMessageRows
             }
         }
         .padding(.horizontal, OpenClawProMetric.pagePadding)
+    }
+
+    private var statusMessageRows: some View {
+        ForEach(self.store.statusMessagePresentations) { message in
+            Text(message.text)
+                .font(.caption2)
+                .foregroundStyle(Self.statusMessageColor(for: message.tone))
+        }
     }
 
     private var compactRefreshButton: some View {
