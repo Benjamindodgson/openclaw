@@ -97,6 +97,15 @@ struct OnboardingGatewayToken: Equatable, Sendable { var value: String }
 
 struct OnboardingGatewayPassword: Equatable, Sendable { var value: String }
 
+struct OnboardingGatewayCurrentInstanceID: Equatable, Sendable {
+    var value: String
+
+    var trimmedValue: String? {
+        let trimmed = self.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
 struct OnboardingQRMessage: Equatable, Sendable { var value: String? }
 
 struct OnboardingQRPhotoImportFailureMessage: Equatable, Sendable { var value: String }
@@ -523,14 +532,96 @@ struct OnboardingStatusFeature {
     }
 }
 
+struct OnboardingGatewaySetupAuthPersistenceRequest: Equatable {
+    let setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth
+    let instanceId: OnboardingGatewayCurrentInstanceID
+
+    var hasBootstrapToken: Bool {
+        self.setupAuth.hasBootstrapToken
+    }
+
+    var trimmedInstanceId: String? {
+        self.instanceId.trimmedValue
+    }
+}
+
+struct OnboardingGatewaySetupAuthPersistenceClient {
+    var currentInstanceID: @Sendable () -> OnboardingGatewayCurrentInstanceID
+    var prepareForBootstrapPairing: @MainActor @Sendable (_ instanceId: OnboardingGatewayCurrentInstanceID) -> Void
+    var saveSetupAuth: @MainActor @Sendable (_ request: OnboardingGatewaySetupAuthPersistenceRequest) -> Void
+
+    init(
+        currentInstanceID: @escaping @Sendable () -> OnboardingGatewayCurrentInstanceID,
+        prepareForBootstrapPairing: @escaping @MainActor @Sendable (
+            _ instanceId: OnboardingGatewayCurrentInstanceID) -> Void = { _ in },
+        saveSetupAuth: @escaping @MainActor @Sendable (_ request: OnboardingGatewaySetupAuthPersistenceRequest) -> Void)
+    {
+        self.currentInstanceID = currentInstanceID
+        self.prepareForBootstrapPairing = prepareForBootstrapPairing
+        self.saveSetupAuth = saveSetupAuth
+    }
+}
+
+extension OnboardingGatewaySetupAuthPersistenceClient: DependencyKey {
+    static let liveValue = OnboardingGatewaySetupAuthPersistenceClient(
+        currentInstanceID: {
+            .init(value: GatewaySettingsStore.currentInstanceID())
+        },
+        saveSetupAuth: { request in
+            guard let instanceId = request.trimmedInstanceId else { return }
+
+            let bootstrapToken = request.setupAuth.bootstrapToken.trimmingCharacters(in: .whitespacesAndNewlines)
+            GatewaySettingsStore.saveGatewayBootstrapToken(bootstrapToken, instanceId: instanceId)
+            if request.setupAuth.shouldApplyTokenField {
+                let token = request.setupAuth.token.trimmingCharacters(in: .whitespacesAndNewlines)
+                GatewaySettingsStore.saveGatewayToken(token, instanceId: instanceId)
+            }
+            if request.setupAuth.shouldApplyPasswordField {
+                let password = request.setupAuth.password.trimmingCharacters(in: .whitespacesAndNewlines)
+                GatewaySettingsStore.saveGatewayPassword(password, instanceId: instanceId)
+            }
+        })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        OnboardingGatewaySetupAuthPersistenceClient(
+            currentInstanceID: {
+                .init(value: GatewaySettingsStore.currentInstanceID())
+            },
+            prepareForBootstrapPairing: { instanceId in
+                guard let instanceId = instanceId.trimmedValue else { return }
+                GatewayOnboardingReset.prepareForBootstrapPairing(appModel: appModel, instanceId: instanceId)
+            },
+            saveSetupAuth: self.liveValue.saveSetupAuth)
+    }
+
+    static let testValue = OnboardingGatewaySetupAuthPersistenceClient(
+        currentInstanceID: { .init(value: "") },
+        saveSetupAuth: { _ in })
+}
+
+extension DependencyValues {
+    var onboardingGatewaySetupAuthPersistence: OnboardingGatewaySetupAuthPersistenceClient {
+        get { self[OnboardingGatewaySetupAuthPersistenceClient.self] }
+        set { self[OnboardingGatewaySetupAuthPersistenceClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct OnboardingCredentialsFeature {
+    private let setupAuthPersistenceClientOverride: OnboardingGatewaySetupAuthPersistenceClient?
+
+    init(setupAuthPersistenceClient: OnboardingGatewaySetupAuthPersistenceClient? = nil) {
+        self.setupAuthPersistenceClientOverride = setupAuthPersistenceClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
         var gatewayPasswordState = OnboardingGatewayPassword(value: "")
         var gatewayTokenState = OnboardingGatewayToken(value: "")
         var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
+        var setupAuthPersistenceRequest: OnboardingGatewaySetupAuthPersistenceRequest?
 
         var gatewayPassword: String {
             self.gatewayPasswordState.value
@@ -561,18 +652,27 @@ struct OnboardingCredentialsFeature {
             var setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth
         }
 
+        struct SetupLinkApplication: Equatable, Sendable { var link: GatewayConnectDeepLink }
+
         case credentialsLoaded(LoadedCredentials)
         case gatewayPasswordChanged(GatewayPasswordChange)
         case gatewayTokenChanged(GatewayTokenChange)
         case pendingManualAuthOverrideConsumed
         case reset
         case setupAuthApplied(SetupAuthApplication)
+        case setupAuthPersistenceRequested(OnboardingGatewaySetupAuthPersistenceRequest)
+        case setupAuthPersistenceRequestHandled
+        case setupLinkApplied(SetupLinkApplication)
     }
 
     // swiftformat:enable redundantSendable
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingGatewaySetupAuthPersistence) var dependencySetupAuthPersistenceClient
+            let setupAuthPersistenceClient = self.setupAuthPersistenceClientOverride
+                ?? dependencySetupAuthPersistenceClient
+
             switch action {
             case let .credentialsLoaded(credentials):
                 state.gatewayTokenState = credentials.token
@@ -595,20 +695,49 @@ struct OnboardingCredentialsFeature {
                 state.gatewayTokenState = .init(value: "")
                 state.gatewayPasswordState = .init(value: "")
                 state.pendingManualAuthOverride = nil
+                state.setupAuthPersistenceRequest = nil
                 return .none
 
             case let .setupAuthApplied(application):
-                if application.setupAuth.shouldApplyTokenField {
-                    state.gatewayTokenState = .init(value: application.setupAuth.token)
+                Self.applySetupAuth(application.setupAuth, to: &state)
+                return .none
+
+            case let .setupAuthPersistenceRequested(request):
+                guard request.trimmedInstanceId != nil else { return .none }
+                return .run { _ in
+                    if request.hasBootstrapToken {
+                        await setupAuthPersistenceClient.prepareForBootstrapPairing(request.instanceId)
+                    }
+                    await setupAuthPersistenceClient.saveSetupAuth(request)
                 }
-                if application.setupAuth.shouldApplyPasswordField {
-                    state.gatewayPasswordState = .init(value: application.setupAuth.password)
-                }
-                state.pendingManualAuthOverride = application.setupAuth.manualAuthOverride
+
+            case .setupAuthPersistenceRequestHandled:
+                state.setupAuthPersistenceRequest = nil
+                return .none
+
+            case let .setupLinkApplied(application):
+                let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: application.link)
+                Self.applySetupAuth(setupAuth, to: &state)
+                state.setupAuthPersistenceRequest = OnboardingGatewaySetupAuthPersistenceRequest(
+                    setupAuth: setupAuth,
+                    instanceId: setupAuthPersistenceClient.currentInstanceID())
                 return .none
             }
         }
         .autoLogActions()
+    }
+
+    private static func applySetupAuth(
+        _ setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth,
+        to state: inout State)
+    {
+        if setupAuth.shouldApplyTokenField {
+            state.gatewayTokenState = .init(value: setupAuth.token)
+        }
+        if setupAuth.shouldApplyPasswordField {
+            state.gatewayPasswordState = .init(value: setupAuth.password)
+        }
+        state.pendingManualAuthOverride = setupAuth.manualAuthOverride
     }
 }
 

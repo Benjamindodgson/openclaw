@@ -606,6 +606,63 @@ import Testing
         #expect(!store.state.hasGatewayPassword)
     }
 
+    @Test @MainActor func `credentials reducer derives setup auth persistence request from gateway link`() async {
+        let probe = OnboardingGatewaySetupAuthPersistenceProbe()
+        probe.currentInstanceID = .init(value: " instance-1 ")
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: "bootstrap-1",
+            token: "token-3",
+            password: "password-3")
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
+        let request = OnboardingGatewaySetupAuthPersistenceRequest(
+            setupAuth: setupAuth,
+            instanceId: .init(value: " instance-1 "))
+        let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
+            OnboardingCredentialsFeature(setupAuthPersistenceClient: probe.client)
+        }
+
+        await store.send(.setupLinkApplied(.init(link: link))) {
+            $0.gatewayTokenState = .init(value: "token-3")
+            $0.gatewayPasswordState = .init(value: "password-3")
+            $0.pendingManualAuthOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+                token: "token-3",
+                bootstrapToken: "bootstrap-1",
+                password: "password-3")
+            $0.setupAuthPersistenceRequest = request
+        }
+
+        await store.send(.setupAuthPersistenceRequestHandled) {
+            $0.setupAuthPersistenceRequest = nil
+        }
+    }
+
+    @Test @MainActor func `credentials reducer persists setup auth through client`() async {
+        let probe = OnboardingGatewaySetupAuthPersistenceProbe()
+        let link = GatewayConnectDeepLink(
+            host: "gateway.example.com",
+            port: 443,
+            tls: true,
+            bootstrapToken: "bootstrap-1",
+            token: "token-3",
+            password: "password-3")
+        let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
+        let request = OnboardingGatewaySetupAuthPersistenceRequest(
+            setupAuth: setupAuth,
+            instanceId: .init(value: " instance-1 "))
+        let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
+            OnboardingCredentialsFeature(setupAuthPersistenceClient: probe.client)
+        }
+
+        await store.send(.setupAuthPersistenceRequested(request))
+        await store.finish()
+
+        #expect(probe.preparedInstanceIDs == [.init(value: " instance-1 ")])
+        #expect(probe.savedRequests == [request])
+    }
+
     @Test @MainActor func `setup code reducer owns setup text and status`() async {
         let store = TestStore(initialState: OnboardingSetupCodeFeature.State()) {
             OnboardingSetupCodeFeature()
@@ -899,6 +956,25 @@ import Testing
             OnboardingPairingResumeClient(resume: {
                 self.resumeCount += 1
             })
+        }
+    }
+
+    private final class OnboardingGatewaySetupAuthPersistenceProbe: @unchecked Sendable {
+        var currentInstanceID = OnboardingGatewayCurrentInstanceID(value: "instance-1")
+        var preparedInstanceIDs: [OnboardingGatewayCurrentInstanceID] = []
+        var savedRequests: [OnboardingGatewaySetupAuthPersistenceRequest] = []
+
+        var client: OnboardingGatewaySetupAuthPersistenceClient {
+            OnboardingGatewaySetupAuthPersistenceClient(
+                currentInstanceID: {
+                    self.currentInstanceID
+                },
+                prepareForBootstrapPairing: { instanceId in
+                    self.preparedInstanceIDs.append(instanceId)
+                },
+                saveSetupAuth: { request in
+                    self.savedRequests.append(request)
+                })
         }
     }
 }
