@@ -269,14 +269,14 @@ struct CommandCenterTab: View {
             VStack(spacing: 10) {
                 self.cardHeader(title: "Recent sessions")
 
-                if self.recentSessionPreviewRows.isEmpty {
+                if self.recentSessionsPresentation.previewRows.isEmpty {
                     CommandEmptyStateRow(
                         icon: self.gatewayStore.presentation.recentSessionsEmptyIcon,
                         title: self.gatewayStore.presentation.recentSessionsEmptyTitle,
                         detail: self.gatewayStore.presentation.recentSessionsEmptyDetail)
                 } else {
                     VStack(spacing: 8) {
-                        ForEach(self.recentSessionPreviewRows) { item in
+                        ForEach(self.recentSessionsPresentation.previewRows) { item in
                             Button {
                                 self.open(item.route)
                             } label: {
@@ -285,7 +285,7 @@ struct CommandCenterTab: View {
                             .buttonStyle(.plain)
                         }
 
-                        if self.hasMoreRecentSessions {
+                        if self.recentSessionsPresentation.showsViewMore {
                             if let openSessions {
                                 Button(action: openSessions) {
                                     CommandViewMoreRow()
@@ -354,18 +354,6 @@ struct CommandCenterTab: View {
         return Self.relativeTimeText(forMilliseconds: updatedAt)
     }
 
-    private var recentSessionRows: [WorkItem] {
-        self.sessionItems
-    }
-
-    private var recentSessionPreviewRows: [WorkItem] {
-        Array(self.recentSessionRows.prefix(3))
-    }
-
-    private var hasMoreRecentSessions: Bool {
-        self.sessionWorkItems.count > self.recentSessionPreviewRows.count
-    }
-
     private var recentSessionsRefreshID: String {
         [
             self.sessionListMode,
@@ -382,17 +370,9 @@ struct CommandCenterTab: View {
         self.appModel.chatTransportModeID
     }
 
-    private var sessionItems: [WorkItem] {
-        self.sessionWorkItems
-    }
-
-    private var sessionWorkItems: [WorkItem] {
-        let currentSessionKey = self.appModel.chatSessionKey
-        return self.recentSessionsStore.recentChatSessions
-            .filter { Self.isRecentChatSession($0.key, defaultSessionKey: self.appModel.defaultChatSessionKey) }
-            .map { session in
-                Self.sessionWorkItem(for: session, currentSessionKey: currentSessionKey)
-            }
+    private var recentSessionsPresentation: CommandCenterRecentSessionsPresentation {
+        self.recentSessionsStore.state.presentation(
+            currentSession: .init(value: self.appModel.chatSessionKey))
     }
 
     private func open(_ route: WorkRoute) {
