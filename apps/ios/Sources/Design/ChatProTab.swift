@@ -72,8 +72,12 @@ struct ChatProTab: View {
             }
         }
         .task {
+            self.syncTalkControlState()
             self.syncPresentationState()
             self.syncChatViewModel()
+        }
+        .onChange(of: self.currentTalkControlSnapshot) { _, _ in
+            self.syncTalkControlState()
         }
         .onChange(of: self.currentPresentationSnapshot) { _, _ in
             self.syncPresentationState()
@@ -219,18 +223,43 @@ struct ChatProTab: View {
     }
 
     private var talkControl: OpenClawChatTalkControl {
-        OpenClawChatTalkControl(
+        let control = self.talkControlState
+        return OpenClawChatTalkControl(
+            isEnabled: control.isEnabled,
+            isListening: control.isListening,
+            isSpeaking: control.isSpeaking,
+            isGatewayConnected: control.isGatewayConnected,
+            statusText: control.statusText,
+            providerLabel: control.providerLabel,
+            toggle: { sessionKey in
+                self.talkControlStore.send(.toggleRequested(.init(
+                    sessionKey: ChatSessionKey(rawValue: sessionKey),
+                    talkEnabled: .init(isEnabled: control.isEnabled))))
+            })
+    }
+
+    private var talkControlState: ChatTalkControlSnapshot {
+        let current = self.currentTalkControlSnapshot
+        guard self.talkControlStore.snapshot == current else {
+            return current
+        }
+        return self.talkControlStore.snapshot
+    }
+
+    private var currentTalkControlSnapshot: ChatTalkControlSnapshot {
+        ChatTalkControlSnapshot(
             isEnabled: self.appModel.talkMode.isEnabled,
             isListening: self.appModel.talkMode.isListening,
             isSpeaking: self.appModel.talkMode.isSpeaking,
             isGatewayConnected: self.appModel.talkMode.isGatewayConnected,
             statusText: self.appModel.talkMode.statusText,
-            providerLabel: self.appModel.talkMode.gatewayTalkProviderLabel,
-            toggle: { sessionKey in
-                self.talkControlStore.send(.toggleRequested(.init(
-                    sessionKey: ChatSessionKey(rawValue: sessionKey),
-                    talkEnabled: .init(isEnabled: self.appModel.talkMode.isEnabled))))
-            })
+            providerLabel: self.appModel.talkMode.gatewayTalkProviderLabel)
+    }
+
+    private func syncTalkControlState() {
+        let snapshot = self.currentTalkControlSnapshot
+        guard self.talkControlStore.snapshot != snapshot else { return }
+        self.talkControlStore.send(.snapshotChanged(.init(snapshot: snapshot)))
     }
 
     @ViewBuilder
@@ -350,7 +379,9 @@ struct ChatTalkControlFeature {
 
     // swiftformat:disable redundantSendable
     @ObservableState
-    struct State: Equatable, Sendable {}
+    struct State: Equatable, Sendable {
+        var snapshot = ChatTalkControlSnapshot()
+    }
 
     enum Action: Equatable, Sendable {
         struct TalkEnabled: Equatable, Sendable {
@@ -362,17 +393,26 @@ struct ChatTalkControlFeature {
             var talkEnabled: TalkEnabled
         }
 
+        struct SnapshotChange: Equatable, Sendable {
+            var snapshot: ChatTalkControlSnapshot
+        }
+
+        case snapshotChanged(SnapshotChange)
         case toggleRequested(ToggleRequest)
     }
 
     // swiftformat:enable redundantSendable
 
     var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             @Dependency(\.chatTalkControl) var dependencyClient
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
+            case let .snapshotChanged(change):
+                state.snapshot = change.snapshot
+                return .none
+
             case let .toggleRequested(request):
                 return .run { [client] _ in
                     await client.focusChatSession(request.sessionKey)
@@ -383,6 +423,67 @@ struct ChatTalkControlFeature {
         .autoLogActions()
     }
 }
+
+// swiftformat:disable redundantSendable
+struct ChatTalkControlIsEnabled: Equatable, Sendable { var value: Bool }
+struct ChatTalkControlIsListening: Equatable, Sendable { var value: Bool }
+struct ChatTalkControlIsSpeaking: Equatable, Sendable { var value: Bool }
+struct ChatTalkControlIsGatewayConnected: Equatable, Sendable { var value: Bool }
+struct ChatTalkControlStatusText: Equatable, Sendable { var value: String }
+struct ChatTalkControlProviderLabel: Equatable, Sendable { var value: String }
+// swiftformat:enable redundantSendable
+
+// swiftformat:disable redundantSendable
+struct ChatTalkControlSnapshot: Equatable, Sendable {
+    var isEnabledValue = ChatTalkControlIsEnabled(value: false)
+    var isListeningValue = ChatTalkControlIsListening(value: false)
+    var isSpeakingValue = ChatTalkControlIsSpeaking(value: false)
+    var isGatewayConnectedValue = ChatTalkControlIsGatewayConnected(value: false)
+    var statusTextValue = ChatTalkControlStatusText(value: "")
+    var providerLabelValue = ChatTalkControlProviderLabel(value: "")
+
+    init(
+        isEnabled: Bool = false,
+        isListening: Bool = false,
+        isSpeaking: Bool = false,
+        isGatewayConnected: Bool = false,
+        statusText: String = "",
+        providerLabel: String = "")
+    {
+        self.isEnabledValue = .init(value: isEnabled)
+        self.isListeningValue = .init(value: isListening)
+        self.isSpeakingValue = .init(value: isSpeaking)
+        self.isGatewayConnectedValue = .init(value: isGatewayConnected)
+        self.statusTextValue = .init(value: statusText)
+        self.providerLabelValue = .init(value: providerLabel)
+    }
+
+    var isEnabled: Bool {
+        self.isEnabledValue.value
+    }
+
+    var isListening: Bool {
+        self.isListeningValue.value
+    }
+
+    var isSpeaking: Bool {
+        self.isSpeakingValue.value
+    }
+
+    var isGatewayConnected: Bool {
+        self.isGatewayConnectedValue.value
+    }
+
+    var statusText: String {
+        self.statusTextValue.value
+    }
+
+    var providerLabel: String {
+        self.providerLabelValue.value
+    }
+}
+
+// swiftformat:enable redundantSendable
 
 @Reducer
 struct ChatViewModelLifecycleFeature {

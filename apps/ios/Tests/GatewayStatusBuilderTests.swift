@@ -136,6 +136,30 @@ struct GatewayStatusBuilderTests {
         }
     }
 
+    @Test func `chat talk control reducer records displayed snapshot`() async {
+        let snapshot = ChatTalkControlSnapshot(
+            isEnabled: true,
+            isListening: true,
+            isSpeaking: false,
+            isGatewayConnected: true,
+            statusText: "Listening",
+            providerLabel: "OpenAI Realtime")
+        let store = TestStore(initialState: ChatTalkControlFeature.State()) {
+            ChatTalkControlFeature()
+        }
+
+        await store.send(.snapshotChanged(.init(snapshot: snapshot))) {
+            $0.snapshot = snapshot
+        }
+
+        #expect(store.state.snapshot.isEnabled)
+        #expect(store.state.snapshot.isListening)
+        #expect(!store.state.snapshot.isSpeaking)
+        #expect(store.state.snapshot.isGatewayConnected)
+        #expect(store.state.snapshot.statusText == "Listening")
+        #expect(store.state.snapshot.providerLabel == "OpenAI Realtime")
+    }
+
     @Test func `chat talk toggle focuses session and flips enabled state through client`() async {
         let probe = ChatTalkControlProbe()
         let store = TestStore(initialState: ChatTalkControlFeature.State()) {
