@@ -114,6 +114,30 @@ struct IPadWorkboardFeatureTests {
         #expect(state.refreshControlPresentation.showsProgress)
     }
 
+    @Test func `workboard board scope menu presentation is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        state.knownBoardIDEntries = .init(values: [.init(value: "ops")])
+        state.cardEntries = .init(values: [
+            Self.card(id: "planning-card", status: "todo", position: 10, boardID: "planning"),
+        ])
+
+        let defaultPresentation = IPadWorkboardBoardScopeMenuPresentation(
+            title: "Board",
+            selectedLabel: "All boards",
+            selectorIconSystemName: "chevron.up.chevron.down",
+            accessibilityLabel: "Workboard board scope",
+            options: [
+                .init(id: "", title: "All boards"),
+                .init(id: "ops", title: "ops"),
+                .init(id: "planning", title: "planning"),
+            ])
+        #expect(state.boardScopeMenuPresentation == defaultPresentation)
+        #expect(state.screenPresentation.boardScopeMenuPresentation == defaultPresentation)
+
+        state.selectedBoardID = .init(value: "planning")
+        #expect(state.boardScopeMenuPresentation.selectedLabel == "planning")
+    }
+
     @Test func `kanban cards are filtered by reducer state`() {
         var state = IPadWorkboardFeature.State()
         state.cardEntries = .init(values: [

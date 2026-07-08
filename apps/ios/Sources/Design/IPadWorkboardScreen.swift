@@ -249,23 +249,16 @@ struct IPadWorkboardScreen: View {
 
     private var compactBoardScopeMenu: some View {
         Menu {
-            Button("All boards") {
-                self.store.send(.boardScopeChanged(.init(boardID: .init(value: ""))))
-            }
-            ForEach(self.boardScopeOptions, id: \.self) { boardID in
-                Button(Self.boardScopeLabel(for: boardID)) {
-                    self.store.send(.boardScopeChanged(.init(boardID: .init(value: boardID))))
-                }
-            }
+            self.boardScopeMenuItems
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "rectangle.stack")
                     .font(.caption.weight(.semibold))
-                Text(self.boardScopeLabel)
+                Text(self.boardScopeMenuPresentation.selectedLabel)
                     .font(.caption.weight(.semibold))
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                Image(systemName: "chevron.up.chevron.down")
+                Image(systemName: self.boardScopeMenuPresentation.selectorIconSystemName)
                     .font(.caption2.weight(.bold))
             }
             .padding(.horizontal, 10)
@@ -278,7 +271,7 @@ struct IPadWorkboardScreen: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(.primary)
-        .accessibilityLabel("Workboard board scope")
+        .accessibilityLabel(self.boardScopeMenuPresentation.accessibilityLabel)
     }
 
     private var compactStatusPicker: some View {
@@ -332,24 +325,17 @@ struct IPadWorkboardScreen: View {
 
     private var boardScopeMenu: some View {
         HStack(spacing: 8) {
-            Text("Board")
+            Text(self.boardScopeMenuPresentation.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Menu {
-                Button("All boards") {
-                    self.store.send(.boardScopeChanged(.init(boardID: .init(value: ""))))
-                }
-                ForEach(self.boardScopeOptions, id: \.self) { boardID in
-                    Button(Self.boardScopeLabel(for: boardID)) {
-                        self.store.send(.boardScopeChanged(.init(boardID: .init(value: boardID))))
-                    }
-                }
+                self.boardScopeMenuItems
             } label: {
                 HStack(spacing: 6) {
-                    Text(self.boardScopeLabel)
+                    Text(self.boardScopeMenuPresentation.selectedLabel)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
-                    Image(systemName: "chevron.up.chevron.down")
+                    Image(systemName: self.boardScopeMenuPresentation.selectorIconSystemName)
                         .font(.caption2.weight(.bold))
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -357,7 +343,15 @@ struct IPadWorkboardScreen: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .tint(self.neutralControlTint)
-            .accessibilityLabel("Workboard board scope")
+            .accessibilityLabel(self.boardScopeMenuPresentation.accessibilityLabel)
+        }
+    }
+
+    private var boardScopeMenuItems: some View {
+        ForEach(self.boardScopeMenuPresentation.options) { option in
+            Button(option.title) {
+                self.store.send(.boardScopeChanged(.init(boardID: .init(value: option.id))))
+            }
         }
     }
 
@@ -561,16 +555,12 @@ struct IPadWorkboardScreen: View {
             .isAppleReviewDemoModeEnabled
     }
 
-    private var boardScopeOptions: [String] {
-        self.store.boardScopeOptions
-    }
-
-    private var boardScopeLabel: String {
-        self.store.boardScopeLabel
-    }
-
     private var screenPresentation: IPadWorkboardScreenPresentation {
         self.store.screenPresentation
+    }
+
+    private var boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation {
+        self.screenPresentation.boardScopeMenuPresentation
     }
 
     private var queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation {
