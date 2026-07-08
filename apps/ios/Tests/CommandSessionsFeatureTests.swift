@@ -248,8 +248,14 @@ struct CommandCenterRecentSessionsFeatureTests {
             Self.session(key: "chat-old", updatedAt: 1),
         ])
 
-        let presentation = state.presentation(currentSession: .init(value: "chat-current"))
+        let presentation = state.presentation(
+            activeAgentName: .init(value: "Rust Claw"),
+            currentSession: .init(value: "chat-current"),
+            defaultSession: .init(value: "main"))
 
+        #expect(presentation.defaultChatWorkItem.title == "Rust Claw")
+        #expect(presentation.defaultChatWorkItem.detail == "No recent activity")
+        #expect(presentation.defaultChatWorkItem.state == "default")
         #expect(presentation.previewRows.map(\.id) == [
             "chat-session-chat-current",
             "chat-session-chat-newest",

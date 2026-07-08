@@ -257,7 +257,7 @@ struct CommandCenterTab: View {
                 Button {
                     self.open(.chat(.defaultSession))
                 } label: {
-                    CommandSessionRow(item: self.defaultChatWorkItem)
+                    CommandSessionRow(item: self.recentSessionsPresentation.defaultChatWorkItem)
                 }
                 .buttonStyle(.plain)
             }
@@ -333,27 +333,6 @@ struct CommandCenterTab: View {
         self.gatewayStore.send(.presentationChanged(.init(presentation: presentation)))
     }
 
-    private var defaultChatWorkItem: WorkItem {
-        let isOpen = self.appModel.chatSessionKey == self.appModel.defaultChatSessionKey
-        return WorkItem(
-            id: "default-chat",
-            icon: isOpen ? "bubble.left.and.text.bubble.right.fill" : "bubble.left.fill",
-            title: self.appModel.activeAgentName,
-            detail: self.defaultChatActivityText,
-            state: isOpen ? "open" : "default",
-            trailing: "chat",
-            color: isOpen ? OpenClawBrand.accent : OpenClawBrand.ok,
-            progress: nil,
-            route: .chat(.defaultSession))
-    }
-
-    private var defaultChatActivityText: String {
-        guard let updatedAt = recentSessionsStore.defaultChatSessionEntry?.updatedAt, updatedAt > 0 else {
-            return "No recent activity"
-        }
-        return Self.relativeTimeText(forMilliseconds: updatedAt)
-    }
-
     private var recentSessionsRefreshID: String {
         [
             self.sessionListMode,
@@ -372,7 +351,9 @@ struct CommandCenterTab: View {
 
     private var recentSessionsPresentation: CommandCenterRecentSessionsPresentation {
         self.recentSessionsStore.state.presentation(
-            currentSession: .init(value: self.appModel.chatSessionKey))
+            activeAgentName: .init(value: self.appModel.activeAgentName),
+            currentSession: .init(value: self.appModel.chatSessionKey),
+            defaultSession: .init(value: self.appModel.defaultChatSessionKey))
     }
 
     private func open(_ route: WorkRoute) {
@@ -472,7 +453,7 @@ struct CommandCenterTab: View {
         return session.key
     }
 
-    fileprivate nonisolated static func relativeTimeText(forMilliseconds milliseconds: Double) -> String {
+    nonisolated static func relativeTimeText(forMilliseconds milliseconds: Double) -> String {
         let date = Date(timeIntervalSince1970: milliseconds / 1000)
         let formatter = RelativeDateTimeFormatter()
         formatter.dateTimeStyle = .numeric
