@@ -1285,11 +1285,11 @@ extension OnboardingStateStoreTests {
                 host: .init(value: "studio.local"),
                 port: .init(value: 19000),
                 useTLS: .init(value: false),
-                connectionStart: .init(
+                statusAction: .connectionStarted(.init(
                     id: .init(value: "manual"),
                     message: .init(value: "Connecting to studio.local…"),
                     statusLine: .init(value: "Connecting to studio.local:19000…"),
-                    clearsIssue: .init(value: true)))
+                    clearsIssue: .init(value: true))))
         }
 
         await store.send(.manualConnectionRequestHandled) {
