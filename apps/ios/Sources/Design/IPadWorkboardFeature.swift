@@ -594,15 +594,12 @@ struct IPadWorkboardFeature {
                 accessibilityLabel: Self.cardPresentation(for: card).actionMenuAccessibilityLabel)
         }
 
-        func moveActionPresentations(for statuses: [String]) -> [IPadWorkboardMoveActionPresentation] {
-            Self.moveActionPresentations(for: statuses)
+        var moveActionPresentations: [IPadWorkboardMoveActionPresentation] {
+            Self.moveActionPresentations(for: self.statusValues)
         }
 
-        func nextMoveActionPresentation(
-            for card: IPadWorkboardCard,
-            statuses: [String]) -> IPadWorkboardMoveActionPresentation?
-        {
-            Self.nextMoveActionPresentation(for: card, statuses: statuses)
+        func nextMoveActionPresentation(for card: IPadWorkboardCard) -> IPadWorkboardMoveActionPresentation? {
+            Self.nextMoveActionPresentation(for: card, statuses: self.statusValues)
         }
 
         func kanbanLanePresentation(status: String, cards: [IPadWorkboardCard]) -> IPadWorkboardKanbanLanePresentation {

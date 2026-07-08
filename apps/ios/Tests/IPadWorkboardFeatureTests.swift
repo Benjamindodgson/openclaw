@@ -403,16 +403,19 @@ struct IPadWorkboardFeatureTests {
             .init(id: "done", status: "done", title: "Done", menuTitle: "Move to Done"),
         ])
 
-        let state = IPadWorkboardFeature.State()
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: statuses.map { .init(value: $0) })
+        #expect(state.moveActionPresentations == actions)
+
         let current = Self.card(id: "current", status: "todo", position: 10)
-        #expect(state.nextMoveActionPresentation(for: current, statuses: statuses) ==
+        #expect(state.nextMoveActionPresentation(for: current) ==
             .init(id: "in_review", status: "in_review", title: "In Review", menuTitle: "Move to In Review"))
 
         let last = Self.card(id: "last", status: "done", position: 20)
-        #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: last, statuses: statuses) == nil)
+        #expect(state.nextMoveActionPresentation(for: last) == nil)
 
         let unknown = Self.card(id: "unknown", status: "custom", position: 30)
-        #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: unknown, statuses: statuses) ==
+        #expect(state.nextMoveActionPresentation(for: unknown) ==
             .init(id: "todo", status: "todo", title: "Todo", menuTitle: "Move to Todo"))
         #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: unknown, statuses: []) == nil)
     }
