@@ -725,6 +725,23 @@ struct IPadWorkboardKanbanColumn: View {
     }
 }
 
+private enum IPadWorkboardCardColor {
+    static func value(for tone: IPadWorkboardCardTone) -> Color {
+        switch tone {
+        case .accent:
+            OpenClawBrand.accent
+        case .accentHot:
+            OpenClawBrand.accentHot
+        case .ok:
+            OpenClawBrand.ok
+        case .secondary:
+            .secondary
+        case .warn:
+            OpenClawBrand.warn
+        }
+    }
+}
+
 private struct IPadWorkboardKanbanCard: View {
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardCardPresentation
@@ -798,13 +815,7 @@ private struct IPadWorkboardKanbanCard: View {
     }
 
     private var color: Color {
-        switch self.card.status {
-        case "running": OpenClawBrand.ok
-        case "review": OpenClawBrand.accent
-        case "blocked": OpenClawBrand.warn
-        case "done": .secondary
-        default: OpenClawBrand.accentHot
-        }
+        IPadWorkboardCardColor.value(for: self.presentation.tone)
     }
 }
 
@@ -894,13 +905,7 @@ struct IPadWorkboardQueueRow: View {
     }
 
     private var color: Color {
-        switch self.card.status {
-        case "running": OpenClawBrand.ok
-        case "review": OpenClawBrand.accent
-        case "blocked": OpenClawBrand.warn
-        case "done": .secondary
-        default: OpenClawBrand.accentHot
-        }
+        IPadWorkboardCardColor.value(for: self.presentation.tone)
     }
 }
 

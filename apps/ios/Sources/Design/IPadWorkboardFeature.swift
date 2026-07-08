@@ -197,6 +197,14 @@ enum IPadWorkboardMetricTone: Equatable, Sendable {
     case warn
 }
 
+enum IPadWorkboardCardTone: Equatable, Sendable {
+    case accent
+    case accentHot
+    case ok
+    case secondary
+    case warn
+}
+
 struct IPadWorkboardMetricPresentation: Equatable, Identifiable, Sendable {
     let id: String
     let iconSystemName: String
@@ -210,6 +218,7 @@ struct IPadWorkboardCardPresentation: Equatable, Sendable {
     let statusLabel: String
     let detail: String
     let iconSystemName: String
+    let tone: IPadWorkboardCardTone
     let labelsSummary: String?
     let sessionKey: String?
     let openSessionActionTitle: String
@@ -730,6 +739,7 @@ struct IPadWorkboardFeature {
                 statusLabel: IPadWorkboardDefaults.label(for: card.status),
                 detail: self.cardDetail(for: card),
                 iconSystemName: self.cardIconSystemName(for: card.status),
+                tone: self.cardTone(for: card.status),
                 labelsSummary: self.labelsSummary(for: card.labels),
                 sessionKey: self.normalizedNonEmpty(card.sessionKey),
                 openSessionActionTitle: "Open Session",
@@ -778,6 +788,16 @@ struct IPadWorkboardFeature {
             case "blocked": "exclamationmark.triangle"
             case "done": "checkmark.circle"
             default: "tray"
+            }
+        }
+
+        static func cardTone(for status: String) -> IPadWorkboardCardTone {
+            switch status {
+            case "running": .ok
+            case "review": .accent
+            case "blocked": .warn
+            case "done": .secondary
+            default: .accentHot
             }
         }
 
