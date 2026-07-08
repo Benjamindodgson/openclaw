@@ -122,6 +122,23 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.pendingProposalCount == 2)
         #expect(state.appliedProposalCount == 1)
         #expect(state.heldProposalCount == 1)
+        #expect(state.metricPresentations == [
+            IPadSkillWorkshopMetricPresentation(
+                id: .pending,
+                icon: "clock",
+                title: "Pending",
+                value: "2"),
+            IPadSkillWorkshopMetricPresentation(
+                id: .applied,
+                icon: "checkmark.circle",
+                title: "Applied",
+                value: "1"),
+            IPadSkillWorkshopMetricPresentation(
+                id: .held,
+                icon: "shield",
+                title: "Held",
+                value: "1"),
+        ])
         #expect(state.visibleProposalLaneStatuses == ["pending"])
         #expect(state.proposals(forLaneStatus: "pending").map(\.id) == ["pending-match"])
         #expect(state.proposals(forLaneStatus: "applied").map(\.id) == ["applied-match"])

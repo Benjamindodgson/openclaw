@@ -297,6 +297,14 @@ struct IPadSkillWorkshopFeature {
             self.proposalCount(forStatus: "quarantined") + self.proposalCount(forStatus: "stale")
         }
 
+        var metricPresentations: [IPadSkillWorkshopMetricPresentation] {
+            [
+                .init(id: .pending, icon: "clock", title: "Pending", value: "\(self.pendingProposalCount)"),
+                .init(id: .applied, icon: "checkmark.circle", title: "Applied", value: "\(self.appliedProposalCount)"),
+                .init(id: .held, icon: "shield", title: "Held", value: "\(self.heldProposalCount)"),
+            ]
+        }
+
         var visibleProposalLaneStatuses: [String] {
             Self.proposalStatusBoardLanes(
                 filter: self.statusFilter.value,
@@ -773,23 +781,13 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var metrics: [ProMetric] {
-        [
+        self.store.metricPresentations.map { presentation in
             ProMetric(
-                icon: "clock",
-                title: "Pending",
-                value: "\(self.store.pendingProposalCount)",
-                color: OpenClawBrand.warn),
-            ProMetric(
-                icon: "checkmark.circle",
-                title: "Applied",
-                value: "\(self.store.appliedProposalCount)",
-                color: OpenClawBrand.ok),
-            ProMetric(
-                icon: "shield",
-                title: "Held",
-                value: "\(self.store.heldProposalCount)",
-                color: .secondary),
-        ]
+                icon: presentation.icon,
+                title: presentation.title,
+                value: presentation.value,
+                color: presentation.id.color)
+        }
     }
 
     private var filtersCard: some View {
@@ -1502,6 +1500,16 @@ extension IPadSkillWorkshopFeedbackPresentation {
             OpenClawBrand.accent
         case .error:
             OpenClawBrand.warn
+        }
+    }
+}
+
+extension IPadSkillWorkshopMetricTone {
+    fileprivate var color: Color {
+        switch self {
+        case .pending: OpenClawBrand.warn
+        case .applied: OpenClawBrand.ok
+        case .held: .secondary
         }
     }
 }
