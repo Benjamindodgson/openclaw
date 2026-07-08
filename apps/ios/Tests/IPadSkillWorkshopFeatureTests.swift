@@ -560,14 +560,21 @@ struct IPadSkillWorkshopFeatureTests {
         var state = IPadSkillWorkshopFeature.State()
 
         #expect(state.feedbackMessages.isEmpty)
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).feedbackMessages.isEmpty)
 
         state.noticeText = .init(value: "Proposal applied.")
         state.errorText = .init(value: "Refresh failed.")
 
-        #expect(state.feedbackMessages == [
+        let expectedMessages = [
             IPadSkillWorkshopFeedbackPresentation(tone: .notice, text: "Proposal applied."),
             IPadSkillWorkshopFeedbackPresentation(tone: .error, text: "Refresh failed."),
-        ])
+        ]
+        #expect(state.feedbackMessages == expectedMessages)
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).feedbackMessages == expectedMessages)
     }
 
     @Test func `empty proposal presentation follows gateway read access`() {
