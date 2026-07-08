@@ -277,6 +277,7 @@ struct IPadWorkboardFeatureTests {
             statusLabel: "Running",
             detail: "Ship it",
             iconSystemName: "figure.run",
+            tone: .ok,
             labelsSummary: "agent, relay, ios",
             sessionKey: "session-1",
             openSessionActionTitle: "Open Session",
@@ -293,6 +294,7 @@ struct IPadWorkboardFeatureTests {
         let sessionPresentation = IPadWorkboardFeature.State.cardPresentation(for: sessionOnly)
         #expect(sessionPresentation.detail == "session-2")
         #expect(sessionPresentation.iconSystemName == "checklist")
+        #expect(sessionPresentation.tone == .accent)
         #expect(sessionPresentation.notesText == nil)
         #expect(sessionPresentation.showsOpenSessionAction)
 
@@ -300,6 +302,7 @@ struct IPadWorkboardFeatureTests {
         let agentPresentation = IPadWorkboardFeature.State.cardPresentation(for: agentOnly)
         #expect(agentPresentation.detail == "agent-7")
         #expect(agentPresentation.iconSystemName == "exclamationmark.triangle")
+        #expect(agentPresentation.tone == .warn)
         #expect(agentPresentation.sessionKey == nil)
         #expect(!agentPresentation.showsOpenSessionAction)
 
@@ -307,7 +310,14 @@ struct IPadWorkboardFeatureTests {
         let archivedPresentation = IPadWorkboardFeature.State.cardPresentation(for: archived)
         #expect(archivedPresentation.detail == "Default agent")
         #expect(archivedPresentation.iconSystemName == "checkmark.circle")
+        #expect(archivedPresentation.tone == .secondary)
         #expect(archivedPresentation.archiveActionTitle == "Unarchive")
+
+        let defaultPresentation = IPadWorkboardFeature.State.cardPresentation(for: Self.card(
+            id: "todo-card",
+            status: "todo",
+            position: 50))
+        #expect(defaultPresentation.tone == .accentHot)
     }
 
     @Test func `workboard move action presentation is reducer owned`() {
