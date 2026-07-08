@@ -68,6 +68,8 @@ struct IPadWorkboardFeatureTests {
             sheet: .init(
                 title: "New Card",
                 sectionTitle: "Card",
+                titleText: "",
+                notesText: "",
                 titlePlaceholder: "Title",
                 notesPlaceholder: "Notes",
                 errorMessage: nil,
@@ -77,6 +79,8 @@ struct IPadWorkboardFeatureTests {
                 isConfirmationDisabled: false)))
 
         state.draftTitle = .init(value: "Card")
+        #expect(state.createCardPresentation(gatewayAccess: .init(canRead: true, canWrite: true)).sheet
+            .titleText == "Card")
         #expect(state.createCardPresentation(gatewayAccess: .init(canRead: true, canWrite: true)).sheet
             .confirmationAccessibilityHint ==
             "Creates a workboard card")
