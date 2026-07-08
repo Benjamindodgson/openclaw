@@ -225,6 +225,21 @@ struct IPadWorkboardCardPresentation: Equatable, Sendable {
     }
 }
 
+struct IPadWorkboardKanbanLaneEmptyStatePresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let detail: String
+    let value: String
+}
+
+struct IPadWorkboardKanbanLanePresentation: Equatable, Sendable {
+    let status: String
+    let title: String
+    let cardCount: Int
+    let value: String
+    let emptyState: IPadWorkboardKanbanLaneEmptyStatePresentation
+}
+
 struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
     let title: String
     let iconSystemName: String
@@ -493,6 +508,10 @@ struct IPadWorkboardFeature {
             Self.cardPresentation(for: card)
         }
 
+        func kanbanLanePresentation(status: String, cards: [IPadWorkboardCard]) -> IPadWorkboardKanbanLanePresentation {
+            Self.kanbanLanePresentation(status: status, cardCount: cards.count)
+        }
+
         var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
             .init(
                 pickerTitle: "Scope",
@@ -725,6 +744,23 @@ struct IPadWorkboardFeature {
             guard let value else { return nil }
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmed.isEmpty ? nil : trimmed
+        }
+
+        static func kanbanLanePresentation(
+            status: String,
+            cardCount: Int) -> IPadWorkboardKanbanLanePresentation
+        {
+            let title = IPadWorkboardDefaults.label(for: status)
+            return .init(
+                status: status,
+                title: title,
+                cardCount: cardCount,
+                value: "\(cardCount)",
+                emptyState: .init(
+                    icon: "tray",
+                    title: "No \(title.lowercased()) cards",
+                    detail: "Cards moved into this lane appear here.",
+                    value: "empty"))
         }
 
         private static let defaultBoardScopeOption = IPadWorkboardBoardScopeOption(id: "", title: "All boards")
