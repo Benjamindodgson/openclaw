@@ -122,4 +122,17 @@ struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
     let statusLabel: String
 }
 
+enum IPadSkillWorkshopMetricTone: Equatable, Sendable {
+    case pending
+    case applied
+    case held
+}
+
+struct IPadSkillWorkshopMetricPresentation: Equatable, Identifiable, Sendable {
+    let id: IPadSkillWorkshopMetricTone
+    let icon: String
+    let title: String
+    let value: String
+}
+
 // swiftformat:enable redundantSendable
