@@ -660,12 +660,12 @@ import Testing
                 token: "token-3",
                 bootstrapToken: "bootstrap-1",
                 password: "password-3")
-            $0.setupAuthPersistenceRequest = request
         }
+        await store.receive(.setupAuthPersistenceRequested(request))
+        await store.finish()
 
-        await store.send(.setupAuthPersistenceRequestHandled) {
-            $0.setupAuthPersistenceRequest = nil
-        }
+        #expect(probe.preparedInstanceIDs == [.init(value: " instance-1 ")])
+        #expect(probe.savedRequests == [request])
     }
 
     @Test @MainActor func `credentials reducer loads saved manual values through client`() async {

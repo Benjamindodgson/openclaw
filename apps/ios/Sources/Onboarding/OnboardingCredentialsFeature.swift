@@ -21,7 +21,6 @@ struct OnboardingCredentialsFeature {
         var gatewayPasswordState = OnboardingGatewayPassword(value: "")
         var gatewayTokenState = OnboardingGatewayToken(value: "")
         var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?
-        var setupAuthPersistenceRequest: OnboardingGatewaySetupAuthPersistenceRequest?
 
         var gatewayPassword: String {
             self.gatewayPasswordState.value
@@ -75,7 +74,6 @@ struct OnboardingCredentialsFeature {
         case reset
         case setupAuthApplied(SetupAuthApplication)
         case setupAuthPersistenceRequested(OnboardingGatewaySetupAuthPersistenceRequest)
-        case setupAuthPersistenceRequestHandled
         case setupLinkApplied(SetupLinkApplication)
     }
 
@@ -149,7 +147,6 @@ struct OnboardingCredentialsFeature {
                 state.gatewayTokenState = .init(value: "")
                 state.gatewayPasswordState = .init(value: "")
                 state.pendingManualAuthOverride = nil
-                state.setupAuthPersistenceRequest = nil
                 return .none
 
             case let .setupAuthApplied(application):
@@ -165,17 +162,12 @@ struct OnboardingCredentialsFeature {
                     await setupAuthPersistenceClient.saveSetupAuth(request)
                 }
 
-            case .setupAuthPersistenceRequestHandled:
-                state.setupAuthPersistenceRequest = nil
-                return .none
-
             case let .setupLinkApplied(application):
                 let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: application.link)
                 Self.applySetupAuth(setupAuth, to: &state)
-                state.setupAuthPersistenceRequest = OnboardingGatewaySetupAuthPersistenceRequest(
+                return .send(.setupAuthPersistenceRequested(.init(
                     setupAuth: setupAuth,
-                    instanceId: setupAuthPersistenceClient.currentInstanceID())
-                return .none
+                    instanceId: setupAuthPersistenceClient.currentInstanceID())))
             }
         }
         .autoLogActions()
