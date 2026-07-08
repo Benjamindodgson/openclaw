@@ -379,10 +379,7 @@ private struct IPadWorkboardStatesPreview: View {
                             lanePresentation: IPadWorkboardFeature.State.kanbanLanePresentation(
                                 status: "todo",
                                 cardCount: 0),
-                            cards: []),
-                        cardPresentation: { card in
-                            self.kanbanCardPresentation(for: card)
-                        },
+                            cardItemPresentations: []),
                         openSession: { _ in },
                         inspect: { _ in },
                         move: { _, _ in },
@@ -429,10 +426,7 @@ private struct IPadWorkboardStatesPreview: View {
                             lanePresentation: IPadWorkboardFeature.State.kanbanLanePresentation(
                                 status: status,
                                 cardCount: cards.count),
-                            cards: cards),
-                        cardPresentation: { card in
-                            self.kanbanCardPresentation(for: card)
-                        },
+                            cardItemPresentations: self.kanbanCardItemPresentations(for: cards)),
                         openSession: { _ in },
                         inspect: { _ in },
                         move: { _, _ in },
@@ -448,6 +442,17 @@ private struct IPadWorkboardStatesPreview: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
             .textCase(.uppercase)
+    }
+
+    private func kanbanCardItemPresentations(for cards: [IPadWorkboardCard])
+        -> [IPadWorkboardKanbanCardItemPresentation]
+    {
+        cards.map { card in
+            .init(
+                id: card.id,
+                card: card,
+                cardPresentation: self.kanbanCardPresentation(for: card))
+        }
     }
 
     private func kanbanCardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardKanbanCardPresentation {

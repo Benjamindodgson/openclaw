@@ -318,10 +318,16 @@ struct IPadWorkboardKanbanLanePresentation: Equatable, Sendable {
     let emptyState: IPadWorkboardKanbanLaneEmptyStatePresentation
 }
 
+struct IPadWorkboardKanbanCardItemPresentation: Equatable, Identifiable, Sendable {
+    let id: String
+    let card: IPadWorkboardCard
+    let cardPresentation: IPadWorkboardKanbanCardPresentation
+}
+
 struct IPadWorkboardKanbanColumnPresentation: Equatable, Identifiable, Sendable {
     let id: String
     let lanePresentation: IPadWorkboardKanbanLanePresentation
-    let cards: [IPadWorkboardCard]
+    let cardItemPresentations: [IPadWorkboardKanbanCardItemPresentation]
 }
 
 struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
@@ -1540,7 +1546,12 @@ extension IPadWorkboardFeature.State {
         return .init(
             id: status,
             lanePresentation: Self.kanbanLanePresentation(status: status, cardCount: cards.count),
-            cards: cards)
+            cardItemPresentations: cards.map { card in
+                .init(
+                    id: card.id,
+                    card: card,
+                    cardPresentation: self.kanbanCardPresentation(for: card))
+            })
     }
 
     func kanbanCardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardKanbanCardPresentation {
