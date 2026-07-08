@@ -236,13 +236,13 @@ struct IPadWorkboardFeatureTests {
     @Test func `workboard compact empty state presentation is reducer owned`() {
         let state = IPadWorkboardFeature.State()
 
-        #expect(state.compactEmptyStatePresentation(canRead: true) == .init(
+        #expect(state.compactEmptyStatePresentation(gatewayAccess: .init(canRead: true, canWrite: true)) == .init(
             icon: "tray",
             title: "No cards",
             detail: "Create a card or change the filter.",
             value: "empty"))
 
-        #expect(state.compactEmptyStatePresentation(canRead: false) == .init(
+        #expect(state.compactEmptyStatePresentation(gatewayAccess: .init(canRead: false, canWrite: false)) == .init(
             icon: "wifi.slash",
             title: "No cards loaded",
             detail: "Connect from Settings to load workboard cards.",
@@ -263,13 +263,13 @@ struct IPadWorkboardFeatureTests {
     @Test func `workboard compact write controls presentation is reducer owned`() {
         let state = IPadWorkboardFeature.State()
 
-        #expect(state.compactWriteControlsPresentation(canRead: true, canWrite: true) == .init(
+        #expect(state.compactWriteControlsPresentation(gatewayAccess: .init(canRead: true, canWrite: true)) == .init(
             showsWriteControls: true,
             unavailablePresentation: .init(message: "Read-only gateway.")))
-        #expect(state.compactWriteControlsPresentation(canRead: true, canWrite: false) == .init(
+        #expect(state.compactWriteControlsPresentation(gatewayAccess: .init(canRead: true, canWrite: false)) == .init(
             showsWriteControls: false,
             unavailablePresentation: .init(message: "Read-only gateway.")))
-        #expect(state.compactWriteControlsPresentation(canRead: false, canWrite: false) == .init(
+        #expect(state.compactWriteControlsPresentation(gatewayAccess: .init(canRead: false, canWrite: false)) == .init(
             showsWriteControls: false,
             unavailablePresentation: .init(message: "Connect from Settings to create, move, and dispatch cards.")))
     }
