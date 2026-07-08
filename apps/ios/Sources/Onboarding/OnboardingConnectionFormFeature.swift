@@ -9,7 +9,7 @@ struct OnboardingSetupCodeFeature {
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
         var gatewayLinkConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?
-        var scannedGatewayLinkConnectionStatusUpdate: OnboardingStatusFeature.Action.ConnectionStatusUpdate?
+        var scannedGatewayLinkTransitionRequest: ScannedGatewayLinkTransitionRequest?
         var setupCodeState = OnboardingSetupCode(value: "")
         var statusState = OnboardingSetupCodeStatusMessage(value: nil)
 
@@ -35,6 +35,12 @@ struct OnboardingSetupCodeFeature {
         var presentationAction: OnboardingPresentationFeature.Action
         var statusAction: OnboardingStatusFeature.Action
         var connectionFormAction: OnboardingConnectionFormFeature.Action
+    }
+
+    struct ScannedGatewayLinkTransitionRequest: Equatable, Sendable {
+        var presentationAction: OnboardingPresentationFeature.Action
+        var statusAction: OnboardingStatusFeature.Action
+        var stepAction: OnboardingStepFeature.Action
     }
 
     enum ApplyResult: Equatable, Sendable {
@@ -73,7 +79,7 @@ struct OnboardingSetupCodeFeature {
             case .appleReviewDemoCodeAccepted:
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 state.setupCodeState = .init(value: "")
                 state.statusState = .init(value: "Apple Review demo mode enabled.")
                 return .none
@@ -81,7 +87,7 @@ struct OnboardingSetupCodeFeature {
             case .applyRequested:
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 state.statusState = .init(value: nil)
                 let raw = state.trimmedSetupCode
                 guard !raw.isEmpty else {
@@ -109,44 +115,44 @@ struct OnboardingSetupCodeFeature {
             case .applyResultHandled:
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 return .none
 
             case .applyStarted:
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 state.statusState = .init(value: nil)
                 return .none
 
             case .emptyCodeSubmitted:
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 state.statusState = .init(value: "Paste a setup code to continue.")
                 return .none
 
             case .invalidSetupCodeSubmitted:
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 state.statusState = .init(value: "Setup code not recognized or uses an insecure ws:// gateway URL.")
                 return .none
 
             case let .scannedGatewayLinkReceived(scan):
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 state.statusState = .init(value: nil)
                 state.applyResult = .gatewayLink(scan.link)
-                state.scannedGatewayLinkConnectionStatusUpdate = Self.scannedGatewayLinkConnectionStatusUpdate(
+                state.scannedGatewayLinkTransitionRequest = Self.scannedGatewayLinkTransitionRequest(
                     for: scan.link)
                 return .none
 
             case let .scannedSetupCodeReceived(scan):
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 guard AppleReviewDemoMode.isSetupCode(scan.code.value) else {
                     return .none
                 }
@@ -156,7 +162,7 @@ struct OnboardingSetupCodeFeature {
             case .setupCodeAccepted:
                 state.applyResult = nil
                 state.gatewayLinkConnectionStart = nil
-                state.scannedGatewayLinkConnectionStatusUpdate = nil
+                state.scannedGatewayLinkTransitionRequest = nil
                 state.setupCodeState = .init(value: "")
                 state.statusState = .init(value: "Setup code applied. Connecting...")
                 return .none
@@ -198,13 +204,16 @@ struct OnboardingSetupCodeFeature {
             clearsIssue: .init(value: false))
     }
 
-    private static func scannedGatewayLinkConnectionStatusUpdate(
+    private static func scannedGatewayLinkTransitionRequest(
         for link: GatewayConnectDeepLink)
-        -> OnboardingStatusFeature.Action.ConnectionStatusUpdate
+        -> ScannedGatewayLinkTransitionRequest
     {
         .init(
-            message: .init(value: "Connecting via QR code..."),
-            statusLine: .init(value: "QR loaded. Connecting to \(link.host):\(link.port)..."))
+            presentationAction: .qrScannerDismissed,
+            statusAction: .connectionStatusUpdated(.init(
+                message: .init(value: "Connecting via QR code..."),
+                statusLine: .init(value: "QR loaded. Connecting to \(link.host):\(link.port)..."))),
+            stepAction: .stepChanged(.init(step: .connect)))
     }
 }
 

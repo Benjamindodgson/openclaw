@@ -1055,15 +1055,18 @@ import Testing
 
         await store.send(.scannedGatewayLinkReceived(.init(link: link))) {
             $0.applyResult = .gatewayLink(link)
-            $0.scannedGatewayLinkConnectionStatusUpdate = .init(
-                message: .init(value: "Connecting via QR code..."),
-                statusLine: .init(value: "QR loaded. Connecting to gateway.example.com:443..."))
+            $0.scannedGatewayLinkTransitionRequest = .init(
+                presentationAction: .qrScannerDismissed,
+                statusAction: .connectionStatusUpdated(.init(
+                    message: .init(value: "Connecting via QR code..."),
+                    statusLine: .init(value: "QR loaded. Connecting to gateway.example.com:443..."))),
+                stepAction: .stepChanged(.init(step: .connect)))
             $0.statusState = .init(value: nil)
         }
 
         await store.send(.applyResultHandled) {
             $0.applyResult = nil
-            $0.scannedGatewayLinkConnectionStatusUpdate = nil
+            $0.scannedGatewayLinkTransitionRequest = nil
         }
     }
 
