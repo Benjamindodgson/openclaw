@@ -1999,12 +1999,10 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("let unavailablePresentation: IPadWorkboardCompactWriteUnavailablePresentation"))
         #expect(source.contains(
             "func compactEmptyStatePresentation(\n            gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCompactEmptyStatePresentation"))
-        #expect(source.contains(
-            "func compactWriteUnavailablePresentation(canRead: Bool) -> IPadWorkboardCompactWriteUnavailablePresentation"))
         #expect(source.contains("func compactWriteControlsPresentation("))
         #expect(source.contains("showsWriteControls: gatewayAccess.canWrite"))
         #expect(source.contains(
-            "unavailablePresentation: self.compactWriteUnavailablePresentation(canRead: gatewayAccess.canRead)"))
+            "unavailablePresentation: .init(message: Self\n                .compactWriteUnavailableMessage(canRead: gatewayAccess.canRead))"))
         #expect(source.contains("static func compactWriteUnavailableMessage(canRead: Bool) -> String"))
         #expect(source.contains("private var compactEmptyStatePresentation: IPadWorkboardCompactEmptyStatePresentation"))
         #expect(source
@@ -2028,6 +2026,8 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("private var compactWriteUnavailablePresentation"))
         #expect(!source.contains("Text(self.compactWriteUnavailablePresentation.message)"))
         #expect(!source.contains("IPadWorkboardScreen.compactWriteUnavailableMessage"))
+        #expect(!source.contains("func compactWriteUnavailablePresentation(canRead: Bool)"))
+        #expect(!source.contains("compactWriteUnavailablePresentation(canRead: gatewayAccess.canRead)"))
         #expect(!source.contains("func compactEmptyStatePresentation(canRead: Bool)"))
         #expect(!source.contains("compactEmptyStatePresentation(canRead: self.gatewayAccess.canRead)"))
         #expect(!source.contains("compactWriteControlsPresentation(\n            canRead:"))

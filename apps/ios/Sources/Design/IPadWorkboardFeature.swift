@@ -580,10 +580,6 @@ struct IPadWorkboardFeature {
                 value: nil)
         }
 
-        func compactWriteUnavailablePresentation(canRead: Bool) -> IPadWorkboardCompactWriteUnavailablePresentation {
-            .init(message: Self.compactWriteUnavailableMessage(canRead: canRead))
-        }
-
         func cardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardCardPresentation {
             Self.cardPresentation(for: card)
         }
@@ -1444,7 +1440,8 @@ extension IPadWorkboardFeature.State {
     {
         .init(
             showsWriteControls: gatewayAccess.canWrite,
-            unavailablePresentation: self.compactWriteUnavailablePresentation(canRead: gatewayAccess.canRead))
+            unavailablePresentation: .init(message: Self
+                .compactWriteUnavailableMessage(canRead: gatewayAccess.canRead)))
     }
 
     func cardDetailActionControlsPresentation(
