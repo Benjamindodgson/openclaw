@@ -2256,6 +2256,68 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("struct StatusChange: Equatable, Sendable {\n            var status: String"))
     }
 
+    @Test func `workboard card presentation is reducer owned`() throws {
+        let source = try Self.iPadWorkboardSource()
+        let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let kanbanCardSource = try Self.extract(
+            screenSource,
+            from: "private struct IPadWorkboardKanbanCard: View",
+            to: "struct IPadWorkboardQueueRow: View")
+        let queueRowSource = try Self.extract(
+            screenSource,
+            from: "struct IPadWorkboardQueueRow: View",
+            to: "private struct IPadWorkboardCardDetailSheet: View")
+        let detailSheetSource = try Self.extract(
+            screenSource,
+            from: "private struct IPadWorkboardCardDetailSheet: View",
+            to: "// swiftformat:disable redundantSendable")
+
+        #expect(source.contains("struct IPadWorkboardCardPresentation: Equatable, Sendable"))
+        #expect(source.contains("let iconSystemName: String"))
+        #expect(source.contains("let labelsSummary: String?"))
+        #expect(source.contains("let sessionKey: String?"))
+        #expect(source.contains("var showsOpenSessionAction: Bool"))
+        #expect(source.contains("func cardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardCardPresentation"))
+        #expect(source.contains("static func cardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardCardPresentation"))
+        #expect(source.contains("static func cardIconSystemName(for status: String) -> String"))
+        #expect(source.contains("static func cardDetail(for card: IPadWorkboardCard) -> String"))
+        #expect(source.contains("static func normalizedNonEmpty(_ value: String?) -> String?"))
+        #expect(source.contains("labelsSummary: self.labelsSummary(for: card.labels)"))
+        #expect(source.contains("archiveActionTitle: card.metadata?.archivedAt == nil ? \"Archive\" : \"Unarchive\""))
+        #expect(screenSource.contains("presentation: self.store.state.cardPresentation(for: card)"))
+        #expect(screenSource.contains("presentation: IPadWorkboardFeature.State.cardPresentation(for: card)"))
+        #expect(screenSource.contains("self.store.state.cardPresentation(for: card).sessionKey"))
+        #expect(kanbanCardSource.contains("let presentation: IPadWorkboardCardPresentation"))
+        #expect(kanbanCardSource.contains("ProIconBadge(systemName: self.presentation.iconSystemName"))
+        #expect(kanbanCardSource.contains("Text(self.presentation.title)"))
+        #expect(kanbanCardSource.contains("Text(self.presentation.detail)"))
+        #expect(kanbanCardSource.contains("if let labelsSummary = self.presentation.labelsSummary"))
+        #expect(kanbanCardSource.contains("if self.presentation.showsOpenSessionAction"))
+        #expect(kanbanCardSource.contains(".accessibilityLabel(self.presentation.openSessionActionTitle)"))
+        #expect(kanbanCardSource.contains("Button(self.presentation.archiveActionTitle, action: self.archive)"))
+        #expect(kanbanCardSource.contains("ProValuePill(value: self.presentation.statusLabel"))
+        #expect(queueRowSource.contains("let presentation: IPadWorkboardCardPresentation"))
+        #expect(queueRowSource.contains("ProIconBadge(systemName: self.presentation.iconSystemName"))
+        #expect(queueRowSource.contains("Text(self.presentation.title)"))
+        #expect(queueRowSource.contains("Text(self.presentation.detail)"))
+        #expect(queueRowSource.contains("Button(self.presentation.inspectActionTitle, action: self.inspect)"))
+        #expect(queueRowSource.contains("Button(self.presentation.compactOpenSessionActionTitle"))
+        #expect(queueRowSource.contains("Button(self.presentation.openSessionActionTitle, action: self.openSession)"))
+        #expect(queueRowSource.contains("Button(self.presentation.archiveActionTitle, action: self.archive)"))
+        #expect(detailSheetSource.contains("let presentation: IPadWorkboardCardPresentation"))
+        #expect(detailSheetSource.contains("LabeledContent(\"Title\", value: self.presentation.title)"))
+        #expect(detailSheetSource.contains("LabeledContent(\"Status\", value: self.presentation.statusLabel)"))
+        #expect(detailSheetSource.contains("if let notes = self.presentation.notesText"))
+        #expect(detailSheetSource.contains("Menu(self.presentation.moveMenuTitle)"))
+        #expect(!screenSource.contains("private static func normalized(_ value: String?) -> String?"))
+        #expect(!screenSource.contains("card.sessionKey?.trimmingCharacters(in: .whitespacesAndNewlines)"))
+        #expect(!screenSource.contains("Button(self.card.metadata?.archivedAt == nil ? \"Archive\" : \"Unarchive\""))
+        #expect(!kanbanCardSource.contains("private var icon: String"))
+        #expect(!kanbanCardSource.contains("private var detail: String"))
+        #expect(!queueRowSource.contains("private var icon: String"))
+        #expect(!queueRowSource.contains("private var detail: String"))
+    }
+
     @Test func `task scope controls send real gateway params`() throws {
         let source = try Self.iPadTaskFeatureScreensSource()
         let skillWorkshopTypeSource = try String(

@@ -261,6 +261,55 @@ struct IPadWorkboardFeatureTests {
         #expect(state.statusFilterControlPresentation.compactOptions.filter(\.isSelected).map(\.id) == ["review"])
     }
 
+    @Test func `workboard card presentation is reducer owned`() {
+        let card = Self.card(
+            id: "running-card",
+            title: "Run gateway",
+            status: "running",
+            position: 10,
+            notes: "  Ship it  ",
+            labels: ["agent", "relay", "ios", "extra"],
+            sessionKey: " session-1 ")
+        let presentation = IPadWorkboardFeature.State.cardPresentation(for: card)
+
+        #expect(presentation == .init(
+            title: "Run gateway",
+            statusLabel: "Running",
+            detail: "Ship it",
+            iconSystemName: "figure.run",
+            labelsSummary: "agent, relay, ios",
+            sessionKey: "session-1",
+            openSessionActionTitle: "Open Session",
+            compactOpenSessionActionTitle: "Open",
+            inspectActionTitle: "Inspect",
+            moveMenuTitle: "Move",
+            actionMenuAccessibilityLabel: "Card Actions",
+            archiveActionTitle: "Archive",
+            notesText: "Ship it"))
+        #expect(presentation.showsOpenSessionAction)
+        #expect(IPadWorkboardFeature.State().cardPresentation(for: card) == presentation)
+
+        let sessionOnly = Self.card(id: "review-card", status: "review", position: 20, sessionKey: " session-2 ")
+        let sessionPresentation = IPadWorkboardFeature.State.cardPresentation(for: sessionOnly)
+        #expect(sessionPresentation.detail == "session-2")
+        #expect(sessionPresentation.iconSystemName == "checklist")
+        #expect(sessionPresentation.notesText == nil)
+        #expect(sessionPresentation.showsOpenSessionAction)
+
+        let agentOnly = Self.card(id: "blocked-card", status: "blocked", position: 30, agentID: " agent-7 ")
+        let agentPresentation = IPadWorkboardFeature.State.cardPresentation(for: agentOnly)
+        #expect(agentPresentation.detail == "agent-7")
+        #expect(agentPresentation.iconSystemName == "exclamationmark.triangle")
+        #expect(agentPresentation.sessionKey == nil)
+        #expect(!agentPresentation.showsOpenSessionAction)
+
+        let archived = Self.card(id: "done-card", status: "done", position: 40, archivedAt: 1)
+        let archivedPresentation = IPadWorkboardFeature.State.cardPresentation(for: archived)
+        #expect(archivedPresentation.detail == "Default agent")
+        #expect(archivedPresentation.iconSystemName == "checkmark.circle")
+        #expect(archivedPresentation.archiveActionTitle == "Unarchive")
+    }
+
     @Test func `kanban cards are filtered by reducer state`() {
         var state = IPadWorkboardFeature.State()
         state.cardEntries = .init(values: [
@@ -604,17 +653,21 @@ struct IPadWorkboardFeatureTests {
         status: String,
         position: Double,
         boardID: String? = nil,
-        archivedAt: Double? = nil) -> IPadWorkboardCard
+        archivedAt: Double? = nil,
+        notes: String? = nil,
+        labels: [String] = [],
+        agentID: String? = nil,
+        sessionKey: String? = nil) -> IPadWorkboardCard
     {
         IPadWorkboardCard(
             id: id,
             title: title,
-            notes: nil,
+            notes: notes,
             status: status,
             priority: nil,
-            labels: [],
-            agentId: nil,
-            sessionKey: nil,
+            labels: labels,
+            agentId: agentID,
+            sessionKey: sessionKey,
             position: position,
             updatedAt: nil,
             metadata: IPadWorkboardMetadata(
