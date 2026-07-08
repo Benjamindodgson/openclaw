@@ -2388,6 +2388,55 @@ struct RootTabsSourceGuardTests {
         #expect(!queueRowSource.contains("private var nextStatus: String?"))
     }
 
+    @Test func `workboard card action control presentation is reducer owned`() throws {
+        let source = try Self.iPadWorkboardSource()
+        let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let kanbanBoardSource = try Self.extract(
+            screenSource,
+            from: "private var kanbanBoard: some View",
+            to: "private var compactCardsPanel: some View")
+        let compactCardsSource = try Self.extract(
+            screenSource,
+            from: "private var compactCardsPanel: some View",
+            to: "private var createCardSheet: some View")
+        let kanbanCardSource = try Self.extract(
+            screenSource,
+            from: "private struct IPadWorkboardKanbanCard: View",
+            to: "struct IPadWorkboardQueueRow: View")
+        let queueRowSource = try Self.extract(
+            screenSource,
+            from: "struct IPadWorkboardQueueRow: View",
+            to: "private struct IPadWorkboardCardDetailSheet: View")
+
+        #expect(source.contains("enum IPadWorkboardCardActionControlContext: Equatable, Sendable"))
+        #expect(source.contains("struct IPadWorkboardCardActionControlPresentation: Equatable, Sendable"))
+        #expect(source.contains("let iconSystemName: String"))
+        #expect(source.contains("let accessibilityLabel: String"))
+        #expect(source.contains("let isDisabled: Bool"))
+        #expect(source.contains("func cardActionControlPresentation("))
+        #expect(source.contains("static func cardActionControlPresentation("))
+        #expect(source.contains("static func cardActionIdleIconSystemName("))
+        #expect(source.contains("iconSystemName: isBusy ? \"hourglass\""))
+        #expect(source.contains("case .kanban: \"ellipsis\""))
+        #expect(source.contains("case .queue: \"ellipsis.circle\""))
+        #expect(kanbanBoardSource.contains("context: .kanban"))
+        #expect(compactCardsSource.contains("context: .queue"))
+        #expect(kanbanCardSource.contains(
+            "let actionControlPresentation: IPadWorkboardCardActionControlPresentation"))
+        #expect(kanbanCardSource.contains("Image(systemName: self.actionControlPresentation.iconSystemName)"))
+        #expect(kanbanCardSource.contains(".accessibilityLabel(self.actionControlPresentation.accessibilityLabel)"))
+        #expect(kanbanCardSource.contains(".disabled(self.actionControlPresentation.isDisabled)"))
+        #expect(queueRowSource.contains(
+            "let actionControlPresentation: IPadWorkboardCardActionControlPresentation"))
+        #expect(queueRowSource.contains("Image(systemName: self.actionControlPresentation.iconSystemName)"))
+        #expect(queueRowSource.contains(".accessibilityLabel(self.actionControlPresentation.accessibilityLabel)"))
+        #expect(queueRowSource.contains(".disabled(self.actionControlPresentation.isDisabled)"))
+        #expect(!kanbanCardSource.contains("self.isBusy ? \"hourglass\""))
+        #expect(!queueRowSource.contains("self.isBusy ? \"hourglass\""))
+        #expect(!kanbanCardSource.contains("let isBusy: Bool"))
+        #expect(!queueRowSource.contains("let isBusy: Bool"))
+    }
+
     @Test func `workboard kanban lane presentation is reducer owned`() throws {
         let source = try Self.iPadWorkboardSource()
         let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)

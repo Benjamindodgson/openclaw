@@ -446,7 +446,9 @@ struct IPadWorkboardScreen: View {
                         presentation: self.store.state.kanbanLanePresentation(status: status, cards: cards),
                         cards: cards,
                         moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
-                        busyCardID: self.store.busyCardID?.value,
+                        actionControlPresentation: { card in
+                            self.store.state.cardActionControlPresentation(for: card, context: .kanban)
+                        },
                         openSession: { card in
                             self.open(card)
                         },
@@ -497,7 +499,9 @@ struct IPadWorkboardScreen: View {
                             nextMoveAction: self.store.state.nextMoveActionPresentation(
                                 for: card,
                                 statuses: self.store.statusValues),
-                            isBusy: self.store.busyCardID?.value == card.id,
+                            actionControlPresentation: self.store.state.cardActionControlPresentation(
+                                for: card,
+                                context: .queue),
                             inspect: {
                                 self.store.send(.cardSheetPresented(.init(card: card)))
                             },
@@ -672,7 +676,7 @@ struct IPadWorkboardKanbanColumn: View {
     let presentation: IPadWorkboardKanbanLanePresentation
     let cards: [IPadWorkboardCard]
     let moveActions: [IPadWorkboardMoveActionPresentation]
-    let busyCardID: String?
+    let actionControlPresentation: (IPadWorkboardCard) -> IPadWorkboardCardActionControlPresentation
     let openSession: (IPadWorkboardCard) -> Void
     let inspect: (IPadWorkboardCard) -> Void
     let move: (IPadWorkboardCard, String) -> Void
@@ -705,7 +709,7 @@ struct IPadWorkboardKanbanColumn: View {
                             card: card,
                             presentation: IPadWorkboardFeature.State.cardPresentation(for: card),
                             moveActions: self.moveActions,
-                            isBusy: self.busyCardID == card.id,
+                            actionControlPresentation: self.actionControlPresentation(card),
                             openSession: {
                                 self.openSession(card)
                             },
@@ -746,7 +750,7 @@ private struct IPadWorkboardKanbanCard: View {
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardCardPresentation
     let moveActions: [IPadWorkboardMoveActionPresentation]
-    let isBusy: Bool
+    let actionControlPresentation: IPadWorkboardCardActionControlPresentation
     let openSession: () -> Void
     let inspect: () -> Void
     let move: (String) -> Void
@@ -798,13 +802,13 @@ private struct IPadWorkboardKanbanCard: View {
                     }
                     Button(self.presentation.archiveActionTitle, action: self.archive)
                 } label: {
-                    Image(systemName: self.isBusy ? "hourglass" : "ellipsis")
+                    Image(systemName: self.actionControlPresentation.iconSystemName)
                         .frame(width: 22, height: 22)
                 }
-                .accessibilityLabel(self.presentation.actionMenuAccessibilityLabel)
+                .accessibilityLabel(self.actionControlPresentation.accessibilityLabel)
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
-                .disabled(self.isBusy)
+                .disabled(self.actionControlPresentation.isDisabled)
 
                 Spacer(minLength: 4)
                 ProValuePill(value: self.presentation.statusLabel, color: self.color)
@@ -824,7 +828,7 @@ struct IPadWorkboardQueueRow: View {
     let presentation: IPadWorkboardCardPresentation
     let moveActions: [IPadWorkboardMoveActionPresentation]
     let nextMoveAction: IPadWorkboardMoveActionPresentation?
-    let isBusy: Bool
+    let actionControlPresentation: IPadWorkboardCardActionControlPresentation
     let inspect: () -> Void
     let openSession: () -> Void
     let move: (String) -> Void
@@ -855,15 +859,15 @@ struct IPadWorkboardQueueRow: View {
             Menu {
                 self.actionMenuItems
             } label: {
-                Image(systemName: self.isBusy ? "hourglass" : "ellipsis.circle")
+                Image(systemName: self.actionControlPresentation.iconSystemName)
                     .font(.system(size: 19, weight: .semibold))
                     .frame(width: 36, height: 36)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .foregroundStyle(OpenClawBrand.accent)
-            .disabled(self.isBusy)
-            .accessibilityLabel(self.presentation.actionMenuAccessibilityLabel)
+            .disabled(self.actionControlPresentation.isDisabled)
+            .accessibilityLabel(self.actionControlPresentation.accessibilityLabel)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

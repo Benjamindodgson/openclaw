@@ -69,14 +69,18 @@ private struct IPadWorkboardCompactRowsPreview: View {
                                 if index > 0 {
                                     Divider().padding(.leading, 58)
                                 }
+                                let presentation = IPadWorkboardFeature.State.cardPresentation(for: card)
                                 IPadWorkboardQueueRow(
                                     card: card,
-                                    presentation: IPadWorkboardFeature.State.cardPresentation(for: card),
+                                    presentation: presentation,
                                     moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
                                     nextMoveAction: IPadWorkboardFeature.State.nextMoveActionPresentation(
                                         for: card,
                                         statuses: self.statuses),
-                                    isBusy: card.id == "preview-running",
+                                    actionControlPresentation: IPadWorkboardFeature.State.cardActionControlPresentation(
+                                        isBusy: card.id == "preview-running",
+                                        context: .queue,
+                                        accessibilityLabel: presentation.actionMenuAccessibilityLabel),
                                     inspect: {},
                                     openSession: {},
                                     move: { _ in },
@@ -371,7 +375,13 @@ private struct IPadWorkboardStatesPreview: View {
                         presentation: IPadWorkboardFeature.State.kanbanLanePresentation(status: "todo", cardCount: 0),
                         cards: [],
                         moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
-                        busyCardID: nil,
+                        actionControlPresentation: { card in
+                            let presentation = IPadWorkboardFeature.State.cardPresentation(for: card)
+                            return IPadWorkboardFeature.State.cardActionControlPresentation(
+                                isBusy: false,
+                                context: .kanban,
+                                accessibilityLabel: presentation.actionMenuAccessibilityLabel)
+                        },
                         openSession: { _ in },
                         inspect: { _ in },
                         move: { _, _ in },
@@ -418,7 +428,13 @@ private struct IPadWorkboardStatesPreview: View {
                             cardCount: cards.count),
                         cards: cards,
                         moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
-                        busyCardID: nil,
+                        actionControlPresentation: { card in
+                            let presentation = IPadWorkboardFeature.State.cardPresentation(for: card)
+                            return IPadWorkboardFeature.State.cardActionControlPresentation(
+                                isBusy: false,
+                                context: .kanban,
+                                accessibilityLabel: presentation.actionMenuAccessibilityLabel)
+                        },
                         openSession: { _ in },
                         inspect: { _ in },
                         move: { _, _ in },
