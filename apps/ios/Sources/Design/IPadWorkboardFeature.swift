@@ -224,9 +224,15 @@ struct IPadWorkboardCardPresentation: Equatable, Sendable {
     let openSessionActionTitle: String
     let compactOpenSessionActionTitle: String
     let inspectActionTitle: String
+    let detailSheetTitle: String
+    let detailSectionTitle: String
+    let titleFieldTitle: String
+    let statusFieldTitle: String
+    let actionsSectionTitle: String
     let moveMenuTitle: String
     let actionMenuAccessibilityLabel: String
     let archiveActionTitle: String
+    let doneActionTitle: String
     let notesText: String?
 
     var showsOpenSessionAction: Bool {
@@ -745,9 +751,15 @@ struct IPadWorkboardFeature {
                 openSessionActionTitle: "Open Session",
                 compactOpenSessionActionTitle: "Open",
                 inspectActionTitle: "Inspect",
+                detailSheetTitle: "Card",
+                detailSectionTitle: "Card",
+                titleFieldTitle: "Title",
+                statusFieldTitle: "Status",
+                actionsSectionTitle: "Actions",
                 moveMenuTitle: "Move",
                 actionMenuAccessibilityLabel: "Card Actions",
                 archiveActionTitle: card.metadata?.archivedAt == nil ? "Archive" : "Unarchive",
+                doneActionTitle: "Done",
                 notesText: self.normalizedNonEmpty(card.notes))
         }
 

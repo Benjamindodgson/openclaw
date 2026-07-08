@@ -283,9 +283,15 @@ struct IPadWorkboardFeatureTests {
             openSessionActionTitle: "Open Session",
             compactOpenSessionActionTitle: "Open",
             inspectActionTitle: "Inspect",
+            detailSheetTitle: "Card",
+            detailSectionTitle: "Card",
+            titleFieldTitle: "Title",
+            statusFieldTitle: "Status",
+            actionsSectionTitle: "Actions",
             moveMenuTitle: "Move",
             actionMenuAccessibilityLabel: "Card Actions",
             archiveActionTitle: "Archive",
+            doneActionTitle: "Done",
             notesText: "Ship it"))
         #expect(presentation.showsOpenSessionAction)
         #expect(IPadWorkboardFeature.State().cardPresentation(for: card) == presentation)
