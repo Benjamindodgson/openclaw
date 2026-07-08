@@ -367,8 +367,7 @@ struct IPadWorkboardFeature {
         }
 
         var boardScopeLabel: String {
-            self.selectedBoardID.value.isEmpty ? "All boards" : IPadWorkboardScreen
-                .boardScopeLabel(for: self.selectedBoardID.value)
+            Self.boardScopeLabel(for: self.selectedBoardID.value)
         }
 
         var boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation {
@@ -378,7 +377,7 @@ struct IPadWorkboardFeature {
                 selectorIconSystemName: "chevron.up.chevron.down",
                 accessibilityLabel: "Workboard board scope",
                 options: [Self.defaultBoardScopeOption] + self.boardScopeOptions.map {
-                    .init(id: $0, title: IPadWorkboardScreen.boardScopeLabel(for: $0))
+                    .init(id: $0, title: Self.boardScopeLabel(for: $0))
                 })
         }
 
@@ -495,7 +494,7 @@ struct IPadWorkboardFeature {
         }
 
         var selectedBoardParam: IPadWorkboardBoardScopeID? {
-            let selected = IPadWorkboardScreen.normalizedScopeID(self.selectedBoardID.value)
+            let selected = Self.normalizedScopeID(self.selectedBoardID.value)
             return selected.isEmpty ? nil : .init(value: selected)
         }
 
@@ -532,9 +531,9 @@ struct IPadWorkboardFeature {
         }
 
         var boardScopeOptions: [String] {
-            IPadWorkboardScreen.boardScopeOptions(
+            Self.boardScopeOptions(
                 knownBoardIDs: self.knownBoardIDValues,
-                cardBoardIDs: self.cards.map { IPadWorkboardScreen.boardID(for: $0) })
+                cardBoardIDs: self.cards.map(Self.boardID(for:)))
         }
 
         var knownBoardIDValues: [String] {
@@ -591,7 +590,7 @@ struct IPadWorkboardFeature {
 
         mutating func applyBoardScopes(_ boards: [IPadWorkboardBoardSummary]) {
             let discovered = boards.map(\.id)
-            let boardIDs = IPadWorkboardScreen.boardScopeOptions(
+            let boardIDs = Self.boardScopeOptions(
                 knownBoardIDs: self.knownBoardIDValues,
                 cardBoardIDs: discovered)
             self.knownBoardIDEntries = .init(values: boardIDs.map { .init(value: $0) })
@@ -634,6 +633,26 @@ struct IPadWorkboardFeature {
 
         static func compactWriteUnavailableMessage(canRead: Bool) -> String {
             canRead ? "Read-only gateway." : "Connect from Settings to create, move, and dispatch cards."
+        }
+
+        static func boardID(for card: IPadWorkboardCard) -> String {
+            self.normalizedScopeID(card.metadata?.automation?.boardId).isEmpty
+                ? "default"
+                : self.normalizedScopeID(card.metadata?.automation?.boardId)
+        }
+
+        static func normalizedScopeID(_ value: String?) -> String {
+            (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        static func boardScopeLabel(for boardID: String) -> String {
+            let normalized = self.normalizedScopeID(boardID)
+            return normalized.isEmpty ? "All boards" : normalized
+        }
+
+        static func boardScopeOptions(knownBoardIDs: [String], cardBoardIDs: [String]) -> [String] {
+            Array(Set((knownBoardIDs + cardBoardIDs).map { self.normalizedScopeID($0) }.filter { !$0.isEmpty }))
+                .sorted()
         }
 
         static func workboardSubtitle(boardScopeLabel: String, selectedStatus: String) -> String {
@@ -715,7 +734,7 @@ struct IPadWorkboardFeature {
         }
 
         private mutating func rememberBoardIDs(from cards: [IPadWorkboardCard]) {
-            let discovered = cards.map { IPadWorkboardScreen.boardID(for: $0) }
+            let discovered = cards.map(Self.boardID(for:))
             let boardIDs = Array(Set(self.knownBoardIDValues + discovered)).sorted()
             self.knownBoardIDEntries = .init(values: boardIDs.map { .init(value: $0) })
         }
@@ -910,7 +929,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .boardScopeChanged(change):
-                state.selectedBoardID = .init(value: IPadWorkboardScreen.normalizedScopeID(change.boardID.value))
+                state.selectedBoardID = .init(value: State.normalizedScopeID(change.boardID.value))
                 return .none
 
             case let .cardSheetPresented(presentation):
