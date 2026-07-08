@@ -215,11 +215,11 @@ struct IPadSkillWorkshopFeature {
                 queueSummaryPresentation: self.queueSummaryPresentation,
                 metricPresentations: self.metricPresentations,
                 agentScopeMenuPresentation: self.agentScopeMenuPresentation,
+                proposalListPresentation: self.proposalListPresentation,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
-                emptyProposalPresentation: self.emptyProposalPresentation(
-                    gatewayAccess: gatewayAccess),
+                emptyProposalPresentation: self.emptyProposalPresentation(gatewayAccess: gatewayAccess),
                 proposalUnavailablePresentation: self.proposalUnavailablePresentation,
                 proposalSheetPresentation: self.proposalSheetPresentation)
         }
@@ -1063,7 +1063,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private var proposalContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if self.store.proposalListPresentation.isEmpty {
+            if self.screenPresentation.proposalListPresentation.isEmpty {
                 ProCard(radius: OpenClawProMetric.cardRadius) {
                     ProStatusRow(
                         icon: self.emptyProposalPresentation.icon,
@@ -1129,7 +1129,7 @@ struct IPadSkillWorkshopScreen: View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 let queueSummary = self.screenPresentation.queueSummaryPresentation
-                let listPresentation = self.store.proposalListPresentation
+                let listPresentation = self.screenPresentation.proposalListPresentation
                 let actionControlsPresentation = self.proposalActionControlsPresentation
                 let inspectionControlsPresentation = self.proposalInspectionControlsPresentation
                 ProPanelHeader(

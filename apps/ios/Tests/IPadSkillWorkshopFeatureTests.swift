@@ -165,6 +165,11 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.proposal(withID: "missing") == nil)
         #expect(state.proposalListPresentation.proposals.map(\.id) == ["pending-match"])
         #expect(state.proposalListPresentation.proposals.map(\.showsProposalActions) == [true])
+        let pendingScreenPresentation = state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true)
+        #expect(pendingScreenPresentation.proposalListPresentation.proposals.map(\.id) == ["pending-match"])
+        #expect(pendingScreenPresentation.proposalListPresentation.proposals.map(\.showsProposalActions) == [true])
         #expect(state.proposalBoardPresentation.lanes.map(\.id) == ["pending"])
         #expect(state.proposalBoardPresentation.lanes.map(\.title) == ["Pending"])
         #expect(state.proposalBoardPresentation.lanes.map(\.value) == ["1"])
@@ -200,6 +205,14 @@ struct IPadSkillWorkshopFeatureTests {
             sceneIsActive: true).queueSummaryPresentation == allQueueSummary)
         #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
         #expect(state.proposalListPresentation.proposals.map(\.id) == [
+            "pending-match",
+            "applied-match",
+            "stale-match",
+        ])
+        let allScreenPresentation = state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true)
+        #expect(allScreenPresentation.proposalListPresentation.proposals.map(\.id) == [
             "pending-match",
             "applied-match",
             "stale-match",
