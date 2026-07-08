@@ -392,6 +392,10 @@ import Testing
         }
 
         #expect(store.state.statusLine == OnboardingStatusFeature.defaultStatusLine)
+        #expect(OnboardingStatusFeature.introAdvanceRequest.stateAction == .markFirstRunIntroSeen)
+        #expect(OnboardingStatusFeature.introAdvanceRequest.localNetworkReason.value == "onboarding_continue")
+        #expect(OnboardingStatusFeature.introAdvanceRequest.statusAction == .introAdvanced)
+        #expect(OnboardingStatusFeature.introAdvanceRequest.stepAction == .stepChanged(.init(step: .welcome)))
         #expect(OnboardingStatusFeature.qrScannerOpeningRequest.statusAction == .qrScannerOpeningStarted)
         #expect(OnboardingStatusFeature.qrScannerOpeningRequest.presentationAction == .qrScannerButtonTapped)
         #expect(OnboardingStatusFeature.freshQRScannerOpeningRequest.statusAction == .freshQRScanStarted)

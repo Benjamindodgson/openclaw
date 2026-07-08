@@ -30,6 +30,11 @@ struct OnboardingStatusFeature {
     static let defaultStatusLine = "In your OpenClaw chat, run /pair qr, then scan the code here."
     static let noSavedPairingStatusLine =
         "No saved pairing found. In your OpenClaw chat, run /pair qr, then scan the code here."
+    static let introAdvanceRequest = IntroAdvanceRequest(
+        stateAction: .markFirstRunIntroSeen,
+        localNetworkReason: .init(value: "onboarding_continue"),
+        statusAction: .introAdvanced,
+        stepAction: .stepChanged(.init(step: .welcome)))
     static let qrScannerOpeningRequest = QRScannerOpeningRequest(
         statusAction: .qrScannerOpeningStarted,
         presentationAction: .qrScannerButtonTapped)
@@ -42,6 +47,15 @@ struct OnboardingStatusFeature {
     }
 
     // swiftformat:disable redundantSendable
+    struct IntroAdvanceRequest: Equatable, Sendable {
+        struct LocalNetworkReason: Equatable, Sendable { var value: String }
+
+        var stateAction: OnboardingStateFeature.Action
+        var localNetworkReason: LocalNetworkReason
+        var statusAction: OnboardingStatusFeature.Action
+        var stepAction: OnboardingStepFeature.Action
+    }
+
     struct QRScannerOpeningRequest: Equatable, Sendable {
         var statusAction: OnboardingStatusFeature.Action
         var presentationAction: OnboardingPresentationFeature.Action
