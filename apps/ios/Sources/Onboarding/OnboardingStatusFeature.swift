@@ -45,6 +45,17 @@ struct OnboardingStatusFeature {
         statusAction: .freshQRScanStarted,
         presentationAction: .qrScannerButtonTapped)
 
+    static func gatewayConnectionSuccessTransitionRequest(
+        selectedMode: OnboardingConnectionMode?)
+        -> GatewayConnectionSuccessTransitionRequest
+    {
+        .init(
+            presentationAction: .qrScannerDismissed,
+            statusAction: .gatewayConnectionSucceeded(.init(selectedMode: selectedMode)),
+            handledStatusAction: .gatewayConnectionSuccessHandled,
+            stepAction: .stepChanged(.init(step: .success)))
+    }
+
     init(clock: OnboardingPairingResumeClockClient? = nil) {
         self.clockOverride = clock
     }
@@ -63,6 +74,13 @@ struct OnboardingStatusFeature {
 
     struct NavigationBackRequest: Equatable, Sendable {
         var statusAction: OnboardingStatusFeature.Action
+        var stepAction: OnboardingStepFeature.Action
+    }
+
+    struct GatewayConnectionSuccessTransitionRequest: Equatable, Sendable {
+        var presentationAction: OnboardingPresentationFeature.Action
+        var statusAction: OnboardingStatusFeature.Action
+        var handledStatusAction: OnboardingStatusFeature.Action
         var stepAction: OnboardingStepFeature.Action
     }
 

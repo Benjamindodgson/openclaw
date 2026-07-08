@@ -487,6 +487,13 @@ import Testing
         let store = TestStore(initialState: OnboardingStatusFeature.State()) {
             OnboardingStatusFeature()
         }
+        let transitionRequest = OnboardingStatusFeature
+            .gatewayConnectionSuccessTransitionRequest(selectedMode: .homeNetwork)
+
+        #expect(transitionRequest.presentationAction == .qrScannerDismissed)
+        #expect(transitionRequest.statusAction == .gatewayConnectionSucceeded(.init(selectedMode: .homeNetwork)))
+        #expect(transitionRequest.handledStatusAction == .gatewayConnectionSuccessHandled)
+        #expect(transitionRequest.stepAction == .stepChanged(.init(step: .success)))
 
         await store.send(.gatewayConnectionSucceeded(.init(selectedMode: .homeNetwork))) {
             $0.gatewayConnectionCompletionRequest = .init(mode: .homeNetwork)
