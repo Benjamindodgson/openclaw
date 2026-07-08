@@ -396,6 +396,8 @@ import Testing
         #expect(OnboardingStatusFeature.introAdvanceRequest.localNetworkReason.value == "onboarding_continue")
         #expect(OnboardingStatusFeature.introAdvanceRequest.statusAction == .introAdvanced)
         #expect(OnboardingStatusFeature.introAdvanceRequest.stepAction == .stepChanged(.init(step: .welcome)))
+        #expect(OnboardingStatusFeature.navigationBackRequest.statusAction == .navigationBackStarted)
+        #expect(OnboardingStatusFeature.navigationBackRequest.stepAction == .backButtonTapped)
         #expect(OnboardingStatusFeature.qrScannerOpeningRequest.statusAction == .qrScannerOpeningStarted)
         #expect(OnboardingStatusFeature.qrScannerOpeningRequest.presentationAction == .qrScannerButtonTapped)
         #expect(OnboardingStatusFeature.freshQRScannerOpeningRequest.statusAction == .freshQRScanStarted)

@@ -35,6 +35,9 @@ struct OnboardingStatusFeature {
         localNetworkReason: .init(value: "onboarding_continue"),
         statusAction: .introAdvanced,
         stepAction: .stepChanged(.init(step: .welcome)))
+    static let navigationBackRequest = NavigationBackRequest(
+        statusAction: .navigationBackStarted,
+        stepAction: .backButtonTapped)
     static let qrScannerOpeningRequest = QRScannerOpeningRequest(
         statusAction: .qrScannerOpeningStarted,
         presentationAction: .qrScannerButtonTapped)
@@ -57,6 +60,11 @@ struct OnboardingStatusFeature {
     }
 
     struct AuthStepNavigationRequest: Equatable, Sendable { var stepAction: OnboardingStepFeature.Action }
+
+    struct NavigationBackRequest: Equatable, Sendable {
+        var statusAction: OnboardingStatusFeature.Action
+        var stepAction: OnboardingStepFeature.Action
+    }
 
     struct QRScannerOpeningRequest: Equatable, Sendable {
         var statusAction: OnboardingStatusFeature.Action
