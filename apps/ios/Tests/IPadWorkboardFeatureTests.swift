@@ -586,6 +586,26 @@ struct IPadWorkboardFeatureTests {
                 value: "empty")))
     }
 
+    @Test func `workboard kanban column presentations are reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: ["todo", "running", "done"].map { .init(value: $0) })
+        state.cardEntries = .init(values: [
+            Self.card(id: "todo-1", title: "Gateway fix", status: "todo", position: 10),
+            Self.card(id: "running-1", title: "Run gateway", status: "running", position: 20),
+            Self.card(id: "done-1", status: "done", position: 30),
+        ])
+
+        #expect(state.kanbanColumnPresentations.map(\.id) == ["todo", "running"])
+        #expect(state.kanbanColumnPresentation(status: "todo") == .init(
+            id: "todo",
+            lanePresentation: state.kanbanLanePresentation(status: "todo"),
+            cards: [Self.card(id: "todo-1", title: "Gateway fix", status: "todo", position: 10)]))
+
+        state.selectedStatus = .init(value: "done")
+        #expect(state.kanbanColumnPresentations.map(\.id) == ["done"])
+        #expect(state.kanbanColumnPresentations.first?.cards.map(\.id) == ["done-1"])
+    }
+
     @Test func `kanban cards are filtered by reducer state`() {
         var state = IPadWorkboardFeature.State()
         state.cardEntries = .init(values: [
