@@ -401,6 +401,7 @@ struct IPadSkillWorkshopFeature {
                 card: self.proposalCardPresentation(for: proposal),
                 bodyText: bodyText,
                 emptyBodyText: "Select refresh to load the proposal body.",
+                supportFilesTitle: "Support files",
                 supportFiles: proposal.supportFiles,
                 showsSupportFiles: !proposal.supportFiles.isEmpty)
         }
@@ -1226,7 +1227,7 @@ struct IPadSkillWorkshopScreen: View {
 
                 if presentation.showsSupportFiles {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Support files")
+                        Text(presentation.supportFilesTitle)
                             .font(.subheadline.weight(.semibold))
                         ForEach(presentation.supportFiles, id: \.path) { file in
                             Text(file.path)
