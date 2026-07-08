@@ -386,8 +386,15 @@ struct IPadSkillWorkshopFeatureTests {
         var state = IPadSkillWorkshopFeature.State()
         var pendingProposal = Self.proposal(id: "pending-1", status: "pending")
         state.proposalEntries = .init(values: [pendingProposal])
+        let gatewayAccess = IPadSkillWorkshopGatewayAccess(
+            canRead: true,
+            canWrite: true,
+            hasOperatorAdminScope: true)
 
         #expect(state.presentedProposalPresentation == nil)
+        #expect(state.screenPresentation(
+            gatewayAccess: gatewayAccess,
+            sceneIsActive: true).presentedProposalPresentation == nil)
 
         state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "pending-1")
         #expect(state.presentedProposalPresentation?.card == .init(
@@ -401,6 +408,9 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.presentedProposalPresentation?.supportFilesTitle == "Support files")
         #expect(state.presentedProposalPresentation?.supportFiles == [])
         #expect(state.presentedProposalPresentation?.showsSupportFiles == false)
+        #expect(state.screenPresentation(
+            gatewayAccess: gatewayAccess,
+            sceneIsActive: true).presentedProposalPresentation == state.presentedProposalPresentation)
 
         pendingProposal.content = "inspected body"
         pendingProposal.supportFiles = [
@@ -419,9 +429,15 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.presentedProposalPresentation?.supportFilesTitle == "Support files")
         #expect(state.presentedProposalPresentation?.supportFiles == pendingProposal.supportFiles)
         #expect(state.presentedProposalPresentation?.showsSupportFiles == true)
+        #expect(state.screenPresentation(
+            gatewayAccess: gatewayAccess,
+            sceneIsActive: true).presentedProposalPresentation == state.presentedProposalPresentation)
 
         state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "missing")
         #expect(state.presentedProposalPresentation == nil)
+        #expect(state.screenPresentation(
+            gatewayAccess: gatewayAccess,
+            sceneIsActive: true).presentedProposalPresentation == nil)
     }
 
     @Test func `agent scope snapshot updates reducer presentation state`() async {

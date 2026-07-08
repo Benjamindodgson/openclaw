@@ -220,6 +220,7 @@ struct IPadSkillWorkshopFeature {
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
                 emptyProposalPresentation: self.emptyProposalPresentation(gatewayAccess: gatewayAccess),
                 proposalUnavailablePresentation: self.proposalUnavailablePresentation,
+                presentedProposalPresentation: self.presentedProposalPresentation,
                 proposalSheetPresentation: self.proposalSheetPresentation)
         }
 
@@ -1198,7 +1199,7 @@ struct IPadSkillWorkshopScreen: View {
 
     @ViewBuilder
     private var presentedProposalDetail: some View {
-        if let presentation = self.store.presentedProposalPresentation {
+        if let presentation = self.screenPresentation.presentedProposalPresentation {
             self.proposalDetailCard(presentation)
         } else {
             ProCard(radius: OpenClawProMetric.cardRadius) {
