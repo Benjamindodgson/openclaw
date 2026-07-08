@@ -575,7 +575,7 @@ struct IPadWorkboardScreen: View {
 
     private var screenPresentation: IPadWorkboardScreenPresentation {
         self.store.state.screenPresentation(
-            canRead: self.gatewayAccess.canRead,
+            gatewayAccess: self.gatewayAccess,
             sceneIsActive: self.scenePhase == .active)
     }
 

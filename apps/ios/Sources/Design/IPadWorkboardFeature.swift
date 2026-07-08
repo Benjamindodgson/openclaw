@@ -1453,11 +1453,14 @@ extension IPadWorkboardFeature.State {
             canWrite: canWrite)
     }
 
-    func screenPresentation(canRead: Bool, sceneIsActive: Bool) -> IPadWorkboardScreenPresentation {
+    func screenPresentation(
+        gatewayAccess: IPadWorkboardGatewayAccess,
+        sceneIsActive: Bool) -> IPadWorkboardScreenPresentation
+    {
         .init(
             screenChromePresentation: self.screenChromePresentation,
             refreshTaskID: self.refreshTaskID(
-                canRead: canRead,
+                gatewayAccess: gatewayAccess,
                 sceneIsActive: sceneIsActive),
             queueSummaryPresentation: self.queueSummaryPresentation,
             refreshControlPresentation: self.refreshControlPresentation,
@@ -1465,8 +1468,8 @@ extension IPadWorkboardFeature.State {
             statusFilterControlPresentation: self.statusFilterControlPresentation)
     }
 
-    func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String {
-        let connection = canRead ? "connected" : "offline"
+    func refreshTaskID(gatewayAccess: IPadWorkboardGatewayAccess, sceneIsActive: Bool) -> String {
+        let connection = gatewayAccess.canRead ? "connected" : "offline"
         let scene = sceneIsActive ? "active" : "inactive"
         let board = self.selectedBoardID.value.isEmpty ? "all" : self.selectedBoardID.value
         return [connection, scene, board].joined(separator: ":")
