@@ -1021,12 +1021,10 @@ extension OnboardingWizardView {
         self.credentialsStore.send(.credentialsLoadRequested(.init(
             instanceId: .init(value: self.instanceId))))
 
-        if !self.connectionFormStore.hasSavedGatewayConnection,
-           !self.credentialsStore.hasGatewayToken,
-           !self.credentialsStore.hasGatewayPassword
-        {
-            self.statusStore.send(.noSavedPairingFound)
-        }
+        self.statusStore.send(.initializationStatusEvaluated(.init(
+            hasSavedGatewayConnection: .init(value: self.connectionFormStore.hasSavedGatewayConnection),
+            hasGatewayToken: .init(value: self.credentialsStore.hasGatewayToken),
+            hasGatewayPassword: .init(value: self.credentialsStore.hasGatewayPassword))))
     }
 
     private func scheduleDiscoveryRestart() {

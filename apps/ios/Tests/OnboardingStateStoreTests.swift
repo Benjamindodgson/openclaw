@@ -458,6 +458,27 @@ import Testing
         await store.send(.noSavedPairingFound) {
             $0.statusLineState = .init(value: OnboardingStatusFeature.noSavedPairingStatusLine)
         }
+
+        await store.send(.introAdvanced) {
+            $0.statusLineState = .init(value: OnboardingStatusFeature.defaultStatusLine)
+        }
+
+        await store.send(.initializationStatusEvaluated(.init(
+            hasSavedGatewayConnection: .init(value: false),
+            hasGatewayToken: .init(value: false),
+            hasGatewayPassword: .init(value: false))))
+        {
+            $0.statusLineState = .init(value: OnboardingStatusFeature.noSavedPairingStatusLine)
+        }
+
+        await store.send(.introAdvanced) {
+            $0.statusLineState = .init(value: OnboardingStatusFeature.defaultStatusLine)
+        }
+
+        await store.send(.initializationStatusEvaluated(.init(
+            hasSavedGatewayConnection: .init(value: true),
+            hasGatewayToken: .init(value: false),
+            hasGatewayPassword: .init(value: false))))
     }
 
     @Test @MainActor func `status reducer derives gateway connection completion request`() async {
