@@ -61,7 +61,7 @@ struct IPadWorkboardScreen: View {
             case let .card(presentation):
                 IPadWorkboardCardDetailSheet(
                     presentation: presentation.sheetPresentation,
-                    openSession: { self.open(presentation.card) },
+                    openSession: { sessionKey in self.open(sessionKey: sessionKey) },
                     move: { status in Task { await self.move(presentation.card, to: status) } },
                     archive: { Task { await self.archive(presentation.card) } })
             }
@@ -438,8 +438,8 @@ struct IPadWorkboardScreen: View {
                 ForEach(self.screenPresentation.kanbanColumnPresentations) { presentation in
                     IPadWorkboardKanbanColumn(
                         presentation: presentation,
-                        openSession: { card in
-                            self.open(card)
+                        openSession: { sessionKey in
+                            self.open(sessionKey: sessionKey)
                         },
                         inspect: { card in
                             self.store.send(.cardSheetPresented(.init(card: card)))
@@ -488,8 +488,8 @@ struct IPadWorkboardScreen: View {
                             inspect: {
                                 self.store.send(.cardSheetPresented(.init(card: item.card)))
                             },
-                            openSession: {
-                                self.open(item.card)
+                            openSession: { sessionKey in
+                                self.open(sessionKey: sessionKey)
                             },
                             move: { status in
                                 Task { await self.move(item.card, to: status) }
@@ -640,8 +640,7 @@ struct IPadWorkboardScreen: View {
         await self.store.send(.dispatchRequested(.init(gatewayAccess: self.gatewayAccess))).finish()
     }
 
-    private func open(_ card: IPadWorkboardCard) {
-        guard let sessionKey = self.store.state.openSessionKey(for: card) else { return }
+    private func open(sessionKey: String) {
         self.appModel.openChat(sessionKey: sessionKey)
         self.openChat()
     }
@@ -649,7 +648,7 @@ struct IPadWorkboardScreen: View {
 
 struct IPadWorkboardKanbanColumn: View {
     let presentation: IPadWorkboardKanbanColumnPresentation
-    let openSession: (IPadWorkboardCard) -> Void
+    let openSession: (String) -> Void
     let inspect: (IPadWorkboardCard) -> Void
     let move: (IPadWorkboardCard, String) -> Void
     let archive: (IPadWorkboardCard) -> Void
@@ -683,8 +682,8 @@ struct IPadWorkboardKanbanColumn: View {
                         IPadWorkboardKanbanCard(
                             card: item.card,
                             presentation: item.cardPresentation,
-                            openSession: {
-                                self.openSession(item.card)
+                            openSession: { sessionKey in
+                                self.openSession(sessionKey)
                             },
                             inspect: {
                                 self.inspect(item.card)
@@ -722,7 +721,7 @@ private enum IPadWorkboardCardColor {
 private struct IPadWorkboardKanbanCard: View {
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardKanbanCardPresentation
-    let openSession: () -> Void
+    let openSession: (String) -> Void
     let inspect: () -> Void
     let move: (String) -> Void
     let archive: () -> Void
@@ -756,8 +755,10 @@ private struct IPadWorkboardKanbanCard: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
-                if self.presentation.cardPresentation.showsOpenSessionAction {
-                    Button(action: self.openSession) {
+                if let sessionKey = self.presentation.cardPresentation.sessionKey {
+                    Button {
+                        self.openSession(sessionKey)
+                    } label: {
                         Image(systemName: "bubble.left.and.text.bubble.right")
                     }
                     .accessibilityLabel(self.presentation.cardPresentation.openSessionActionTitle)
@@ -798,7 +799,7 @@ struct IPadWorkboardQueueRow: View {
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardQueueRowPresentation
     let inspect: () -> Void
-    let openSession: () -> Void
+    let openSession: (String) -> Void
     let move: (String) -> Void
     let archive: () -> Void
 
@@ -845,9 +846,11 @@ struct IPadWorkboardQueueRow: View {
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button(self.presentation.cardPresentation.inspectActionTitle, action: self.inspect)
                 .tint(OpenClawBrand.accent)
-            if self.presentation.cardPresentation.showsOpenSessionAction {
-                Button(self.presentation.cardPresentation.compactOpenSessionActionTitle, action: self.openSession)
-                    .tint(OpenClawBrand.ok)
+            if let sessionKey = self.presentation.cardPresentation.sessionKey {
+                Button(self.presentation.cardPresentation.compactOpenSessionActionTitle) {
+                    self.openSession(sessionKey)
+                }
+                .tint(OpenClawBrand.ok)
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -864,8 +867,10 @@ struct IPadWorkboardQueueRow: View {
 
     @ViewBuilder
     private var actionMenuItems: some View {
-        if self.presentation.cardPresentation.showsOpenSessionAction {
-            Button(self.presentation.cardPresentation.openSessionActionTitle, action: self.openSession)
+        if let sessionKey = self.presentation.cardPresentation.sessionKey {
+            Button(self.presentation.cardPresentation.openSessionActionTitle) {
+                self.openSession(sessionKey)
+            }
         }
         Button(self.presentation.cardPresentation.inspectActionTitle, action: self.inspect)
         ForEach(self.presentation.moveActions) { action in
@@ -884,7 +889,7 @@ struct IPadWorkboardQueueRow: View {
 private struct IPadWorkboardCardDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     let presentation: IPadWorkboardCardDetailSheetPresentation
-    let openSession: () -> Void
+    let openSession: (String) -> Void
     let move: (String) -> Void
     let archive: () -> Void
 
@@ -904,8 +909,10 @@ private struct IPadWorkboardCardDetailSheet: View {
                 }
 
                 Section(self.presentation.cardPresentation.actionsSectionTitle) {
-                    if self.presentation.cardPresentation.showsOpenSessionAction {
-                        Button(self.presentation.cardPresentation.openSessionActionTitle, action: self.openSession)
+                    if let sessionKey = self.presentation.cardPresentation.sessionKey {
+                        Button(self.presentation.cardPresentation.openSessionActionTitle) {
+                            self.openSession(sessionKey)
+                        }
                     }
                     Menu(self.presentation.cardPresentation.moveMenuTitle) {
                         ForEach(self.presentation.moveActions) { action in
