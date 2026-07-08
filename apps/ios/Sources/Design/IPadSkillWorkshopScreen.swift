@@ -279,6 +279,12 @@ struct IPadSkillWorkshopFeature {
             self.filteredProposals.count
         }
 
+        var queueSummaryPresentation: IPadSkillWorkshopQueueSummaryPresentation {
+            .init(
+                proposalCount: self.filteredProposalCount,
+                statusLabel: self.statusFilterLabel)
+        }
+
         var pendingProposalCount: Int {
             self.proposalCount(forStatus: "pending")
         }
@@ -827,11 +833,12 @@ struct IPadSkillWorkshopScreen: View {
             VStack(alignment: .leading, spacing: 12) {
                 let refreshPresentation = self.store.refreshControlPresentation
                 let statusFilterPresentation = self.store.statusFilterControlPresentation
+                let queueSummary = self.store.queueSummaryPresentation
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("\(self.store.filteredProposalCount) proposals")
+                        Text("\(queueSummary.proposalCount) proposals")
                             .font(.headline)
-                        Text(statusFilterPresentation.selectedLabel)
+                        Text(queueSummary.statusLabel)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -1001,9 +1008,10 @@ struct IPadSkillWorkshopScreen: View {
     private var proposalList: some View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
+                let queueSummary = self.store.queueSummaryPresentation
                 ProPanelHeader(
                     title: "Queue",
-                    value: "\(self.store.filteredProposalCount)",
+                    value: "\(queueSummary.proposalCount)",
                     actionTitle: nil,
                     action: nil)
                 ForEach(Array(self.store.filteredProposals.enumerated()), id: \.element.id) { index, proposal in
