@@ -1096,6 +1096,8 @@ struct IPadSkillWorkshopScreen: View {
             VStack(spacing: 0) {
                 let queueSummary = self.store.queueSummaryPresentation
                 let listPresentation = self.store.proposalListPresentation
+                let actionControlsPresentation = self.proposalActionControlsPresentation
+                let inspectionControlsPresentation = self.proposalInspectionControlsPresentation
                 ProPanelHeader(
                     title: "Queue",
                     value: "\(queueSummary.proposalCount)",
@@ -1119,38 +1121,38 @@ struct IPadSkillWorkshopScreen: View {
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
-                        Button("Inspect") {
+                        Button(inspectionControlsPresentation.title) {
                             self.selectProposal(
                                 proposal,
                                 opening: .sheet,
                                 forceInspect: true)
                         }
                         if presentation.showsProposalActions {
-                            Button("Apply") {
+                            Button(actionControlsPresentation.applyButton.title) {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
-                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
-                            Button("Reject", role: .destructive) {
+                            .disabled(!actionControlsPresentation.canRunActions)
+                            Button(actionControlsPresentation.rejectButton.title, role: .destructive) {
                                 Task { await self.run(.reject, proposal: proposal) }
                             }
-                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
+                            .disabled(!actionControlsPresentation.canRunActions)
                         }
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if presentation.showsProposalActions {
-                            Button("Apply") {
+                            Button(actionControlsPresentation.applyButton.title) {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
                             .tint(OpenClawBrand.ok)
-                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
-                            Button("Reject", role: .destructive) {
+                            .disabled(!actionControlsPresentation.canRunActions)
+                            Button(actionControlsPresentation.rejectButton.title, role: .destructive) {
                                 Task { await self.run(.reject, proposal: proposal) }
                             }
-                            .disabled(!self.proposalActionControlsPresentation.canRunActions)
+                            .disabled(!actionControlsPresentation.canRunActions)
                         }
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        Button("Inspect") {
+                        Button(inspectionControlsPresentation.title) {
                             self.selectProposal(
                                 proposal,
                                 opening: .sheet,
