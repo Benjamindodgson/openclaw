@@ -72,23 +72,24 @@ struct IPadWorkboardScreen: View {
     }
 
     private var metrics: [ProMetric] {
-        [
+        self.store.metricPresentations.map { presentation in
             ProMetric(
-                icon: "tray.full",
-                title: "Cards",
-                value: "\(self.store.cards.count)",
-                color: OpenClawBrand.accent),
-            ProMetric(
-                icon: "figure.run",
-                title: "Running",
-                value: "\(self.store.runningCardCount)",
-                color: OpenClawBrand.ok),
-            ProMetric(
-                icon: "exclamationmark.triangle",
-                title: "Blocked",
-                value: "\(self.store.blockedCardCount)",
-                color: OpenClawBrand.warn),
-        ]
+                icon: presentation.iconSystemName,
+                title: presentation.title,
+                value: presentation.value,
+                color: Self.metricColor(for: presentation.tone))
+        }
+    }
+
+    private static func metricColor(for tone: IPadWorkboardMetricTone) -> Color {
+        switch tone {
+        case .accent:
+            OpenClawBrand.accent
+        case .ok:
+            OpenClawBrand.ok
+        case .warn:
+            OpenClawBrand.warn
+        }
     }
 
     private var controlsCard: some View {

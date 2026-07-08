@@ -190,6 +190,20 @@ struct IPadWorkboardQueueSummaryPresentation: Equatable, Sendable {
     let cardCountLabel: String
 }
 
+enum IPadWorkboardMetricTone: Equatable, Sendable {
+    case accent
+    case ok
+    case warn
+}
+
+struct IPadWorkboardMetricPresentation: Equatable, Identifiable, Sendable {
+    let id: String
+    let iconSystemName: String
+    let title: String
+    let value: String
+    let tone: IPadWorkboardMetricTone
+}
+
 struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
     let title: String
     let iconSystemName: String
@@ -379,6 +393,29 @@ struct IPadWorkboardFeature {
                 cardCount: self.filteredCardCount,
                 value: "\(self.filteredCardCount)",
                 cardCountLabel: "\(self.filteredCardCount) cards")
+        }
+
+        var metricPresentations: [IPadWorkboardMetricPresentation] {
+            [
+                .init(
+                    id: "cards",
+                    iconSystemName: "tray.full",
+                    title: "Cards",
+                    value: "\(self.cards.count)",
+                    tone: .accent),
+                .init(
+                    id: "running",
+                    iconSystemName: "figure.run",
+                    title: "Running",
+                    value: "\(self.runningCardCount)",
+                    tone: .ok),
+                .init(
+                    id: "blocked",
+                    iconSystemName: "exclamationmark.triangle",
+                    title: "Blocked",
+                    value: "\(self.blockedCardCount)",
+                    tone: .warn),
+            ]
         }
 
         var refreshControlPresentation: IPadWorkboardRefreshControlPresentation {
