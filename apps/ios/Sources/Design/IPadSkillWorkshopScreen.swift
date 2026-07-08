@@ -192,9 +192,11 @@ struct IPadSkillWorkshopFeature {
         }
 
         var proposalSheetPresentation: IPadSkillWorkshopProposalSheetPresentation {
-            .init(
-                title: "Proposal",
-                dismissButtonTitle: "Done")
+            .init(title: "Proposal", dismissButtonTitle: "Done")
+        }
+
+        var screenChromePresentation: IPadSkillWorkshopScreenChromePresentation {
+            .init(title: "Skill Workshop", subtitle: "Review and apply proposed skills.")
         }
 
         func screenPresentation(
@@ -202,6 +204,7 @@ struct IPadSkillWorkshopFeature {
             sceneIsActive: Bool) -> IPadSkillWorkshopScreenPresentation
         {
             .init(
+                screenChromePresentation: self.screenChromePresentation,
                 refreshTaskID: self.refreshTaskID(
                     gatewayAccess: gatewayAccess,
                     sceneIsActive: sceneIsActive),
@@ -852,8 +855,8 @@ struct IPadSkillWorkshopScreen: View {
 
     var body: some View {
         IPadSidebarScreenChrome(
-            title: "Skill Workshop",
-            subtitle: "Review and apply proposed skills.",
+            title: self.screenPresentation.screenChromePresentation.title,
+            subtitle: self.screenPresentation.screenChromePresentation.subtitle,
             headerLeadingAction: self.headerLeadingAction,
             gatewayAction: self.openSettings)
         {
