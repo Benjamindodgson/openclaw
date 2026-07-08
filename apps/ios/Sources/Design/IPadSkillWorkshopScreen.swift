@@ -216,6 +216,17 @@ struct IPadSkillWorkshopFeature {
             Self.proposalStatusFilterLabel(self.statusFilter.value)
         }
 
+        var statusFilterControlPresentation: IPadSkillWorkshopStatusFilterControlPresentation {
+            .init(
+                selectedFilter: self.statusFilter.value,
+                selectedLabel: self.statusFilterLabel,
+                options: Self.proposalStatusFilters.map { filter in
+                    IPadSkillWorkshopStatusFilterOption(
+                        id: filter,
+                        title: Self.proposalStatusFilterLabel(filter))
+                })
+        }
+
         static func proposalStatusMatchesFilter(status: String, filter: String) -> Bool {
             switch filter {
             case "all": true
@@ -779,11 +790,12 @@ struct IPadSkillWorkshopScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
                 let refreshPresentation = self.store.refreshControlPresentation
+                let statusFilterPresentation = self.store.statusFilterControlPresentation
                 self.agentScopeMenu
                 self.proposalSearchField
                 Picker("Status", selection: self.statusFilterBinding) {
-                    ForEach(IPadSkillWorkshopFeature.State.proposalStatusFilters, id: \.self) { filter in
-                        Text(IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(filter)).tag(filter)
+                    ForEach(statusFilterPresentation.options) { option in
+                        Text(option.title).tag(option.id)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -814,11 +826,12 @@ struct IPadSkillWorkshopScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
                 let refreshPresentation = self.store.refreshControlPresentation
+                let statusFilterPresentation = self.store.statusFilterControlPresentation
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("\(self.store.filteredProposalCount) proposals")
                             .font(.headline)
-                        Text(self.store.statusFilterLabel)
+                        Text(statusFilterPresentation.selectedLabel)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -830,8 +843,8 @@ struct IPadSkillWorkshopScreen: View {
 
                 self.agentScopeMenu
                 Picker("Status", selection: self.statusFilterBinding) {
-                    ForEach(IPadSkillWorkshopFeature.State.proposalStatusFilters, id: \.self) { filter in
-                        Text(IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(filter)).tag(filter)
+                    ForEach(statusFilterPresentation.options) { option in
+                        Text(option.title).tag(option.id)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -1252,7 +1265,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private var statusFilterBinding: Binding<String> {
         Binding(
-            get: { self.store.statusFilter.value },
+            get: { self.store.statusFilterControlPresentation.selectedFilter },
             set: { self.store.send(.statusFilterChanged(.init(filter: .init(value: $0)))) })
     }
 

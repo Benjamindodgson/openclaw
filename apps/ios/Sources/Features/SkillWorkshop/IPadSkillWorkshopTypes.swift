@@ -106,4 +106,15 @@ struct IPadSkillWorkshopAgentScopeMenuPresentation: Equatable, Sendable {
     let isEnabled: Bool
 }
 
+struct IPadSkillWorkshopStatusFilterOption: Equatable, Identifiable, Sendable {
+    let id: String
+    let title: String
+}
+
+struct IPadSkillWorkshopStatusFilterControlPresentation: Equatable, Sendable {
+    let selectedFilter: String
+    let selectedLabel: String
+    let options: [IPadSkillWorkshopStatusFilterOption]
+}
+
 // swiftformat:enable redundantSendable

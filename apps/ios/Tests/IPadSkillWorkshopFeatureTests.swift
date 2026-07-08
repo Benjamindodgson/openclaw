@@ -94,6 +94,13 @@ struct IPadSkillWorkshopFeatureTests {
 
     @Test func `proposal lanes are filtered by reducer state`() {
         var state = IPadSkillWorkshopFeature.State()
+        let statusFilterOptions = [
+            IPadSkillWorkshopStatusFilterOption(id: "pending", title: "Pending"),
+            IPadSkillWorkshopStatusFilterOption(id: "held", title: "Held"),
+            IPadSkillWorkshopStatusFilterOption(id: "applied", title: "Applied"),
+            IPadSkillWorkshopStatusFilterOption(id: "rejected", title: "Rejected"),
+            IPadSkillWorkshopStatusFilterOption(id: "all", title: "All"),
+        ]
         state.proposalEntries = .init(values: [
             Self.proposal(id: "pending-match", status: "pending", title: "Gateway proposal"),
             Self.proposal(id: "pending-other", status: "pending", title: "Other proposal"),
@@ -103,6 +110,10 @@ struct IPadSkillWorkshopFeatureTests {
         state.query = .init(value: "gateway")
 
         #expect(state.statusFilterLabel == "Pending")
+        #expect(state.statusFilterControlPresentation == .init(
+            selectedFilter: "pending",
+            selectedLabel: "Pending",
+            options: statusFilterOptions))
         #expect(state.filteredProposals.map(\.id) == ["pending-match"])
         #expect(state.filteredProposalCount == 1)
         #expect(state.pendingProposalCount == 2)
@@ -116,6 +127,10 @@ struct IPadSkillWorkshopFeatureTests {
 
         state.statusFilter = .init(value: "all")
         #expect(state.statusFilterLabel == "All")
+        #expect(state.statusFilterControlPresentation == .init(
+            selectedFilter: "all",
+            selectedLabel: "All",
+            options: statusFilterOptions))
         #expect(state.filteredProposals.map(\.id) == ["pending-match", "applied-match", "stale-match"])
         #expect(state.filteredProposalCount == 3)
         #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
