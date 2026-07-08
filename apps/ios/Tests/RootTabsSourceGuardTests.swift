@@ -3002,7 +3002,10 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains(
             "for proposal: IPadSkillProposal) -> IPadSkillWorkshopProposalDetailPresentation"))
         #expect(source.contains("var presentedProposalPresentation: IPadSkillWorkshopProposalDetailPresentation?"))
-        #expect(source.contains("self.store.proposalListPresentation"))
+        #expect(source.contains("proposalListPresentation: self.proposalListPresentation"))
+        #expect(source.contains("if self.screenPresentation.proposalListPresentation.isEmpty"))
+        #expect(source.contains("let listPresentation = self.screenPresentation.proposalListPresentation"))
+        #expect(!source.contains("self.store.proposalListPresentation"))
         #expect(proposalList.contains("let actionControlsPresentation = self.proposalActionControlsPresentation"))
         #expect(proposalList.contains("let inspectionControlsPresentation = self.proposalInspectionControlsPresentation"))
         #expect(proposalList.contains("Button(inspectionControlsPresentation.title)"))
