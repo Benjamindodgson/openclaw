@@ -216,6 +216,7 @@ struct IPadSkillWorkshopAdminScopeNoticePresentation: Equatable, Sendable {
 struct IPadSkillWorkshopProposalActionButtonPresentation: Equatable, Sendable {
     let title: String
     let iconSystemName: String
+    let accessibilityLabel: String
 }
 
 struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable {
@@ -229,6 +230,7 @@ struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable 
 struct IPadSkillWorkshopProposalInspectionControlsPresentation: Equatable, Sendable {
     let title: String
     let iconSystemName: String
+    let accessibilityLabel: String
     let canInspect: Bool
 }
 
