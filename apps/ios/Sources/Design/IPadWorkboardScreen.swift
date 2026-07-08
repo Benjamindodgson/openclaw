@@ -171,7 +171,7 @@ struct IPadWorkboardScreen: View {
                 self.compactBoardScopeMenu
                 self.compactStatusPicker
 
-                if self.canWrite {
+                if self.compactWriteControlsPresentation.showsWriteControls {
                     HStack(spacing: 8) {
                         self.newCardButton(expands: true)
 
@@ -188,7 +188,7 @@ struct IPadWorkboardScreen: View {
                         .disabled(self.dispatchControlPresentation.isDisabled)
                     }
                 } else {
-                    Text(self.compactWriteUnavailablePresentation.message)
+                    Text(self.compactWriteControlsPresentation.unavailablePresentation.message)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
@@ -608,8 +608,10 @@ struct IPadWorkboardScreen: View {
         self.store.state.compactEmptyStatePresentation(canRead: self.canRead)
     }
 
-    private var compactWriteUnavailablePresentation: IPadWorkboardCompactWriteUnavailablePresentation {
-        self.store.state.compactWriteUnavailablePresentation(canRead: self.canRead)
+    private var compactWriteControlsPresentation: IPadWorkboardCompactWriteControlsPresentation {
+        self.store.state.compactWriteControlsPresentation(
+            canRead: self.canRead,
+            canWrite: self.canWrite)
     }
 
     private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
