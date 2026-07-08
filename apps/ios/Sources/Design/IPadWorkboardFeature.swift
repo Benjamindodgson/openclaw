@@ -256,6 +256,7 @@ struct IPadWorkboardStatusFilterOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
     let accessibilityLabel: String
+    let isSelected: Bool
 }
 
 struct IPadWorkboardStatusFilterControlPresentation: Equatable, Sendable {
@@ -464,8 +465,12 @@ struct IPadWorkboardFeature {
                 menuTitle: "Status",
                 selectedFilter: self.selectedStatus.value,
                 selectedLabel: IPadWorkboardDefaults.label(for: self.selectedStatus.value),
-                options: Self.statusFilterOptions(for: self.statusValues),
-                compactOptions: Self.statusFilterOptions(for: self.compactStatuses))
+                options: Self.statusFilterOptions(
+                    for: self.statusValues,
+                    selectedStatus: self.selectedStatus.value),
+                compactOptions: Self.statusFilterOptions(
+                    for: self.compactStatuses,
+                    selectedStatus: self.selectedStatus.value))
         }
 
         var screenPresentation: IPadWorkboardScreenPresentation {
@@ -625,13 +630,25 @@ struct IPadWorkboardFeature {
 
         private static let defaultBoardScopeOption = IPadWorkboardBoardScopeOption(id: "", title: "All boards")
 
-        private static func statusFilterOptions(for statuses: [String]) -> [IPadWorkboardStatusFilterOption] {
-            [self.statusFilterOption(for: "active")] + statuses.map(self.statusFilterOption(for:))
+        private static func statusFilterOptions(
+            for statuses: [String],
+            selectedStatus: String) -> [IPadWorkboardStatusFilterOption]
+        {
+            [self.statusFilterOption(for: "active", selectedStatus: selectedStatus)] + statuses.map {
+                self.statusFilterOption(for: $0, selectedStatus: selectedStatus)
+            }
         }
 
-        private static func statusFilterOption(for status: String) -> IPadWorkboardStatusFilterOption {
+        private static func statusFilterOption(
+            for status: String,
+            selectedStatus: String) -> IPadWorkboardStatusFilterOption
+        {
             let title = IPadWorkboardDefaults.label(for: status)
-            return .init(id: status, title: title, accessibilityLabel: "Show \(title) cards")
+            return .init(
+                id: status,
+                title: title,
+                accessibilityLabel: "Show \(title) cards",
+                isSelected: status == selectedStatus)
         }
 
         static func cardsForKanbanStatus(

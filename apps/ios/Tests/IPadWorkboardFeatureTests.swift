@@ -238,10 +238,14 @@ struct IPadWorkboardFeatureTests {
         #expect(presentation.options.map(\.id) == ["active", "review", "todo", "custom"])
         #expect(presentation.compactOptions.map(\.id) == ["active", "todo", "review", "custom"])
         #expect(presentation.options.first?.accessibilityLabel == "Show Active cards")
+        #expect(presentation.options.filter(\.isSelected).map(\.id) == ["active"])
+        #expect(presentation.compactOptions.filter(\.isSelected).map(\.id) == ["active"])
         #expect(state.screenPresentation.statusFilterControlPresentation == presentation)
 
         state.selectedStatus = .init(value: "review")
         #expect(state.statusFilterControlPresentation.selectedLabel == "Review")
+        #expect(state.statusFilterControlPresentation.options.filter(\.isSelected).map(\.id) == ["review"])
+        #expect(state.statusFilterControlPresentation.compactOptions.filter(\.isSelected).map(\.id) == ["review"])
     }
 
     @Test func `kanban cards are filtered by reducer state`() {

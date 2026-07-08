@@ -315,14 +315,14 @@ struct IPadWorkboardScreen: View {
                 .padding(.horizontal, 10)
                 .frame(height: 30)
                 .background(
-                    self.statusFilterControlPresentation.selectedFilter == option.id
+                    option.isSelected
                         ? OpenClawBrand.accent.opacity(0.12)
                         : Color.primary.opacity(0.06),
                     in: Capsule())
                 .overlay {
                     Capsule()
                         .strokeBorder(
-                            self.statusFilterControlPresentation.selectedFilter == option.id
+                            option.isSelected
                                 ? OpenClawBrand.accent.opacity(0.42)
                                 : Color.primary.opacity(0.08),
                             lineWidth: 1)
@@ -330,7 +330,7 @@ struct IPadWorkboardScreen: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(
-            self.statusFilterControlPresentation.selectedFilter == option.id
+            option.isSelected
                 ? OpenClawBrand.accent
                 : .primary)
         .accessibilityLabel(option.accessibilityLabel)
