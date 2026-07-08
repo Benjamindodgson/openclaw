@@ -82,9 +82,15 @@ struct IPadActivitySessionsFeature {
         }
 
         var screenPresentation: IPadActivityScreenPresentation {
-            .init(
+            let sessionRows = self.visibleSessions.map {
+                CommandCenterTab.sessionWorkItem(
+                    for: $0,
+                    currentSessionKey: self.currentSession.value)
+            }
+            return .init(
                 gatewayPresentation: self.gatewayPresentation,
-                sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(self.visibleSessions.count)",
+                sessionRows: sessionRows,
+                sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(sessionRows.count)",
                 feedHeaderValue: self.loadingPhase == .inFlight ? "Loading" : nil,
                 showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
                 loadErrorText: self.loadErrorText)
@@ -320,7 +326,7 @@ struct IPadActivityScreen: View {
                         color: OpenClawBrand.warn,
                         actionTitle: nil,
                         action: nil)
-                } else if self.sessionRows.isEmpty {
+                } else if self.screenPresentation.sessionRows.isEmpty {
                     Divider().padding(.leading, 58)
                     ProStatusRow(
                         icon: "bubble.left.and.text.bubble.right",
@@ -333,7 +339,7 @@ struct IPadActivityScreen: View {
                         actionTitle: self.sessionsAvailable ? "Chat" : nil,
                         action: self.sessionsAvailable ? self.openChat : nil)
                 } else {
-                    ForEach(self.sessionRows) { row in
+                    ForEach(self.screenPresentation.sessionRows) { row in
                         Divider().padding(.leading, 58)
                         ProStatusRow(
                             icon: row.icon,
@@ -388,15 +394,6 @@ struct IPadActivityScreen: View {
         self.appModel.chatTransportModeID
     }
 
-    private var sessionRows: [CommandCenterTab.WorkItem] {
-        self.store.visibleSessions
-            .map {
-                CommandCenterTab.sessionWorkItem(
-                    for: $0,
-                    currentSessionKey: self.store.currentSession.value)
-            }
-    }
-
     private func refreshSessions() async {
         await self.store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: .init(value: self.scenePhase == .active)),
@@ -424,6 +421,7 @@ struct IPadActivityGatewayAgentCount: Equatable, Sendable { var value: Int }
 
 struct IPadActivityScreenPresentation: Equatable, Sendable {
     let gatewayPresentation: IPadActivityGatewayPresentationState
+    let sessionRows: [CommandCenterTab.WorkItem]
     let sessionMetricValue: String
     let feedHeaderValue: String?
     let showsLoadingSessionsPlaceholder: Bool

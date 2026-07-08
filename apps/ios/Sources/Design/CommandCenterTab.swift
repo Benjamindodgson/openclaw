@@ -19,7 +19,8 @@ struct CommandCenterTab: View {
     var openSettings: () -> Void
     var openSessions: (() -> Void)?
 
-    struct ChatRoute: Equatable {
+    // swiftformat:disable redundantSendable
+    struct ChatRoute: Equatable, Sendable {
         let sessionKey: String?
 
         static let defaultSession = Self(sessionKey: nil)
@@ -29,12 +30,12 @@ struct CommandCenterTab: View {
         }
     }
 
-    enum WorkRoute: Equatable {
+    enum WorkRoute: Equatable, Sendable {
         case chat(ChatRoute)
         case settings
     }
 
-    struct WorkItem: Identifiable {
+    struct WorkItem: Equatable, Identifiable, Sendable {
         let id: String
         let icon: String
         let title: String
@@ -45,6 +46,8 @@ struct CommandCenterTab: View {
         let progress: Double?
         let route: WorkRoute
     }
+
+    // swiftformat:enable redundantSendable
 
     init(
         ownsNavigationStack: Bool = true,
