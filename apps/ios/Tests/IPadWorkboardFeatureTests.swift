@@ -638,14 +638,11 @@ struct IPadWorkboardFeatureTests {
         ])
 
         #expect(state.kanbanColumnPresentations.map(\.id) == ["todo", "running"])
-        #expect(state.kanbanColumnPresentation(status: "todo") == .init(
-            id: "todo",
-            lanePresentation: state.kanbanLanePresentation(status: "todo"),
-            cards: [Self.card(id: "todo-1", title: "Gateway fix", status: "todo", position: 10)]))
+        #expect(state.kanbanColumnPresentation(status: "todo").cardItemPresentations.map(\.card.id) == ["todo-1"])
 
         state.selectedStatus = .init(value: "done")
         #expect(state.kanbanColumnPresentations.map(\.id) == ["done"])
-        #expect(state.kanbanColumnPresentations.first?.cards.map(\.id) == ["done-1"])
+        #expect(state.kanbanColumnPresentations.first?.cardItemPresentations.map(\.card.id) == ["done-1"])
     }
 
     @Test func `kanban cards are filtered by reducer state`() {

@@ -440,9 +440,6 @@ struct IPadWorkboardScreen: View {
                 ForEach(self.screenPresentation.kanbanColumnPresentations) { presentation in
                     IPadWorkboardKanbanColumn(
                         presentation: presentation,
-                        cardPresentation: { card in
-                            self.store.state.kanbanCardPresentation(for: card)
-                        },
                         openSession: { card in
                             self.open(card)
                         },
@@ -654,7 +651,6 @@ struct IPadWorkboardScreen: View {
 
 struct IPadWorkboardKanbanColumn: View {
     let presentation: IPadWorkboardKanbanColumnPresentation
-    let cardPresentation: (IPadWorkboardCard) -> IPadWorkboardKanbanCardPresentation
     let openSession: (IPadWorkboardCard) -> Void
     let inspect: (IPadWorkboardCard) -> Void
     let move: (IPadWorkboardCard, String) -> Void
@@ -669,7 +665,7 @@ struct IPadWorkboardKanbanColumn: View {
                     actionTitle: nil,
                     action: nil)
 
-                if self.presentation.cards.isEmpty {
+                if self.presentation.cardItemPresentations.isEmpty {
                     ProStatusRow(
                         icon: self.presentation.lanePresentation.emptyState.icon,
                         title: self.presentation.lanePresentation.emptyState.title,
@@ -679,24 +675,27 @@ struct IPadWorkboardKanbanColumn: View {
                         actionTitle: nil,
                         action: nil)
                 } else {
-                    ForEach(Array(self.presentation.cards.enumerated()), id: \.element.id) { index, card in
+                    ForEach(
+                        Array(self.presentation.cardItemPresentations.enumerated()),
+                        id: \.element.id)
+                    { index, item in
                         if index > 0 {
                             Divider().padding(.leading, 12)
                         }
                         IPadWorkboardKanbanCard(
-                            card: card,
-                            presentation: self.cardPresentation(card),
+                            card: item.card,
+                            presentation: item.cardPresentation,
                             openSession: {
-                                self.openSession(card)
+                                self.openSession(item.card)
                             },
                             inspect: {
-                                self.inspect(card)
+                                self.inspect(item.card)
                             },
                             move: { status in
-                                self.move(card, status)
+                                self.move(item.card, status)
                             },
                             archive: {
-                                self.archive(card)
+                                self.archive(item.card)
                             })
                     }
                 }
