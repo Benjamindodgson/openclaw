@@ -969,8 +969,9 @@ extension OnboardingWizardView {
             problem: problem,
             statusText: .init(value: statusText))))
 
-        if self.statusStore.shouldShowAuthStep {
-            self.stepStore.send(.stepChanged(.init(step: .auth)))
+        if let request = self.statusStore.authStepNavigationRequest {
+            self.stepStore.send(request.stepAction)
+            self.statusStore.send(.authStepNavigationHandled)
         }
     }
 

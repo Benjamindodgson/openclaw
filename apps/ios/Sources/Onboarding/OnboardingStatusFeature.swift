@@ -56,6 +56,8 @@ struct OnboardingStatusFeature {
         var stepAction: OnboardingStepFeature.Action
     }
 
+    struct AuthStepNavigationRequest: Equatable, Sendable { var stepAction: OnboardingStepFeature.Action }
+
     struct QRScannerOpeningRequest: Equatable, Sendable {
         var statusAction: OnboardingStatusFeature.Action
         var presentationAction: OnboardingPresentationFeature.Action
@@ -72,6 +74,7 @@ struct OnboardingStatusFeature {
         var pairingRequestIdState = OnboardingConnectionIssueRequestID(value: nil)
         var automaticPairingResume = OnboardingAutomaticPairingResume(shouldResume: false)
         var authStepPresentation = OnboardingAuthStepPresentation(shouldShow: false)
+        var authStepNavigationRequest: AuthStepNavigationRequest?
         var statusLineState: OnboardingConnectionStatusLine
 
         init(statusLine: String = OnboardingStatusFeature.defaultStatusLine) {
@@ -151,6 +154,7 @@ struct OnboardingStatusFeature {
 
         case automaticPairingResumeRequested
         case appleReviewDemoModeEnabled
+        case authStepNavigationHandled
         case connectionFinished
         case connectionIssueDetected(ConnectionIssueDetection)
         case connectionProblemUpdated(ConnectionProblemUpdate)
@@ -199,6 +203,10 @@ struct OnboardingStatusFeature {
                 state.statusLineState = .init(value: "Apple Review demo mode enabled.")
                 return .none
 
+            case .authStepNavigationHandled:
+                state.authStepNavigationRequest = nil
+                return .none
+
             case .connectionFinished:
                 state.connectingGatewayIDState = nil
                 return .none
@@ -227,6 +235,7 @@ struct OnboardingStatusFeature {
                     state.issue = .none
                     state.authStepPresentation = .init(shouldShow: false)
                 }
+                state.authStepNavigationRequest = nil
                 state.connectMessageState = .init(value: start.message.value)
                 state.statusLineState = start.statusLine
                 return .none
@@ -249,6 +258,7 @@ struct OnboardingStatusFeature {
                 state.pairingRequestIdState = .init(value: nil)
                 state.automaticPairingResume = .init(shouldResume: false)
                 state.authStepPresentation = .init(shouldShow: false)
+                state.authStepNavigationRequest = nil
                 state.statusLineState = .init(value: "Opening QR scanner…")
                 return .none
 
@@ -279,6 +289,7 @@ struct OnboardingStatusFeature {
                 state.pairingRequestIdState = .init(value: nil)
                 state.automaticPairingResume = .init(shouldResume: false)
                 state.authStepPresentation = .init(shouldShow: false)
+                state.authStepNavigationRequest = nil
                 state.statusLineState = .init(value: "Scan a fresh setup QR code from this gateway.")
                 return .none
 
@@ -300,6 +311,7 @@ struct OnboardingStatusFeature {
                 state.issue = .none
                 state.automaticPairingResume = .init(shouldResume: false)
                 state.authStepPresentation = .init(shouldShow: false)
+                state.authStepNavigationRequest = nil
                 state.connectMessageState = .init(value: "Retrying after approval…")
                 state.statusLineState = .init(value: "Retrying after approval…")
                 return .none
@@ -340,6 +352,9 @@ struct OnboardingStatusFeature {
             state.issue.needsAuthToken
                 || state.issue.needsPairing
                 || detection.pauseReconnect.value)
+        state.authStepNavigationRequest = state.authStepPresentation.shouldShow
+            ? .init(stepAction: .stepChanged(.init(step: .auth)))
+            : nil
 
         if let message = detection.message.value {
             state.connectMessageState = .init(value: message)
