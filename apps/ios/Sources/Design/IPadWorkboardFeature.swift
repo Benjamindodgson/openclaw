@@ -153,6 +153,19 @@ struct IPadWorkboardBoardScope: Equatable, Sendable {
     var boardID: IPadWorkboardBoardScopeID?
 }
 
+struct IPadWorkboardBoardScopeOption: Equatable, Identifiable, Sendable {
+    let id: String
+    let title: String
+}
+
+struct IPadWorkboardBoardScopeMenuPresentation: Equatable, Sendable {
+    let title: String
+    let selectedLabel: String
+    let selectorIconSystemName: String
+    let accessibilityLabel: String
+    let options: [IPadWorkboardBoardScopeOption]
+}
+
 struct IPadWorkboardCards: Equatable, Sendable {
     var values: [IPadWorkboardCard] = []
 }
@@ -189,6 +202,7 @@ struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let screenChromePresentation: IPadWorkboardScreenChromePresentation
     let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
     let refreshControlPresentation: IPadWorkboardRefreshControlPresentation
+    let boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation
 }
 
 // swiftformat:enable redundantSendable
@@ -282,6 +296,17 @@ struct IPadWorkboardFeature {
                 .boardScopeLabel(for: self.selectedBoardID.value)
         }
 
+        var boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation {
+            .init(
+                title: "Board",
+                selectedLabel: self.boardScopeLabel,
+                selectorIconSystemName: "chevron.up.chevron.down",
+                accessibilityLabel: "Workboard board scope",
+                options: [Self.defaultBoardScopeOption] + self.boardScopeOptions.map {
+                    .init(id: $0, title: IPadWorkboardScreen.boardScopeLabel(for: $0))
+                })
+        }
+
         var workboardSubtitle: String {
             Self.workboardSubtitle(
                 boardScopeLabel: self.boardScopeLabel,
@@ -313,7 +338,8 @@ struct IPadWorkboardFeature {
             .init(
                 screenChromePresentation: self.screenChromePresentation,
                 queueSummaryPresentation: self.queueSummaryPresentation,
-                refreshControlPresentation: self.refreshControlPresentation)
+                refreshControlPresentation: self.refreshControlPresentation,
+                boardScopeMenuPresentation: self.boardScopeMenuPresentation)
         }
 
         var isLoading: Bool {
@@ -441,6 +467,8 @@ struct IPadWorkboardFeature {
         static func workboardSubtitle(boardScopeLabel: String, selectedStatus: String) -> String {
             "\(boardScopeLabel) / \(IPadWorkboardDefaults.label(for: selectedStatus))"
         }
+
+        private static let defaultBoardScopeOption = IPadWorkboardBoardScopeOption(id: "", title: "All boards")
 
         static func cardsForKanbanStatus(
             cards: [IPadWorkboardCard],
