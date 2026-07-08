@@ -362,7 +362,6 @@ struct IPadWorkboardFeatureTests {
             notesText: "Ship it"))
         #expect(presentation.showsOpenSessionAction)
         #expect(IPadWorkboardFeature.State().cardPresentation(for: card) == presentation)
-        #expect(IPadWorkboardFeature.State().openSessionKey(for: card) == "session-1")
 
         let sessionOnly = Self.card(id: "review-card", status: "review", position: 20, sessionKey: " session-2 ")
         let sessionPresentation = IPadWorkboardFeature.State.cardPresentation(for: sessionOnly)
@@ -370,8 +369,8 @@ struct IPadWorkboardFeatureTests {
         #expect(sessionPresentation.iconSystemName == "checklist")
         #expect(sessionPresentation.tone == .accent)
         #expect(sessionPresentation.notesText == nil)
+        #expect(sessionPresentation.sessionKey == "session-2")
         #expect(sessionPresentation.showsOpenSessionAction)
-        #expect(IPadWorkboardFeature.State().openSessionKey(for: sessionOnly) == "session-2")
 
         let agentOnly = Self.card(id: "blocked-card", status: "blocked", position: 30, agentID: " agent-7 ")
         let agentPresentation = IPadWorkboardFeature.State.cardPresentation(for: agentOnly)
@@ -380,7 +379,6 @@ struct IPadWorkboardFeatureTests {
         #expect(agentPresentation.tone == .warn)
         #expect(agentPresentation.sessionKey == nil)
         #expect(!agentPresentation.showsOpenSessionAction)
-        #expect(IPadWorkboardFeature.State().openSessionKey(for: agentOnly) == nil)
 
         let archived = Self.card(id: "done-card", status: "done", position: 40, archivedAt: 1)
         let archivedPresentation = IPadWorkboardFeature.State.cardPresentation(for: archived)

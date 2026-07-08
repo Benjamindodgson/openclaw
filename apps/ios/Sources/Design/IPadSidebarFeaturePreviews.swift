@@ -84,7 +84,7 @@ private struct IPadWorkboardCompactRowsPreview: View {
                                     card: card,
                                     presentation: presentation,
                                     inspect: {},
-                                    openSession: {},
+                                    openSession: { _ in },
                                     move: { _ in },
                                     archive: {})
                             }
