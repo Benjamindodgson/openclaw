@@ -561,8 +561,10 @@ struct IPadWorkboardFeature {
                 showsClearButton: !self.query.value.isEmpty)
         }
 
-        func compactEmptyStatePresentation(canRead: Bool) -> IPadWorkboardCompactEmptyStatePresentation {
-            if canRead {
+        func compactEmptyStatePresentation(
+            gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCompactEmptyStatePresentation
+        {
+            if gatewayAccess.canRead {
                 return .init(
                     icon: "tray",
                     title: "No cards",
@@ -1436,12 +1438,11 @@ extension IPadWorkboardFeature.State {
     }
 
     func compactWriteControlsPresentation(
-        canRead: Bool,
-        canWrite: Bool) -> IPadWorkboardCompactWriteControlsPresentation
+        gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCompactWriteControlsPresentation
     {
         .init(
-            showsWriteControls: canWrite,
-            unavailablePresentation: self.compactWriteUnavailablePresentation(canRead: canRead))
+            showsWriteControls: gatewayAccess.canWrite,
+            unavailablePresentation: self.compactWriteUnavailablePresentation(canRead: gatewayAccess.canRead))
     }
 
     func cardDetailActionControlsPresentation(

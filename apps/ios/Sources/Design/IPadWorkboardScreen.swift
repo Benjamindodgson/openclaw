@@ -602,13 +602,11 @@ struct IPadWorkboardScreen: View {
     }
 
     private var compactEmptyStatePresentation: IPadWorkboardCompactEmptyStatePresentation {
-        self.store.state.compactEmptyStatePresentation(canRead: self.gatewayAccess.canRead)
+        self.store.state.compactEmptyStatePresentation(gatewayAccess: self.gatewayAccess)
     }
 
     private var compactWriteControlsPresentation: IPadWorkboardCompactWriteControlsPresentation {
-        self.store.state.compactWriteControlsPresentation(
-            canRead: self.gatewayAccess.canRead,
-            canWrite: self.gatewayAccess.canWrite)
+        self.store.state.compactWriteControlsPresentation(gatewayAccess: self.gatewayAccess)
     }
 
     private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
