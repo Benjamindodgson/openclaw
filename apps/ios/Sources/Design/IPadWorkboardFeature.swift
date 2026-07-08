@@ -242,6 +242,25 @@ struct IPadWorkboardCardDetailSheetPresentation: Equatable, Sendable {
     let actionControlsPresentation: IPadWorkboardCardDetailActionControlsPresentation
 }
 
+struct IPadWorkboardPresentedCardSheetPresentation: Equatable, Sendable {
+    let card: IPadWorkboardCard
+    let sheetPresentation: IPadWorkboardCardDetailSheetPresentation
+}
+
+enum IPadWorkboardPresentedSheetPresentation: Equatable, Identifiable, Sendable {
+    case create
+    case card(IPadWorkboardPresentedCardSheetPresentation)
+
+    var id: String {
+        switch self {
+        case .create:
+            "create"
+        case let .card(presentation):
+            "card-\(presentation.card.id)"
+        }
+    }
+}
+
 struct IPadWorkboardQueueRowPresentation: Equatable, Sendable {
     let cardPresentation: IPadWorkboardCardPresentation
     let moveActions: [IPadWorkboardMoveActionPresentation]
@@ -419,6 +438,7 @@ struct IPadWorkboardStatusFilterControlPresentation: Equatable, Sendable {
 struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let screenChromePresentation: IPadWorkboardScreenChromePresentation
     let refreshTaskID: String
+    let presentedSheetPresentation: IPadWorkboardPresentedSheetPresentation?
     let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
     let metricPresentations: [IPadWorkboardMetricPresentation]
     let queryFieldPresentation: IPadWorkboardQueryFieldPresentation
@@ -1523,6 +1543,23 @@ extension IPadWorkboardFeature.State {
                 gatewayAccess: gatewayAccess))
     }
 
+    func presentedSheetPresentation(
+        gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardPresentedSheetPresentation?
+    {
+        switch self.presentedSheet {
+        case .create:
+            .create
+        case let .card(card):
+            .card(.init(
+                card: card,
+                sheetPresentation: self.cardDetailSheetPresentation(
+                    for: card,
+                    gatewayAccess: gatewayAccess)))
+        case nil:
+            nil
+        }
+    }
+
     func queueRowPresentation(for card: IPadWorkboardCard) -> IPadWorkboardQueueRowPresentation {
         .init(
             cardPresentation: self.cardPresentation(for: card),
@@ -1570,6 +1607,7 @@ extension IPadWorkboardFeature.State {
             refreshTaskID: self.refreshTaskID(
                 gatewayAccess: gatewayAccess,
                 sceneIsActive: sceneIsActive),
+            presentedSheetPresentation: self.presentedSheetPresentation(gatewayAccess: gatewayAccess),
             queueSummaryPresentation: self.queueSummaryPresentation,
             metricPresentations: self.metricPresentations,
             queryFieldPresentation: self.queryFieldPresentation,

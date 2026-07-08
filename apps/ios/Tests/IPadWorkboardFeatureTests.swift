@@ -1017,3 +1017,19 @@ private enum TestWorkboardFailure: LocalizedError {
         "workboard boom"
     }
 }
+
+extension IPadWorkboardFeatureTests {
+    @Test func `workboard presented sheet presentation is screen owned`() {
+        let card = Self.card(id: "card-1", status: "todo", position: 10)
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: [.init(value: "todo")])
+        state.busyCardID = .init(value: "card-1")
+        state.presentedSheet = .card(card)
+
+        let sheetPresentation = state.cardDetailSheetPresentation(
+            for: card,
+            gatewayAccess: .init(canRead: true, canWrite: true))
+        #expect(state.screenPresentation(gatewayAccess: .init(canRead: true, canWrite: true), sceneIsActive: true)
+            .presentedSheetPresentation == .card(.init(card: card, sheetPresentation: sheetPresentation)))
+    }
+}
