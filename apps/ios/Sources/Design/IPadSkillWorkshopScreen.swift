@@ -1198,7 +1198,7 @@ struct IPadSkillWorkshopScreen: View {
         return ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top, spacing: 12) {
-                    ProIconBadge(systemName: "hammer", color: proposal.statusColor)
+                    ProIconBadge(systemName: card.iconSystemName, color: proposal.statusColor)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(proposal.title)
                             .font(.headline)
