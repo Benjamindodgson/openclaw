@@ -1075,10 +1075,10 @@ struct RootTabsPresentationTests {
     }
 
     @Test func `workboard board scope labels stay compact`() {
-        #expect(IPadWorkboardScreen.normalizedScopeID("  planning ") == "planning")
-        #expect(IPadWorkboardScreen.boardScopeLabel(for: "") == "All boards")
-        #expect(IPadWorkboardScreen.boardScopeLabel(for: "planning") == "planning")
-        #expect(IPadWorkboardScreen.boardScopeOptions(
+        #expect(IPadWorkboardFeature.State.normalizedScopeID("  planning ") == "planning")
+        #expect(IPadWorkboardFeature.State.boardScopeLabel(for: "") == "All boards")
+        #expect(IPadWorkboardFeature.State.boardScopeLabel(for: "planning") == "planning")
+        #expect(IPadWorkboardFeature.State.boardScopeOptions(
             knownBoardIDs: ["default", " empty-board ", ""],
             cardBoardIDs: ["planning", "default"]) == ["default", "empty-board", "planning"])
         #expect(IPadWorkboardFeature.State

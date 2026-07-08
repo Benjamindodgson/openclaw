@@ -621,11 +621,6 @@ struct IPadWorkboardScreen: View {
         horizontalSizeClass == .compact || verticalSizeClass == .compact
     }
 
-    nonisolated static func boardScopeOptions(knownBoardIDs: [String], cardBoardIDs: [String]) -> [String] {
-        Array(Set((knownBoardIDs + cardBoardIDs).map { self.normalizedScopeID($0) }.filter { !$0.isEmpty }))
-            .sorted()
-    }
-
     private func loadCards(force: Bool) async {
         await self.store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: self.scenePhase == .active),
@@ -670,21 +665,6 @@ struct IPadWorkboardScreen: View {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
-    }
-
-    nonisolated static func boardID(for card: IPadWorkboardCard) -> String {
-        self.normalizedScopeID(card.metadata?.automation?.boardId).isEmpty
-            ? "default"
-            : self.normalizedScopeID(card.metadata?.automation?.boardId)
-    }
-
-    nonisolated static func normalizedScopeID(_ value: String?) -> String {
-        (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    nonisolated static func boardScopeLabel(for boardID: String) -> String {
-        let normalized = self.normalizedScopeID(boardID)
-        return normalized.isEmpty ? "All boards" : normalized
     }
 }
 
