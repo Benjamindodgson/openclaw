@@ -7137,7 +7137,15 @@ struct RootTabsSourceGuardTests {
         let connectionActivityStart = try Self.extract(
             onboardingStateSource,
             from: "struct ConnectionActivityStart",
+            to: "struct RetryConnectionStart")
+        let retryConnectionStart = try Self.extract(
+            onboardingStateSource,
+            from: "struct RetryConnectionStart",
             to: "struct ScannerError")
+        let retryFunction = try Self.extract(
+            onboardingSource,
+            from: "private func retryLastAttempt",
+            to: "private func gatewayProblemPrimaryActionTitle")
         let statusStateBlock = try Self.extract(
             onboardingStateSource,
             from: "@Reducer\nstruct OnboardingStatusFeature",
@@ -7147,15 +7155,19 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct OnboardingConnectionMessage: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingConnectionStatusLine: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingConnectionClearsIssue: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingRetryConnectionSilence: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionStart: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionActivityStart: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct RetryConnectionStart: Equatable, Sendable"))
         #expect(connectionStart.contains("var id: OnboardingConnectionID"))
         #expect(connectionStart.contains("var message: OnboardingConnectionMessage"))
         #expect(connectionStart.contains("var statusLine: OnboardingConnectionStatusLine"))
         #expect(connectionStart.contains("var clearsIssue: OnboardingConnectionClearsIssue"))
         #expect(connectionActivityStart.contains("var id: OnboardingConnectionID"))
+        #expect(retryConnectionStart.contains("var silent: OnboardingRetryConnectionSilence"))
         #expect(onboardingStateSource.contains("case connectionStarted(ConnectionStart)"))
         #expect(onboardingStateSource.contains("case connectionActivityStarted(ConnectionActivityStart)"))
+        #expect(onboardingStateSource.contains("case retryConnectionStarted(RetryConnectionStart)"))
         #expect(onboardingStateSource.contains("var connectingGatewayIDState: OnboardingConnectionID?"))
         #expect(onboardingStateSource.contains("var connectingGatewayID: String? {\n            self.connectingGatewayIDState?.value"))
         #expect(onboardingStateSource.contains("state.connectingGatewayIDState = start.id"))
@@ -7167,12 +7179,17 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.statusLineState = start.statusLine"))
         #expect(onboardingStateSource.contains("if start.clearsIssue.value"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(.init("))
-        #expect(onboardingSource.contains("id: .init(value: connectionID)"))
+        #expect(onboardingStateSource.contains("let connectionID = start.silent.value ? \"retry-auto\" : \"retry\""))
+        #expect(onboardingStateSource.contains("state.connectingGatewayIDState = .init(value: connectionID)"))
+        #expect(onboardingStateSource.contains("state.connectMessageState = .init(value: \"Retrying…\")"))
+        #expect(onboardingStateSource.contains("state.statusLineState = .init(value: \"Retrying last connection…\")"))
+        #expect(retryFunction.contains("self.statusStore.send(.retryConnectionStarted(.init(silent: .init(value: silent))))"))
         #expect(!connectionStart.contains("var id: String"))
         #expect(!connectionStart.contains("var message: String\n"))
         #expect(!connectionStart.contains("var statusLine: String\n"))
         #expect(!connectionStart.contains("var clearsIssue: Bool"))
         #expect(!connectionActivityStart.contains("var id: String"))
+        #expect(!retryConnectionStart.contains("var silent: Bool"))
         #expect(!statusStateBlock.contains("var connectingGatewayID: String?"))
         #expect(!onboardingStateSource.contains("state.connectingGatewayID = start.id.value"))
         #expect(!statusStateBlock.contains("var connectMessage: String?"))
@@ -7180,6 +7197,8 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingStateSource.contains("state.connectMessage = start.message.value"))
         #expect(!onboardingStateSource.contains("state.statusLine = start.statusLine.value"))
         #expect(!onboardingSource.contains("self.statusStore.send(.connectionActivityStarted(.init(id: connectionID)))"))
+        #expect(!retryFunction.contains("let connectionID = silent ? \"retry-auto\" : \"retry\""))
+        #expect(!retryFunction.contains("Retrying last connection…"))
     }
 
     @Test func `onboarding connection status action is typed`() throws {

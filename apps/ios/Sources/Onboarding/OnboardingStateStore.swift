@@ -73,6 +73,8 @@ struct OnboardingConnectionPauseReconnect: Equatable, Sendable { var value: Bool
 
 struct OnboardingConnectionClearsIssue: Equatable, Sendable { var value: Bool }
 
+struct OnboardingRetryConnectionSilence: Equatable, Sendable { var value: Bool }
+
 struct OnboardingGatewayMarkedCompleted: Equatable, Sendable { var value: Bool }
 
 struct OnboardingAutomaticPairingResume: Equatable, Sendable { var shouldResume: Bool }

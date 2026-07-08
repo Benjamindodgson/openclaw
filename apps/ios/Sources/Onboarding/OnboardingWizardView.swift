@@ -1070,17 +1070,8 @@ extension OnboardingWizardView {
     }
 
     private func retryLastAttempt(silent: Bool = false) async {
-        let connectionID = silent ? "retry-auto" : "retry"
         // Keep current auth/pairing issue sticky while retrying to avoid Step 3 UI flip-flop.
-        if !silent {
-            self.statusStore.send(.connectionStarted(.init(
-                id: .init(value: connectionID),
-                message: .init(value: "Retrying…"),
-                statusLine: .init(value: "Retrying last connection…"),
-                clearsIssue: .init(value: false))))
-        } else {
-            self.statusStore.send(.connectionActivityStarted(.init(id: .init(value: connectionID))))
-        }
+        self.statusStore.send(.retryConnectionStarted(.init(silent: .init(value: silent))))
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connectLastKnown()
     }
