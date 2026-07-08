@@ -62,7 +62,7 @@ struct IPadWorkboardScreen: View {
                 IPadWorkboardCardDetailSheet(
                     card: card,
                     presentation: self.store.state.cardPresentation(for: card),
-                    statuses: self.store.statusValues,
+                    moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
                     isBusy: self.store.busyCardID?.value == card.id,
                     canWrite: self.canWrite,
                     openSession: { self.open(card) },
@@ -445,7 +445,7 @@ struct IPadWorkboardScreen: View {
                     IPadWorkboardKanbanColumn(
                         presentation: self.store.state.kanbanLanePresentation(status: status, cards: cards),
                         cards: cards,
-                        statuses: self.store.statusValues,
+                        moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
                         busyCardID: self.store.busyCardID?.value,
                         openSession: { card in
                             self.open(card)
@@ -493,7 +493,10 @@ struct IPadWorkboardScreen: View {
                         IPadWorkboardQueueRow(
                             card: card,
                             presentation: self.store.state.cardPresentation(for: card),
-                            statuses: self.store.statusValues,
+                            moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
+                            nextMoveAction: self.store.state.nextMoveActionPresentation(
+                                for: card,
+                                statuses: self.store.statusValues),
                             isBusy: self.store.busyCardID?.value == card.id,
                             inspect: {
                                 self.store.send(.cardSheetPresented(.init(card: card)))
@@ -668,7 +671,7 @@ struct IPadWorkboardScreen: View {
 struct IPadWorkboardKanbanColumn: View {
     let presentation: IPadWorkboardKanbanLanePresentation
     let cards: [IPadWorkboardCard]
-    let statuses: [String]
+    let moveActions: [IPadWorkboardMoveActionPresentation]
     let busyCardID: String?
     let openSession: (IPadWorkboardCard) -> Void
     let inspect: (IPadWorkboardCard) -> Void
@@ -701,7 +704,7 @@ struct IPadWorkboardKanbanColumn: View {
                         IPadWorkboardKanbanCard(
                             card: card,
                             presentation: IPadWorkboardFeature.State.cardPresentation(for: card),
-                            statuses: self.statuses,
+                            moveActions: self.moveActions,
                             isBusy: self.busyCardID == card.id,
                             openSession: {
                                 self.openSession(card)
@@ -725,7 +728,7 @@ struct IPadWorkboardKanbanColumn: View {
 private struct IPadWorkboardKanbanCard: View {
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardCardPresentation
-    let statuses: [String]
+    let moveActions: [IPadWorkboardMoveActionPresentation]
     let isBusy: Bool
     let openSession: () -> Void
     let inspect: () -> Void
@@ -771,9 +774,9 @@ private struct IPadWorkboardKanbanCard: View {
                 }
 
                 Menu {
-                    ForEach(self.statuses, id: \.self) { status in
-                        Button("Move to \(IPadWorkboardDefaults.label(for: status))") {
-                            self.move(status)
+                    ForEach(self.moveActions) { action in
+                        Button(action.menuTitle) {
+                            self.move(action.status)
                         }
                     }
                     Button(self.presentation.archiveActionTitle, action: self.archive)
@@ -808,7 +811,8 @@ private struct IPadWorkboardKanbanCard: View {
 struct IPadWorkboardQueueRow: View {
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardCardPresentation
-    let statuses: [String]
+    let moveActions: [IPadWorkboardMoveActionPresentation]
+    let nextMoveAction: IPadWorkboardMoveActionPresentation?
     let isBusy: Bool
     let inspect: () -> Void
     let openSession: () -> Void
@@ -864,9 +868,9 @@ struct IPadWorkboardQueueRow: View {
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if let nextStatus {
-                Button(IPadWorkboardDefaults.label(for: nextStatus)) {
-                    self.move(nextStatus)
+            if let nextMoveAction {
+                Button(nextMoveAction.title) {
+                    self.move(nextMoveAction.status)
                 }
                 .tint(OpenClawBrand.accentHot)
             }
@@ -881,21 +885,12 @@ struct IPadWorkboardQueueRow: View {
             Button(self.presentation.openSessionActionTitle, action: self.openSession)
         }
         Button(self.presentation.inspectActionTitle, action: self.inspect)
-        ForEach(self.statuses, id: \.self) { status in
-            Button("Move to \(IPadWorkboardDefaults.label(for: status))") {
-                self.move(status)
+        ForEach(self.moveActions) { action in
+            Button(action.menuTitle) {
+                self.move(action.status)
             }
         }
         Button(self.presentation.archiveActionTitle, action: self.archive)
-    }
-
-    private var nextStatus: String? {
-        guard let currentIndex = statuses.firstIndex(of: card.status) else {
-            return self.statuses.first
-        }
-        let nextIndex = self.statuses.index(after: currentIndex)
-        guard self.statuses.indices.contains(nextIndex) else { return nil }
-        return self.statuses[nextIndex]
     }
 
     private var color: Color {
@@ -913,7 +908,7 @@ private struct IPadWorkboardCardDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardCardPresentation
-    let statuses: [String]
+    let moveActions: [IPadWorkboardMoveActionPresentation]
     let isBusy: Bool
     let canWrite: Bool
     let openSession: () -> Void
@@ -936,9 +931,9 @@ private struct IPadWorkboardCardDetailSheet: View {
                         Button(self.presentation.openSessionActionTitle, action: self.openSession)
                     }
                     Menu(self.presentation.moveMenuTitle) {
-                        ForEach(self.statuses, id: \.self) { status in
-                            Button(IPadWorkboardDefaults.label(for: status)) {
-                                self.move(status)
+                        ForEach(self.moveActions) { action in
+                            Button(action.title) {
+                                self.move(action.status)
                             }
                         }
                     }

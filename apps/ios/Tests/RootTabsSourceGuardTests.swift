@@ -2319,6 +2319,51 @@ struct RootTabsSourceGuardTests {
         #expect(!queueRowSource.contains("private var detail: String"))
     }
 
+    @Test func `workboard move action presentation is reducer owned`() throws {
+        let source = try Self.iPadWorkboardSource()
+        let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let kanbanCardSource = try Self.extract(
+            screenSource,
+            from: "private struct IPadWorkboardKanbanCard: View",
+            to: "struct IPadWorkboardQueueRow: View")
+        let queueRowSource = try Self.extract(
+            screenSource,
+            from: "struct IPadWorkboardQueueRow: View",
+            to: "private struct IPadWorkboardCardDetailSheet: View")
+        let detailSheetSource = try Self.extract(
+            screenSource,
+            from: "private struct IPadWorkboardCardDetailSheet: View",
+            to: "// swiftformat:disable redundantSendable")
+
+        #expect(source.contains("struct IPadWorkboardMoveActionPresentation: Equatable, Identifiable, Sendable"))
+        #expect(source.contains("let menuTitle: String"))
+        #expect(source.contains("func moveActionPresentations(for statuses: [String])"))
+        #expect(source.contains("static func moveActionPresentations(for statuses: [String])"))
+        #expect(source.contains("static func moveActionPresentation(for status: String)"))
+        #expect(source.contains("static func nextMoveActionPresentation("))
+        #expect(source.contains("menuTitle: \"Move to \\(title)\""))
+        #expect(source.contains("return self.moveActionPresentation(for: nextStatus)"))
+        #expect(screenSource.contains(
+            "moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues)"))
+        #expect(screenSource.contains("nextMoveAction: self.store.state.nextMoveActionPresentation("))
+        #expect(kanbanCardSource.contains("let moveActions: [IPadWorkboardMoveActionPresentation]"))
+        #expect(kanbanCardSource.contains("ForEach(self.moveActions)"))
+        #expect(kanbanCardSource.contains("Button(action.menuTitle)"))
+        #expect(kanbanCardSource.contains("self.move(action.status)"))
+        #expect(queueRowSource.contains("let moveActions: [IPadWorkboardMoveActionPresentation]"))
+        #expect(queueRowSource.contains("let nextMoveAction: IPadWorkboardMoveActionPresentation?"))
+        #expect(queueRowSource.contains("Button(nextMoveAction.title)"))
+        #expect(queueRowSource.contains("Button(action.menuTitle)"))
+        #expect(detailSheetSource.contains("let moveActions: [IPadWorkboardMoveActionPresentation]"))
+        #expect(detailSheetSource.contains("ForEach(self.moveActions)"))
+        #expect(detailSheetSource.contains("Button(action.title)"))
+        #expect(!screenSource.contains(
+            "Button(\"Move to \\(IPadWorkboardDefaults.label(for: status))\")"))
+        #expect(!queueRowSource.contains("Button(IPadWorkboardDefaults.label(for: nextStatus))"))
+        #expect(!detailSheetSource.contains("Button(IPadWorkboardDefaults.label(for: status))"))
+        #expect(!queueRowSource.contains("private var nextStatus: String?"))
+    }
+
     @Test func `workboard kanban lane presentation is reducer owned`() throws {
         let source = try Self.iPadWorkboardSource()
         let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)

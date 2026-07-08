@@ -225,6 +225,13 @@ struct IPadWorkboardCardPresentation: Equatable, Sendable {
     }
 }
 
+struct IPadWorkboardMoveActionPresentation: Equatable, Identifiable, Sendable {
+    let id: String
+    let status: String
+    let title: String
+    let menuTitle: String
+}
+
 struct IPadWorkboardKanbanLaneEmptyStatePresentation: Equatable, Sendable {
     let icon: String
     let title: String
@@ -508,6 +515,17 @@ struct IPadWorkboardFeature {
             Self.cardPresentation(for: card)
         }
 
+        func moveActionPresentations(for statuses: [String]) -> [IPadWorkboardMoveActionPresentation] {
+            Self.moveActionPresentations(for: statuses)
+        }
+
+        func nextMoveActionPresentation(
+            for card: IPadWorkboardCard,
+            statuses: [String]) -> IPadWorkboardMoveActionPresentation?
+        {
+            Self.nextMoveActionPresentation(for: card, statuses: statuses)
+        }
+
         func kanbanLanePresentation(status: String, cards: [IPadWorkboardCard]) -> IPadWorkboardKanbanLanePresentation {
             Self.kanbanLanePresentation(status: status, cardCount: cards.count)
         }
@@ -721,6 +739,36 @@ struct IPadWorkboardFeature {
                 actionMenuAccessibilityLabel: "Card Actions",
                 archiveActionTitle: card.metadata?.archivedAt == nil ? "Archive" : "Unarchive",
                 notesText: self.normalizedNonEmpty(card.notes))
+        }
+
+        static func moveActionPresentations(for statuses: [String]) -> [IPadWorkboardMoveActionPresentation] {
+            statuses.map(self.moveActionPresentation(for:))
+        }
+
+        static func moveActionPresentation(for status: String) -> IPadWorkboardMoveActionPresentation {
+            let title = IPadWorkboardDefaults.label(for: status)
+            return .init(
+                id: status,
+                status: status,
+                title: title,
+                menuTitle: "Move to \(title)")
+        }
+
+        static func nextMoveActionPresentation(
+            for card: IPadWorkboardCard,
+            statuses: [String]) -> IPadWorkboardMoveActionPresentation?
+        {
+            let nextStatus: String
+            if let currentIndex = statuses.firstIndex(of: card.status) {
+                let nextIndex = statuses.index(after: currentIndex)
+                guard statuses.indices.contains(nextIndex) else { return nil }
+                nextStatus = statuses[nextIndex]
+            } else if let firstStatus = statuses.first {
+                nextStatus = firstStatus
+            } else {
+                return nil
+            }
+            return self.moveActionPresentation(for: nextStatus)
         }
 
         static func cardIconSystemName(for status: String) -> String {
