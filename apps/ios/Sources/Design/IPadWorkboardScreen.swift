@@ -71,7 +71,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var metrics: [ProMetric] {
-        self.store.metricPresentations.map { presentation in
+        self.screenPresentation.metricPresentations.map { presentation in
             ProMetric(
                 icon: presentation.iconSystemName,
                 title: presentation.title,
