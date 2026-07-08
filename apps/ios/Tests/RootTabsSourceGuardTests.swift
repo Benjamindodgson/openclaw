@@ -2198,7 +2198,7 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct IPadWorkboardDispatchSummaryText: Equatable, Sendable"))
         #expect(source.contains("var dispatchSummaryText: IPadWorkboardDispatchSummaryText?"))
         #expect(source.contains("state.dispatchSummaryText = .init(value: snapshot.summary.summaryText)"))
-        #expect(source.contains("Text(dispatchSummaryText.value)"))
+        #expect(source.contains("text: dispatchSummaryText.value"))
         #expect(!source.contains("var dispatchSummaryText: String?"))
         #expect(source.contains("var notes: IPadWorkboardDraftNotes"))
         #expect(source.contains("var title: IPadWorkboardDraftTitle"))
@@ -2386,6 +2386,36 @@ struct RootTabsSourceGuardTests {
         #expect(!queueRowSource.contains("Button(IPadWorkboardDefaults.label(for: nextStatus))"))
         #expect(!detailSheetSource.contains("Button(IPadWorkboardDefaults.label(for: status))"))
         #expect(!queueRowSource.contains("private var nextStatus: String?"))
+    }
+
+    @Test func `workboard status message presentation is reducer owned`() throws {
+        let source = try Self.iPadWorkboardSource()
+        let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let controlsSource = try Self.extract(
+            screenSource,
+            from: "private var controlsCard: some View",
+            to: "private var compactQueueControls: some View")
+        let compactControlsSource = try Self.extract(
+            screenSource,
+            from: "private var compactQueueControls: some View",
+            to: "private var compactRefreshButton: some View")
+
+        #expect(source.contains("enum IPadWorkboardStatusMessageTone: Equatable, Sendable"))
+        #expect(source.contains(
+            "struct IPadWorkboardStatusMessagePresentation: Equatable, Identifiable, Sendable"))
+        #expect(source.contains("var statusMessagePresentations: [IPadWorkboardStatusMessagePresentation]"))
+        #expect(source.contains(
+            "messages.append(.init(id: \"dispatch\", text: dispatchSummaryText.value, tone: .accent))"))
+        #expect(source.contains("messages.append(.init(id: \"error\", text: errorText.value, tone: .warn))"))
+        #expect(screenSource.contains("private var statusMessageRows: some View"))
+        #expect(screenSource.contains("ForEach(self.store.statusMessagePresentations)"))
+        #expect(screenSource.contains("Self.statusMessageColor(for: message.tone)"))
+        #expect(controlsSource.contains("self.statusMessageRows"))
+        #expect(compactControlsSource.contains("self.statusMessageRows"))
+        #expect(!controlsSource.contains("if let dispatchSummaryText = self.store.dispatchSummaryText"))
+        #expect(!controlsSource.contains("if let errorText = self.store.errorText"))
+        #expect(!compactControlsSource.contains("if let dispatchSummaryText = self.store.dispatchSummaryText"))
+        #expect(!compactControlsSource.contains("if let errorText = self.store.errorText"))
     }
 
     @Test func `workboard card action control presentation is reducer owned`() throws {
