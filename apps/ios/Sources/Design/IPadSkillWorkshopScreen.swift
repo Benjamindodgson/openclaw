@@ -76,7 +76,10 @@ struct IPadSkillWorkshopFeature {
         var agentScopeMenuPresentation: IPadSkillWorkshopAgentScopeMenuPresentation {
             let options = self.agentScopeOptions
             return .init(
+                title: "Agent",
                 selectedLabel: self.agentScopeLabel,
+                selectorIconSystemName: "chevron.up.chevron.down",
+                accessibilityLabel: "Skill Workshop agent scope",
                 options: [IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent")] + options,
                 isEnabled: !options.isEmpty)
         }
@@ -983,7 +986,7 @@ struct IPadSkillWorkshopScreen: View {
     private var agentScopeMenu: some View {
         let presentation = self.store.agentScopeMenuPresentation
         return HStack(spacing: 8) {
-            Text("Agent")
+            Text(presentation.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Menu {
@@ -997,7 +1000,7 @@ struct IPadSkillWorkshopScreen: View {
                     Text(presentation.selectedLabel)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
-                    Image(systemName: "chevron.up.chevron.down")
+                    Image(systemName: presentation.selectorIconSystemName)
                         .font(.caption2.weight(.bold))
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -1006,7 +1009,7 @@ struct IPadSkillWorkshopScreen: View {
             .controlSize(.small)
             .tint(self.neutralControlTint)
             .disabled(!presentation.isEnabled)
-            .accessibilityLabel("Skill Workshop agent scope")
+            .accessibilityLabel(presentation.accessibilityLabel)
         }
     }
 

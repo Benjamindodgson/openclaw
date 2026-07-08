@@ -330,7 +330,10 @@ struct IPadSkillWorkshopFeatureTests {
 
     @Test func `agent scope snapshot updates reducer presentation state`() async {
         #expect(IPadSkillWorkshopFeature.State().agentScopeMenuPresentation == .init(
+            title: "Agent",
             selectedLabel: "Default Agent",
+            selectorIconSystemName: "chevron.up.chevron.down",
+            accessibilityLabel: "Skill Workshop agent scope",
             options: [
                 IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent"),
             ],
@@ -370,7 +373,10 @@ struct IPadSkillWorkshopFeatureTests {
             IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
         ])
         #expect(state.agentScopeMenuPresentation == .init(
+            title: "Agent",
             selectedLabel: "Main Agent",
+            selectorIconSystemName: "chevron.up.chevron.down",
+            accessibilityLabel: "Skill Workshop agent scope",
             options: [
                 IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent"),
                 IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
