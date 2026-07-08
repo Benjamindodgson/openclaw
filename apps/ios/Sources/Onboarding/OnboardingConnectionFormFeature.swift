@@ -309,7 +309,7 @@ struct OnboardingConnectionFormFeature {
         var host: OnboardingManualHost
         var port: OnboardingManualPort
         var useTLS: OnboardingManualTLS
-        var connectionStart: OnboardingStatusFeature.Action.ConnectionStart
+        var statusAction: OnboardingStatusFeature.Action
     }
 
     enum Action: Equatable, Sendable {
@@ -393,7 +393,7 @@ struct OnboardingConnectionFormFeature {
                     host: manualHost,
                     port: manualPort,
                     useTLS: .init(value: state.manualTLS),
-                    connectionStart: Self.manualConnectionStart(host: manualHost, port: manualPort))
+                    statusAction: .connectionStarted(Self.manualConnectionStart(host: manualHost, port: manualPort)))
                 return .none
 
             case .manualConnectionRequestHandled:
