@@ -387,7 +387,7 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
 
     struct CertificateTrustRequest: Equatable, Sendable {
         var problem: GatewayConnectionProblem
-        var connectionStart: OnboardingStatusFeature.Action.ConnectionStart
+        var statusAction: OnboardingStatusFeature.Action
     }
 
     struct ResetAndScanRequest: Equatable, Sendable {
@@ -461,11 +461,11 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
     {
         CertificateTrustRequest(
             problem: problem,
-            connectionStart: .init(
+            statusAction: .connectionStarted(.init(
                 id: .init(value: "trust-certificate"),
                 message: .init(value: "Updating gateway certificate…"),
                 statusLine: .init(value: "Updating gateway certificate…"),
-                clearsIssue: .init(value: false)))
+                clearsIssue: .init(value: false))))
     }
 }
 
