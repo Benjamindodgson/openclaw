@@ -453,8 +453,7 @@ struct OnboardingWizardView: View {
         OnboardingWelcomeStep(
             statusLine: self.statusLine,
             onScanQRCode: {
-                self.statusStore.send(.qrScannerOpeningStarted)
-                self.presentationStore.send(.qrScannerButtonTapped)
+                self.openQRScanner(OnboardingStatusFeature.qrScannerOpeningRequest)
             },
             onManualSetup: {
                 self.stepStore.send(.stepChanged(.init(step: .mode)))
@@ -933,8 +932,12 @@ extension OnboardingWizardView {
     private func openQRScannerFromOnboarding() async {
         // Stop active reconnect loops before scanning new credentials.
         await self.gatewayConnectionStore.send(.disconnectRequested).finish()
-        self.statusStore.send(.freshQRScanStarted)
-        self.presentationStore.send(.qrScannerButtonTapped)
+        self.openQRScanner(OnboardingStatusFeature.freshQRScannerOpeningRequest)
+    }
+
+    private func openQRScanner(_ request: OnboardingStatusFeature.QRScannerOpeningRequest) {
+        self.statusStore.send(request.statusAction)
+        self.presentationStore.send(request.presentationAction)
     }
 
     private func resumeAfterPairingApproval() async {

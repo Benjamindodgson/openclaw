@@ -5961,6 +5961,7 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `onboarding status reducer stores flow flags as typed state`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try Self.onboardingStateAndStatusSource()
         let statusFeatureSource = try Self.extract(
             onboardingStateSource,
@@ -5972,10 +5973,32 @@ struct RootTabsSourceGuardTests {
             to: "        init(statusLine:")
 
         #expect(onboardingStateSource.contains("struct OnboardingAuthStepPresentation: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct QRScannerOpeningRequest: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("var statusAction: OnboardingStatusFeature.Action"))
+        #expect(onboardingStateSource.contains("var presentationAction: OnboardingPresentationFeature.Action"))
+        #expect(onboardingStateSource.contains("static let qrScannerOpeningRequest = QRScannerOpeningRequest("))
+        #expect(onboardingStateSource.contains("static let freshQRScannerOpeningRequest = QRScannerOpeningRequest("))
+        #expect(onboardingStateSource.contains("statusAction: .qrScannerOpeningStarted"))
+        #expect(onboardingStateSource.contains("statusAction: .freshQRScanStarted"))
+        #expect(onboardingStateSource.contains("presentationAction: .qrScannerButtonTapped"))
+        #expect(onboardingSource.contains("self.openQRScanner(OnboardingStatusFeature.qrScannerOpeningRequest)"))
+        #expect(onboardingSource.contains("self.openQRScanner(OnboardingStatusFeature.freshQRScannerOpeningRequest)"))
+        #expect(onboardingSource.contains(
+            "private func openQRScanner(_ request: OnboardingStatusFeature.QRScannerOpeningRequest)"))
+        #expect(onboardingSource.contains("self.statusStore.send(request.statusAction)"))
+        #expect(onboardingSource.contains("self.presentationStore.send(request.presentationAction)"))
         #expect(statusStateBlock.contains("var completionMark = OnboardingGatewayMarkedCompleted(value: false)"))
         #expect(statusStateBlock.contains("var automaticPairingResume = OnboardingAutomaticPairingResume(shouldResume: false)"))
         #expect(statusStateBlock.contains("var authStepPresentation = OnboardingAuthStepPresentation(shouldShow: false)"))
         #expect(onboardingStateSource.contains("state.authStepPresentation = .init(shouldShow:"))
+        #expect(!onboardingSource.contains("""
+                self.statusStore.send(.qrScannerOpeningStarted)
+                self.presentationStore.send(.qrScannerButtonTapped)
+        """))
+        #expect(!onboardingSource.contains("""
+        self.statusStore.send(.freshQRScanStarted)
+        self.presentationStore.send(.qrScannerButtonTapped)
+        """))
         #expect(!statusStateBlock.contains("var didMarkCompleted = false"))
         #expect(!statusStateBlock.contains("var shouldResumePairingAutomatically = false"))
         #expect(!statusStateBlock.contains("var shouldShowAuthStep = false"))
