@@ -280,6 +280,7 @@ struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
     let proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
     let proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
     let emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation
+    let proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation
 }
 
 struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Sendable {

@@ -561,6 +561,20 @@ struct IPadSkillWorkshopFeatureTests {
             value: nil))
     }
 
+    @Test func `proposal unavailable presentation is reducer owned`() {
+        let state = IPadSkillWorkshopFeature.State()
+        let expectedPresentation = IPadSkillWorkshopEmptyProposalPresentation(
+            icon: "hammer",
+            title: "Proposal unavailable",
+            detail: "Return to the queue and choose another proposal.",
+            value: "missing")
+
+        #expect(state.proposalUnavailablePresentation == expectedPresentation)
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).proposalUnavailablePresentation == expectedPresentation)
+    }
+
     @Test func `proposal selection opening controls sheet presentation`() async {
         let store = TestStore(initialState: IPadSkillWorkshopFeature.State()) {
             IPadSkillWorkshopFeature(client: Self.client())

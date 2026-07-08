@@ -183,6 +183,14 @@ struct IPadSkillWorkshopFeature {
                 value: nil)
         }
 
+        var proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation {
+            .init(
+                icon: "hammer",
+                title: "Proposal unavailable",
+                detail: "Return to the queue and choose another proposal.",
+                value: "missing")
+        }
+
         func screenPresentation(
             gatewayAccess: IPadSkillWorkshopGatewayAccess,
             sceneIsActive: Bool) -> IPadSkillWorkshopScreenPresentation
@@ -195,7 +203,8 @@ struct IPadSkillWorkshopFeature {
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
                 emptyProposalPresentation: self.emptyProposalPresentation(
-                    gatewayAccess: gatewayAccess))
+                    gatewayAccess: gatewayAccess),
+                proposalUnavailablePresentation: self.proposalUnavailablePresentation)
         }
 
         static func shouldShowProposalActions(status: String) -> Bool {
@@ -1181,10 +1190,10 @@ struct IPadSkillWorkshopScreen: View {
         } else {
             ProCard(radius: OpenClawProMetric.cardRadius) {
                 ProStatusRow(
-                    icon: "hammer",
-                    title: "Proposal unavailable",
-                    detail: "Return to the queue and choose another proposal.",
-                    value: "missing",
+                    icon: self.proposalUnavailablePresentation.icon,
+                    title: self.proposalUnavailablePresentation.title,
+                    detail: self.proposalUnavailablePresentation.detail,
+                    value: self.proposalUnavailablePresentation.value,
                     color: .secondary,
                     actionTitle: nil,
                     action: nil)
@@ -1328,6 +1337,10 @@ struct IPadSkillWorkshopScreen: View {
 
     private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation {
         self.screenPresentation.emptyProposalPresentation
+    }
+
+    private var proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation {
+        self.screenPresentation.proposalUnavailablePresentation
     }
 
     private var agentScopeSnapshot: IPadSkillWorkshopFeature.Action.AgentScopeSnapshot {
