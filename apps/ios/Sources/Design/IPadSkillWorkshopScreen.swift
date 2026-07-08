@@ -356,12 +356,20 @@ struct IPadSkillWorkshopFeature {
 
         var proposalBoardPresentation: IPadSkillWorkshopProposalBoardPresentation {
             .init(lanes: self.visibleProposalLaneStatuses.map { status in
-                IPadSkillWorkshopProposalLanePresentation(
+                let title = Self.proposalLaneLabel(status)
+                let proposals = self.proposals(forLaneStatus: status).map { proposal in
+                    self.proposalCardPresentation(for: proposal)
+                }
+                return IPadSkillWorkshopProposalLanePresentation(
                     id: status,
-                    title: Self.proposalLaneLabel(status),
-                    proposals: self.proposals(forLaneStatus: status).map { proposal in
-                        self.proposalCardPresentation(for: proposal)
-                    })
+                    title: title,
+                    value: "\(proposals.count)",
+                    emptyPresentation: .init(
+                        icon: "hammer",
+                        title: "No \(title.lowercased()) proposals",
+                        detail: "Matching proposals appear here after gateway refresh.",
+                        value: "empty"),
+                    proposals: proposals)
             })
         }
 
@@ -1392,16 +1400,16 @@ struct IPadSkillProposalKanbanColumn: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: self.lane.title,
-                    value: "\(self.lane.proposals.count)",
+                    value: self.lane.value,
                     actionTitle: nil,
                     action: nil)
 
                 if self.lane.proposals.isEmpty {
                     ProStatusRow(
-                        icon: "hammer",
-                        title: "No \(self.lane.title.lowercased()) proposals",
-                        detail: "Matching proposals appear here after gateway refresh.",
-                        value: "empty",
+                        icon: self.lane.emptyPresentation.icon,
+                        title: self.lane.emptyPresentation.title,
+                        detail: self.lane.emptyPresentation.detail,
+                        value: self.lane.emptyPresentation.value,
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)
