@@ -186,6 +186,24 @@ struct IPadWorkboardFeatureTests {
         #expect(state.dispatchControlPresentation(canWrite: true).isDisabled)
     }
 
+    @Test func `workboard gateway access is reducer owned`() {
+        #expect(IPadWorkboardFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: false) == .init(
+            canRead: true,
+            canWrite: true))
+        #expect(IPadWorkboardFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: true,
+            isAppleReviewDemoModeEnabled: true) == .init(
+            canRead: true,
+            canWrite: false))
+        #expect(IPadWorkboardFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: false,
+            isAppleReviewDemoModeEnabled: false) == .init(
+            canRead: false,
+            canWrite: false))
+    }
+
     @Test func `workboard query field presentation is reducer owned`() {
         var state = IPadWorkboardFeature.State()
         #expect(state.queryFieldPresentation == .init(
