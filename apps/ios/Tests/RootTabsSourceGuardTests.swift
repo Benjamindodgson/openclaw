@@ -2140,6 +2140,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "private var proposalBoard: some View",
             to: "private var proposalList: some View")
+        let proposalList = try Self.extract(
+            source,
+            from: "private var proposalList: some View",
+            to: "@ViewBuilder\n    private var presentedProposalDetail")
 
         #expect(content.contains("if self.isCompactWidth"))
         #expect(content.contains("self.proposalList"))
@@ -2291,6 +2295,15 @@ struct RootTabsSourceGuardTests {
             "for proposal: IPadSkillProposal) -> IPadSkillWorkshopProposalDetailPresentation"))
         #expect(source.contains("var presentedProposalPresentation: IPadSkillWorkshopProposalDetailPresentation?"))
         #expect(source.contains("self.store.proposalListPresentation"))
+        #expect(proposalList.contains("let actionControlsPresentation = self.proposalActionControlsPresentation"))
+        #expect(proposalList.contains("let inspectionControlsPresentation = self.proposalInspectionControlsPresentation"))
+        #expect(proposalList.contains("Button(inspectionControlsPresentation.title)"))
+        #expect(proposalList.contains("Button(actionControlsPresentation.applyButton.title)"))
+        #expect(proposalList.contains("Button(actionControlsPresentation.rejectButton.title, role: .destructive)"))
+        #expect(proposalList.contains(".disabled(!actionControlsPresentation.canRunActions)"))
+        #expect(!proposalList.contains("Button(\"Inspect\")"))
+        #expect(!proposalList.contains("Button(\"Apply\")"))
+        #expect(!proposalList.contains("Button(\"Reject\""))
         #expect(source.contains("let boardPresentation = self.store.proposalBoardPresentation"))
         #expect(source.contains("ForEach(boardPresentation.lanes) { lane in"))
         #expect(source.contains("lane: lane"))
