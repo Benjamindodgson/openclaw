@@ -980,7 +980,8 @@ struct IPadWorkboardFeatureTests {
             create: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected create"))) },
             move: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected move"))) },
             archive: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected archive"))) },
-            dispatch: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected dispatch"))) })
+            dispatch: { _ in throw IPadWorkboardError.failed(.init(message: .init(value: "unexpected dispatch"))) },
+            openChat: { _ in })
     }
 
     private static func card(
@@ -1012,6 +1013,10 @@ struct IPadWorkboardFeatureTests {
     }
 }
 
+private final class IPadWorkboardOpenChatProbe: @unchecked Sendable {
+    var openedSessionKeys: [String] = []
+}
+
 private enum TestWorkboardFailure: LocalizedError {
     case failed
 
@@ -1021,6 +1026,22 @@ private enum TestWorkboardFailure: LocalizedError {
 }
 
 extension IPadWorkboardFeatureTests {
+    @Test func `chat session open delegates through client`() async {
+        let probe = IPadWorkboardOpenChatProbe()
+        var client = Self.failingClient()
+        client.openChat = { sessionKey in
+            probe.openedSessionKeys.append(sessionKey.value)
+        }
+        let store = TestStore(initialState: IPadWorkboardFeature.State()) {
+            IPadWorkboardFeature(client: client)
+        }
+
+        await store.send(.chatSessionOpened(.init(sessionKey: .init(value: "session-1"))))
+        await store.finish()
+
+        #expect(probe.openedSessionKeys == ["session-1"])
+    }
+
     @Test func `workboard presented sheet presentation is screen owned`() {
         let card = Self.card(id: "card-1", status: "todo", position: 10)
         var state = IPadWorkboardFeature.State()

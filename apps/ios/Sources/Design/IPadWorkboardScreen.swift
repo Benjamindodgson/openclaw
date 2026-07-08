@@ -61,7 +61,9 @@ struct IPadWorkboardScreen: View {
             case let .card(presentation):
                 IPadWorkboardCardDetailSheet(
                     presentation: presentation.sheetPresentation,
-                    openSession: { sessionKey in self.open(sessionKey: sessionKey) },
+                    openSession: { sessionKey in
+                        Task { @MainActor in await self.open(sessionKey: sessionKey) }
+                    },
                     move: { status in Task { await self.move(presentation.card, to: status) } },
                     archive: { Task { await self.archive(presentation.card) } })
             }
@@ -439,7 +441,7 @@ struct IPadWorkboardScreen: View {
                     IPadWorkboardKanbanColumn(
                         presentation: presentation,
                         openSession: { sessionKey in
-                            self.open(sessionKey: sessionKey)
+                            Task { @MainActor in await self.open(sessionKey: sessionKey) }
                         },
                         inspect: { card in
                             self.store.send(.cardSheetPresented(.init(card: card)))
@@ -489,7 +491,7 @@ struct IPadWorkboardScreen: View {
                                 self.store.send(.cardSheetPresented(.init(card: item.card)))
                             },
                             openSession: { sessionKey in
-                                self.open(sessionKey: sessionKey)
+                                Task { @MainActor in await self.open(sessionKey: sessionKey) }
                             },
                             move: { status in
                                 Task { await self.move(item.card, to: status) }
@@ -640,8 +642,8 @@ struct IPadWorkboardScreen: View {
         await self.store.send(.dispatchRequested(.init(gatewayAccess: self.gatewayAccess))).finish()
     }
 
-    private func open(sessionKey: String) {
-        self.appModel.openChat(sessionKey: sessionKey)
+    private func open(sessionKey: String) async {
+        await self.store.send(.chatSessionOpened(.init(sessionKey: .init(value: sessionKey)))).finish()
         self.openChat()
     }
 }

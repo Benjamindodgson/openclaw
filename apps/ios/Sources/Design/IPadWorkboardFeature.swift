@@ -9,6 +9,7 @@ struct IPadWorkboardClient {
     var move: @Sendable @MainActor (IPadWorkboardMoveParams) async throws -> IPadWorkboardCard
     var archive: @Sendable @MainActor (IPadWorkboardArchiveParams) async throws -> IPadWorkboardCard
     var dispatch: @Sendable @MainActor (IPadWorkboardBoardScope) async throws -> IPadWorkboardDispatchSummary
+    var openChat: @Sendable @MainActor (IPadWorkboardChatSessionKey) -> Void
 }
 
 extension IPadWorkboardClient: DependencyKey {
@@ -29,7 +30,8 @@ extension IPadWorkboardClient: DependencyKey {
         },
         dispatch: { _ in
             throw IPadWorkboardError.failed(.init(message: .init(value: "Workboard gateway unavailable.")))
-        })
+        },
+        openChat: { _ in })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
@@ -81,6 +83,9 @@ extension IPadWorkboardClient: DependencyKey {
                     params: IPadWorkboardListParams(boardId: boardScope.boardID?.value),
                     timeoutSeconds: 45)
                 return try JSONDecoder().decode(IPadWorkboardDispatchSummary.self, from: data)
+            },
+            openChat: { sessionKey in
+                appModel.openChat(sessionKey: sessionKey.value)
             })
     }
 
@@ -128,6 +133,7 @@ struct IPadWorkboardMoveStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardQuery: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedBoardID: Equatable, Sendable { var value: String }
 struct IPadWorkboardSelectedStatus: Equatable, Sendable { var value: String }
+struct IPadWorkboardChatSessionKey: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatus: Equatable, Sendable { var value: String }
 struct IPadWorkboardStatusFilter: Equatable, Sendable { var value: String }
 
@@ -1133,6 +1139,9 @@ struct IPadWorkboardFeature {
         case cardSheetPresented(CardSheetPresentation)
         case clearQueryTapped
 
+        struct ChatSessionOpenRequest: Equatable, Sendable { var sessionKey: IPadWorkboardChatSessionKey }
+        case chatSessionOpened(ChatSessionOpenRequest)
+
         struct CreateRequest: Equatable, Sendable {
             var gatewayAccess: IPadWorkboardGatewayAccess
         }
@@ -1278,6 +1287,11 @@ struct IPadWorkboardFeature {
             case .clearQueryTapped:
                 state.query = .init(value: "")
                 return .none
+
+            case let .chatSessionOpened(request):
+                return .run { [client] _ in
+                    await client.openChat(request.sessionKey)
+                }
 
             case let .createRequested(request):
                 if let message = state.createUnavailableMessage(
