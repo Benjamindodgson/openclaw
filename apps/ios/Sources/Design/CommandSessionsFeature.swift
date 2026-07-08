@@ -62,6 +62,11 @@ struct CommandSessionsScreenPresentation: Equatable, Sendable {
     let sessionRows: [CommandCenterTab.WorkItem]
 }
 
+struct CommandCenterRecentSessionsPresentation: Equatable, Sendable {
+    let previewRows: [CommandCenterTab.WorkItem]
+    let showsViewMore: Bool
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -252,6 +257,17 @@ struct CommandCenterRecentSessionsFeature {
 
         var recentChatSessions: [OpenClawChatSessionEntry] {
             self.recentChatSessionEntries.entries
+        }
+
+        func presentation(currentSession: CommandSessionReferenceKey) -> CommandCenterRecentSessionsPresentation {
+            let rows = self.recentChatSessions.map {
+                CommandCenterTab.sessionWorkItem(
+                    for: $0,
+                    currentSessionKey: currentSession.value)
+            }
+            return .init(
+                previewRows: Array(rows.prefix(3)),
+                showsViewMore: rows.count > 3)
         }
     }
 

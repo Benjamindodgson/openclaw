@@ -239,6 +239,26 @@ struct CommandCenterRecentSessionsFeatureTests {
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
     }
 
+    @Test func `overview presentation caps preview rows and exposes view more`() {
+        var state = CommandCenterRecentSessionsFeature.State()
+        state.recentChatSessionEntries = .init(entries: [
+            Self.session(key: "chat-current", updatedAt: 4),
+            Self.session(key: "chat-newest", updatedAt: 3),
+            Self.session(key: "chat-middle", updatedAt: 2),
+            Self.session(key: "chat-old", updatedAt: 1),
+        ])
+
+        let presentation = state.presentation(currentSession: .init(value: "chat-current"))
+
+        #expect(presentation.previewRows.map(\.id) == [
+            "chat-session-chat-current",
+            "chat-session-chat-newest",
+            "chat-session-chat-middle",
+        ])
+        #expect(presentation.previewRows.first?.state == "open")
+        #expect(presentation.showsViewMore)
+    }
+
     @Test func `available refresh clears cached overview sessions on failure`() async {
         let probe = CommandSessionsProbe()
         probe.result = .failure(CommandSessionsProbeError.failed)
