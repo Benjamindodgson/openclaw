@@ -5,19 +5,28 @@ import SwiftUI
 
 struct IPadActivitySessionsClient {
     var listSessions: @Sendable @MainActor (_ limit: Int) async throws -> [OpenClawChatSessionEntry]
+    var openChat: @Sendable @MainActor (_ route: CommandCenterTab.ChatRoute) -> Void
 }
 
 extension IPadActivitySessionsClient: DependencyKey {
-    static let liveValue = IPadActivitySessionsClient(listSessions: { _ in [] })
-    static let testValue = IPadActivitySessionsClient(listSessions: { _ in [] })
+    static let liveValue = IPadActivitySessionsClient(
+        listSessions: { _ in [] },
+        openChat: { _ in })
+    static let testValue = IPadActivitySessionsClient(
+        listSessions: { _ in [] },
+        openChat: { _ in })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
-        IPadActivitySessionsClient(listSessions: { limit in
-            let transport = appModel.makeChatTransport()
-            let response = try await transport.listSessions(limit: limit)
-            return response.sessions
-        })
+        IPadActivitySessionsClient(
+            listSessions: { limit in
+                let transport = appModel.makeChatTransport()
+                let response = try await transport.listSessions(limit: limit)
+                return response.sessions
+            },
+            openChat: { route in
+                appModel.openChat(sessionKey: route.sessionKey)
+            })
     }
 }
 
@@ -233,6 +242,10 @@ struct IPadActivitySessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ChatRouteOpenRequest: Equatable, Sendable {
+            var route: CommandCenterTab.ChatRoute
+        }
+
         struct SceneActivity: Equatable, Sendable {
             var isActive: IPadActivitySceneActive
         }
@@ -256,6 +269,7 @@ struct IPadActivitySessionsFeature {
             var key: IPadActivitySessionReferenceKey
         }
 
+        case chatRouteOpened(ChatRouteOpenRequest)
         case gatewayPresentationChanged(IPadActivityGatewayPresentationState)
         case refreshRequested(RefreshRequest)
         case refreshResponse(RefreshResponse)
@@ -269,6 +283,11 @@ struct IPadActivitySessionsFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
+            case let .chatRouteOpened(request):
+                return .run { [client] _ in
+                    await client.openChat(request.route)
+                }
+
             case let .gatewayPresentationChanged(presentation):
                 state.gatewayPresentation = presentation
                 return .none
@@ -474,7 +493,7 @@ struct IPadActivityScreen: View {
                             color: row.color,
                             actionTitle: "Open",
                             action: {
-                                self.open(row)
+                                Task { @MainActor in await self.open(row) }
                             })
                     }
                 }
@@ -537,10 +556,10 @@ struct IPadActivityScreen: View {
             defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))))).finish()
     }
 
-    private func open(_ item: CommandCenterTab.WorkItem) {
+    private func open(_ item: CommandCenterTab.WorkItem) async {
         switch item.route {
         case let .chat(route):
-            self.appModel.openChat(sessionKey: route.sessionKey)
+            await self.store.send(.chatRouteOpened(.init(route: route))).finish()
             self.openChat()
         case .settings:
             self.openSettings()
