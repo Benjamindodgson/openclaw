@@ -122,6 +122,13 @@ struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
     let statusLabel: String
 }
 
+struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
+    let refreshTaskID: String
+    let proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
+    let proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
+    let emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation
+}
+
 struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Sendable {
     let proposal: IPadSkillProposal
     let isSelected: Bool
