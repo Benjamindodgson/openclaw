@@ -949,7 +949,7 @@ extension OnboardingWizardView {
     private func attemptAutomaticPairingResumeIfNeeded() {
         guard self.scenePhase == .active else { return }
         guard self.step == .auth else { return }
-        self.statusStore.send(.automaticPairingResumeRequested(.init(now: .init(value: Date()))))
+        self.statusStore.send(.automaticPairingResumeRequested)
         guard self.statusStore.shouldResumePairingAutomatically else { return }
         Task { @MainActor in await self.resumeAfterPairingApprovalInBackground() }
     }

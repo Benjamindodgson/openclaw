@@ -555,12 +555,13 @@ import Testing
     }
 
     @Test @MainActor func `status reducer throttles automatic pairing resume attempts`() async {
-        let store = TestStore(initialState: OnboardingStatusFeature.State()) {
-            OnboardingStatusFeature()
-        }
         let firstAttempt = Date(timeIntervalSince1970: 100)
+        let dateProbe = OnboardingDateProbe(firstAttempt)
+        let store = TestStore(initialState: OnboardingStatusFeature.State()) {
+            OnboardingStatusFeature(clock: dateProbe.client)
+        }
 
-        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: firstAttempt))))
+        await store.send(.automaticPairingResumeRequested)
         #expect(!store.state.shouldResumePairingAutomatically)
 
         await store.send(.connectionIssueDetected(.init(
@@ -577,7 +578,7 @@ import Testing
             $0.statusLineState = .init(value: "Pairing required")
         }
 
-        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: firstAttempt)))) {
+        await store.send(.automaticPairingResumeRequested) {
             $0.lastPairingAutoResumeAttemptState = .init(value: firstAttempt)
             $0.automaticPairingResume = .init(shouldResume: true)
         }
@@ -585,12 +586,14 @@ import Testing
         #expect(store.state.lastPairingAutoResumeAttemptAt == firstAttempt)
 
         let throttledAttempt = firstAttempt.addingTimeInterval(3)
-        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: throttledAttempt)))) {
+        dateProbe.now = throttledAttempt
+        await store.send(.automaticPairingResumeRequested) {
             $0.automaticPairingResume = .init(shouldResume: false)
         }
 
         let laterAttempt = firstAttempt.addingTimeInterval(7)
-        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: laterAttempt)))) {
+        dateProbe.now = laterAttempt
+        await store.send(.automaticPairingResumeRequested) {
             $0.lastPairingAutoResumeAttemptState = .init(value: laterAttempt)
             $0.automaticPairingResume = .init(shouldResume: true)
         }
@@ -600,7 +603,8 @@ import Testing
         }
 
         let blockedAttempt = laterAttempt.addingTimeInterval(7)
-        await store.send(.automaticPairingResumeRequested(.init(now: .init(value: blockedAttempt)))) {
+        dateProbe.now = blockedAttempt
+        await store.send(.automaticPairingResumeRequested) {
             $0.automaticPairingResume = .init(shouldResume: false)
         }
     }
@@ -1051,6 +1055,20 @@ import Testing
             OnboardingPairingResumeClient(resume: {
                 self.resumeCount += 1
             })
+        }
+    }
+
+    private final class OnboardingDateProbe: @unchecked Sendable {
+        var now: Date
+
+        var client: OnboardingPairingResumeClockClient {
+            OnboardingPairingResumeClockClient(now: {
+                .init(value: self.now)
+            })
+        }
+
+        init(_ now: Date) {
+            self.now = now
         }
     }
 

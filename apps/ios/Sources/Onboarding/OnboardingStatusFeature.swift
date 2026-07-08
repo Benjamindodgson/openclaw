@@ -2,11 +2,38 @@ import ComposableArchitecture
 import Foundation
 import OpenClawKit
 
+struct OnboardingPairingResumeClockClient {
+    var now: @Sendable () -> OnboardingPairingResumeRequestTime
+}
+
+extension OnboardingPairingResumeClockClient: DependencyKey {
+    static let liveValue = OnboardingPairingResumeClockClient(now: {
+        .init(value: Date())
+    })
+
+    static let testValue = OnboardingPairingResumeClockClient(now: {
+        .init(value: Date(timeIntervalSince1970: 0))
+    })
+}
+
+extension DependencyValues {
+    var onboardingPairingResumeClock: OnboardingPairingResumeClockClient {
+        get { self[OnboardingPairingResumeClockClient.self] }
+        set { self[OnboardingPairingResumeClockClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct OnboardingStatusFeature {
+    private let clockOverride: OnboardingPairingResumeClockClient?
+
     static let defaultStatusLine = "In your OpenClaw chat, run /pair qr, then scan the code here."
     static let noSavedPairingStatusLine =
         "No saved pairing found. In your OpenClaw chat, run /pair qr, then scan the code here."
+
+    init(clock: OnboardingPairingResumeClockClient? = nil) {
+        self.clockOverride = clock
+    }
 
     // swiftformat:disable redundantSendable
     @ObservableState
@@ -59,8 +86,6 @@ struct OnboardingStatusFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct AutomaticPairingResumeRequest: Equatable, Sendable { var now: OnboardingPairingResumeRequestTime }
-
         struct ConnectionStart: Equatable, Sendable {
             var id: OnboardingConnectionID
             var message: OnboardingConnectionMessage
@@ -94,7 +119,7 @@ struct OnboardingStatusFeature {
         struct RetryConnectionStart: Equatable, Sendable { var silent: OnboardingRetryConnectionSilence }
         struct ScannerError: Equatable, Sendable { var message: OnboardingScannerErrorMessage }
 
-        case automaticPairingResumeRequested(AutomaticPairingResumeRequest)
+        case automaticPairingResumeRequested
         case appleReviewDemoModeEnabled
         case connectionFinished
         case connectionIssueDetected(ConnectionIssueDetection)
@@ -118,17 +143,21 @@ struct OnboardingStatusFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingPairingResumeClock) var dependencyClock
+            let clock = self.clockOverride ?? dependencyClock
+
             switch action {
-            case let .automaticPairingResumeRequested(request):
+            case .automaticPairingResumeRequested:
                 state.automaticPairingResume = .init(shouldResume: false)
                 guard state.issue.needsPairing, state.connectingGatewayID == nil else { return .none }
+                let requestTime = clock.now()
                 if let last = state.lastPairingAutoResumeAttemptAt {
-                    let elapsedSinceLastAttempt = request.now.value.timeIntervalSince(last)
+                    let elapsedSinceLastAttempt = requestTime.value.timeIntervalSince(last)
                     if elapsedSinceLastAttempt < 6 {
                         return .none
                     }
                 }
-                state.lastPairingAutoResumeAttemptState = request.now
+                state.lastPairingAutoResumeAttemptState = requestTime
                 state.automaticPairingResume = .init(shouldResume: true)
                 return .none
 

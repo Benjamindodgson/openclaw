@@ -5901,26 +5901,27 @@ struct RootTabsSourceGuardTests {
             statusFeatureSource,
             from: "struct State: Equatable, Sendable",
             to: "        init(statusLine:")
-        let automaticPairingResumeRequest = try Self.extract(
-            onboardingStateSource,
-            from: "struct AutomaticPairingResumeRequest",
-            to: "struct ConnectionStart")
-
         #expect(onboardingStateSource.contains("struct OnboardingPairingResumeRequestTime: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingAutomaticPairingResume: Equatable, Sendable"))
-        #expect(onboardingStateSource.contains("struct AutomaticPairingResumeRequest: Equatable, Sendable"))
-        #expect(automaticPairingResumeRequest.contains("var now: OnboardingPairingResumeRequestTime"))
+        #expect(onboardingStateSource.contains("struct OnboardingPairingResumeClockClient"))
+        #expect(onboardingStateSource.contains("var onboardingPairingResumeClock: OnboardingPairingResumeClockClient"))
+        #expect(onboardingStateSource.contains("private let clockOverride: OnboardingPairingResumeClockClient?"))
         #expect(statusStateBlock.contains("var lastPairingAutoResumeAttemptState: OnboardingPairingResumeRequestTime?"))
         #expect(onboardingStateSource.contains(
             "var lastPairingAutoResumeAttemptAt: Date? {\n            self.lastPairingAutoResumeAttemptState?.value"))
-        #expect(onboardingStateSource.contains("case automaticPairingResumeRequested(AutomaticPairingResumeRequest)"))
-        #expect(onboardingStateSource.contains("request.now.value.timeIntervalSince(last)"))
-        #expect(onboardingStateSource.contains("state.lastPairingAutoResumeAttemptState = request.now"))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingPairingResumeClock) var dependencyClock"))
+        #expect(onboardingStateSource.contains("let clock = self.clockOverride ?? dependencyClock"))
+        #expect(onboardingStateSource.contains("case automaticPairingResumeRequested"))
+        #expect(onboardingStateSource.contains("let requestTime = clock.now()"))
+        #expect(onboardingStateSource.contains("requestTime.value.timeIntervalSince(last)"))
+        #expect(onboardingStateSource.contains("state.lastPairingAutoResumeAttemptState = requestTime"))
         #expect(onboardingStateSource.contains("state.lastPairingAutoResumeAttemptState = nil"))
         #expect(onboardingStateSource.contains("state.automaticPairingResume = .init(shouldResume: true)"))
-        #expect(onboardingSource.contains(
-            "self.statusStore.send(.automaticPairingResumeRequested(.init(now: .init(value: Date()))))"))
-        #expect(!automaticPairingResumeRequest.contains("var now: Date"))
+        #expect(onboardingSource.contains("self.statusStore.send(.automaticPairingResumeRequested)"))
+        #expect(!onboardingSource.contains("self.statusStore.send(.automaticPairingResumeRequested(.init("))
+        #expect(!onboardingSource.contains("Date()"))
+        #expect(!onboardingStateSource.contains("struct AutomaticPairingResumeRequest"))
+        #expect(!onboardingStateSource.contains("@Dependency(\\.date"))
         #expect(!statusStateBlock.contains("var lastPairingAutoResumeAttemptAt: Date?"))
         #expect(!onboardingStateSource.contains("state.lastPairingAutoResumeAttemptAt = request.now.value"))
         #expect(!onboardingStateSource.contains("state.shouldResumePairingAutomatically = true"))
