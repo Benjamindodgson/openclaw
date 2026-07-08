@@ -289,6 +289,7 @@ struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
 struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
     let screenChromePresentation: IPadSkillWorkshopScreenChromePresentation
     let refreshTaskID: String
+    let refreshControlPresentation: IPadSkillWorkshopRefreshControlPresentation
     let proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
     let proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
     let emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation
