@@ -57,6 +57,40 @@ struct IPadWorkboardFeatureTests {
             .createUnavailableMessage(canRead: true, canWrite: true) == "Card creation is already in progress.")
     }
 
+    @Test func `workboard create card presentation is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+
+        #expect(state.createCardPresentation(canRead: true, canWrite: true) == .init(
+            buttonTitle: "New Card",
+            buttonIconSystemName: "plus",
+            buttonAccessibilityHint: "Opens card title and notes entry",
+            isButtonDisabled: false,
+            sheet: .init(
+                title: "New Card",
+                sectionTitle: "Card",
+                titlePlaceholder: "Title",
+                notesPlaceholder: "Notes",
+                cancelTitle: "Cancel",
+                confirmationTitle: "Create",
+                confirmationAccessibilityHint: "Enter a title to create a card.",
+                isConfirmationDisabled: false)))
+
+        state.draftTitle = .init(value: "Card")
+        #expect(state.createCardPresentation(canRead: true, canWrite: true).sheet.confirmationAccessibilityHint ==
+            "Creates a workboard card")
+
+        state.cardCreationPhase = .inFlight
+        let creatingPresentation = state.createCardPresentation(canRead: true, canWrite: true)
+        #expect(creatingPresentation.isButtonDisabled)
+        #expect(creatingPresentation.sheet.confirmationTitle == "Creating...")
+        #expect(creatingPresentation.sheet.isConfirmationDisabled)
+        #expect(creatingPresentation.sheet.confirmationAccessibilityHint == "Card creation is already in progress.")
+
+        state.cardCreationPhase = .idle
+        #expect(state.createCardPresentation(canRead: false, canWrite: false).sheet.confirmationAccessibilityHint ==
+            "Connect from Settings to create, move, and dispatch cards.")
+    }
+
     @Test func `workboard subtitle is derived by reducer state`() {
         var state = IPadWorkboardFeature.State()
         #expect(state.workboardSubtitle == "All boards / Active")
