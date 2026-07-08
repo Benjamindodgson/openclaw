@@ -60,7 +60,7 @@ struct IPadWorkboardFeatureTests {
     @Test func `workboard create card presentation is reducer owned`() {
         var state = IPadWorkboardFeature.State()
 
-        #expect(state.createCardPresentation(canRead: true, canWrite: true) == .init(
+        #expect(state.createCardPresentation(gatewayAccess: .init(canRead: true, canWrite: true)) == .init(
             buttonTitle: "New Card",
             buttonIconSystemName: "plus",
             buttonAccessibilityHint: "Opens card title and notes entry",
@@ -77,24 +77,27 @@ struct IPadWorkboardFeatureTests {
                 isConfirmationDisabled: false)))
 
         state.draftTitle = .init(value: "Card")
-        #expect(state.createCardPresentation(canRead: true, canWrite: true).sheet.confirmationAccessibilityHint ==
+        #expect(state.createCardPresentation(gatewayAccess: .init(canRead: true, canWrite: true)).sheet
+            .confirmationAccessibilityHint ==
             "Creates a workboard card")
 
         state.cardCreationPhase = .inFlight
-        let creatingPresentation = state.createCardPresentation(canRead: true, canWrite: true)
+        let creatingPresentation = state.createCardPresentation(gatewayAccess: .init(canRead: true, canWrite: true))
         #expect(creatingPresentation.isButtonDisabled)
         #expect(creatingPresentation.sheet.confirmationTitle == "Creating...")
         #expect(creatingPresentation.sheet.isConfirmationDisabled)
         #expect(creatingPresentation.sheet.confirmationAccessibilityHint == "Card creation is already in progress.")
 
         state.cardCreationPhase = .idle
-        #expect(state.createCardPresentation(canRead: false, canWrite: false).sheet.confirmationAccessibilityHint ==
+        #expect(state.createCardPresentation(gatewayAccess: .init(canRead: false, canWrite: false)).sheet
+            .confirmationAccessibilityHint ==
             "Connect from Settings to create, move, and dispatch cards.")
 
         state.errorText = .init(value: "workboard boom")
-        #expect(state.createCardPresentation(canRead: true, canWrite: true).sheet.errorMessage == .init(
-            text: "workboard boom",
-            tone: .warn))
+        #expect(state.createCardPresentation(gatewayAccess: .init(canRead: true, canWrite: true)).sheet
+            .errorMessage == .init(
+                text: "workboard boom",
+                tone: .warn))
     }
 
     @Test func `workboard subtitle is derived by reducer state`() {
