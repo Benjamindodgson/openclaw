@@ -273,6 +273,11 @@ struct IPadSkillWorkshopProposalSheetPresentation: Equatable, Sendable {
     let dismissButtonTitle: String
 }
 
+struct IPadSkillWorkshopScreenChromePresentation: Equatable, Sendable {
+    let title: String
+    let subtitle: String
+}
+
 struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
     let title: String
     let proposalCount: Int
@@ -282,6 +287,7 @@ struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
 }
 
 struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
+    let screenChromePresentation: IPadSkillWorkshopScreenChromePresentation
     let refreshTaskID: String
     let proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
     let proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
