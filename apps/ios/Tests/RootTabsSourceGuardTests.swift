@@ -2084,6 +2084,18 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("case dispatchResponse(DispatchResponse)"))
         #expect(source.contains("self.store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: self.canWrite))"))
         #expect(source.contains("guard request.writeAccess.canWrite"))
+        #expect(source.contains("struct IPadWorkboardDispatchControlPresentation: Equatable, Sendable"))
+        #expect(source.contains(
+            "func dispatchControlPresentation(canWrite: Bool) -> IPadWorkboardDispatchControlPresentation"))
+        #expect(source.contains("isDisabled: !canWrite || self.isLoading"))
+        #expect(source.contains("private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation"))
+        #expect(source.contains("self.store.state.dispatchControlPresentation(canWrite: self.canWrite)"))
+        #expect(source.contains("self.dispatchControlPresentation.title"))
+        #expect(source.contains("systemImage: self.dispatchControlPresentation.iconSystemName"))
+        #expect(source.contains(".disabled(self.dispatchControlPresentation.isDisabled)"))
+        #expect(!source.contains("Label(\"Dispatch\", systemImage: \"bolt.fill\")"))
+        #expect(!source.contains(".disabled(!self.canWrite || self.store.isLoading)"))
+        #expect(!source.contains(".disabled(self.store.isLoading)"))
         #expect(source.contains("request.readAccess.canRead"))
         #expect(source.contains("enum DispatchPhase: Equatable, Sendable"))
         #expect(source.contains("var dispatchPhase = DispatchPhase.idle"))
@@ -2236,7 +2248,7 @@ struct RootTabsSourceGuardTests {
         #expect(compactControls.contains("self.compactBoardScopeMenu"))
         #expect(!compactControls.contains("Self.workboardSubtitle("))
         #expect(!compactControls.contains("Label(\"Refresh\""))
-        #expect(compactControls.contains("Label(\"Dispatch\""))
+        #expect(compactControls.contains("self.dispatchControlPresentation.title"))
     }
 
     @Test func `skill workshop uses kanban lanes on wide I pad`() throws {

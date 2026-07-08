@@ -132,11 +132,13 @@ struct IPadWorkboardScreen: View {
                     Button {
                         Task { await self.dispatchCards() }
                     } label: {
-                        Label("Dispatch", systemImage: "bolt.fill")
+                        Label(
+                            self.dispatchControlPresentation.title,
+                            systemImage: self.dispatchControlPresentation.iconSystemName)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .disabled(!self.canWrite || self.store.isLoading)
+                    .disabled(self.dispatchControlPresentation.isDisabled)
 
                     Button {
                         Task { await self.loadCards(force: true) }
@@ -190,12 +192,14 @@ struct IPadWorkboardScreen: View {
                         Button {
                             Task { await self.dispatchCards() }
                         } label: {
-                            Label("Dispatch", systemImage: "bolt.fill")
+                            Label(
+                                self.dispatchControlPresentation.title,
+                                systemImage: self.dispatchControlPresentation.iconSystemName)
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                        .disabled(self.store.isLoading)
+                        .disabled(self.dispatchControlPresentation.isDisabled)
                     }
                 } else {
                     Text(Self.compactWriteUnavailableMessage(canRead: self.canRead))
@@ -582,6 +586,10 @@ struct IPadWorkboardScreen: View {
         self.store.state.createCardPresentation(
             canRead: self.canRead,
             canWrite: self.canWrite)
+    }
+
+    private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation {
+        self.store.state.dispatchControlPresentation(canWrite: self.canWrite)
     }
 
     private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
