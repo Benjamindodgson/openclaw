@@ -164,6 +164,24 @@ struct IPadWorkboardFeatureTests {
         #expect(state.dispatchControlPresentation(canWrite: true).isDisabled)
     }
 
+    @Test func `workboard query field presentation is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        #expect(state.queryFieldPresentation == .init(
+            text: "",
+            placeholder: "Search cards",
+            iconSystemName: "magnifyingglass",
+            clearButtonSystemName: "xmark.circle.fill",
+            showsClearButton: false))
+
+        state.query = .init(value: "gateway")
+        #expect(state.queryFieldPresentation == .init(
+            text: "gateway",
+            placeholder: "Search cards",
+            iconSystemName: "magnifyingglass",
+            clearButtonSystemName: "xmark.circle.fill",
+            showsClearButton: true))
+    }
+
     @Test func `workboard board scope menu presentation is reducer owned`() {
         var state = IPadWorkboardFeature.State()
         state.knownBoardIDEntries = .init(values: [.init(value: "ops")])

@@ -204,6 +204,14 @@ struct IPadWorkboardDispatchControlPresentation: Equatable, Sendable {
     let isDisabled: Bool
 }
 
+struct IPadWorkboardQueryFieldPresentation: Equatable, Sendable {
+    let text: String
+    let placeholder: String
+    let iconSystemName: String
+    let clearButtonSystemName: String
+    let showsClearButton: Bool
+}
+
 struct IPadWorkboardCreateSheetPresentation: Equatable, Sendable {
     let title: String
     let sectionTitle: String
@@ -380,6 +388,15 @@ struct IPadWorkboardFeature {
                 title: "Dispatch",
                 iconSystemName: "bolt.fill",
                 isDisabled: !canWrite || self.isLoading)
+        }
+
+        var queryFieldPresentation: IPadWorkboardQueryFieldPresentation {
+            .init(
+                text: self.query.value,
+                placeholder: "Search cards",
+                iconSystemName: "magnifyingglass",
+                clearButtonSystemName: "xmark.circle.fill",
+                showsClearButton: !self.query.value.isEmpty)
         }
 
         var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {

@@ -95,24 +95,7 @@ struct IPadWorkboardScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
                 self.boardScopeMenu
-                HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    TextField("Search cards", text: self.queryBinding)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .font(.subheadline)
-                    if !self.store.query.value.isEmpty {
-                        Button {
-                            self.store.send(.clearQueryTapped)
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.secondary)
-                    }
-                }
+                self.searchField
                 if self.isCompactWidth {
                     self.statusMenu
                 } else {
@@ -250,6 +233,28 @@ struct IPadWorkboardScreen: View {
         .controlSize(.small)
         .disabled(self.createCardPresentation.isButtonDisabled)
         .accessibilityHint(self.createCardPresentation.buttonAccessibilityHint)
+    }
+
+    private var searchField: some View {
+        let presentation = self.store.queryFieldPresentation
+        return HStack(spacing: 8) {
+            Image(systemName: presentation.iconSystemName)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            TextField(presentation.placeholder, text: self.queryBinding)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(.subheadline)
+            if presentation.showsClearButton {
+                Button {
+                    self.store.send(.clearQueryTapped)
+                } label: {
+                    Image(systemName: presentation.clearButtonSystemName)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private var compactBoardScopeMenu: some View {
@@ -416,7 +421,7 @@ struct IPadWorkboardScreen: View {
 
     private var queryBinding: Binding<String> {
         Binding(
-            get: { self.store.query.value },
+            get: { self.store.queryFieldPresentation.text },
             set: { self.store.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
