@@ -345,6 +345,7 @@ struct IPadSkillWorkshopFeatureTests {
             showsProposalActions: true))
         #expect(state.presentedProposalPresentation?.bodyText == nil)
         #expect(state.presentedProposalPresentation?.emptyBodyText == "Select refresh to load the proposal body.")
+        #expect(state.presentedProposalPresentation?.supportFilesTitle == "Support files")
         #expect(state.presentedProposalPresentation?.supportFiles == [])
         #expect(state.presentedProposalPresentation?.showsSupportFiles == false)
 
@@ -361,6 +362,7 @@ struct IPadSkillWorkshopFeatureTests {
             isInspecting: true,
             showsProposalActions: true))
         #expect(state.presentedProposalPresentation?.bodyText == "inspected body")
+        #expect(state.presentedProposalPresentation?.supportFilesTitle == "Support files")
         #expect(state.presentedProposalPresentation?.supportFiles == pendingProposal.supportFiles)
         #expect(state.presentedProposalPresentation?.showsSupportFiles == true)
 

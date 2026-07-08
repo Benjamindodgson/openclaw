@@ -294,6 +294,7 @@ struct IPadSkillWorkshopProposalDetailPresentation: Equatable, Identifiable, Sen
     let card: IPadSkillWorkshopProposalCardPresentation
     let bodyText: String?
     let emptyBodyText: String
+    let supportFilesTitle: String
     let supportFiles: [IPadSkillProposalSupportFile]
     let showsSupportFiles: Bool
 
