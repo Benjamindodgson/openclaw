@@ -116,10 +116,9 @@ struct IPadWorkboardScreen: View {
                 if self.isCompactWidth {
                     self.statusMenu
                 } else {
-                    Picker("Scope", selection: self.selectedStatusBinding) {
-                        Text("Active").tag("active")
-                        ForEach(self.store.statusValues, id: \.self) { status in
-                            Text(IPadWorkboardDefaults.label(for: status)).tag(status)
+                    Picker(self.statusFilterControlPresentation.pickerTitle, selection: self.selectedStatusBinding) {
+                        ForEach(self.statusFilterControlPresentation.options) { option in
+                            Text(option.title).tag(option.id)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -277,9 +276,8 @@ struct IPadWorkboardScreen: View {
     private var compactStatusPicker: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                self.compactStatusChip("active")
-                ForEach(self.store.compactStatuses, id: \.self) { status in
-                    self.compactStatusChip(status)
+                ForEach(self.statusFilterControlPresentation.compactOptions) { option in
+                    self.compactStatusChip(option)
                 }
             }
             .padding(.vertical, 1)
@@ -295,32 +293,35 @@ struct IPadWorkboardScreen: View {
         }
     }
 
-    private func compactStatusChip(_ status: String) -> some View {
+    private func compactStatusChip(_ option: IPadWorkboardStatusFilterOption) -> some View {
         Button {
-            self.store.send(.statusChanged(.init(status: .init(value: status))))
+            self.store.send(.statusChanged(.init(status: .init(value: option.id))))
         } label: {
-            Text(IPadWorkboardDefaults.label(for: status))
+            Text(option.title)
                 .font(.caption2.weight(.semibold))
                 .lineLimit(1)
                 .padding(.horizontal, 10)
                 .frame(height: 30)
                 .background(
-                    self.store.selectedStatus.value == status
+                    self.statusFilterControlPresentation.selectedFilter == option.id
                         ? OpenClawBrand.accent.opacity(0.12)
                         : Color.primary.opacity(0.06),
                     in: Capsule())
                 .overlay {
                     Capsule()
                         .strokeBorder(
-                            self.store.selectedStatus.value == status
+                            self.statusFilterControlPresentation.selectedFilter == option.id
                                 ? OpenClawBrand.accent.opacity(0.42)
                                 : Color.primary.opacity(0.08),
                             lineWidth: 1)
                 }
         }
         .buttonStyle(.plain)
-        .foregroundStyle(self.store.selectedStatus.value == status ? OpenClawBrand.accent : .primary)
-        .accessibilityLabel("Show \(IPadWorkboardDefaults.label(for: status)) cards")
+        .foregroundStyle(
+            self.statusFilterControlPresentation.selectedFilter == option.id
+                ? OpenClawBrand.accent
+                : .primary)
+        .accessibilityLabel(option.accessibilityLabel)
     }
 
     private var boardScopeMenu: some View {
@@ -357,21 +358,14 @@ struct IPadWorkboardScreen: View {
 
     private var statusMenu: some View {
         HStack(spacing: 8) {
-            Text("Status")
+            Text(self.statusFilterControlPresentation.menuTitle)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Menu {
-                Button("Active") {
-                    self.store.send(.statusChanged(.init(status: .init(value: "active"))))
-                }
-                ForEach(self.store.statusValues, id: \.self) { status in
-                    Button(IPadWorkboardDefaults.label(for: status)) {
-                        self.store.send(.statusChanged(.init(status: .init(value: status))))
-                    }
-                }
+                self.statusFilterMenuItems
             } label: {
                 HStack(spacing: 6) {
-                    Text(IPadWorkboardDefaults.label(for: self.store.selectedStatus.value))
+                    Text(self.statusFilterControlPresentation.selectedLabel)
                         .font(.subheadline.weight(.semibold))
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2.weight(.bold))
@@ -381,6 +375,14 @@ struct IPadWorkboardScreen: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .tint(self.neutralControlTint)
+        }
+    }
+
+    private var statusFilterMenuItems: some View {
+        ForEach(self.statusFilterControlPresentation.options) { option in
+            Button(option.title) {
+                self.store.send(.statusChanged(.init(status: .init(value: option.id))))
+            }
         }
     }
 
@@ -414,7 +416,7 @@ struct IPadWorkboardScreen: View {
 
     private var selectedStatusBinding: Binding<String> {
         Binding(
-            get: { self.store.selectedStatus.value },
+            get: { self.statusFilterControlPresentation.selectedFilter },
             set: { self.store.send(.statusChanged(.init(status: .init(value: $0)))) })
     }
 
@@ -569,6 +571,10 @@ struct IPadWorkboardScreen: View {
 
     private var refreshControlPresentation: IPadWorkboardRefreshControlPresentation {
         self.screenPresentation.refreshControlPresentation
+    }
+
+    private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
+        self.screenPresentation.statusFilterControlPresentation
     }
 
     private var createUnavailableMessage: String? {

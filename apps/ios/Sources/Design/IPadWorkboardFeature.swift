@@ -198,11 +198,27 @@ struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
     let showsProgress: Bool
 }
 
+struct IPadWorkboardStatusFilterOption: Equatable, Identifiable, Sendable {
+    let id: String
+    let title: String
+    let accessibilityLabel: String
+}
+
+struct IPadWorkboardStatusFilterControlPresentation: Equatable, Sendable {
+    let pickerTitle: String
+    let menuTitle: String
+    let selectedFilter: String
+    let selectedLabel: String
+    let options: [IPadWorkboardStatusFilterOption]
+    let compactOptions: [IPadWorkboardStatusFilterOption]
+}
+
 struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let screenChromePresentation: IPadWorkboardScreenChromePresentation
     let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
     let refreshControlPresentation: IPadWorkboardRefreshControlPresentation
     let boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation
+    let statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation
 }
 
 // swiftformat:enable redundantSendable
@@ -334,12 +350,23 @@ struct IPadWorkboardFeature {
                 showsProgress: self.isLoading)
         }
 
+        var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
+            .init(
+                pickerTitle: "Scope",
+                menuTitle: "Status",
+                selectedFilter: self.selectedStatus.value,
+                selectedLabel: IPadWorkboardDefaults.label(for: self.selectedStatus.value),
+                options: Self.statusFilterOptions(for: self.statusValues),
+                compactOptions: Self.statusFilterOptions(for: self.compactStatuses))
+        }
+
         var screenPresentation: IPadWorkboardScreenPresentation {
             .init(
                 screenChromePresentation: self.screenChromePresentation,
                 queueSummaryPresentation: self.queueSummaryPresentation,
                 refreshControlPresentation: self.refreshControlPresentation,
-                boardScopeMenuPresentation: self.boardScopeMenuPresentation)
+                boardScopeMenuPresentation: self.boardScopeMenuPresentation,
+                statusFilterControlPresentation: self.statusFilterControlPresentation)
         }
 
         var isLoading: Bool {
@@ -469,6 +496,15 @@ struct IPadWorkboardFeature {
         }
 
         private static let defaultBoardScopeOption = IPadWorkboardBoardScopeOption(id: "", title: "All boards")
+
+        private static func statusFilterOptions(for statuses: [String]) -> [IPadWorkboardStatusFilterOption] {
+            [self.statusFilterOption(for: "active")] + statuses.map(self.statusFilterOption(for:))
+        }
+
+        private static func statusFilterOption(for status: String) -> IPadWorkboardStatusFilterOption {
+            let title = IPadWorkboardDefaults.label(for: status)
+            return .init(id: status, title: title, accessibilityLabel: "Show \(title) cards")
+        }
 
         static func cardsForKanbanStatus(
             cards: [IPadWorkboardCard],

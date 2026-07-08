@@ -138,6 +138,28 @@ struct IPadWorkboardFeatureTests {
         #expect(state.boardScopeMenuPresentation.selectedLabel == "planning")
     }
 
+    @Test func `workboard status filter presentation is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: [
+            .init(value: "review"),
+            .init(value: "todo"),
+            .init(value: "custom"),
+        ])
+
+        let presentation = state.statusFilterControlPresentation
+        #expect(presentation.pickerTitle == "Scope")
+        #expect(presentation.menuTitle == "Status")
+        #expect(presentation.selectedFilter == "active")
+        #expect(presentation.selectedLabel == "Active")
+        #expect(presentation.options.map(\.id) == ["active", "review", "todo", "custom"])
+        #expect(presentation.compactOptions.map(\.id) == ["active", "todo", "review", "custom"])
+        #expect(presentation.options.first?.accessibilityLabel == "Show Active cards")
+        #expect(state.screenPresentation.statusFilterControlPresentation == presentation)
+
+        state.selectedStatus = .init(value: "review")
+        #expect(state.statusFilterControlPresentation.selectedLabel == "Review")
+    }
+
     @Test func `kanban cards are filtered by reducer state`() {
         var state = IPadWorkboardFeature.State()
         state.cardEntries = .init(values: [
