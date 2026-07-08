@@ -161,6 +161,7 @@ struct IPadWorkboardBoardScopeOption: Equatable, Identifiable, Sendable {
 struct IPadWorkboardBoardScopeMenuPresentation: Equatable, Sendable {
     let title: String
     let selectedLabel: String
+    let leadingIconSystemName: String
     let selectorIconSystemName: String
     let accessibilityLabel: String
     let options: [IPadWorkboardBoardScopeOption]
@@ -268,6 +269,7 @@ struct IPadWorkboardStatusFilterControlPresentation: Equatable, Sendable {
     let menuTitle: String
     let selectedFilter: String
     let selectedLabel: String
+    let selectorIconSystemName: String
     let options: [IPadWorkboardStatusFilterOption]
     let compactOptions: [IPadWorkboardStatusFilterOption]
 }
@@ -374,6 +376,7 @@ struct IPadWorkboardFeature {
             .init(
                 title: "Board",
                 selectedLabel: self.boardScopeLabel,
+                leadingIconSystemName: "rectangle.stack",
                 selectorIconSystemName: "chevron.up.chevron.down",
                 accessibilityLabel: "Workboard board scope",
                 options: [Self.defaultBoardScopeOption] + self.boardScopeOptions.map {
@@ -472,6 +475,7 @@ struct IPadWorkboardFeature {
                 menuTitle: "Status",
                 selectedFilter: self.selectedStatus.value,
                 selectedLabel: IPadWorkboardDefaults.label(for: self.selectedStatus.value),
+                selectorIconSystemName: "chevron.up.chevron.down",
                 options: Self.statusFilterOptions(
                     for: self.statusValues,
                     selectedStatus: self.selectedStatus.value),
