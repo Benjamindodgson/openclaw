@@ -321,6 +321,11 @@ struct IPadWorkboardCompactWriteUnavailablePresentation: Equatable, Sendable {
     let message: String
 }
 
+struct IPadWorkboardCompactWriteControlsPresentation: Equatable, Sendable {
+    let showsWriteControls: Bool
+    let unavailablePresentation: IPadWorkboardCompactWriteUnavailablePresentation
+}
+
 struct IPadWorkboardCreateSheetErrorPresentation: Equatable, Sendable {
     let text: String
     let tone: IPadWorkboardStatusMessageTone
@@ -1416,6 +1421,15 @@ struct IPadWorkboardFeature {
 }
 
 extension IPadWorkboardFeature.State {
+    func compactWriteControlsPresentation(
+        canRead: Bool,
+        canWrite: Bool) -> IPadWorkboardCompactWriteControlsPresentation
+    {
+        .init(
+            showsWriteControls: canWrite,
+            unavailablePresentation: self.compactWriteUnavailablePresentation(canRead: canRead))
+    }
+
     func cardDetailActionControlsPresentation(
         for card: IPadWorkboardCard,
         canWrite: Bool) -> IPadWorkboardCardDetailActionControlsPresentation
