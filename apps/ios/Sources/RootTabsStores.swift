@@ -193,6 +193,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeOnboardingGatewayConnectionStore() -> StoreOf<OnboardingGatewayConnectionFeature> {
+        Store(initialState: OnboardingGatewayConnectionFeature.State()) {
+            OnboardingGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewaySetupStatusStore() -> StoreOf<SettingsGatewaySetupStatusFeature> {
         Store(initialState: SettingsGatewaySetupStatusFeature.State()) {
             SettingsGatewaySetupStatusFeature()

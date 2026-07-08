@@ -764,6 +764,63 @@ extension DependencyValues {
     }
 }
 
+struct OnboardingGatewayDisconnectClient {
+    var disconnect: @MainActor @Sendable () -> Void
+}
+
+extension OnboardingGatewayDisconnectClient: DependencyKey {
+    static let liveValue = OnboardingGatewayDisconnectClient(disconnect: {})
+    static let testValue = OnboardingGatewayDisconnectClient(disconnect: {})
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        OnboardingGatewayDisconnectClient(disconnect: {
+            appModel.disconnectGateway()
+        })
+    }
+}
+
+extension DependencyValues {
+    var onboardingGatewayDisconnect: OnboardingGatewayDisconnectClient {
+        get { self[OnboardingGatewayDisconnectClient.self] }
+        set { self[OnboardingGatewayDisconnectClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct OnboardingGatewayConnectionFeature {
+    private let disconnectClientOverride: OnboardingGatewayDisconnectClient?
+
+    init(disconnectClient: OnboardingGatewayDisconnectClient? = nil) {
+        self.disconnectClientOverride = disconnectClient
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case disconnectRequested
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.onboardingGatewayDisconnect) var dependencyDisconnectClient
+            let disconnectClient = self.disconnectClientOverride ?? dependencyDisconnectClient
+
+            switch action {
+            case .disconnectRequested:
+                return .run { [disconnectClient] _ in
+                    await disconnectClient.disconnect()
+                }
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 @Reducer
 struct OnboardingQRPhotoImportFeature {
     static let imageLoadFailureMessage = OnboardingQRPhotoImportFailureMessage(
