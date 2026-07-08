@@ -25,6 +25,8 @@ struct OnboardingWizardView: View {
 
     @State private var appleReviewDemoStore: StoreOf<OnboardingAppleReviewDemoFeature>
 
+    @State private var pairingResumeStore: StoreOf<OnboardingPairingResumeFeature>
+
     @State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>
 
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature>
@@ -85,6 +87,12 @@ struct OnboardingWizardView: View {
                 OnboardingAppleReviewDemoFeature()
             }
         },
+        pairingResumeStore: StoreOf<OnboardingPairingResumeFeature>? = nil,
+        pairingResumeStoreFactory: () -> StoreOf<OnboardingPairingResumeFeature> = {
+            Store(initialState: OnboardingPairingResumeFeature.State()) {
+                OnboardingPairingResumeFeature()
+            }
+        },
         discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>? = nil,
         discoveryRestartStoreFactory: () -> StoreOf<OnboardingDiscoveryRestartFeature> = {
             Store(initialState: OnboardingDiscoveryRestartFeature.State()) {
@@ -127,6 +135,7 @@ struct OnboardingWizardView: View {
         let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
         let resolvedGatewayConnectionStore = gatewayConnectionStore ?? gatewayConnectionStoreFactory()
         let resolvedAppleReviewDemoStore = appleReviewDemoStore ?? appleReviewDemoStoreFactory()
+        let resolvedPairingResumeStore = pairingResumeStore ?? pairingResumeStoreFactory()
         let resolvedDiscoveryRestartStore = discoveryRestartStore ?? discoveryRestartStoreFactory()
         let resolvedConnectionFormStore = connectionFormStore ?? connectionFormStoreFactory()
         let resolvedSetupCodeStore = setupCodeStore ?? setupCodeStoreFactory()
@@ -137,6 +146,7 @@ struct OnboardingWizardView: View {
         self._presentationStore = State(wrappedValue: resolvedPresentationStore)
         self._gatewayConnectionStore = State(wrappedValue: resolvedGatewayConnectionStore)
         self._appleReviewDemoStore = State(wrappedValue: resolvedAppleReviewDemoStore)
+        self._pairingResumeStore = State(wrappedValue: resolvedPairingResumeStore)
         self._discoveryRestartStore = State(wrappedValue: resolvedDiscoveryRestartStore)
         self._connectionFormStore = State(wrappedValue: resolvedConnectionFormStore)
         self._setupCodeStore = State(wrappedValue: resolvedSetupCodeStore)
@@ -654,7 +664,7 @@ struct OnboardingWizardView: View {
             if self.issue.needsPairing {
                 Section {
                     Button {
-                        self.resumeAfterPairingApproval()
+                        Task { @MainActor in await self.resumeAfterPairingApproval() }
                     } label: {
                         Label("Resume After Approval", systemImage: "arrow.clockwise")
                     }
@@ -917,24 +927,20 @@ extension OnboardingWizardView {
         self.presentationStore.send(.qrScannerButtonTapped)
     }
 
-    private func resumeAfterPairingApproval() {
+    private func resumeAfterPairingApproval() async {
         // We intentionally stop reconnect churn while unpaired to avoid generating multiple pending requests.
-        self.appModel.gatewayAutoReconnectEnabled = true
-        self.appModel.gatewayPairingPaused = false
-        self.appModel.gatewayPairingRequestId = nil
+        await self.pairingResumeStore.send(.resumeRequested).finish()
         // Pairing state is sticky to prevent UI flip-flop during reconnect churn.
         // Once the user explicitly resumes after approving, clear the sticky issue
         // so new status/auth errors can surface instead of being masked as pairing.
         self.statusStore.send(.pairingResumeStarted)
-        Task { await self.retryLastAttempt() }
+        await self.retryLastAttempt()
     }
 
-    private func resumeAfterPairingApprovalInBackground() {
+    private func resumeAfterPairingApprovalInBackground() async {
         // Keep the pairing issue sticky to avoid visual flicker while we probe for approval.
-        self.appModel.gatewayAutoReconnectEnabled = true
-        self.appModel.gatewayPairingPaused = false
-        self.appModel.gatewayPairingRequestId = nil
-        Task { await self.retryLastAttempt(silent: true) }
+        await self.pairingResumeStore.send(.resumeRequested).finish()
+        await self.retryLastAttempt(silent: true)
     }
 
     private func attemptAutomaticPairingResumeIfNeeded() {
@@ -942,7 +948,7 @@ extension OnboardingWizardView {
         guard self.step == .auth else { return }
         self.statusStore.send(.automaticPairingResumeRequested(.init(now: .init(value: Date()))))
         guard self.statusStore.shouldResumePairingAutomatically else { return }
-        self.resumeAfterPairingApprovalInBackground()
+        Task { @MainActor in await self.resumeAfterPairingApprovalInBackground() }
     }
 
     private func updateConnectionIssue(problem: GatewayConnectionProblem?, statusText: String) {

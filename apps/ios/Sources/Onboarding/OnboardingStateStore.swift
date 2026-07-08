@@ -878,6 +878,65 @@ struct OnboardingAppleReviewDemoFeature {
     }
 }
 
+struct OnboardingPairingResumeClient {
+    var resume: @MainActor @Sendable () -> Void
+}
+
+extension OnboardingPairingResumeClient: DependencyKey {
+    static let liveValue = OnboardingPairingResumeClient(resume: {})
+    static let testValue = OnboardingPairingResumeClient(resume: {})
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        OnboardingPairingResumeClient(resume: {
+            appModel.gatewayAutoReconnectEnabled = true
+            appModel.gatewayPairingPaused = false
+            appModel.gatewayPairingRequestId = nil
+        })
+    }
+}
+
+extension DependencyValues {
+    var onboardingPairingResume: OnboardingPairingResumeClient {
+        get { self[OnboardingPairingResumeClient.self] }
+        set { self[OnboardingPairingResumeClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct OnboardingPairingResumeFeature {
+    private let resumeClientOverride: OnboardingPairingResumeClient?
+
+    init(resumeClient: OnboardingPairingResumeClient? = nil) {
+        self.resumeClientOverride = resumeClient
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case resumeRequested
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.onboardingPairingResume) var dependencyResumeClient
+            let resumeClient = self.resumeClientOverride ?? dependencyResumeClient
+
+            switch action {
+            case .resumeRequested:
+                return .run { [resumeClient] _ in
+                    await resumeClient.resume()
+                }
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 @Reducer
 struct OnboardingQRPhotoImportFeature {
     static let imageLoadFailureMessage = OnboardingQRPhotoImportFailureMessage(
