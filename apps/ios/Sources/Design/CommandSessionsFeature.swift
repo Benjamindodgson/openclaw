@@ -63,6 +63,7 @@ struct CommandSessionsScreenPresentation: Equatable, Sendable {
 }
 
 struct CommandCenterRecentSessionsPresentation: Equatable, Sendable {
+    let defaultChatWorkItem: CommandCenterTab.WorkItem
     let previewRows: [CommandCenterTab.WorkItem]
     let showsViewMore: Bool
 }
@@ -259,13 +260,46 @@ struct CommandCenterRecentSessionsFeature {
             self.recentChatSessionEntries.entries
         }
 
-        func presentation(currentSession: CommandSessionReferenceKey) -> CommandCenterRecentSessionsPresentation {
+        var defaultChatActivityText: String {
+            guard let updatedAt = self.defaultChatSessionEntry?.updatedAt, updatedAt > 0 else {
+                return "No recent activity"
+            }
+            return CommandCenterTab.relativeTimeText(forMilliseconds: updatedAt)
+        }
+
+        func defaultChatWorkItem(
+            activeAgentName: CommandCenterGatewayActiveAgentName,
+            currentSession: CommandSessionReferenceKey,
+            defaultSession: CommandSessionReferenceKey) -> CommandCenterTab.WorkItem
+        {
+            let isOpen = currentSession.value == defaultSession.value
+            return .init(
+                id: "default-chat",
+                icon: isOpen ? "bubble.left.and.text.bubble.right.fill" : "bubble.left.fill",
+                title: activeAgentName.value,
+                detail: self.defaultChatActivityText,
+                state: isOpen ? "open" : "default",
+                trailing: "chat",
+                color: isOpen ? OpenClawBrand.accent : OpenClawBrand.ok,
+                progress: nil,
+                route: .chat(.defaultSession))
+        }
+
+        func presentation(
+            activeAgentName: CommandCenterGatewayActiveAgentName,
+            currentSession: CommandSessionReferenceKey,
+            defaultSession: CommandSessionReferenceKey) -> CommandCenterRecentSessionsPresentation
+        {
             let rows = self.recentChatSessions.map {
                 CommandCenterTab.sessionWorkItem(
                     for: $0,
                     currentSessionKey: currentSession.value)
             }
             return .init(
+                defaultChatWorkItem: self.defaultChatWorkItem(
+                    activeAgentName: activeAgentName,
+                    currentSession: currentSession,
+                    defaultSession: defaultSession),
                 previewRows: Array(rows.prefix(3)),
                 showsViewMore: rows.count > 3)
         }
