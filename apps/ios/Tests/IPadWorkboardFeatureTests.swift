@@ -273,6 +273,26 @@ struct IPadWorkboardFeatureTests {
 
         #expect(state.runningCardCount == 2)
         #expect(state.blockedCardCount == 1)
+        #expect(state.metricPresentations == [
+            .init(
+                id: "cards",
+                iconSystemName: "tray.full",
+                title: "Cards",
+                value: "4",
+                tone: .accent),
+            .init(
+                id: "running",
+                iconSystemName: "figure.run",
+                title: "Running",
+                value: "2",
+                tone: .ok),
+            .init(
+                id: "blocked",
+                iconSystemName: "exclamationmark.triangle",
+                title: "Blocked",
+                value: "1",
+                tone: .warn),
+        ])
     }
 
     @Test func `refresh loads cards and board scopes through client`() async {
