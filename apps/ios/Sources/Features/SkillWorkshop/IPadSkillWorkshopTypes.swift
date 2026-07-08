@@ -86,6 +86,11 @@ struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable 
     let showsAdminScopeNotice: Bool
 }
 
+struct IPadSkillWorkshopQueryFieldPresentation: Equatable, Sendable {
+    let text: String
+    let showsClearButton: Bool
+}
+
 struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
