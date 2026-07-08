@@ -6957,8 +6957,8 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct AppleReviewDemoActivation: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("var setupCodeState = OnboardingSetupCode(value: \"\")"))
-        #expect(onboardingStateSource
-            .contains("var gatewayLinkConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?"))
+        #expect(onboardingStateSource.contains("struct GatewayLinkTransitionRequest: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("var gatewayLinkTransitionRequest: GatewayLinkTransitionRequest?"))
         #expect(onboardingStateSource.contains("var statusState = OnboardingSetupCodeStatusMessage(value: nil)"))
         #expect(onboardingStateSource.contains("var setupCode: String {\n            self.setupCodeState.value"))
         #expect(onboardingStateSource.contains("var status: String? {\n            self.statusState.value"))
@@ -7047,9 +7047,12 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("connectionFormAction: .selectedModeChanged(.init(mode: .homeNetwork))"))
         #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(onboardingStateSource.contains(
-            "state.gatewayLinkConnectionStart = Self.gatewayLinkConnectionStart(for: link)"))
-        #expect(onboardingStateSource.contains("state.gatewayLinkConnectionStart = nil"))
+            "state.gatewayLinkTransitionRequest = Self.gatewayLinkTransitionRequest(for: link)"))
+        #expect(onboardingStateSource.contains("state.gatewayLinkTransitionRequest = nil"))
+        #expect(onboardingStateSource.contains("private static func gatewayLinkTransitionRequest("))
         #expect(onboardingStateSource.contains("private static func gatewayLinkConnectionStart("))
+        #expect(onboardingStateSource.contains("statusAction: .connectionStarted(self.gatewayLinkConnectionStart(for: link))"))
+        #expect(onboardingStateSource.contains("stepAction: .stepChanged(.init(step: .connect))"))
         #expect(onboardingStateSource.contains("id: .init(value: \"setup-code\")"))
         #expect(onboardingStateSource.contains("message: .init(value: \"Connecting via setup code...\")"))
         #expect(onboardingStateSource.contains(
@@ -7061,7 +7064,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.setupCodeStore.status"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.applyRequested)"))
         #expect(applySetupCodeFunction.contains(
-            "let gatewayLinkConnectionStart = self.setupCodeStore.gatewayLinkConnectionStart"))
+            "let gatewayLinkTransitionRequest = self.setupCodeStore.gatewayLinkTransitionRequest"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.applyResultHandled)"))
         #expect(onboardingSource.contains("await self.applyAppleReviewDemoActivation(setupCode.activation)"))
         #expect(onboardingSource.contains("private func applyAppleReviewDemoActivation("))
@@ -7070,8 +7073,9 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.statusStore.send(activation.statusAction)"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(activation.connectionFormAction)"))
         #expect(applySetupCodeFunction.contains(
-            "guard let connectionStart = gatewayLinkConnectionStart else { return }"))
-        #expect(applySetupCodeFunction.contains("self.statusStore.send(.connectionStarted(connectionStart))"))
+            "guard let transitionRequest = gatewayLinkTransitionRequest else { return }"))
+        #expect(applySetupCodeFunction.contains("self.statusStore.send(transitionRequest.statusAction)"))
+        #expect(applySetupCodeFunction.contains("self.stepStore.send(transitionRequest.stepAction)"))
         #expect(onboardingSource.contains("await self.applyGatewayLink(link)"))
         #expect(onboardingSource.contains("await self.applyGatewayLink(scannedLink)"))
         #expect(!onboardingStateSource.contains("case appleReviewDemoSetupCode(String)"))

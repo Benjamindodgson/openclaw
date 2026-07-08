@@ -848,7 +848,7 @@ extension OnboardingWizardView {
     private func applySetupCodeAndConnect() async {
         self.setupCodeStore.send(.applyRequested)
         guard let result = self.setupCodeStore.applyResult else { return }
-        let gatewayLinkConnectionStart = self.setupCodeStore.gatewayLinkConnectionStart
+        let gatewayLinkTransitionRequest = self.setupCodeStore.gatewayLinkTransitionRequest
         self.setupCodeStore.send(.applyResultHandled)
 
         switch result {
@@ -856,10 +856,10 @@ extension OnboardingWizardView {
             await self.applyAppleReviewDemoActivation(setupCode.activation)
 
         case let .gatewayLink(link):
-            guard let connectionStart = gatewayLinkConnectionStart else { return }
-            self.statusStore.send(.connectionStarted(connectionStart))
+            guard let transitionRequest = gatewayLinkTransitionRequest else { return }
+            self.statusStore.send(transitionRequest.statusAction)
             await self.applyGatewayLink(link)
-            self.stepStore.send(.stepChanged(.init(step: .connect)))
+            self.stepStore.send(transitionRequest.stepAction)
             await self.connectManual()
         }
     }
