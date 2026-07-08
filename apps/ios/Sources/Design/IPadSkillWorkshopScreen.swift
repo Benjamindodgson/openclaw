@@ -212,6 +212,7 @@ struct IPadSkillWorkshopFeature {
                 statusFilterControlPresentation: self.statusFilterControlPresentation,
                 queryFieldPresentation: self.queryFieldPresentation,
                 feedbackMessages: self.feedbackMessages,
+                queueSummaryPresentation: self.queueSummaryPresentation,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -951,7 +952,7 @@ struct IPadSkillWorkshopScreen: View {
             VStack(alignment: .leading, spacing: 12) {
                 let refreshPresentation = self.screenPresentation.refreshControlPresentation
                 let statusFilterPresentation = self.screenPresentation.statusFilterControlPresentation
-                let queueSummary = self.store.queueSummaryPresentation
+                let queueSummary = self.screenPresentation.queueSummaryPresentation
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(queueSummary.proposalCountLabel)
@@ -1125,7 +1126,7 @@ struct IPadSkillWorkshopScreen: View {
     private var proposalList: some View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
-                let queueSummary = self.store.queueSummaryPresentation
+                let queueSummary = self.screenPresentation.queueSummaryPresentation
                 let listPresentation = self.store.proposalListPresentation
                 let actionControlsPresentation = self.proposalActionControlsPresentation
                 let inspectionControlsPresentation = self.proposalInspectionControlsPresentation
