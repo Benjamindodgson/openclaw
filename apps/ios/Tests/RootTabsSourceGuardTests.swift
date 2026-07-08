@@ -2536,10 +2536,12 @@ struct RootTabsSourceGuardTests {
             "struct IPadWorkboardCardDetailActionControlsPresentation: Equatable, Sendable"))
         #expect(source.contains("let isMutationDisabled: Bool"))
         #expect(source.contains("func cardDetailActionControlsPresentation("))
+        #expect(source.contains("gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCardDetailActionControlsPresentation"))
         #expect(source.contains("static func cardDetailActionControlsPresentation("))
         #expect(source.contains("isMutationDisabled: !canWrite || isBusy"))
         #expect(screenSource.contains("self.store.state.cardDetailActionControlsPresentation("))
-        #expect(screenSource.contains("canWrite: self.gatewayAccess.canWrite"))
+        #expect(screenSource.contains("gatewayAccess: self.gatewayAccess"))
+        #expect(!screenSource.contains("cardDetailActionControlsPresentation(\n                        for: card,\n                        canWrite: self.gatewayAccess.canWrite)"))
         #expect(detailSheetSource.contains(
             "let actionControlsPresentation: IPadWorkboardCardDetailActionControlsPresentation"))
         #expect(detailSheetSource.contains(".disabled(self.actionControlsPresentation.isMutationDisabled)"))

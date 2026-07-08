@@ -475,13 +475,19 @@ struct IPadWorkboardFeatureTests {
         let card = Self.card(id: "card-1", status: "todo", position: 10)
         var state = IPadWorkboardFeature.State()
 
-        #expect(state.cardDetailActionControlsPresentation(for: card, canWrite: true) == .init(
+        #expect(state.cardDetailActionControlsPresentation(
+            for: card,
+            gatewayAccess: .init(canRead: true, canWrite: true)) == .init(
             isMutationDisabled: false))
-        #expect(state.cardDetailActionControlsPresentation(for: card, canWrite: false) == .init(
+        #expect(state.cardDetailActionControlsPresentation(
+            for: card,
+            gatewayAccess: .init(canRead: true, canWrite: false)) == .init(
             isMutationDisabled: true))
 
         state.busyCardID = .init(value: "card-1")
-        #expect(state.cardDetailActionControlsPresentation(for: card, canWrite: true) == .init(
+        #expect(state.cardDetailActionControlsPresentation(
+            for: card,
+            gatewayAccess: .init(canRead: true, canWrite: true)) == .init(
             isMutationDisabled: true))
         #expect(IPadWorkboardFeature.State.cardDetailActionControlsPresentation(
             isBusy: false,

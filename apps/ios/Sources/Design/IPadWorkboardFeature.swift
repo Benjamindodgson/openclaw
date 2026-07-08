@@ -1449,11 +1449,11 @@ extension IPadWorkboardFeature.State {
 
     func cardDetailActionControlsPresentation(
         for card: IPadWorkboardCard,
-        canWrite: Bool) -> IPadWorkboardCardDetailActionControlsPresentation
+        gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCardDetailActionControlsPresentation
     {
         Self.cardDetailActionControlsPresentation(
             isBusy: self.busyCardID?.value == card.id,
-            canWrite: canWrite)
+            canWrite: gatewayAccess.canWrite)
     }
 
     func screenPresentation(

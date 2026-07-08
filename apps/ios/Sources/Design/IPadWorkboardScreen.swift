@@ -65,7 +65,7 @@ struct IPadWorkboardScreen: View {
                     moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
                     actionControlsPresentation: self.store.state.cardDetailActionControlsPresentation(
                         for: card,
-                        canWrite: self.gatewayAccess.canWrite),
+                        gatewayAccess: self.gatewayAccess),
                     openSession: { self.open(card) },
                     move: { status in Task { await self.move(card, to: status) } },
                     archive: { Task { await self.archive(card) } })
