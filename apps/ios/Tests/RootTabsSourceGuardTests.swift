@@ -6022,6 +6022,10 @@ struct RootTabsSourceGuardTests {
             settingsActionsSource,
             from: "func handleScannedGatewayLink(_ link: GatewayConnectDeepLink)",
             to: "func handleScannedSetupCode")
+        let onboardingHandleFunction = try Self.extract(
+            onboardingSource,
+            from: "private func handleScannedLink(_ link: GatewayConnectDeepLink) async",
+            to: "private func applyGatewayLink")
 
         #expect(setupLinkFeatureSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
         #expect(setupLinkFeatureSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
@@ -6040,11 +6044,22 @@ struct RootTabsSourceGuardTests {
         #expect(settingsActionsSource.contains("self.gatewaySetupLinkStore.send(.scannedGatewayLinkStatusHandled)"))
         #expect(onboardingStateSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
+        #expect(onboardingStateSource.contains(
+            "var scannedGatewayLinkConnectionStatusUpdate: OnboardingStatusFeature.Action.ConnectionStatusUpdate?"))
         #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(scan.link)"))
+        #expect(onboardingStateSource.contains("state.scannedGatewayLinkConnectionStatusUpdate = "))
+        #expect(onboardingStateSource.contains("private static func scannedGatewayLinkConnectionStatusUpdate("))
+        #expect(onboardingStateSource.contains("message: .init(value: \"Connecting via QR code...\")"))
+        #expect(onboardingStateSource.contains(
+            "statusLine: .init(value: \"QR loaded. Connecting to \\(link.host):\\(link.port)...\")"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.scannedGatewayLinkReceived(.init(link: link)))"))
+        #expect(onboardingSource.contains("self.setupCodeStore.scannedGatewayLinkConnectionStatusUpdate"))
+        #expect(onboardingSource.contains("self.statusStore.send(.connectionStatusUpdated(connectionStatusUpdate))"))
         #expect(!setupLinkFeatureSource.contains("var scannedGatewayLinkStatusText: String?"))
         #expect(!handleFunction.contains("value: statusText))"))
         #expect(!handleFunction.contains("QR loaded. Connecting to"))
+        #expect(!onboardingHandleFunction.contains("Connecting via QR code..."))
+        #expect(!onboardingHandleFunction.contains("QR loaded. Connecting to"))
         #expect(!settingsActionsSource.contains("""
         self.presentationStore.send(.qrScannerDismissed)
                 self.updateSetupCode("")
@@ -7258,9 +7273,8 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("case connectionStatusUpdated(ConnectionStatusUpdate)"))
         #expect(onboardingStateSource.contains("state.connectMessageState = update.message"))
         #expect(onboardingStateSource.contains("state.statusLineState = update.statusLine"))
-        #expect(onboardingSource.contains("self.statusStore.send(.connectionStatusUpdated(.init("))
-        #expect(onboardingSource.contains("message: .init(value: \"Connecting via QR code...\")"))
-        #expect(onboardingSource.contains("statusLine: .init(value: \"QR loaded. Connecting to \\(scannedLink.host):"))
+        #expect(onboardingSource.contains("self.statusStore.send(.connectionStatusUpdated(connectionStatusUpdate))"))
+        #expect(!onboardingSource.contains("self.statusStore.send(.connectionStatusUpdated(.init("))
         #expect(!connectionStatusUpdate.contains("var message: String?"))
         #expect(!connectionStatusUpdate.contains("var statusLine: String\n"))
         #expect(!onboardingStateSource.contains("state.connectMessage = update.message.value"))
