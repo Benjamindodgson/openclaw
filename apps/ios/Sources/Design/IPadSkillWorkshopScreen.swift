@@ -361,6 +361,7 @@ struct IPadSkillWorkshopFeature {
         {
             .init(
                 proposal: proposal,
+                iconSystemName: proposal.id == self.inspectingProposalID?.value ? "hourglass" : "hammer",
                 isSelected: proposal.id == self.selectedProposalID?.value,
                 isInspecting: proposal.id == self.inspectingProposalID?.value,
                 showsProposalActions: self.shouldShowProposalActions(for: proposal))
@@ -1122,9 +1123,7 @@ struct IPadSkillWorkshopScreen: View {
                             forceInspect: false)
                     } label: {
                         IPadSkillProposalRow(
-                            proposal: proposal,
-                            isSelected: presentation.isSelected,
-                            isBusy: presentation.isInspecting)
+                            presentation: presentation)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -1497,7 +1496,7 @@ private struct IPadSkillProposalKanbanCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .top, spacing: 10) {
                         ProIconBadge(
-                            systemName: self.presentation.isInspecting ? "hourglass" : "hammer",
+                            systemName: self.presentation.iconSystemName,
                             color: self.proposal.statusColor)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(self.proposal.title)
@@ -1568,17 +1567,19 @@ private struct IPadSkillProposalKanbanCard: View {
 }
 
 struct IPadSkillProposalRow: View {
-    let proposal: IPadSkillProposal
-    let isSelected: Bool
-    let isBusy: Bool
+    let presentation: IPadSkillWorkshopProposalCardPresentation
+
+    private var proposal: IPadSkillProposal {
+        self.presentation.proposal
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            ProIconBadge(systemName: self.isBusy ? "hourglass" : "hammer", color: self.proposal.statusColor)
+            ProIconBadge(systemName: self.presentation.iconSystemName, color: self.proposal.statusColor)
             VStack(alignment: .leading, spacing: 4) {
                 Text(self.proposal.title)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(self.isSelected ? OpenClawBrand.accent : .primary)
+                    .foregroundStyle(self.presentation.isSelected ? OpenClawBrand.accent : .primary)
                     .lineLimit(1)
                 Text(self.proposal.description)
                     .font(.caption)
@@ -1593,7 +1594,7 @@ struct IPadSkillProposalRow: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(
-            self.isSelected ? OpenClawBrand.danger.opacity(0.08) : Color.clear,
+            self.presentation.isSelected ? OpenClawBrand.danger.opacity(0.08) : Color.clear,
             in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }

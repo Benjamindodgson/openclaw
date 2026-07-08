@@ -2281,6 +2281,7 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("func proposal(withID id: String) -> IPadSkillProposal?"))
         #expect(typeSource.contains(
             "struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Sendable"))
+        #expect(typeSource.contains("let iconSystemName: String"))
         #expect(typeSource.contains(
             "struct IPadSkillWorkshopProposalDetailPresentation: Equatable, Identifiable, Sendable"))
         #expect(typeSource.contains(
@@ -2296,6 +2297,8 @@ struct RootTabsSourceGuardTests {
             "var proposalBoardPresentation: IPadSkillWorkshopProposalBoardPresentation"))
         #expect(source.contains("value: \"\\(proposals.count)\""))
         #expect(source.contains("emptyPresentation: .init("))
+        #expect(source.contains(
+            "iconSystemName: proposal.id == self.inspectingProposalID?.value ? \"hourglass\" : \"hammer\""))
         #expect(source.contains("func proposalDetailPresentation("))
         #expect(source.contains(
             "for proposal: IPadSkillProposal) -> IPadSkillWorkshopProposalDetailPresentation"))
@@ -2307,6 +2310,7 @@ struct RootTabsSourceGuardTests {
         #expect(proposalList.contains("Button(actionControlsPresentation.applyButton.title)"))
         #expect(proposalList.contains("Button(actionControlsPresentation.rejectButton.title, role: .destructive)"))
         #expect(proposalList.contains(".disabled(!actionControlsPresentation.canRunActions)"))
+        #expect(proposalList.contains("IPadSkillProposalRow(\n                            presentation: presentation)"))
         #expect(!proposalList.contains("Button(\"Inspect\")"))
         #expect(!proposalList.contains("Button(\"Apply\")"))
         #expect(!proposalList.contains("Button(\"Reject\""))
@@ -2372,7 +2376,7 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("let presentation = self.store.state.proposalPresentation(for: proposal)"))
         #expect(!source.contains("proposalPresentation: { proposal in"))
         #expect(!source.contains("self.store.state.proposalPresentation(for: proposal)"))
-        #expect(source.contains("isSelected: presentation.isSelected"))
+        #expect(source.contains(".foregroundStyle(self.presentation.isSelected ? OpenClawBrand.accent : .primary)"))
         #expect(!source.contains("var selectedProposalID: String?"))
         #expect(!source.contains("current: self.selectedProposalID,"))
         #expect(!source.contains("state.selectedProposalID = request.proposalID.value"))
@@ -2396,7 +2400,8 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains(
             "private var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation"))
         #expect(source.contains("self.screenPresentation.proposalInspectionControlsPresentation"))
-        #expect(source.contains("isBusy: presentation.isInspecting"))
+        #expect(source.contains("ProIconBadge(systemName: self.presentation.iconSystemName"))
+        #expect(!source.contains("isBusy: presentation.isInspecting"))
         #expect(source.contains("if card.isInspecting"))
         #expect(!source.contains("if self.store.state.proposalPresentation(for: proposal).isInspecting"))
         #expect(source.contains(
@@ -2515,6 +2520,7 @@ struct RootTabsSourceGuardTests {
             "Label(rejectButtonPresentation.title, systemImage: rejectButtonPresentation.iconSystemName)"))
         #expect(kanbanCard.contains("Image(systemName: self.actionControlsPresentation.applyButton.iconSystemName)"))
         #expect(kanbanCard.contains("Image(systemName: self.actionControlsPresentation.rejectButton.iconSystemName)"))
+        #expect(kanbanCard.contains("systemName: self.presentation.iconSystemName"))
         #expect(kanbanCard.contains(
             ".accessibilityLabel(self.actionControlsPresentation.applyButton.accessibilityLabel)"))
         #expect(kanbanCard.contains(
@@ -2525,6 +2531,7 @@ struct RootTabsSourceGuardTests {
         #expect(kanbanCard.contains(".disabled(!self.actionControlsPresentation.canRunActions)"))
         #expect(!kanbanCard.contains("Image(systemName: \"checkmark.circle\")"))
         #expect(!kanbanCard.contains("Image(systemName: \"xmark.circle\")"))
+        #expect(!kanbanCard.contains("self.presentation.isInspecting ? \"hourglass\" : \"hammer\""))
         #expect(!kanbanCard.contains(".accessibilityLabel(\"Apply Proposal\")"))
         #expect(!kanbanCard.contains(".accessibilityLabel(\"Reject Proposal\")"))
         #expect(!kanbanCard.contains("Button(\"Apply\""))

@@ -132,9 +132,10 @@ private struct IPadSkillWorkshopCompactRowsPreview: View {
                                     Divider().padding(.leading, 58)
                                 }
                                 IPadSkillProposalRow(
-                                    proposal: proposal,
-                                    isSelected: proposal.id == "preview-pending",
-                                    isBusy: proposal.id == "preview-held")
+                                    presentation: IPadSkillWorkshopPreviewFixtures.cardPresentation(
+                                        for: proposal,
+                                        selectedID: "preview-pending",
+                                        busyID: "preview-held"))
                             }
                         }
                     }
@@ -546,9 +547,10 @@ private struct IPadSkillWorkshopStatesPreview: View {
                         Divider().padding(.leading, 58)
                     }
                     IPadSkillProposalRow(
-                        proposal: proposal,
-                        isSelected: proposal.id == selectedID,
-                        isBusy: proposal.id == busyID)
+                        presentation: IPadSkillWorkshopPreviewFixtures.cardPresentation(
+                            for: proposal,
+                            selectedID: selectedID,
+                            busyID: busyID))
                 }
             }
         }
@@ -596,12 +598,10 @@ private struct IPadSkillWorkshopKanbanPreview: View {
                                     detail: "Matching proposals appear here after gateway refresh.",
                                     value: "empty"),
                                 proposals: proposals.map { proposal in
-                                    IPadSkillWorkshopProposalCardPresentation(
-                                        proposal: proposal,
-                                        isSelected: proposal.id == "preview-pending",
-                                        isInspecting: proposal.id == "preview-needs-review",
-                                        showsProposalActions: IPadSkillWorkshopFeature.State
-                                            .shouldShowProposalActions(status: proposal.status))
+                                    IPadSkillWorkshopPreviewFixtures.cardPresentation(
+                                        for: proposal,
+                                        selectedID: "preview-pending",
+                                        busyID: "preview-needs-review")
                                 })
                             IPadSkillProposalKanbanColumn(
                                 lane: lane,
@@ -678,6 +678,20 @@ private enum IPadSkillWorkshopPreviewFixtures {
             description: "Generates a device checklist for iPhone portrait and iPad split layouts.",
             minutesAgo: 15),
     ]
+
+    static func cardPresentation(
+        for proposal: IPadSkillProposal,
+        selectedID: String?,
+        busyID: String?) -> IPadSkillWorkshopProposalCardPresentation
+    {
+        .init(
+            proposal: proposal,
+            iconSystemName: proposal.id == busyID ? "hourglass" : "hammer",
+            isSelected: proposal.id == selectedID,
+            isInspecting: proposal.id == busyID,
+            showsProposalActions: IPadSkillWorkshopFeature.State
+                .shouldShowProposalActions(status: proposal.status))
+    }
 
     private static func proposal(
         id: String,
