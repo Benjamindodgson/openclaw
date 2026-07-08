@@ -214,6 +214,7 @@ struct IPadSkillWorkshopFeature {
                 feedbackMessages: self.feedbackMessages,
                 queueSummaryPresentation: self.queueSummaryPresentation,
                 metricPresentations: self.metricPresentations,
+                agentScopeMenuPresentation: self.agentScopeMenuPresentation,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -1027,7 +1028,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var agentScopeMenu: some View {
-        let presentation = self.store.agentScopeMenuPresentation
+        let presentation = self.screenPresentation.agentScopeMenuPresentation
         return HStack(spacing: 8) {
             Text(presentation.title)
                 .font(.caption.weight(.semibold))
@@ -1654,10 +1655,9 @@ extension IPadSkillWorkshopMetricTone {
 extension IPadSkillProposal {
     var statusColor: Color {
         switch self.status {
-        case "pending": OpenClawBrand.warn
+        case "pending", "quarantined", "stale": OpenClawBrand.warn
         case "applied": OpenClawBrand.ok
         case "rejected": .secondary
-        case "quarantined", "stale": OpenClawBrand.warn
         default: OpenClawBrand.accent
         }
     }

@@ -295,6 +295,7 @@ struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
     let feedbackMessages: [IPadSkillWorkshopFeedbackPresentation]
     let queueSummaryPresentation: IPadSkillWorkshopQueueSummaryPresentation
     let metricPresentations: [IPadSkillWorkshopMetricPresentation]
+    let agentScopeMenuPresentation: IPadSkillWorkshopAgentScopeMenuPresentation
     let proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
     let proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
     let emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation

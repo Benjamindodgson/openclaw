@@ -410,7 +410,8 @@ struct IPadSkillWorkshopFeatureTests {
     }
 
     @Test func `agent scope snapshot updates reducer presentation state`() async {
-        #expect(IPadSkillWorkshopFeature.State().agentScopeMenuPresentation == .init(
+        var state = IPadSkillWorkshopFeature.State()
+        let defaultAgentScopeMenu = IPadSkillWorkshopAgentScopeMenuPresentation(
             title: "Agent",
             selectedLabel: "Default Agent",
             selectorIconSystemName: "chevron.up.chevron.down",
@@ -418,7 +419,11 @@ struct IPadSkillWorkshopFeatureTests {
             options: [
                 IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent"),
             ],
-            isEnabled: false))
+            isEnabled: false)
+        #expect(state.agentScopeMenuPresentation == defaultAgentScopeMenu)
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).agentScopeMenuPresentation == defaultAgentScopeMenu)
 
         let snapshot = IPadSkillWorkshopFeature.Action.AgentScopeSnapshot(
             gatewayDefaultAgentID: .init(value: " main "),
@@ -442,7 +447,6 @@ struct IPadSkillWorkshopFeatureTests {
             $0.activeAgentName = .init(value: "Active Agent")
         }
 
-        var state = IPadSkillWorkshopFeature.State()
         state.gatewayDefaultAgentID = snapshot.gatewayDefaultAgentID
         state.gatewayAgentEntries = snapshot.gatewayAgents
         state.activeAgentName = snapshot.activeAgentName
@@ -453,7 +457,7 @@ struct IPadSkillWorkshopFeatureTests {
             IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
             IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
         ])
-        #expect(state.agentScopeMenuPresentation == .init(
+        let loadedAgentScopeMenu = IPadSkillWorkshopAgentScopeMenuPresentation(
             title: "Agent",
             selectedLabel: "Main Agent",
             selectorIconSystemName: "chevron.up.chevron.down",
@@ -463,19 +467,29 @@ struct IPadSkillWorkshopFeatureTests {
                 IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
                 IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
             ],
-            isEnabled: true))
+            isEnabled: true)
+        #expect(state.agentScopeMenuPresentation == loadedAgentScopeMenu)
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).agentScopeMenuPresentation == loadedAgentScopeMenu)
 
         await store.send(.agentScopeChanged(.init(agentID: .init(value: "agent-b")))) {
             $0.selectedAgentScopeID = .init(value: "agent-b")
         }
         state.selectedAgentScopeID = .init(value: "agent-b")
         #expect(state.agentScopeMenuPresentation.selectedLabel == "Beta")
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).agentScopeMenuPresentation.selectedLabel == "Beta")
 
         await store.send(.agentScopeChanged(.init(agentID: .init(value: "missing")))) {
             $0.selectedAgentScopeID = .init(value: "missing")
         }
         state.selectedAgentScopeID = .init(value: "missing")
         #expect(state.agentScopeMenuPresentation.selectedLabel == "missing")
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).agentScopeMenuPresentation.selectedLabel == "missing")
     }
 
     @Test func `refresh task identifier is reducer state`() {
