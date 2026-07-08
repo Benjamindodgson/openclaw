@@ -441,9 +441,10 @@ struct IPadWorkboardScreen: View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
                 ForEach(self.store.visibleKanbanStatuses, id: \.self) { status in
+                    let cards = self.store.state.cards(forKanbanStatus: status)
                     IPadWorkboardKanbanColumn(
-                        status: status,
-                        cards: self.store.state.cards(forKanbanStatus: status),
+                        presentation: self.store.state.kanbanLanePresentation(status: status, cards: cards),
+                        cards: cards,
                         statuses: self.store.statusValues,
                         busyCardID: self.store.busyCardID?.value,
                         openSession: { card in
@@ -665,7 +666,7 @@ struct IPadWorkboardScreen: View {
 }
 
 struct IPadWorkboardKanbanColumn: View {
-    let status: String
+    let presentation: IPadWorkboardKanbanLanePresentation
     let cards: [IPadWorkboardCard]
     let statuses: [String]
     let busyCardID: String?
@@ -678,17 +679,17 @@ struct IPadWorkboardKanbanColumn: View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 ProPanelHeader(
-                    title: IPadWorkboardDefaults.label(for: self.status),
-                    value: "\(self.cards.count)",
+                    title: self.presentation.title,
+                    value: self.presentation.value,
                     actionTitle: nil,
                     action: nil)
 
                 if self.cards.isEmpty {
                     ProStatusRow(
-                        icon: "tray",
-                        title: "No \(IPadWorkboardDefaults.label(for: self.status).lowercased()) cards",
-                        detail: "Cards moved into this lane appear here.",
-                        value: "empty",
+                        icon: self.presentation.emptyState.icon,
+                        title: self.presentation.emptyState.title,
+                        detail: self.presentation.emptyState.detail,
+                        value: self.presentation.emptyState.value,
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)

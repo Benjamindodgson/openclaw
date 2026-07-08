@@ -1920,7 +1920,8 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("cardCount: self.filteredCardCount"))
         #expect(source.contains("cardCountLabel: \"\\(self.filteredCardCount) cards\""))
         #expect(!source.contains("Text(\"\\(self.store.filteredCards.count) cards\")"))
-        #expect(source.contains("cards: self.store.state.cards(forKanbanStatus: status)"))
+        #expect(source.contains("let cards = self.store.state.cards(forKanbanStatus: status)"))
+        #expect(source.contains("cards: cards"))
         #expect(source.contains("func cards(forKanbanStatus status: String) -> [IPadWorkboardCard]"))
         #expect(source.contains("Self.cardsForKanbanStatus("))
         #expect(!source.contains("private func cards(forKanbanStatus status: String) -> [IPadWorkboardCard]"))
@@ -2316,6 +2317,41 @@ struct RootTabsSourceGuardTests {
         #expect(!kanbanCardSource.contains("private var detail: String"))
         #expect(!queueRowSource.contains("private var icon: String"))
         #expect(!queueRowSource.contains("private var detail: String"))
+    }
+
+    @Test func `workboard kanban lane presentation is reducer owned`() throws {
+        let source = try Self.iPadWorkboardSource()
+        let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let kanbanBoardSource = try Self.extract(
+            screenSource,
+            from: "private var kanbanBoard: some View",
+            to: "private var compactCardsPanel: some View")
+        let kanbanColumnSource = try Self.extract(
+            screenSource,
+            from: "struct IPadWorkboardKanbanColumn: View",
+            to: "private struct IPadWorkboardKanbanCard: View")
+
+        #expect(source.contains("struct IPadWorkboardKanbanLaneEmptyStatePresentation: Equatable, Sendable"))
+        #expect(source.contains("struct IPadWorkboardKanbanLanePresentation: Equatable, Sendable"))
+        #expect(source.contains("let emptyState: IPadWorkboardKanbanLaneEmptyStatePresentation"))
+        #expect(source.contains(
+            "func kanbanLanePresentation(status: String, cards: [IPadWorkboardCard]) -> IPadWorkboardKanbanLanePresentation"))
+        #expect(source.contains("static func kanbanLanePresentation("))
+        #expect(source.contains("title: \"No \\(title.lowercased()) cards\""))
+        #expect(source.contains("detail: \"Cards moved into this lane appear here.\""))
+        #expect(kanbanBoardSource.contains("let cards = self.store.state.cards(forKanbanStatus: status)"))
+        #expect(kanbanBoardSource.contains(
+            "presentation: self.store.state.kanbanLanePresentation(status: status, cards: cards)"))
+        #expect(kanbanBoardSource.contains("cards: cards"))
+        #expect(kanbanColumnSource.contains("let presentation: IPadWorkboardKanbanLanePresentation"))
+        #expect(kanbanColumnSource.contains("title: self.presentation.title"))
+        #expect(kanbanColumnSource.contains("value: self.presentation.value"))
+        #expect(kanbanColumnSource.contains("icon: self.presentation.emptyState.icon"))
+        #expect(kanbanColumnSource.contains("title: self.presentation.emptyState.title"))
+        #expect(kanbanColumnSource.contains("detail: self.presentation.emptyState.detail"))
+        #expect(kanbanColumnSource.contains("value: self.presentation.emptyState.value"))
+        #expect(!kanbanColumnSource.contains("IPadWorkboardDefaults.label(for: self.status)"))
+        #expect(!kanbanColumnSource.contains("Cards moved into this lane appear here."))
     }
 
     @Test func `task scope controls send real gateway params`() throws {

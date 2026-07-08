@@ -365,7 +365,7 @@ private struct IPadWorkboardStatesPreview: View {
 
                     self.previewHeader("Empty")
                     IPadWorkboardKanbanColumn(
-                        status: "todo",
+                        presentation: IPadWorkboardFeature.State.kanbanLanePresentation(status: "todo", cardCount: 0),
                         cards: [],
                         statuses: self.statuses,
                         busyCardID: nil,
@@ -408,9 +408,12 @@ private struct IPadWorkboardStatesPreview: View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
                 ForEach(self.statuses, id: \.self) { status in
+                    let cards = self.connectedCards.filter { $0.status == status }
                     IPadWorkboardKanbanColumn(
-                        status: status,
-                        cards: self.connectedCards.filter { $0.status == status },
+                        presentation: IPadWorkboardFeature.State.kanbanLanePresentation(
+                            status: status,
+                            cardCount: cards.count),
+                        cards: cards,
                         statuses: self.statuses,
                         busyCardID: nil,
                         openSession: { _ in },

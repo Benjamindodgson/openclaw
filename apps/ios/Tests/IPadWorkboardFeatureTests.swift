@@ -310,6 +310,35 @@ struct IPadWorkboardFeatureTests {
         #expect(archivedPresentation.archiveActionTitle == "Unarchive")
     }
 
+    @Test func `workboard kanban lane presentation is reducer owned`() {
+        let cards = [
+            Self.card(id: "review-1", status: "in_review", position: 10),
+            Self.card(id: "review-2", status: "in_review", position: 20),
+        ]
+        let state = IPadWorkboardFeature.State()
+
+        #expect(state.kanbanLanePresentation(status: "in_review", cards: cards) == .init(
+            status: "in_review",
+            title: "In Review",
+            cardCount: 2,
+            value: "2",
+            emptyState: .init(
+                icon: "tray",
+                title: "No in review cards",
+                detail: "Cards moved into this lane appear here.",
+                value: "empty")))
+        #expect(IPadWorkboardFeature.State.kanbanLanePresentation(status: "blocked", cardCount: 0) == .init(
+            status: "blocked",
+            title: "Blocked",
+            cardCount: 0,
+            value: "0",
+            emptyState: .init(
+                icon: "tray",
+                title: "No blocked cards",
+                detail: "Cards moved into this lane appear here.",
+                value: "empty")))
+    }
+
     @Test func `kanban cards are filtered by reducer state`() {
         var state = IPadWorkboardFeature.State()
         state.cardEntries = .init(values: [
