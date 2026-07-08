@@ -218,6 +218,9 @@ struct IPadSkillWorkshopProposalInspectionControlsPresentation: Equatable, Senda
 
 struct IPadSkillWorkshopQueryFieldPresentation: Equatable, Sendable {
     let text: String
+    let placeholder: String
+    let iconSystemName: String
+    let clearButtonSystemName: String
     let showsClearButton: Bool
 }
 

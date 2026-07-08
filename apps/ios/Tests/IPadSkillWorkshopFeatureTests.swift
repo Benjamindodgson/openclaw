@@ -433,11 +433,17 @@ struct IPadSkillWorkshopFeatureTests {
 
         #expect(state.queryFieldPresentation == .init(
             text: "",
+            placeholder: "Search proposals",
+            iconSystemName: "magnifyingglass",
+            clearButtonSystemName: "xmark.circle.fill",
             showsClearButton: false))
 
         state.query = .init(value: "gateway")
         #expect(state.queryFieldPresentation == .init(
             text: "gateway",
+            placeholder: "Search proposals",
+            iconSystemName: "magnifyingglass",
+            clearButtonSystemName: "xmark.circle.fill",
             showsClearButton: true))
     }
 
