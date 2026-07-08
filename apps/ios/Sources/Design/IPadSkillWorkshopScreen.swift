@@ -165,6 +165,21 @@ struct IPadSkillWorkshopFeature {
                 value: nil)
         }
 
+        func screenPresentation(
+            gatewayAccess: IPadSkillWorkshopGatewayAccess,
+            sceneIsActive: Bool) -> IPadSkillWorkshopScreenPresentation
+        {
+            .init(
+                refreshTaskID: self.refreshTaskID(
+                    gatewayAccess: gatewayAccess,
+                    sceneIsActive: sceneIsActive),
+                proposalActionControlsPresentation: self.proposalActionControlsPresentation(
+                    gatewayAccess: gatewayAccess),
+                proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
+                emptyProposalPresentation: self.emptyProposalPresentation(
+                    gatewayAccess: gatewayAccess))
+        }
+
         static func shouldShowProposalActions(status: String) -> Bool {
             status == "pending"
         }
@@ -1221,13 +1236,11 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .disabled(!self.store.proposalInspectionControlsPresentation.canInspect)
+        .disabled(!self.screenPresentation.proposalInspectionControlsPresentation.canInspect)
     }
 
     private var refreshTaskID: String {
-        self.store.state.refreshTaskID(
-            gatewayAccess: self.gatewayAccess,
-            sceneIsActive: self.scenePhase == .active)
+        self.screenPresentation.refreshTaskID
     }
 
     private var gatewayAccess: IPadSkillWorkshopGatewayAccess {
@@ -1237,14 +1250,18 @@ struct IPadSkillWorkshopScreen: View {
             hasOperatorAdminScope: self.appModel.hasOperatorAdminScope)
     }
 
+    private var screenPresentation: IPadSkillWorkshopScreenPresentation {
+        self.store.state.screenPresentation(
+            gatewayAccess: self.gatewayAccess,
+            sceneIsActive: self.scenePhase == .active)
+    }
+
     private var proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation {
-        self.store.state.proposalActionControlsPresentation(
-            gatewayAccess: self.gatewayAccess)
+        self.screenPresentation.proposalActionControlsPresentation
     }
 
     private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation {
-        self.store.state.emptyProposalPresentation(
-            gatewayAccess: self.gatewayAccess)
+        self.screenPresentation.emptyProposalPresentation
     }
 
     private var agentScopeSnapshot: IPadSkillWorkshopFeature.Action.AgentScopeSnapshot {

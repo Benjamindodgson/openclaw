@@ -218,6 +218,12 @@ struct IPadSkillWorkshopFeatureTests {
             canApplyMutations: true,
             canRunActions: true,
             showsAdminScopeNotice: false))
+        #expect(state.screenPresentation(
+            gatewayAccess: writableAdmin,
+            sceneIsActive: true).proposalActionControlsPresentation == .init(
+            canApplyMutations: true,
+            canRunActions: true,
+            showsAdminScopeNotice: false))
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableNonAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableNonAdmin) == .init(
             canApplyMutations: false,
@@ -235,6 +241,12 @@ struct IPadSkillWorkshopFeatureTests {
             canApplyMutations: true,
             canRunActions: false,
             showsAdminScopeNotice: false))
+        #expect(state.screenPresentation(
+            gatewayAccess: writableAdmin,
+            sceneIsActive: true).proposalActionControlsPresentation == .init(
+            canApplyMutations: true,
+            canRunActions: false,
+            showsAdminScopeNotice: false))
     }
 
     @Test func `proposal inspection presentation follows selected and inspecting state`() {
@@ -243,6 +255,9 @@ struct IPadSkillWorkshopFeatureTests {
         let inspectingProposal = Self.proposal(id: "pending-2", status: "pending")
 
         #expect(state.proposalInspectionControlsPresentation == .init(canInspect: true))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).proposalInspectionControlsPresentation == .init(canInspect: true))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,
             isSelected: false,
@@ -253,6 +268,9 @@ struct IPadSkillWorkshopFeatureTests {
         state.inspectingProposalID = .init(value: inspectingProposal.id)
 
         #expect(state.proposalInspectionControlsPresentation == .init(canInspect: false))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).proposalInspectionControlsPresentation == .init(canInspect: false))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,
             isSelected: true,
@@ -345,6 +363,9 @@ struct IPadSkillWorkshopFeatureTests {
         state.selectedAgentScopeID = .init(value: "agent-b")
         #expect(state
             .refreshTaskID(gatewayAccess: connectedAccess, sceneIsActive: false) == "connected:inactive:agent-b")
+        #expect(state.screenPresentation(
+            gatewayAccess: connectedAccess,
+            sceneIsActive: false).refreshTaskID == "connected:inactive:agent-b")
     }
 
     @Test func `refresh control state follows loading phase`() {
@@ -405,7 +426,21 @@ struct IPadSkillWorkshopFeatureTests {
             title: "No proposals",
             detail: "New proposals will appear here when agents draft skills.",
             value: "empty"))
+        #expect(state.screenPresentation(
+            gatewayAccess: connectedAccess,
+            sceneIsActive: true).emptyProposalPresentation == .init(
+            icon: "hammer",
+            title: "No proposals",
+            detail: "New proposals will appear here when agents draft skills.",
+            value: "empty"))
         #expect(state.emptyProposalPresentation(gatewayAccess: offlineAccess) == .init(
+            icon: "wifi.slash",
+            title: "No proposals loaded",
+            detail: "Connect from Settings to load Skill Workshop proposals.",
+            value: nil))
+        #expect(state.screenPresentation(
+            gatewayAccess: offlineAccess,
+            sceneIsActive: true).emptyProposalPresentation == .init(
             icon: "wifi.slash",
             title: "No proposals loaded",
             detail: "Connect from Settings to load Skill Workshop proposals.",
