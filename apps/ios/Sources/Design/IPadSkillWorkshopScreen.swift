@@ -116,6 +116,9 @@ struct IPadSkillWorkshopFeature {
         var queryFieldPresentation: IPadSkillWorkshopQueryFieldPresentation {
             .init(
                 text: self.query.value,
+                placeholder: "Search proposals",
+                iconSystemName: "magnifyingglass",
+                clearButtonSystemName: "xmark.circle.fill",
                 showsClearButton: !self.query.value.isEmpty)
         }
 
@@ -956,19 +959,20 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var proposalSearchField: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
+        let presentation = self.store.queryFieldPresentation
+        return HStack(spacing: 8) {
+            Image(systemName: presentation.iconSystemName)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-            TextField("Search proposals", text: self.queryBinding)
+            TextField(presentation.placeholder, text: self.queryBinding)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.subheadline)
-            if self.store.queryFieldPresentation.showsClearButton {
+            if presentation.showsClearButton {
                 Button {
                     self.store.send(.clearQueryTapped)
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
+                    Image(systemName: presentation.clearButtonSystemName)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
