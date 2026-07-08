@@ -3025,7 +3025,11 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("title: self.lane.emptyPresentation.title"))
         #expect(!source.contains("value: \"\\(self.lane.proposals.count)\""))
         #expect(!source.contains("title: \"No \\(self.lane.title.lowercased()) proposals\""))
-        #expect(source.contains("self.store.presentedProposalPresentation"))
+        #expect(typeSource.contains(
+            "let presentedProposalPresentation: IPadSkillWorkshopProposalDetailPresentation?"))
+        #expect(source.contains("presentedProposalPresentation: self.presentedProposalPresentation"))
+        #expect(source.contains("if let presentation = self.screenPresentation.presentedProposalPresentation"))
+        #expect(!source.contains("self.store.presentedProposalPresentation"))
         #expect(source.contains("self.screenPresentation.queueSummaryPresentation"))
         #expect(source.contains("Text(queueSummary.proposalCountLabel)"))
         #expect(source.contains("title: queueSummary.title"))
