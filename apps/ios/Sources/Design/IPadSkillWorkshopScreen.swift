@@ -112,6 +112,8 @@ struct IPadSkillWorkshopFeature {
 
         var refreshControlPresentation: IPadSkillWorkshopRefreshControlPresentation {
             .init(
+                title: "Refresh",
+                iconSystemName: "arrow.clockwise",
                 isDisabled: self.isRefreshInFlight,
                 showsProgress: self.isRefreshInFlight)
         }
@@ -886,7 +888,7 @@ struct IPadSkillWorkshopScreen: View {
                     Button {
                         Task { await self.loadProposals(force: true) }
                     } label: {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        Label(refreshPresentation.title, systemImage: refreshPresentation.iconSystemName)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -939,7 +941,7 @@ struct IPadSkillWorkshopScreen: View {
                     Button {
                         Task { await self.loadProposals(force: true) }
                     } label: {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        Label(refreshPresentation.title, systemImage: refreshPresentation.iconSystemName)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
