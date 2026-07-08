@@ -117,4 +117,9 @@ struct IPadSkillWorkshopStatusFilterControlPresentation: Equatable, Sendable {
     let options: [IPadSkillWorkshopStatusFilterOption]
 }
 
+struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
+    let proposalCount: Int
+    let statusLabel: String
+}
+
 // swiftformat:enable redundantSendable
