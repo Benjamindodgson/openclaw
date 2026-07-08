@@ -1,3 +1,4 @@
+import Foundation
 import OpenClawKit
 
 // swiftformat:disable redundantSendable
@@ -33,6 +34,131 @@ struct IPadSkillWorkshopAgentScopeParam: Equatable, Sendable {
 
 struct IPadSkillWorkshopProposalID: Equatable, Sendable {
     var value: String
+}
+
+struct IPadSkillProposalSheetRoute: Equatable, Identifiable, Sendable {
+    let proposalID: String
+
+    var id: String {
+        self.proposalID
+    }
+}
+
+struct IPadSkillProposalAction: Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
+        case apply
+        case reject
+    }
+
+    let kind: Kind
+    let proposalID: String
+}
+
+struct IPadSkillProposalManifest: Decodable, Equatable, Sendable {
+    let proposals: [IPadSkillProposalManifestEntry]
+}
+
+struct IPadSkillProposalManifestEntry: Decodable, Equatable, Sendable {
+    let id: String
+    let kind: String
+    let status: String
+    let title: String
+    let description: String
+    let skillName: String
+    let skillKey: String
+    let createdAt: String
+    let updatedAt: String
+    let scanState: String
+}
+
+struct IPadSkillProposalInspectResponse: Decodable, Equatable, Sendable {
+    let record: IPadSkillProposalRecord
+    let content: String
+    let supportFiles: [IPadSkillProposalSupportFile]?
+}
+
+struct IPadSkillProposalRecord: Decodable, Equatable, Sendable {
+    let id: String
+    let kind: String
+    let status: String
+    let title: String
+    let description: String
+    let createdAt: String
+    let updatedAt: String
+    let target: IPadSkillProposalTarget
+}
+
+struct IPadSkillProposalTarget: Decodable, Equatable, Sendable {
+    let skillName: String
+    let skillKey: String
+}
+
+struct IPadSkillProposalSupportFile: Decodable, Equatable, Sendable {
+    let path: String
+    let content: String?
+}
+
+struct IPadSkillProposal: Equatable, Identifiable, Sendable {
+    let id: String
+    let kind: String
+    let status: String
+    let title: String
+    let description: String
+    let skillName: String
+    let skillKey: String
+    let createdAtMs: Double
+    let updatedAtMs: Double
+    var content: String?
+    var supportFiles: [IPadSkillProposalSupportFile]
+
+    init(entry: IPadSkillProposalManifestEntry, previous: IPadSkillProposal?) {
+        self.id = entry.id
+        self.kind = entry.kind
+        self.status = entry.status
+        self.title = entry.title.isEmpty ? entry.skillName : entry.title
+        self.description = entry.description
+        self.skillName = entry.skillName
+        self.skillKey = entry.skillKey
+        self.createdAtMs = Self.parseDate(entry.createdAt)
+        self.updatedAtMs = Self.parseDate(entry.updatedAt)
+        self.content = previous?.updatedAtMs == self.updatedAtMs ? previous?.content : nil
+        self.supportFiles = previous?.updatedAtMs == self.updatedAtMs ? previous?.supportFiles ?? [] : []
+    }
+
+    init(inspect: IPadSkillProposalInspectResponse, previous: IPadSkillProposal?) {
+        let record = inspect.record
+        self.id = record.id
+        self.kind = record.kind
+        self.status = record.status
+        self.title = record.title.isEmpty ? record.target.skillName : record.title
+        self.description = record.description
+        self.skillName = record.target.skillName
+        self.skillKey = record.target.skillKey
+        self.createdAtMs = Self.parseDate(record.createdAt)
+        self.updatedAtMs = Self.parseDate(record.updatedAt)
+        self.content = Self.stripFrontmatter(inspect.content)
+        self.supportFiles = inspect.supportFiles ?? previous?.supportFiles ?? []
+    }
+
+    var ageLabel: String {
+        let diff = max(0, Date().timeIntervalSince1970 * 1000 - self.updatedAtMs)
+        let minutes = Int(diff / 60000)
+        if minutes < 1 { return "now" }
+        if minutes < 60 { return "\(minutes)m" }
+        let hours = minutes / 60
+        if hours < 24 { return "\(hours)h" }
+        return "\(hours / 24)d"
+    }
+
+    private static func parseDate(_ value: String) -> Double {
+        (ISO8601DateFormatter().date(from: value)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970) * 1000
+    }
+
+    private static func stripFrontmatter(_ value: String) -> String {
+        let pattern = #"(?s)^---\r?\n.*?\r?\n---\r?\n?"#
+        return value.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 struct IPadSkillWorkshopProposals: Equatable, Sendable {
