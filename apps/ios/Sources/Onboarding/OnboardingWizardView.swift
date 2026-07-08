@@ -867,12 +867,12 @@ extension OnboardingWizardView {
     private func handleScannedLink(_ link: GatewayConnectDeepLink) async {
         self.setupCodeStore.send(.scannedGatewayLinkReceived(.init(link: link)))
         guard case let .gatewayLink(scannedLink)? = self.setupCodeStore.applyResult else { return }
-        guard let connectionStatusUpdate = self.setupCodeStore.scannedGatewayLinkConnectionStatusUpdate else { return }
+        guard let transitionRequest = self.setupCodeStore.scannedGatewayLinkTransitionRequest else { return }
         self.setupCodeStore.send(.applyResultHandled)
         await self.applyGatewayLink(scannedLink)
-        self.presentationStore.send(.qrScannerDismissed)
-        self.statusStore.send(.connectionStatusUpdated(connectionStatusUpdate))
-        self.stepStore.send(.stepChanged(.init(step: .connect)))
+        self.presentationStore.send(transitionRequest.presentationAction)
+        self.statusStore.send(transitionRequest.statusAction)
+        self.stepStore.send(transitionRequest.stepAction)
         Task { await self.connectManual() }
     }
 
