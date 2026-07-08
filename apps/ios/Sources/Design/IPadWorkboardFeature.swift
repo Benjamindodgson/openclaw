@@ -227,6 +227,10 @@ struct IPadWorkboardCardActionControlPresentation: Equatable, Sendable {
     let isDisabled: Bool
 }
 
+struct IPadWorkboardCardDetailActionControlsPresentation: Equatable, Sendable {
+    let isMutationDisabled: Bool
+}
+
 struct IPadWorkboardMetricPresentation: Equatable, Identifiable, Sendable {
     let id: String
     let iconSystemName: String
@@ -846,6 +850,13 @@ struct IPadWorkboardFeature {
                 isDisabled: isBusy)
         }
 
+        static func cardDetailActionControlsPresentation(
+            isBusy: Bool,
+            canWrite: Bool) -> IPadWorkboardCardDetailActionControlsPresentation
+        {
+            .init(isMutationDisabled: !canWrite || isBusy)
+        }
+
         static func cardActionIdleIconSystemName(for context: IPadWorkboardCardActionControlContext) -> String {
             switch context {
             case .kanban: "ellipsis"
@@ -1405,6 +1416,15 @@ struct IPadWorkboardFeature {
 }
 
 extension IPadWorkboardFeature.State {
+    func cardDetailActionControlsPresentation(
+        for card: IPadWorkboardCard,
+        canWrite: Bool) -> IPadWorkboardCardDetailActionControlsPresentation
+    {
+        Self.cardDetailActionControlsPresentation(
+            isBusy: self.busyCardID?.value == card.id,
+            canWrite: canWrite)
+    }
+
     func screenPresentation(canRead: Bool, sceneIsActive: Bool) -> IPadWorkboardScreenPresentation {
         .init(
             screenChromePresentation: self.screenChromePresentation,

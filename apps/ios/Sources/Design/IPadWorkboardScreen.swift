@@ -63,8 +63,9 @@ struct IPadWorkboardScreen: View {
                     card: card,
                     presentation: self.store.state.cardPresentation(for: card),
                     moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
-                    isBusy: self.store.busyCardID?.value == card.id,
-                    canWrite: self.canWrite,
+                    actionControlsPresentation: self.store.state.cardDetailActionControlsPresentation(
+                        for: card,
+                        canWrite: self.canWrite),
                     openSession: { self.open(card) },
                     move: { status in Task { await self.move(card, to: status) } },
                     archive: { Task { await self.archive(card) } })
@@ -915,8 +916,7 @@ private struct IPadWorkboardCardDetailSheet: View {
     let card: IPadWorkboardCard
     let presentation: IPadWorkboardCardPresentation
     let moveActions: [IPadWorkboardMoveActionPresentation]
-    let isBusy: Bool
-    let canWrite: Bool
+    let actionControlsPresentation: IPadWorkboardCardDetailActionControlsPresentation
     let openSession: () -> Void
     let move: (String) -> Void
     let archive: () -> Void
@@ -943,9 +943,9 @@ private struct IPadWorkboardCardDetailSheet: View {
                             }
                         }
                     }
-                    .disabled(!self.canWrite || self.isBusy)
+                    .disabled(self.actionControlsPresentation.isMutationDisabled)
                     Button(self.presentation.archiveActionTitle, action: self.archive)
-                        .disabled(!self.canWrite || self.isBusy)
+                        .disabled(self.actionControlsPresentation.isMutationDisabled)
                 }
             }
             .navigationTitle(self.presentation.detailSheetTitle)
