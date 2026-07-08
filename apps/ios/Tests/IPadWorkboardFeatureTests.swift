@@ -590,7 +590,7 @@ struct IPadWorkboardFeatureTests {
         }
         await store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: true),
-            readAccess: .init(canRead: true),
+            gatewayAccess: .init(canRead: true, canWrite: true),
             force: .init(isForced: false))))
         {
             $0.refreshPhase = .inFlight(boardID: .init(value: "planning"))
@@ -658,7 +658,7 @@ struct IPadWorkboardFeatureTests {
 
         await store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: true),
-            readAccess: .init(canRead: true),
+            gatewayAccess: .init(canRead: true, canWrite: true),
             force: .init(isForced: true))))
         {
             $0.refreshPhase = .inFlight(boardID: nil)

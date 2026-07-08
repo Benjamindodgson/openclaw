@@ -1026,8 +1026,6 @@ struct IPadWorkboardFeature {
 
     enum Action: Equatable, Sendable {
         struct SceneActivity: Equatable, Sendable { var isActive: Bool }
-        struct GatewayReadAccess: Equatable, Sendable { var canRead: Bool }
-        struct GatewayWriteAccess: Equatable, Sendable { var canWrite: Bool }
         struct RefreshForce: Equatable, Sendable { var isForced: Bool }
 
         struct ArchiveRequest: Equatable, Sendable {
@@ -1119,7 +1117,7 @@ struct IPadWorkboardFeature {
 
         struct RefreshRequest: Equatable, Sendable {
             var sceneActivity: SceneActivity
-            var readAccess: GatewayReadAccess
+            var gatewayAccess: IPadWorkboardGatewayAccess
             var force: RefreshForce
         }
 
@@ -1340,7 +1338,7 @@ struct IPadWorkboardFeature {
                     state.refreshPhase = .idle
                     return .cancel(id: CancelID.refresh)
                 }
-                guard request.readAccess.canRead else {
+                guard request.gatewayAccess.canRead else {
                     state.cardEntries = .init()
                     state.errorText = nil
                     state.refreshPhase = .idle
