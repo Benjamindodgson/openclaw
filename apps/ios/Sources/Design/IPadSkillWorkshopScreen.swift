@@ -211,6 +211,7 @@ struct IPadSkillWorkshopFeature {
                 refreshControlPresentation: self.refreshControlPresentation,
                 statusFilterControlPresentation: self.statusFilterControlPresentation,
                 queryFieldPresentation: self.queryFieldPresentation,
+                feedbackMessages: self.feedbackMessages,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -994,7 +995,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var feedbackMessageRows: some View {
-        ForEach(self.store.feedbackMessages) { message in
+        ForEach(self.screenPresentation.feedbackMessages) { message in
             Text(message.text)
                 .font(.caption2)
                 .foregroundStyle(message.color)
@@ -1632,10 +1633,8 @@ struct IPadSkillProposalRow: View {
 extension IPadSkillWorkshopFeedbackPresentation {
     fileprivate var color: Color {
         switch self.tone {
-        case .notice:
-            OpenClawBrand.accent
-        case .error:
-            OpenClawBrand.warn
+        case .notice: OpenClawBrand.accent
+        case .error: OpenClawBrand.warn
         }
     }
 }
