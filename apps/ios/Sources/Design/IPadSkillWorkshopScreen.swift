@@ -210,6 +210,7 @@ struct IPadSkillWorkshopFeature {
                     sceneIsActive: sceneIsActive),
                 refreshControlPresentation: self.refreshControlPresentation,
                 statusFilterControlPresentation: self.statusFilterControlPresentation,
+                queryFieldPresentation: self.queryFieldPresentation,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -1001,7 +1002,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var proposalSearchField: some View {
-        let presentation = self.store.queryFieldPresentation
+        let presentation = self.screenPresentation.queryFieldPresentation
         return HStack(spacing: 8) {
             Image(systemName: presentation.iconSystemName)
                 .font(.caption.weight(.semibold))
@@ -1402,7 +1403,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private var queryBinding: Binding<String> {
         Binding(
-            get: { self.store.queryFieldPresentation.text },
+            get: { self.screenPresentation.queryFieldPresentation.text },
             set: { self.store.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
