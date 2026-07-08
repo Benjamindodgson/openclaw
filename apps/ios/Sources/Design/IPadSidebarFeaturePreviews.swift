@@ -69,10 +69,9 @@ private struct IPadWorkboardCompactRowsPreview: View {
                                 if index > 0 {
                                     Divider().padding(.leading, 58)
                                 }
-                                let presentation = IPadWorkboardFeature.State.cardPresentation(for: card)
-                                IPadWorkboardQueueRow(
-                                    card: card,
-                                    presentation: presentation,
+                                let cardPresentation = IPadWorkboardFeature.State.cardPresentation(for: card)
+                                let presentation = IPadWorkboardQueueRowPresentation(
+                                    cardPresentation: cardPresentation,
                                     moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
                                     nextMoveAction: IPadWorkboardFeature.State.nextMoveActionPresentation(
                                         for: card,
@@ -80,7 +79,10 @@ private struct IPadWorkboardCompactRowsPreview: View {
                                     actionControlPresentation: IPadWorkboardFeature.State.cardActionControlPresentation(
                                         isBusy: card.id == "preview-running",
                                         context: .queue,
-                                        accessibilityLabel: presentation.actionMenuAccessibilityLabel),
+                                        accessibilityLabel: cardPresentation.actionMenuAccessibilityLabel))
+                                IPadWorkboardQueueRow(
+                                    card: card,
+                                    presentation: presentation,
                                     inspect: {},
                                     openSession: {},
                                     move: { _ in },

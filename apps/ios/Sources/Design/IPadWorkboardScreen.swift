@@ -491,12 +491,7 @@ struct IPadWorkboardScreen: View {
                         }
                         IPadWorkboardQueueRow(
                             card: card,
-                            presentation: self.store.state.cardPresentation(for: card),
-                            moveActions: self.store.moveActionPresentations,
-                            nextMoveAction: self.store.state.nextMoveActionPresentation(for: card),
-                            actionControlPresentation: self.store.state.cardActionControlPresentation(
-                                for: card,
-                                context: .queue),
+                            presentation: self.store.state.queueRowPresentation(for: card),
                             inspect: {
                                 self.store.send(.cardSheetPresented(.init(card: card)))
                             },
@@ -812,10 +807,7 @@ private struct IPadWorkboardKanbanCard: View {
 
 struct IPadWorkboardQueueRow: View {
     let card: IPadWorkboardCard
-    let presentation: IPadWorkboardCardPresentation
-    let moveActions: [IPadWorkboardMoveActionPresentation]
-    let nextMoveAction: IPadWorkboardMoveActionPresentation?
-    let actionControlPresentation: IPadWorkboardCardActionControlPresentation
+    let presentation: IPadWorkboardQueueRowPresentation
     let inspect: () -> Void
     let openSession: () -> Void
     let move: (String) -> Void
@@ -825,18 +817,18 @@ struct IPadWorkboardQueueRow: View {
         HStack(alignment: .top, spacing: 10) {
             Button(action: self.inspect) {
                 HStack(alignment: .top, spacing: 12) {
-                    ProIconBadge(systemName: self.presentation.iconSystemName, color: self.color)
+                    ProIconBadge(systemName: self.presentation.cardPresentation.iconSystemName, color: self.color)
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(self.presentation.title)
+                        Text(self.presentation.cardPresentation.title)
                             .font(.subheadline.weight(.semibold))
                             .lineLimit(2)
-                        Text(self.presentation.detail)
+                        Text(self.presentation.cardPresentation.detail)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                     }
                     Spacer(minLength: 8)
-                    ProValuePill(value: self.presentation.statusLabel, color: self.color)
+                    ProValuePill(value: self.presentation.cardPresentation.statusLabel, color: self.color)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -846,15 +838,15 @@ struct IPadWorkboardQueueRow: View {
             Menu {
                 self.actionMenuItems
             } label: {
-                Image(systemName: self.actionControlPresentation.iconSystemName)
+                Image(systemName: self.presentation.actionControlPresentation.iconSystemName)
                     .font(.system(size: 19, weight: .semibold))
                     .frame(width: 36, height: 36)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .foregroundStyle(OpenClawBrand.accent)
-            .disabled(self.actionControlPresentation.isDisabled)
-            .accessibilityLabel(self.actionControlPresentation.accessibilityLabel)
+            .disabled(self.presentation.actionControlPresentation.isDisabled)
+            .accessibilityLabel(self.presentation.actionControlPresentation.accessibilityLabel)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -862,41 +854,41 @@ struct IPadWorkboardQueueRow: View {
             self.actionMenuItems
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            Button(self.presentation.inspectActionTitle, action: self.inspect)
+            Button(self.presentation.cardPresentation.inspectActionTitle, action: self.inspect)
                 .tint(OpenClawBrand.accent)
-            if self.presentation.showsOpenSessionAction {
-                Button(self.presentation.compactOpenSessionActionTitle, action: self.openSession)
+            if self.presentation.cardPresentation.showsOpenSessionAction {
+                Button(self.presentation.cardPresentation.compactOpenSessionActionTitle, action: self.openSession)
                     .tint(OpenClawBrand.ok)
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if let nextMoveAction {
+            if let nextMoveAction = self.presentation.nextMoveAction {
                 Button(nextMoveAction.title) {
                     self.move(nextMoveAction.status)
                 }
                 .tint(OpenClawBrand.accentHot)
             }
-            Button(self.presentation.archiveActionTitle, action: self.archive)
+            Button(self.presentation.cardPresentation.archiveActionTitle, action: self.archive)
                 .tint(.secondary)
         }
     }
 
     @ViewBuilder
     private var actionMenuItems: some View {
-        if self.presentation.showsOpenSessionAction {
-            Button(self.presentation.openSessionActionTitle, action: self.openSession)
+        if self.presentation.cardPresentation.showsOpenSessionAction {
+            Button(self.presentation.cardPresentation.openSessionActionTitle, action: self.openSession)
         }
-        Button(self.presentation.inspectActionTitle, action: self.inspect)
-        ForEach(self.moveActions) { action in
+        Button(self.presentation.cardPresentation.inspectActionTitle, action: self.inspect)
+        ForEach(self.presentation.moveActions) { action in
             Button(action.menuTitle) {
                 self.move(action.status)
             }
         }
-        Button(self.presentation.archiveActionTitle, action: self.archive)
+        Button(self.presentation.cardPresentation.archiveActionTitle, action: self.archive)
     }
 
     private var color: Color {
-        IPadWorkboardCardColor.value(for: self.presentation.tone)
+        IPadWorkboardCardColor.value(for: self.presentation.cardPresentation.tone)
     }
 }
 
