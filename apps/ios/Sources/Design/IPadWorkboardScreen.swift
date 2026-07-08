@@ -656,7 +656,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private func open(_ card: IPadWorkboardCard) {
-        guard let sessionKey = self.store.state.cardPresentation(for: card).sessionKey else { return }
+        guard let sessionKey = self.store.state.openSessionKey(for: card) else { return }
         self.appModel.openChat(sessionKey: sessionKey)
         self.openChat()
     }
