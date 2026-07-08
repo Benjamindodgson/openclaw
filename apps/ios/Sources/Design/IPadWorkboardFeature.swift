@@ -165,6 +165,23 @@ struct IPadWorkboardKnownBoardIDs: Equatable, Sendable {
     var values: [IPadWorkboardKnownBoardID] = []
 }
 
+struct IPadWorkboardScreenChromePresentation: Equatable, Sendable {
+    let title: String
+    let subtitle: String
+}
+
+struct IPadWorkboardQueueSummaryPresentation: Equatable, Sendable {
+    let title: String
+    let cardCount: Int
+    let value: String
+    let cardCountLabel: String
+}
+
+struct IPadWorkboardScreenPresentation: Equatable, Sendable {
+    let screenChromePresentation: IPadWorkboardScreenChromePresentation
+    let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -260,6 +277,24 @@ struct IPadWorkboardFeature {
             Self.workboardSubtitle(
                 boardScopeLabel: self.boardScopeLabel,
                 selectedStatus: self.selectedStatus.value)
+        }
+
+        var screenChromePresentation: IPadWorkboardScreenChromePresentation {
+            .init(title: "Workboard", subtitle: self.workboardSubtitle)
+        }
+
+        var queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation {
+            .init(
+                title: "Queue",
+                cardCount: self.filteredCardCount,
+                value: "\(self.filteredCardCount)",
+                cardCountLabel: "\(self.filteredCardCount) cards")
+        }
+
+        var screenPresentation: IPadWorkboardScreenPresentation {
+            .init(
+                screenChromePresentation: self.screenChromePresentation,
+                queueSummaryPresentation: self.queueSummaryPresentation)
         }
 
         var isLoading: Bool {
