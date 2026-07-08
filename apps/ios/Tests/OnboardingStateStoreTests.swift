@@ -663,6 +663,27 @@ import Testing
         }
     }
 
+    @Test @MainActor func `credentials reducer loads saved manual values through client`() async {
+        let probe = OnboardingGatewayCredentialsPersistenceProbe()
+        probe.gatewayTokens["instance-1"] = "token-1"
+        probe.gatewayPasswords["instance-1"] = "password-1"
+        let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
+            OnboardingCredentialsFeature(credentialsPersistenceClient: probe.client)
+        }
+
+        await store.send(.credentialsLoadRequested(.init(
+            instanceId: .init(value: " instance-1 "))))
+        {
+            $0.gatewayTokenState = .init(value: "token-1")
+            $0.gatewayPasswordState = .init(value: "password-1")
+        }
+
+        await store.send(.credentialsLoadRequested(.init(
+            instanceId: .init(value: " "))))
+
+        #expect(probe.loadedInstanceIds == ["instance-1"])
+    }
+
     @Test @MainActor func `credentials reducer persists manual values through client`() async {
         let probe = OnboardingGatewayCredentialsPersistenceProbe()
         let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
@@ -1030,11 +1051,21 @@ import Testing
     }
 
     private final class OnboardingGatewayCredentialsPersistenceProbe: @unchecked Sendable {
+        var gatewayPasswords: [String: String] = [:]
+        var gatewayTokens: [String: String] = [:]
+        var loadedInstanceIds: [String] = []
         var savedPasswords: [String] = []
         var savedTokens: [String] = []
 
         var client: OnboardingGatewayCredentialsPersistenceClient {
             OnboardingGatewayCredentialsPersistenceClient(
+                loadCredentials: { instanceId in
+                    let instanceId = instanceId.trimmedValue ?? ""
+                    self.loadedInstanceIds.append(instanceId)
+                    return .init(
+                        token: self.gatewayTokens[instanceId] ?? "",
+                        password: self.gatewayPasswords[instanceId] ?? "")
+                },
                 saveGatewayPassword: { value, instanceId in
                     guard let instanceId = instanceId.trimmedValue else { return }
                     self.savedPasswords.append("\(instanceId):\(value.value)")
