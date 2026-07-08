@@ -5821,11 +5821,31 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `onboarding completion mark action is typed`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let introFunction = try Self.extract(
+            onboardingSource,
+            from: "private func advanceFromIntro()",
+            to: "private func requestLocalNetworkAccessIfPastIntro")
 
+        #expect(onboardingStateSource.contains("struct OnboardingProgressPersistenceClient"))
+        #expect(onboardingStateSource.contains(
+            "var markCompleted: @MainActor @Sendable (_ mode: OnboardingConnectionMode?) -> Void"))
+        #expect(onboardingStateSource.contains("var markFirstRunIntroSeen: @MainActor @Sendable () -> Void"))
+        #expect(onboardingStateSource.contains("OnboardingStateStore.markCompleted(mode: mode)"))
+        #expect(onboardingStateSource.contains("OnboardingStateStore.markFirstRunIntroSeen()"))
         #expect(onboardingStateSource.contains("struct CompletionMark: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case markCompleted(CompletionMark)"))
         #expect(onboardingStateSource.contains("if let mode = mark.mode"))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingProgressPersistence)"))
+        #expect(onboardingStateSource.contains("await progressPersistenceClient.markCompleted(mark.mode)"))
+        #expect(onboardingStateSource.contains("await progressPersistenceClient.markFirstRunIntroSeen()"))
+        #expect(storesSource.contains("progressPersistenceClient: .liveValue"))
+        #expect(onboardingSource.contains("self.onboardingStateStore.send(.markCompleted(.init(mode: selectedMode)))"))
+        #expect(introFunction.contains("self.onboardingStateStore.send(.markFirstRunIntroSeen)"))
+        #expect(!onboardingSource.contains("OnboardingStateStore.markCompleted(mode: selectedMode)"))
+        #expect(!onboardingSource.contains("OnboardingStateStore.markFirstRunIntroSeen()"))
     }
 
     @Test func `onboarding reducer stores presentation flags as typed state`() throws {
@@ -7192,7 +7212,9 @@ struct RootTabsSourceGuardTests {
             .contains("@State private var onboardingStateStore: StoreOf<OnboardingStateFeature>"))
         #expect(rootSource.contains("onboardingStateStore: self.makeOnboardingStateStore()"))
         #expect(storesSource.contains("func makeOnboardingStateStore()"))
-        #expect(storesSource.contains("OnboardingStateFeature(resetClient: .live(appModel: self.appModel))"))
+        #expect(storesSource.contains("OnboardingStateFeature("))
+        #expect(storesSource.contains("progressPersistenceClient: .liveValue"))
+        #expect(storesSource.contains("resetClient: .live(appModel: self.appModel)"))
         #expect(resetFunction.contains("await self.onboardingStateStore"))
         #expect(resetFunction.contains(".send(.onboardingResetRequested(.init("))
         #expect(resetFunction.contains("instanceId: .init(value: self.instanceId)"))

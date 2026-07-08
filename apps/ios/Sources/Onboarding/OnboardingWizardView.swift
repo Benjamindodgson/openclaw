@@ -418,7 +418,7 @@ struct OnboardingWizardView: View {
                 self.presentationStore.send(.qrScannerDismissed)
                 let shouldMarkCompleted = !self.statusStore.didMarkCompleted
                 if shouldMarkCompleted, let selectedMode {
-                    OnboardingStateStore.markCompleted(mode: selectedMode)
+                    self.onboardingStateStore.send(.markCompleted(.init(mode: selectedMode)))
                 }
                 self.statusStore.send(.gatewayConnected(.init(
                     markedCompleted: .init(value: shouldMarkCompleted && selectedMode != nil))))
@@ -982,7 +982,7 @@ extension OnboardingWizardView {
     }
 
     private func advanceFromIntro() {
-        OnboardingStateStore.markFirstRunIntroSeen()
+        self.onboardingStateStore.send(.markFirstRunIntroSeen)
         self.requestLocalNetworkAccess(reason: "onboarding_continue")
         self.statusStore.send(.introAdvanced)
         self.stepStore.send(.stepChanged(.init(step: .welcome)))

@@ -142,6 +142,32 @@ extension DependencyValues {
     }
 }
 
+struct OnboardingProgressPersistenceClient {
+    var markCompleted: @MainActor @Sendable (_ mode: OnboardingConnectionMode?) -> Void
+    var markFirstRunIntroSeen: @MainActor @Sendable () -> Void
+}
+
+extension OnboardingProgressPersistenceClient: DependencyKey {
+    static let liveValue = OnboardingProgressPersistenceClient(
+        markCompleted: { mode in
+            OnboardingStateStore.markCompleted(mode: mode)
+        },
+        markFirstRunIntroSeen: {
+            OnboardingStateStore.markFirstRunIntroSeen()
+        })
+
+    static let testValue = OnboardingProgressPersistenceClient(
+        markCompleted: { _ in },
+        markFirstRunIntroSeen: {})
+}
+
+extension DependencyValues {
+    var onboardingProgressPersistence: OnboardingProgressPersistenceClient {
+        get { self[OnboardingProgressPersistenceClient.self] }
+        set { self[OnboardingProgressPersistenceClient.self] = newValue }
+    }
+}
+
 struct OnboardingQRMessage: Equatable, Sendable { var value: String? }
 
 struct OnboardingQRPhotoImportFailureMessage: Equatable, Sendable { var value: String }
@@ -165,9 +191,14 @@ struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 
 @Reducer
 struct OnboardingStateFeature {
+    private let progressPersistenceClientOverride: OnboardingProgressPersistenceClient?
     private let resetClientOverride: OnboardingResetClient?
 
-    init(resetClient: OnboardingResetClient? = nil) {
+    init(
+        progressPersistenceClient: OnboardingProgressPersistenceClient? = nil,
+        resetClient: OnboardingResetClient? = nil)
+    {
+        self.progressPersistenceClientOverride = progressPersistenceClient
         self.resetClientOverride = resetClient
     }
 
@@ -242,7 +273,10 @@ struct OnboardingStateFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingProgressPersistence) var dependencyProgressPersistenceClient
             @Dependency(\.onboardingReset) var dependencyResetClient
+            let progressPersistenceClient = self.progressPersistenceClientOverride
+                ?? dependencyProgressPersistenceClient
             let resetClient = self.resetClientOverride ?? dependencyResetClient
 
             switch action {
@@ -262,12 +296,16 @@ struct OnboardingStateFeature {
                     state.lastMode = mode
                 }
                 state.refreshPresentation()
-                return .none
+                return .run { _ in
+                    await progressPersistenceClient.markCompleted(mark.mode)
+                }
 
             case .markFirstRunIntroSeen:
                 state.firstRunIntroSeenState = .init(value: true)
                 state.refreshPresentation()
-                return .none
+                return .run { _ in
+                    await progressPersistenceClient.markFirstRunIntroSeen()
+                }
 
             case let .onboardingResetRequested(request):
                 Self.resetState(&state)
