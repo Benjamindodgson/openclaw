@@ -268,6 +268,11 @@ struct IPadSkillWorkshopStatusFilterControlPresentation: Equatable, Sendable {
     let options: [IPadSkillWorkshopStatusFilterOption]
 }
 
+struct IPadSkillWorkshopProposalSheetPresentation: Equatable, Sendable {
+    let title: String
+    let dismissButtonTitle: String
+}
+
 struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
     let title: String
     let proposalCount: Int
@@ -282,6 +287,7 @@ struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
     let proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
     let emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation
     let proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation
+    let proposalSheetPresentation: IPadSkillWorkshopProposalSheetPresentation
 }
 
 struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Sendable {

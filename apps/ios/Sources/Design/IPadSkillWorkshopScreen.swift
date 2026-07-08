@@ -191,6 +191,12 @@ struct IPadSkillWorkshopFeature {
                 value: "missing")
         }
 
+        var proposalSheetPresentation: IPadSkillWorkshopProposalSheetPresentation {
+            .init(
+                title: "Proposal",
+                dismissButtonTitle: "Done")
+        }
+
         func screenPresentation(
             gatewayAccess: IPadSkillWorkshopGatewayAccess,
             sceneIsActive: Bool) -> IPadSkillWorkshopScreenPresentation
@@ -204,7 +210,8 @@ struct IPadSkillWorkshopFeature {
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
                 emptyProposalPresentation: self.emptyProposalPresentation(
                     gatewayAccess: gatewayAccess),
-                proposalUnavailablePresentation: self.proposalUnavailablePresentation)
+                proposalUnavailablePresentation: self.proposalUnavailablePresentation,
+                proposalSheetPresentation: self.proposalSheetPresentation)
         }
 
         static func shouldShowProposalActions(status: String) -> Bool {
@@ -875,11 +882,11 @@ struct IPadSkillWorkshopScreen: View {
                         .padding(.vertical, 16)
                 }
                 .background(OpenClawProBackground())
-                .navigationTitle("Proposal")
+                .navigationTitle(self.proposalSheetPresentation.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") {
+                        Button(self.proposalSheetPresentation.dismissButtonTitle) {
                             self.store.send(.proposalSheetDismissed)
                         }
                     }
@@ -1342,6 +1349,10 @@ struct IPadSkillWorkshopScreen: View {
 
     private var proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation {
         self.screenPresentation.proposalUnavailablePresentation
+    }
+
+    private var proposalSheetPresentation: IPadSkillWorkshopProposalSheetPresentation {
+        self.screenPresentation.proposalSheetPresentation
     }
 
     private var agentScopeSnapshot: IPadSkillWorkshopFeature.Action.AgentScopeSnapshot {

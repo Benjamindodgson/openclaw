@@ -2507,6 +2507,16 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains(".task(id: self.refreshTaskID)"))
         #expect(source.contains("self.screenPresentation.refreshTaskID"))
         #expect(!source.contains("self.store.state.refreshTaskID("))
+        #expect(typeSource.contains("struct IPadSkillWorkshopProposalSheetPresentation: Equatable, Sendable"))
+        #expect(typeSource.contains("let dismissButtonTitle: String"))
+        #expect(source.contains("var proposalSheetPresentation: IPadSkillWorkshopProposalSheetPresentation"))
+        #expect(source.contains("proposalSheetPresentation: self.proposalSheetPresentation"))
+        #expect(source.contains("private var proposalSheetPresentation: IPadSkillWorkshopProposalSheetPresentation"))
+        #expect(source.contains("self.screenPresentation.proposalSheetPresentation"))
+        #expect(source.contains(".navigationTitle(self.proposalSheetPresentation.title)"))
+        #expect(source.contains("Button(self.proposalSheetPresentation.dismissButtonTitle)"))
+        #expect(!source.contains(".navigationTitle(\"Proposal\")"))
+        #expect(!source.contains("Button(\"Done\")"))
         #expect(source.contains(
             "func shouldEnableProposalMutation(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
         #expect(source.contains(
