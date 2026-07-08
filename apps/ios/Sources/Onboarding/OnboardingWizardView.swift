@@ -344,7 +344,7 @@ struct OnboardingWizardView: View {
                 NavigationStack {
                     QRScannerView(
                         onGatewayLink: { link in
-                            self.handleScannedLink(link)
+                            Task { @MainActor in await self.handleScannedLink(link) }
                         },
                         onSetupCode: { code in
                             Task { @MainActor in await self.handleScannedSetupCode(code) }
@@ -844,17 +844,17 @@ extension OnboardingWizardView {
                 message: .init(value: "Connecting via setup code..."),
                 statusLine: .init(value: "Setup code loaded. Connecting to \(link.host):\(link.port)..."),
                 clearsIssue: .init(value: false))))
-            self.applyGatewayLink(link)
+            await self.applyGatewayLink(link)
             self.stepStore.send(.stepChanged(.init(step: .connect)))
             await self.connectManual()
         }
     }
 
-    private func handleScannedLink(_ link: GatewayConnectDeepLink) {
+    private func handleScannedLink(_ link: GatewayConnectDeepLink) async {
         self.setupCodeStore.send(.scannedGatewayLinkReceived(.init(link: link)))
         guard case let .gatewayLink(scannedLink)? = self.setupCodeStore.applyResult else { return }
         self.setupCodeStore.send(.applyResultHandled)
-        self.applyGatewayLink(scannedLink)
+        await self.applyGatewayLink(scannedLink)
         self.presentationStore.send(.qrScannerDismissed)
         self.statusStore.send(.connectionStatusUpdated(.init(
             message: .init(value: "Connecting via QR code..."),
@@ -863,20 +863,16 @@ extension OnboardingWizardView {
         Task { await self.connectManual() }
     }
 
-    private func applyGatewayLink(_ link: GatewayConnectDeepLink) {
+    private func applyGatewayLink(_ link: GatewayConnectDeepLink) async {
         self.connectionFormStore.send(.gatewayLinkApplied(.init(
             host: .init(value: link.host),
             port: .init(value: link.port),
             tls: .init(value: link.tls))))
-        let setupAuth = GatewayConnectionController.ManualAuthOverride.setupAuth(from: link)
-        if setupAuth.hasBootstrapToken {
-            GatewayOnboardingReset.prepareForBootstrapPairing(
-                appModel: self.appModel,
-                instanceId: GatewaySettingsStore.currentInstanceID())
-        }
-        self.saveGatewayBootstrapToken(setupAuth.bootstrapToken)
-        self.credentialsStore.send(.setupAuthApplied(.init(setupAuth: setupAuth)))
-        self.saveGatewayCredentials(token: self.gatewayToken, password: self.gatewayPassword)
+        self.credentialsStore.send(.setupLinkApplied(.init(link: link)))
+        guard let request = self.credentialsStore.setupAuthPersistenceRequest else { return }
+        defer { self.credentialsStore.send(.setupAuthPersistenceRequestHandled) }
+
+        await self.credentialsStore.send(.setupAuthPersistenceRequested(request)).finish()
     }
 
     private func handleScannedSetupCode(_ code: String) async {
@@ -912,7 +908,7 @@ extension OnboardingWizardView {
 
         switch result {
         case let .gatewayLink(link):
-            self.handleScannedLink(link)
+            await self.handleScannedLink(link)
         case let .appleReviewSetupCode(setupCode):
             await self.handleScannedSetupCode(setupCode.code.value)
         case let .failure(failure):
@@ -1047,13 +1043,6 @@ extension OnboardingWizardView {
         GatewaySettingsStore.saveGatewayToken(trimmedToken, instanceId: trimmedInstanceId)
         let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
         GatewaySettingsStore.saveGatewayPassword(trimmedPassword, instanceId: trimmedInstanceId)
-    }
-
-    private func saveGatewayBootstrapToken(_ token: String?) {
-        let trimmedInstanceId = GatewaySettingsStore.currentInstanceID()
-        guard !trimmedInstanceId.isEmpty else { return }
-        let trimmedToken = token?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        GatewaySettingsStore.saveGatewayBootstrapToken(trimmedToken, instanceId: trimmedInstanceId)
     }
 
     private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
