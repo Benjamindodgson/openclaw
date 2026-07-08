@@ -97,6 +97,14 @@ struct OnboardingGatewayToken: Equatable, Sendable { var value: String }
 
 struct OnboardingGatewayPassword: Equatable, Sendable { var value: String }
 
+struct OnboardingGatewayCredentialValue: Equatable, Sendable {
+    var value: String
+
+    init(rawValue: String) {
+        self.value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 struct OnboardingGatewayCurrentInstanceID: Equatable, Sendable {
     var value: String
 
@@ -607,11 +615,50 @@ extension DependencyValues {
     }
 }
 
+struct OnboardingGatewayCredentialsPersistenceClient {
+    var saveGatewayPassword: @MainActor @Sendable (
+        _ value: OnboardingGatewayCredentialValue,
+        _ instanceId: OnboardingGatewayCurrentInstanceID)
+        -> Void
+    var saveGatewayToken: @MainActor @Sendable (
+        _ value: OnboardingGatewayCredentialValue,
+        _ instanceId: OnboardingGatewayCurrentInstanceID)
+        -> Void
+}
+
+extension OnboardingGatewayCredentialsPersistenceClient: DependencyKey {
+    static let liveValue = OnboardingGatewayCredentialsPersistenceClient(
+        saveGatewayPassword: { value, instanceId in
+            guard let instanceId = instanceId.trimmedValue else { return }
+            GatewaySettingsStore.saveGatewayPassword(value.value, instanceId: instanceId)
+        },
+        saveGatewayToken: { value, instanceId in
+            guard let instanceId = instanceId.trimmedValue else { return }
+            GatewaySettingsStore.saveGatewayToken(value.value, instanceId: instanceId)
+        })
+
+    static let testValue = OnboardingGatewayCredentialsPersistenceClient(
+        saveGatewayPassword: { _, _ in },
+        saveGatewayToken: { _, _ in })
+}
+
+extension DependencyValues {
+    var onboardingGatewayCredentialsPersistence: OnboardingGatewayCredentialsPersistenceClient {
+        get { self[OnboardingGatewayCredentialsPersistenceClient.self] }
+        set { self[OnboardingGatewayCredentialsPersistenceClient.self] = newValue }
+    }
+}
+
 @Reducer
 struct OnboardingCredentialsFeature {
+    private let credentialsPersistenceClientOverride: OnboardingGatewayCredentialsPersistenceClient?
     private let setupAuthPersistenceClientOverride: OnboardingGatewaySetupAuthPersistenceClient?
 
-    init(setupAuthPersistenceClient: OnboardingGatewaySetupAuthPersistenceClient? = nil) {
+    init(
+        credentialsPersistenceClient: OnboardingGatewayCredentialsPersistenceClient? = nil,
+        setupAuthPersistenceClient: OnboardingGatewaySetupAuthPersistenceClient? = nil)
+    {
+        self.credentialsPersistenceClientOverride = credentialsPersistenceClient
         self.setupAuthPersistenceClientOverride = setupAuthPersistenceClient
     }
 
@@ -648,6 +695,11 @@ struct OnboardingCredentialsFeature {
 
         struct GatewayPasswordChange: Equatable, Sendable { var password: OnboardingGatewayPassword }
         struct GatewayTokenChange: Equatable, Sendable { var token: OnboardingGatewayToken }
+        struct ManualCredentialPersistenceRequest: Equatable, Sendable {
+            var value: OnboardingGatewayCredentialValue
+            var instanceId: OnboardingGatewayCurrentInstanceID
+        }
+
         struct SetupAuthApplication: Equatable, Sendable {
             var setupAuth: GatewayConnectionController.ManualAuthOverride.SetupAuth
         }
@@ -656,7 +708,9 @@ struct OnboardingCredentialsFeature {
 
         case credentialsLoaded(LoadedCredentials)
         case gatewayPasswordChanged(GatewayPasswordChange)
+        case gatewayPasswordPersistenceRequested(ManualCredentialPersistenceRequest)
         case gatewayTokenChanged(GatewayTokenChange)
+        case gatewayTokenPersistenceRequested(ManualCredentialPersistenceRequest)
         case pendingManualAuthOverrideConsumed
         case reset
         case setupAuthApplied(SetupAuthApplication)
@@ -669,7 +723,10 @@ struct OnboardingCredentialsFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingGatewayCredentialsPersistence) var dependencyCredentialsPersistenceClient
             @Dependency(\.onboardingGatewaySetupAuthPersistence) var dependencySetupAuthPersistenceClient
+            let credentialsPersistenceClient = self.credentialsPersistenceClientOverride
+                ?? dependencyCredentialsPersistenceClient
             let setupAuthPersistenceClient = self.setupAuthPersistenceClientOverride
                 ?? dependencySetupAuthPersistenceClient
 
@@ -683,9 +740,27 @@ struct OnboardingCredentialsFeature {
                 state.gatewayPasswordState = change.password
                 return .none
 
+            case let .gatewayPasswordPersistenceRequested(persistence):
+                guard let request = Self.manualCredentialPersistenceRequest(
+                    value: persistence.value,
+                    instanceId: persistence.instanceId)
+                else { return .none }
+                return .run { _ in
+                    await credentialsPersistenceClient.saveGatewayPassword(request.value, request.instanceId)
+                }
+
             case let .gatewayTokenChanged(change):
                 state.gatewayTokenState = change.token
                 return .none
+
+            case let .gatewayTokenPersistenceRequested(persistence):
+                guard let request = Self.manualCredentialPersistenceRequest(
+                    value: persistence.value,
+                    instanceId: persistence.instanceId)
+                else { return .none }
+                return .run { _ in
+                    await credentialsPersistenceClient.saveGatewayToken(request.value, request.instanceId)
+                }
 
             case .pendingManualAuthOverrideConsumed:
                 state.pendingManualAuthOverride = nil
@@ -725,6 +800,15 @@ struct OnboardingCredentialsFeature {
             }
         }
         .autoLogActions()
+    }
+
+    private static func manualCredentialPersistenceRequest(
+        value: OnboardingGatewayCredentialValue,
+        instanceId: OnboardingGatewayCurrentInstanceID)
+        -> Action.ManualCredentialPersistenceRequest?
+    {
+        guard instanceId.trimmedValue != nil else { return nil }
+        return .init(value: value, instanceId: instanceId)
     }
 
     private static func applySetupAuth(
