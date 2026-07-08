@@ -697,6 +697,8 @@ struct IPadWorkboardFeatureTests {
                 value: "1",
                 tone: .warn),
         ])
+        #expect(state.screenPresentation(gatewayAccess: .init(canRead: true, canWrite: true), sceneIsActive: true)
+            .metricPresentations == state.metricPresentations)
     }
 
     @Test func `refresh loads cards and board scopes through client`() async {
