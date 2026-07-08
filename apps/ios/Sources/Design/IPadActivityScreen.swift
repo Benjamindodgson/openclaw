@@ -82,7 +82,12 @@ struct IPadActivitySessionsFeature {
         }
 
         var screenPresentation: IPadActivityScreenPresentation {
-            .init(gatewayPresentation: self.gatewayPresentation)
+            .init(
+                gatewayPresentation: self.gatewayPresentation,
+                sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(self.visibleSessions.count)",
+                feedHeaderValue: self.loadingPhase == .inFlight ? "Loading" : nil,
+                showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
+                loadErrorText: self.loadErrorText)
         }
     }
 
@@ -246,7 +251,7 @@ struct IPadActivityScreen: View {
             ProMetric(
                 icon: "bubble.left.and.text.bubble.right",
                 title: "Sessions",
-                value: self.store.loadingPhase == .inFlight ? "..." : "\(self.sessionRows.count)",
+                value: self.screenPresentation.sessionMetricValue,
                 color: OpenClawBrand.accentHot),
         ]
     }
@@ -256,7 +261,7 @@ struct IPadActivityScreen: View {
             VStack(spacing: 0) {
                 ProPanelHeader(
                     title: "Recent activity",
-                    value: self.store.loadingPhase == .inFlight ? "Loading" : nil,
+                    value: self.screenPresentation.feedHeaderValue,
                     actionTitle: "Refresh",
                     action: {
                         Task { await self.refreshSessions() }
@@ -295,7 +300,7 @@ struct IPadActivityScreen: View {
                     actionTitle: nil,
                     action: nil)
 
-                if self.store.loadingPhase == .inFlight, self.store.sessions.isEmpty {
+                if self.screenPresentation.showsLoadingSessionsPlaceholder {
                     Divider().padding(.leading, 58)
                     ProStatusRow(
                         icon: "hourglass",
@@ -305,7 +310,7 @@ struct IPadActivityScreen: View {
                         color: OpenClawBrand.accent,
                         actionTitle: nil,
                         action: nil)
-                } else if let loadErrorText = self.store.loadErrorText {
+                } else if let loadErrorText = self.screenPresentation.loadErrorText {
                     Divider().padding(.leading, 58)
                     ProStatusRow(
                         icon: "exclamationmark.triangle.fill",
@@ -419,6 +424,10 @@ struct IPadActivityGatewayAgentCount: Equatable, Sendable { var value: Int }
 
 struct IPadActivityScreenPresentation: Equatable, Sendable {
     let gatewayPresentation: IPadActivityGatewayPresentationState
+    let sessionMetricValue: String
+    let feedHeaderValue: String?
+    let showsLoadingSessionsPlaceholder: Bool
+    let loadErrorText: IPadActivitySessionsFailureMessage?
 }
 
 struct IPadActivityGatewayPresentationState: Equatable, Sendable {
