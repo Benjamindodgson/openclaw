@@ -310,6 +310,30 @@ struct IPadWorkboardFeatureTests {
         #expect(archivedPresentation.archiveActionTitle == "Unarchive")
     }
 
+    @Test func `workboard move action presentation is reducer owned`() {
+        let statuses = ["todo", "in_review", "done"]
+        let actions = IPadWorkboardFeature.State.moveActionPresentations(for: statuses)
+
+        #expect(actions == [
+            .init(id: "todo", status: "todo", title: "Todo", menuTitle: "Move to Todo"),
+            .init(id: "in_review", status: "in_review", title: "In Review", menuTitle: "Move to In Review"),
+            .init(id: "done", status: "done", title: "Done", menuTitle: "Move to Done"),
+        ])
+
+        let state = IPadWorkboardFeature.State()
+        let current = Self.card(id: "current", status: "todo", position: 10)
+        #expect(state.nextMoveActionPresentation(for: current, statuses: statuses) ==
+            .init(id: "in_review", status: "in_review", title: "In Review", menuTitle: "Move to In Review"))
+
+        let last = Self.card(id: "last", status: "done", position: 20)
+        #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: last, statuses: statuses) == nil)
+
+        let unknown = Self.card(id: "unknown", status: "custom", position: 30)
+        #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: unknown, statuses: statuses) ==
+            .init(id: "todo", status: "todo", title: "Todo", menuTitle: "Move to Todo"))
+        #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: unknown, statuses: []) == nil)
+    }
+
     @Test func `workboard kanban lane presentation is reducer owned`() {
         let cards = [
             Self.card(id: "review-1", status: "in_review", position: 10),

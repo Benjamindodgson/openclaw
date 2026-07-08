@@ -72,7 +72,10 @@ private struct IPadWorkboardCompactRowsPreview: View {
                                 IPadWorkboardQueueRow(
                                     card: card,
                                     presentation: IPadWorkboardFeature.State.cardPresentation(for: card),
-                                    statuses: self.statuses,
+                                    moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
+                                    nextMoveAction: IPadWorkboardFeature.State.nextMoveActionPresentation(
+                                        for: card,
+                                        statuses: self.statuses),
                                     isBusy: card.id == "preview-running",
                                     inspect: {},
                                     openSession: {},
@@ -367,7 +370,7 @@ private struct IPadWorkboardStatesPreview: View {
                     IPadWorkboardKanbanColumn(
                         presentation: IPadWorkboardFeature.State.kanbanLanePresentation(status: "todo", cardCount: 0),
                         cards: [],
-                        statuses: self.statuses,
+                        moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
                         busyCardID: nil,
                         openSession: { _ in },
                         inspect: { _ in },
@@ -414,7 +417,7 @@ private struct IPadWorkboardStatesPreview: View {
                             status: status,
                             cardCount: cards.count),
                         cards: cards,
-                        statuses: self.statuses,
+                        moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
                         busyCardID: nil,
                         openSession: { _ in },
                         inspect: { _ in },
