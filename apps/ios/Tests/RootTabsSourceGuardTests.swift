@@ -4983,7 +4983,11 @@ struct RootTabsSourceGuardTests {
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateStoreSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingCredentialsSource = try String(
+            contentsOf: Self.onboardingCredentialsFeatureSourceURL(),
+            encoding: .utf8)
+        let onboardingStateSource = onboardingStateStoreSource + "\n" + onboardingCredentialsSource
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
@@ -5897,7 +5901,7 @@ struct RootTabsSourceGuardTests {
         let statusFeatureSource = try Self.extract(
             onboardingStateSource,
             from: "struct OnboardingStatusFeature",
-            to: "struct OnboardingCredentialsFeature")
+            to: "struct OnboardingPresentationFeature")
         let statusStateBlock = try Self.extract(
             statusFeatureSource,
             from: "struct State: Equatable, Sendable",
@@ -6735,7 +6739,11 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding setup code apply result is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateStoreSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingCredentialsSource = try String(
+            contentsOf: Self.onboardingCredentialsFeatureSourceURL(),
+            encoding: .utf8)
+        let onboardingStateSource = onboardingStateStoreSource + "\n" + onboardingCredentialsSource
         let setupCodeFeatureSource = try Self.extract(
             onboardingStateSource,
             from: "struct OnboardingSetupCodeFeature",
@@ -6755,7 +6763,11 @@ struct RootTabsSourceGuardTests {
         let gatewayTokenChange = try Self.extract(
             onboardingStateSource,
             from: "struct GatewayTokenChange",
-            to: "struct SetupAuthApplication")
+            to: "struct ManualCredentialPersistenceRequest")
+        let manualCredentialInputChange = try Self.extract(
+            onboardingStateSource,
+            from: "struct OnboardingManualCredentialInputChange",
+            to: "struct OnboardingGatewayStoredCredentials")
         let setupCodeChange = try Self.extract(
             onboardingStateSource,
             from: "struct SetupCodeChange",
@@ -6780,6 +6792,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct OnboardingSetupCode: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayToken: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayPassword: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingGatewayCredentialInput: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayStoredCredentials: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayCredentialValue: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayCredentialsPersistenceClient"))
@@ -6807,10 +6820,15 @@ struct RootTabsSourceGuardTests {
         #expect(setupCodeChange.contains("var code: OnboardingSetupCode"))
         #expect(appleReviewDemoSetupCode.contains("var code: OnboardingSetupCode"))
         #expect(onboardingStateSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingManualCredentialInputChange: Equatable, Sendable"))
+        #expect(manualCredentialInputChange.contains("var value: OnboardingGatewayCredentialInput"))
+        #expect(manualCredentialInputChange.contains("var instanceId: OnboardingGatewayCurrentInstanceID"))
         #expect(onboardingStateSource.contains("case credentialsLoadRequested(CredentialsLoadRequest)"))
         #expect(onboardingStateSource.contains("case credentialsLoaded(LoadedCredentials)"))
         #expect(onboardingStateSource.contains("case gatewayTokenChanged(GatewayTokenChange)"))
         #expect(onboardingStateSource.contains("case gatewayPasswordChanged(GatewayPasswordChange)"))
+        #expect(onboardingStateSource.contains("case gatewayTokenInputChanged(OnboardingManualCredentialInputChange)"))
+        #expect(onboardingStateSource.contains("case gatewayPasswordInputChanged(OnboardingManualCredentialInputChange)"))
         #expect(onboardingStateSource.contains("case gatewayTokenPersistenceRequested(ManualCredentialPersistenceRequest)"))
         #expect(onboardingStateSource.contains("case gatewayPasswordPersistenceRequested(ManualCredentialPersistenceRequest)"))
         #expect(onboardingStateSource.contains("case setupAuthApplied(SetupAuthApplication)"))
@@ -6834,6 +6852,11 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.gatewayPasswordState = credentials.password"))
         #expect(onboardingStateSource.contains("state.gatewayTokenState = change.token"))
         #expect(onboardingStateSource.contains("state.gatewayPasswordState = change.password"))
+        #expect(onboardingStateSource.contains("case let .gatewayTokenInputChanged(change):"))
+        #expect(onboardingStateSource.contains("case let .gatewayPasswordInputChanged(change):"))
+        #expect(onboardingStateSource.contains("state.gatewayTokenState = .init(value: change.value.value)"))
+        #expect(onboardingStateSource.contains("state.gatewayPasswordState = .init(value: change.value.value)"))
+        #expect(onboardingStateSource.contains("value: .init(rawValue: change.value.value)"))
         #expect(onboardingStateSource.contains("@Dependency(\\.onboardingGatewayCredentialsPersistence)"))
         #expect(onboardingStateSource.contains("manualCredentialPersistenceRequest("))
         #expect(onboardingStateSource.contains("await credentialsPersistenceClient.saveGatewayToken("))
@@ -6855,15 +6878,11 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("await setupAuthPersistenceClient.saveSetupAuth(request)"))
         #expect(onboardingSource.contains("set: { self.updateGatewayToken($0) }"))
         #expect(onboardingSource.contains("set: { self.updateGatewayPassword($0) }"))
-        #expect(updateGatewayTokenFunction.contains("self.credentialsStore.send(.gatewayTokenChanged(.init("))
-        #expect(updateGatewayTokenFunction.contains("token: .init(value: value)"))
-        #expect(updateGatewayTokenFunction.contains("self.credentialsStore.send(.gatewayTokenPersistenceRequested(.init("))
-        #expect(updateGatewayTokenFunction.contains("value: .init(rawValue: value)"))
+        #expect(updateGatewayTokenFunction.contains("self.credentialsStore.send(.gatewayTokenInputChanged(.init("))
+        #expect(updateGatewayTokenFunction.contains("value: .init(value: value)"))
         #expect(updateGatewayTokenFunction.contains("instanceId: .init(value: self.instanceId)"))
-        #expect(updateGatewayPasswordFunction.contains("self.credentialsStore.send(.gatewayPasswordChanged(.init("))
-        #expect(updateGatewayPasswordFunction.contains("password: .init(value: value)"))
-        #expect(updateGatewayPasswordFunction.contains("self.credentialsStore.send(.gatewayPasswordPersistenceRequested(.init("))
-        #expect(updateGatewayPasswordFunction.contains("value: .init(rawValue: value)"))
+        #expect(updateGatewayPasswordFunction.contains("self.credentialsStore.send(.gatewayPasswordInputChanged(.init("))
+        #expect(updateGatewayPasswordFunction.contains("value: .init(value: value)"))
         #expect(updateGatewayPasswordFunction.contains("instanceId: .init(value: self.instanceId)"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.setupCodeChanged(.init(code: .init(value: $0))))"))
         #expect(onboardingSource.contains("get: { self.setupCodeStore.setupCode }"))
@@ -6890,6 +6909,7 @@ struct RootTabsSourceGuardTests {
         #expect(!loadedCredentials.contains("var password: String"))
         #expect(!gatewayTokenChange.contains("var token: String"))
         #expect(!gatewayPasswordChange.contains("var password: String"))
+        #expect(!manualCredentialInputChange.contains("var value: String"))
         #expect(!onboardingSource.contains("GatewaySettingsStore.loadGatewayToken"))
         #expect(!onboardingSource.contains("GatewaySettingsStore.loadGatewayPassword"))
         #expect(!onboardingSource.contains("self.credentialsStore.send(.credentialsLoaded(.init("))
@@ -6914,6 +6934,10 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains(".onChange(of: self.gatewayPassword)"))
         #expect(!updateGatewayTokenFunction.contains("GatewaySettingsStore.saveGatewayToken"))
         #expect(!updateGatewayPasswordFunction.contains("GatewaySettingsStore.saveGatewayPassword"))
+        #expect(!updateGatewayTokenFunction.contains("gatewayTokenChanged"))
+        #expect(!updateGatewayTokenFunction.contains("gatewayTokenPersistenceRequested"))
+        #expect(!updateGatewayPasswordFunction.contains("gatewayPasswordChanged"))
+        #expect(!updateGatewayPasswordFunction.contains("gatewayPasswordPersistenceRequested"))
         #expect(!onboardingSource.contains("self.credentialsStore.send(.gatewayTokenChanged(.init(value: $0)))"))
         #expect(!onboardingSource.contains("self.credentialsStore.send(.gatewayPasswordChanged(.init(value: $0)))"))
         #expect(!onboardingStateSource.contains("var setupCode = \"\""))
@@ -8923,6 +8947,13 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Onboarding/OnboardingStateStore.swift")
+    }
+
+    private static func onboardingCredentialsFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Onboarding/OnboardingCredentialsFeature.swift")
     }
 
     private static func openClawAppSourceURL() -> URL {

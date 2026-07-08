@@ -1021,16 +1021,14 @@ extension OnboardingWizardView {
     }
 
     private func updateGatewayToken(_ value: String) {
-        self.credentialsStore.send(.gatewayTokenChanged(.init(token: .init(value: value))))
-        self.credentialsStore.send(.gatewayTokenPersistenceRequested(.init(
-            value: .init(rawValue: value),
+        self.credentialsStore.send(.gatewayTokenInputChanged(.init(
+            value: .init(value: value),
             instanceId: .init(value: self.instanceId))))
     }
 
     private func updateGatewayPassword(_ value: String) {
-        self.credentialsStore.send(.gatewayPasswordChanged(.init(password: .init(value: value))))
-        self.credentialsStore.send(.gatewayPasswordPersistenceRequested(.init(
-            value: .init(rawValue: value),
+        self.credentialsStore.send(.gatewayPasswordInputChanged(.init(
+            value: .init(value: value),
             instanceId: .init(value: self.instanceId))))
     }
 
