@@ -5137,7 +5137,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("case enableRequested"))
         #expect(onboardingStateSource.contains("@Dependency(\\.onboardingAppleReviewDemo)"))
         #expect(onboardingStateSource.contains("await appleReviewDemoClient.enter()"))
-        #expect(onboardingSource.contains("await self.appleReviewDemoStore.send(.enableRequested).finish()"))
+        #expect(onboardingSource.contains("await self.appleReviewDemoStore.send(activation.appleReviewDemoAction).finish()"))
         #expect(!onboardingSource.contains("self.appModel.enterAppleReviewDemoMode()"))
         #expect(onboardingPairingResumeStoreDeclaration
             .contains("@State private var pairingResumeStore: StoreOf<OnboardingPairingResumeFeature>"))
@@ -6786,6 +6786,10 @@ struct RootTabsSourceGuardTests {
             onboardingStateSource,
             from: "struct SetupCodeChange",
             to: "case appleReviewDemoCodeAccepted")
+        let appleReviewDemoActivation = try Self.extract(
+            onboardingStateSource,
+            from: "struct AppleReviewDemoActivation",
+            to: "enum ApplyResult")
         let appleReviewDemoSetupCode = try Self.extract(
             onboardingStateSource,
             from: "struct AppleReviewDemoSetupCode",
@@ -6831,6 +6835,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct SetupLinkApplication: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct SetupCodeChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct AppleReviewDemoActivation: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("var setupCodeState = OnboardingSetupCode(value: \"\")"))
         #expect(onboardingStateSource
             .contains("var gatewayLinkConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?"))
@@ -6838,7 +6843,13 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("var setupCode: String {\n            self.setupCodeState.value"))
         #expect(onboardingStateSource.contains("var status: String? {\n            self.statusState.value"))
         #expect(setupCodeChange.contains("var code: OnboardingSetupCode"))
+        #expect(appleReviewDemoActivation
+            .contains("var appleReviewDemoAction: OnboardingAppleReviewDemoFeature.Action"))
+        #expect(appleReviewDemoActivation.contains("var presentationAction: OnboardingPresentationFeature.Action"))
+        #expect(appleReviewDemoActivation.contains("var statusAction: OnboardingStatusFeature.Action"))
+        #expect(appleReviewDemoActivation.contains("var connectionFormAction: OnboardingConnectionFormFeature.Action"))
         #expect(appleReviewDemoSetupCode.contains("var code: OnboardingSetupCode"))
+        #expect(appleReviewDemoSetupCode.contains("var activation: AppleReviewDemoActivation"))
         #expect(onboardingStateSource.contains("struct ScannedGatewayLink: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingManualCredentialInputChange: Equatable, Sendable"))
         #expect(manualCredentialInputChange.contains("var value: OnboardingGatewayCredentialInput"))
@@ -6906,7 +6917,14 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("case applyRequested"))
         #expect(onboardingStateSource.contains("state.setupCodeState = change.code"))
         #expect(onboardingStateSource.contains("state.setupCodeState = .init(value: \"\")"))
-        #expect(onboardingStateSource.contains("state.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: raw)))"))
+        #expect(onboardingStateSource.contains("state.applyResult = Self.appleReviewDemoSetupCode(raw)"))
+        #expect(onboardingStateSource.contains("private static func appleReviewDemoSetupCode("))
+        #expect(onboardingStateSource.contains("activation: self.appleReviewDemoActivation()"))
+        #expect(onboardingStateSource.contains("private static func appleReviewDemoActivation() -> AppleReviewDemoActivation"))
+        #expect(onboardingStateSource.contains("appleReviewDemoAction: .enableRequested"))
+        #expect(onboardingStateSource.contains("presentationAction: .qrScannerDismissed"))
+        #expect(onboardingStateSource.contains("statusAction: .appleReviewDemoModeEnabled"))
+        #expect(onboardingStateSource.contains("connectionFormAction: .selectedModeChanged(.init(mode: .homeNetwork))"))
         #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(link)"))
         #expect(onboardingStateSource.contains(
             "state.gatewayLinkConnectionStart = Self.gatewayLinkConnectionStart(for: link)"))
@@ -6925,6 +6943,12 @@ struct RootTabsSourceGuardTests {
         #expect(applySetupCodeFunction.contains(
             "let gatewayLinkConnectionStart = self.setupCodeStore.gatewayLinkConnectionStart"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.applyResultHandled)"))
+        #expect(onboardingSource.contains("await self.applyAppleReviewDemoActivation(setupCode.activation)"))
+        #expect(onboardingSource.contains("private func applyAppleReviewDemoActivation("))
+        #expect(onboardingSource.contains("await self.appleReviewDemoStore.send(activation.appleReviewDemoAction).finish()"))
+        #expect(onboardingSource.contains("self.presentationStore.send(activation.presentationAction)"))
+        #expect(onboardingSource.contains("self.statusStore.send(activation.statusAction)"))
+        #expect(onboardingSource.contains("self.connectionFormStore.send(activation.connectionFormAction)"))
         #expect(applySetupCodeFunction.contains(
             "guard let connectionStart = gatewayLinkConnectionStart else { return }"))
         #expect(applySetupCodeFunction.contains("self.statusStore.send(.connectionStarted(connectionStart))"))
@@ -6976,6 +7000,8 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("let raw = self.setupCodeStore.trimmedSetupCode"))
         #expect(!onboardingSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
         #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
+        #expect(!onboardingSource.contains("self.appleReviewDemoStore.send(.enableRequested).finish()"))
+        #expect(!onboardingSource.contains("self.statusStore.send(.appleReviewDemoModeEnabled)"))
         #expect(!applySetupCodeFunction.contains("id: .init(value: \"setup-code\")"))
         #expect(!applySetupCodeFunction.contains("message: .init(value: \"Connecting via setup code...\")"))
         #expect(!applySetupCodeFunction.contains("Setup code loaded. Connecting to \\(link.host):\\(link.port)"))
@@ -7091,7 +7117,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualConnectionRequestHandled)"))
         #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.modeSelected(.init(mode: mode)))"))
-        #expect(onboardingSource.contains("self.connectionFormStore.send(.selectedModeChanged(.init(mode:"))
+        #expect(onboardingSource.contains("self.connectionFormStore.send(activation.connectionFormAction)"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualHostChanged(.init(host: .init(value: $0))))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualPortTextChanged(.init(text: .init(value: $0))))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualTLSChanged(.init(useTLS: .init(value: $0))))"))

@@ -851,7 +851,7 @@ extension OnboardingWizardView {
 
         switch result {
         case let .appleReviewDemoSetupCode(setupCode):
-            await self.handleScannedSetupCode(setupCode.code.value)
+            await self.applyAppleReviewDemoActivation(setupCode.activation)
 
         case let .gatewayLink(link):
             guard let connectionStart = gatewayLinkConnectionStart else { return }
@@ -887,11 +887,17 @@ extension OnboardingWizardView {
         guard let result = self.setupCodeStore.applyResult else { return }
         self.setupCodeStore.send(.applyResultHandled)
 
-        guard case .appleReviewDemoSetupCode = result else { return }
-        await self.appleReviewDemoStore.send(.enableRequested).finish()
-        self.presentationStore.send(.qrScannerDismissed)
-        self.statusStore.send(.appleReviewDemoModeEnabled)
-        self.connectionFormStore.send(.selectedModeChanged(.init(mode: .homeNetwork)))
+        guard case let .appleReviewDemoSetupCode(setupCode) = result else { return }
+        await self.applyAppleReviewDemoActivation(setupCode.activation)
+    }
+
+    private func applyAppleReviewDemoActivation(
+        _ activation: OnboardingSetupCodeFeature.AppleReviewDemoActivation) async
+    {
+        await self.appleReviewDemoStore.send(activation.appleReviewDemoAction).finish()
+        self.presentationStore.send(activation.presentationAction)
+        self.statusStore.send(activation.statusAction)
+        self.connectionFormStore.send(activation.connectionFormAction)
     }
 
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
