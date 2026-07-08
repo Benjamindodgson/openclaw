@@ -230,7 +230,10 @@ struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
 }
 
 struct IPadSkillWorkshopAgentScopeMenuPresentation: Equatable, Sendable {
+    let title: String
     let selectedLabel: String
+    let selectorIconSystemName: String
+    let accessibilityLabel: String
     let options: [IPadSkillWorkshopAgentScopeOption]
     let isEnabled: Bool
 }
