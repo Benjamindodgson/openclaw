@@ -195,7 +195,9 @@ extension RootTabs {
     @MainActor
     func makeOnboardingStateStore() -> StoreOf<OnboardingStateFeature> {
         Store(initialState: OnboardingStateFeature.State()) {
-            OnboardingStateFeature(resetClient: .live(appModel: self.appModel))
+            OnboardingStateFeature(
+                progressPersistenceClient: .liveValue,
+                resetClient: .live(appModel: self.appModel))
         }
     }
 

@@ -93,13 +93,14 @@ import Testing
     }
 
     @Test @MainActor func `reducer updates presentation state`() async {
+        let progressProbe = OnboardingProgressPersistenceProbe()
         let store = TestStore(initialState: OnboardingStateFeature.State(
             isCompleted: false,
             firstRunIntroSeen: false,
             hasSavedGatewayConnection: false,
             gatewayServerName: nil))
         {
-            OnboardingStateFeature()
+            OnboardingStateFeature(progressPersistenceClient: progressProbe.client)
         }
 
         await store.send(.gatewaySnapshotChanged(.init(
@@ -146,6 +147,10 @@ import Testing
             $0.firstRunIntroSeenState = .init(value: true)
             $0.firstRunIntroPresentation = .init(shouldPresent: false)
         }
+        await store.finish()
+
+        #expect(progressProbe.completedModes == [.remoteDomain])
+        #expect(progressProbe.firstRunIntroSeenCount == 1)
     }
 
     @Test @MainActor func `onboarding state reducer resets through client`() async {
@@ -1094,5 +1099,20 @@ import Testing
                     self.savedRequests.append(request)
                 })
         }
+    }
+}
+
+private final class OnboardingProgressPersistenceProbe: @unchecked Sendable {
+    var completedModes: [OnboardingConnectionMode?] = []
+    var firstRunIntroSeenCount = 0
+
+    var client: OnboardingProgressPersistenceClient {
+        OnboardingProgressPersistenceClient(
+            markCompleted: { mode in
+                self.completedModes.append(mode)
+            },
+            markFirstRunIntroSeen: {
+                self.firstRunIntroSeenCount += 1
+            })
     }
 }
