@@ -947,14 +947,8 @@ extension OnboardingWizardView {
     }
 
     private func updateConnectionIssue(problem: GatewayConnectionProblem?, statusText: String) {
-        let next = GatewayConnectionIssue.detect(problem: problem)
-        let fallback = next == .none ? GatewayConnectionIssue.detect(from: statusText) : next
-
-        self.statusStore.send(.connectionIssueDetected(.init(
-            issue: fallback,
-            requestId: .init(value: problem?.requestId ?? fallback.requestId),
-            pauseReconnect: .init(value: problem?.pauseReconnect == true),
-            message: .init(value: problem?.message),
+        self.statusStore.send(.connectionProblemUpdated(.init(
+            problem: problem,
             statusText: .init(value: statusText))))
 
         if self.statusStore.shouldShowAuthStep {
