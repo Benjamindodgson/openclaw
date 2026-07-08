@@ -596,7 +596,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation {
-        self.store.state.dispatchControlPresentation(canWrite: self.gatewayAccess.canWrite)
+        self.store.state.dispatchControlPresentation(gatewayAccess: self.gatewayAccess)
     }
 
     private var compactEmptyStatePresentation: IPadWorkboardCompactEmptyStatePresentation {
