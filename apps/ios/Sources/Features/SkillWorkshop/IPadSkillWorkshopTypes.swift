@@ -213,7 +213,14 @@ struct IPadSkillWorkshopAdminScopeNoticePresentation: Equatable, Sendable {
     let text: String
 }
 
+struct IPadSkillWorkshopProposalActionButtonPresentation: Equatable, Sendable {
+    let title: String
+    let iconSystemName: String
+}
+
 struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable {
+    let applyButton: IPadSkillWorkshopProposalActionButtonPresentation
+    let rejectButton: IPadSkillWorkshopProposalActionButtonPresentation
     let canApplyMutations: Bool
     let canRunActions: Bool
     let adminScopeNotice: IPadSkillWorkshopAdminScopeNoticePresentation?

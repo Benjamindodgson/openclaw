@@ -2459,8 +2459,16 @@ struct RootTabsSourceGuardTests {
             "struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable"))
         #expect(typeSource.contains(
             "struct IPadSkillWorkshopAdminScopeNoticePresentation: Equatable, Sendable"))
+        #expect(typeSource.contains(
+            "struct IPadSkillWorkshopProposalActionButtonPresentation: Equatable, Sendable"))
         #expect(source.contains(
             "func proposalActionControlsPresentation(\n            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopProposalActionControlsPresentation"))
+        #expect(source.contains("applyButton: .init("))
+        #expect(source.contains("title: \"Apply\""))
+        #expect(source.contains("iconSystemName: \"checkmark.circle\""))
+        #expect(source.contains("rejectButton: .init("))
+        #expect(source.contains("title: \"Reject\""))
+        #expect(source.contains("iconSystemName: \"xmark.circle\""))
         #expect(source.contains(
             "func emptyProposalPresentation(\n            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopEmptyProposalPresentation"))
         #expect(source.contains("guard state.shouldEnableProposalActionControls("))
@@ -2468,6 +2476,10 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.screenPresentation.proposalActionControlsPresentation"))
         #expect(!source.contains("self.store.state.proposalActionControlsPresentation("))
         #expect(source.contains("self.proposalActionControlsPresentation.canRunActions"))
+        #expect(source.contains(
+            "Label(applyButtonPresentation.title, systemImage: applyButtonPresentation.iconSystemName)"))
+        #expect(source.contains(
+            "Label(rejectButtonPresentation.title, systemImage: rejectButtonPresentation.iconSystemName)"))
         #expect(source.contains("adminScopeNotice: canApplyMutations ? nil : .init("))
         #expect(source.contains("iconSystemName: \"lock.shield\""))
         #expect(source.contains("text: \"Admin scope required.\""))
@@ -2494,6 +2506,8 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("self.store.state.shouldEnableProposalMutation("))
         #expect(!source.contains("self.store.state.shouldEnableProposalActionControls("))
         #expect(!source.contains("if !self.canApplyProposalMutations"))
+        #expect(!source.contains("Label(\"Apply\", systemImage: \"checkmark.circle\")"))
+        #expect(!source.contains("Label(\"Reject\", systemImage: \"xmark.circle\")"))
         #expect(!source.contains(
             "func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String"))
         #expect(!source.contains(

@@ -151,6 +151,12 @@ struct IPadSkillWorkshopFeature {
         {
             let canApplyMutations = self.shouldEnableProposalMutation(gatewayAccess: gatewayAccess)
             return .init(
+                applyButton: .init(
+                    title: "Apply",
+                    iconSystemName: "checkmark.circle"),
+                rejectButton: .init(
+                    title: "Reject",
+                    iconSystemName: "xmark.circle"),
                 canApplyMutations: canApplyMutations,
                 canRunActions: canApplyMutations && self.busyAction == nil,
                 adminScopeNotice: canApplyMutations ? nil : .init(
@@ -1246,10 +1252,11 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private func proposalApplyButton(_ proposal: IPadSkillProposal) -> some View {
-        Button {
+        let applyButtonPresentation = self.proposalActionControlsPresentation.applyButton
+        return Button {
             Task { await self.run(.apply, proposal: proposal) }
         } label: {
-            Label("Apply", systemImage: "checkmark.circle")
+            Label(applyButtonPresentation.title, systemImage: applyButtonPresentation.iconSystemName)
                 .frame(maxWidth: self.isCompactWidth ? .infinity : nil)
         }
         .buttonStyle(.borderedProminent)
@@ -1258,10 +1265,11 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private func proposalRejectButton(_ proposal: IPadSkillProposal) -> some View {
-        Button(role: .destructive) {
+        let rejectButtonPresentation = self.proposalActionControlsPresentation.rejectButton
+        return Button(role: .destructive) {
             Task { await self.run(.reject, proposal: proposal) }
         } label: {
-            Label("Reject", systemImage: "xmark.circle")
+            Label(rejectButtonPresentation.title, systemImage: rejectButtonPresentation.iconSystemName)
                 .frame(maxWidth: self.isCompactWidth ? .infinity : nil)
         }
         .buttonStyle(.bordered)
