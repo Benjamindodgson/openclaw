@@ -1165,7 +1165,12 @@ extension OnboardingStateStoreTests {
             $0.manualConnectionRequest = OnboardingConnectionFormFeature.ManualConnectionRequest(
                 host: .init(value: "studio.local"),
                 port: .init(value: 19000),
-                useTLS: .init(value: false))
+                useTLS: .init(value: false),
+                connectionStart: .init(
+                    id: .init(value: "manual"),
+                    message: .init(value: "Connecting to studio.local…"),
+                    statusLine: .init(value: "Connecting to studio.local:19000…"),
+                    clearsIssue: .init(value: true)))
         }
 
         await store.send(.manualConnectionRequestHandled) {
