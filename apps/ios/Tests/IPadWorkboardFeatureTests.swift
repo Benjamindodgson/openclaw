@@ -90,6 +90,30 @@ struct IPadWorkboardFeatureTests {
         #expect(state.screenPresentation.queueSummaryPresentation == state.queueSummaryPresentation)
     }
 
+    @Test func `workboard refresh control presentation is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        #expect(state.refreshControlPresentation == .init(
+            title: "Refresh",
+            iconSystemName: "arrow.clockwise",
+            compactAccessibilityLabel: "Refresh workboard",
+            isDisabled: false,
+            showsProgress: false))
+
+        state.refreshPhase = .inFlight(boardID: nil)
+        #expect(state.refreshControlPresentation == .init(
+            title: "Refresh",
+            iconSystemName: "arrow.clockwise",
+            compactAccessibilityLabel: "Refresh workboard",
+            isDisabled: true,
+            showsProgress: true))
+        #expect(state.screenPresentation.refreshControlPresentation == state.refreshControlPresentation)
+
+        state.refreshPhase = .idle
+        state.dispatchPhase = .inFlight
+        #expect(state.refreshControlPresentation.isDisabled)
+        #expect(state.refreshControlPresentation.showsProgress)
+    }
+
     @Test func `kanban cards are filtered by reducer state`() {
         var state = IPadWorkboardFeature.State()
         state.cardEntries = .init(values: [

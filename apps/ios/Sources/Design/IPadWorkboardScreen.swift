@@ -142,14 +142,16 @@ struct IPadWorkboardScreen: View {
                     Button {
                         Task { await self.loadCards(force: true) }
                     } label: {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        Label(
+                            self.refreshControlPresentation.title,
+                            systemImage: self.refreshControlPresentation.iconSystemName)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(self.neutralControlTint)
-                    .disabled(self.store.isLoading)
+                    .disabled(self.refreshControlPresentation.isDisabled)
 
-                    if self.store.isLoading {
+                    if self.refreshControlPresentation.showsProgress {
                         ProgressView().controlSize(.small)
                     }
                 }
@@ -222,14 +224,14 @@ struct IPadWorkboardScreen: View {
         Button {
             Task { await self.loadCards(force: true) }
         } label: {
-            Image(systemName: "arrow.clockwise")
+            Image(systemName: self.refreshControlPresentation.iconSystemName)
                 .font(.caption.weight(.semibold))
                 .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)
         .foregroundStyle(self.neutralControlTint)
-        .accessibilityLabel("Refresh workboard")
-        .disabled(self.store.isLoading)
+        .accessibilityLabel(self.refreshControlPresentation.compactAccessibilityLabel)
+        .disabled(self.refreshControlPresentation.isDisabled)
     }
 
     private func newCardButton(expands: Bool) -> some View {
@@ -573,6 +575,10 @@ struct IPadWorkboardScreen: View {
 
     private var queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation {
         self.screenPresentation.queueSummaryPresentation
+    }
+
+    private var refreshControlPresentation: IPadWorkboardRefreshControlPresentation {
+        self.screenPresentation.refreshControlPresentation
     }
 
     private var createUnavailableMessage: String? {

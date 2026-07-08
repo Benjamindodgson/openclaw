@@ -177,9 +177,18 @@ struct IPadWorkboardQueueSummaryPresentation: Equatable, Sendable {
     let cardCountLabel: String
 }
 
+struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
+    let title: String
+    let iconSystemName: String
+    let compactAccessibilityLabel: String
+    let isDisabled: Bool
+    let showsProgress: Bool
+}
+
 struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let screenChromePresentation: IPadWorkboardScreenChromePresentation
     let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
+    let refreshControlPresentation: IPadWorkboardRefreshControlPresentation
 }
 
 // swiftformat:enable redundantSendable
@@ -291,10 +300,20 @@ struct IPadWorkboardFeature {
                 cardCountLabel: "\(self.filteredCardCount) cards")
         }
 
+        var refreshControlPresentation: IPadWorkboardRefreshControlPresentation {
+            .init(
+                title: "Refresh",
+                iconSystemName: "arrow.clockwise",
+                compactAccessibilityLabel: "Refresh workboard",
+                isDisabled: self.isLoading,
+                showsProgress: self.isLoading)
+        }
+
         var screenPresentation: IPadWorkboardScreenPresentation {
             .init(
                 screenChromePresentation: self.screenChromePresentation,
-                queueSummaryPresentation: self.queueSummaryPresentation)
+                queueSummaryPresentation: self.queueSummaryPresentation,
+                refreshControlPresentation: self.refreshControlPresentation)
         }
 
         var isLoading: Bool {
