@@ -219,20 +219,32 @@ struct IPadSkillWorkshopFeatureTests {
             isOperatorGatewayConnected: true,
             isAppleReviewDemoModeEnabled: true,
             hasOperatorAdminScope: true)
+        let applyButton = IPadSkillWorkshopProposalActionButtonPresentation(
+            title: "Apply",
+            iconSystemName: "checkmark.circle")
+        let rejectButton = IPadSkillWorkshopProposalActionButtonPresentation(
+            title: "Reject",
+            iconSystemName: "xmark.circle")
 
         #expect(state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableAdmin) == .init(
+            applyButton: applyButton,
+            rejectButton: rejectButton,
             canApplyMutations: true,
             canRunActions: true,
             adminScopeNotice: nil))
         #expect(state.screenPresentation(
             gatewayAccess: writableAdmin,
             sceneIsActive: true).proposalActionControlsPresentation == .init(
+            applyButton: applyButton,
+            rejectButton: rejectButton,
             canApplyMutations: true,
             canRunActions: true,
             adminScopeNotice: nil))
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableNonAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableNonAdmin) == .init(
+            applyButton: applyButton,
+            rejectButton: rejectButton,
             canApplyMutations: false,
             canRunActions: false,
             adminScopeNotice: .init(
@@ -240,6 +252,8 @@ struct IPadSkillWorkshopFeatureTests {
                 text: "Admin scope required.")))
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: reviewModeAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: reviewModeAdmin) == .init(
+            applyButton: applyButton,
+            rejectButton: rejectButton,
             canApplyMutations: false,
             canRunActions: false,
             adminScopeNotice: .init(
@@ -249,12 +263,16 @@ struct IPadSkillWorkshopFeatureTests {
         state.busyAction = IPadSkillProposalAction(kind: .apply, proposalID: "pending-1")
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableAdmin) == .init(
+            applyButton: applyButton,
+            rejectButton: rejectButton,
             canApplyMutations: true,
             canRunActions: false,
             adminScopeNotice: nil))
         #expect(state.screenPresentation(
             gatewayAccess: writableAdmin,
             sceneIsActive: true).proposalActionControlsPresentation == .init(
+            applyButton: applyButton,
+            rejectButton: rejectButton,
             canApplyMutations: true,
             canRunActions: false,
             adminScopeNotice: nil))
