@@ -472,7 +472,7 @@ struct IPadWorkboardScreen: View {
                     value: self.queueSummaryPresentation.value,
                     actionTitle: nil,
                     action: nil)
-                if self.store.filteredCards.isEmpty {
+                if self.store.queueRowItemPresentations.isEmpty {
                     ProStatusRow(
                         icon: self.compactEmptyStatePresentation.icon,
                         title: self.compactEmptyStatePresentation.title,
@@ -482,24 +482,24 @@ struct IPadWorkboardScreen: View {
                         actionTitle: nil,
                         action: nil)
                 } else {
-                    ForEach(Array(self.store.filteredCards.enumerated()), id: \.element.id) { index, card in
+                    ForEach(Array(self.store.queueRowItemPresentations.enumerated()), id: \.element.id) { index, item in
                         if index > 0 {
                             Divider().padding(.leading, 58)
                         }
                         IPadWorkboardQueueRow(
-                            card: card,
-                            presentation: self.store.state.queueRowPresentation(for: card),
+                            card: item.card,
+                            presentation: item.rowPresentation,
                             inspect: {
-                                self.store.send(.cardSheetPresented(.init(card: card)))
+                                self.store.send(.cardSheetPresented(.init(card: item.card)))
                             },
                             openSession: {
-                                self.open(card)
+                                self.open(item.card)
                             },
                             move: { status in
-                                Task { await self.move(card, to: status) }
+                                Task { await self.move(item.card, to: status) }
                             },
                             archive: {
-                                Task { await self.archive(card) }
+                                Task { await self.archive(item.card) }
                             })
                     }
                 }

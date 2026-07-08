@@ -249,6 +249,12 @@ struct IPadWorkboardQueueRowPresentation: Equatable, Sendable {
     let actionControlPresentation: IPadWorkboardCardActionControlPresentation
 }
 
+struct IPadWorkboardQueueRowItemPresentation: Equatable, Identifiable, Sendable {
+    let id: String
+    let card: IPadWorkboardCard
+    let rowPresentation: IPadWorkboardQueueRowPresentation
+}
+
 struct IPadWorkboardKanbanCardPresentation: Equatable, Sendable {
     let cardPresentation: IPadWorkboardCardPresentation
     let moveActions: [IPadWorkboardMoveActionPresentation]
@@ -1494,6 +1500,12 @@ extension IPadWorkboardFeature.State {
             moveActions: self.moveActionPresentations,
             nextMoveAction: self.nextMoveActionPresentation(for: card),
             actionControlPresentation: self.cardActionControlPresentation(for: card, context: .queue))
+    }
+
+    var queueRowItemPresentations: [IPadWorkboardQueueRowItemPresentation] {
+        self.filteredCards.map { card in
+            .init(id: card.id, card: card, rowPresentation: self.queueRowPresentation(for: card))
+        }
     }
 
     var kanbanColumnPresentations: [IPadWorkboardKanbanColumnPresentation] {
