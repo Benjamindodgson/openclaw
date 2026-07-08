@@ -93,7 +93,7 @@ struct IPadActivitySessionsFeatureTests {
         }
         let loadingPresentation = Self.screenPresentation(store.state)
         #expect(loadingPresentation.sessionMetricValue == "...")
-        #expect(loadingPresentation.feedHeaderValue == "Loading")
+        #expect(loadingPresentation.feedHeaderPresentation.value == "Loading")
         #expect(loadingPresentation.showsLoadingSessionsPlaceholder)
         await store.receive(.refreshResponse(.init(result: .success(.init(entries: loadedSessions))))) {
             $0.loadingPhase = .idle
@@ -114,7 +114,7 @@ struct IPadActivitySessionsFeatureTests {
             "chat-session-chat-3",
             "chat-session-chat-2",
         ])
-        #expect(loadedPresentation.feedHeaderValue == nil)
+        #expect(loadedPresentation.feedHeaderPresentation.value == nil)
         #expect(!loadedPresentation.showsLoadingSessionsPlaceholder)
         #expect(store.state.visibleSessions.map(\.key) == [
             "chat-9",
@@ -275,6 +275,14 @@ struct IPadActivitySessionsFeatureTests {
 
         #expect(presentation.title == "Activity")
         #expect(presentation.subtitle == "Live device and gateway activity.")
+    }
+
+    @Test func `screen presentation owns feed header copy`() {
+        let presentation = Self.screenPresentation(IPadActivitySessionsFeature.State()).feedHeaderPresentation
+
+        #expect(presentation.title == "Recent activity")
+        #expect(presentation.value == nil)
+        #expect(presentation.actionTitle == "Refresh")
     }
 
     @Test func `screen presentation owns pending approval row`() {
