@@ -62,7 +62,7 @@ struct IPadWorkboardScreen: View {
                 IPadWorkboardCardDetailSheet(
                     card: card,
                     presentation: self.store.state.cardPresentation(for: card),
-                    moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
+                    moveActions: self.store.moveActionPresentations,
                     actionControlsPresentation: self.store.state.cardDetailActionControlsPresentation(
                         for: card,
                         gatewayAccess: self.gatewayAccess),
@@ -445,7 +445,7 @@ struct IPadWorkboardScreen: View {
                     IPadWorkboardKanbanColumn(
                         presentation: self.store.state.kanbanLanePresentation(status: status, cards: cards),
                         cards: cards,
-                        moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
+                        moveActions: self.store.moveActionPresentations,
                         actionControlPresentation: { card in
                             self.store.state.cardActionControlPresentation(for: card, context: .kanban)
                         },
@@ -495,10 +495,8 @@ struct IPadWorkboardScreen: View {
                         IPadWorkboardQueueRow(
                             card: card,
                             presentation: self.store.state.cardPresentation(for: card),
-                            moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
-                            nextMoveAction: self.store.state.nextMoveActionPresentation(
-                                for: card,
-                                statuses: self.store.statusValues),
+                            moveActions: self.store.moveActionPresentations,
+                            nextMoveAction: self.store.state.nextMoveActionPresentation(for: card),
                             actionControlPresentation: self.store.state.cardActionControlPresentation(
                                 for: card,
                                 context: .queue),
