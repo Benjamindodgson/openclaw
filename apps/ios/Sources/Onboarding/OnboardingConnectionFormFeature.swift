@@ -242,6 +242,7 @@ struct OnboardingConnectionFormFeature {
         var host: OnboardingManualHost
         var port: OnboardingManualPort
         var useTLS: OnboardingManualTLS
+        var connectionStart: OnboardingStatusFeature.Action.ConnectionStart
     }
 
     enum Action: Equatable, Sendable {
@@ -319,10 +320,13 @@ struct OnboardingConnectionFormFeature {
                 guard !host.isEmpty, state.manualPort > 0, state.manualPort <= 65535 else {
                     return .none
                 }
+                let manualHost = OnboardingManualHost(value: host)
+                let manualPort = state.manualPortState
                 state.manualConnectionRequest = ManualConnectionRequest(
-                    host: .init(value: host),
-                    port: state.manualPortState,
-                    useTLS: .init(value: state.manualTLS))
+                    host: manualHost,
+                    port: manualPort,
+                    useTLS: .init(value: state.manualTLS),
+                    connectionStart: Self.manualConnectionStart(host: manualHost, port: manualPort))
                 return .none
 
             case .manualConnectionRequestHandled:
@@ -379,5 +383,17 @@ struct OnboardingConnectionFormFeature {
             state.manualHostState = .init(value: "localhost")
             state.manualTLSState = .init(value: false)
         }
+    }
+
+    private static func manualConnectionStart(
+        host: OnboardingManualHost,
+        port: OnboardingManualPort)
+        -> OnboardingStatusFeature.Action.ConnectionStart
+    {
+        .init(
+            id: .init(value: "manual"),
+            message: .init(value: "Connecting to \(host.value)…"),
+            statusLine: .init(value: "Connecting to \(host.value):\(port.value)…"),
+            clearsIssue: .init(value: true))
     }
 }

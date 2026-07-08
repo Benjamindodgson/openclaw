@@ -1060,11 +1060,7 @@ extension OnboardingWizardView {
         guard let request = self.connectionFormStore.manualConnectionRequest else { return }
         self.connectionFormStore.send(.manualConnectionRequestHandled)
 
-        self.statusStore.send(.connectionStarted(.init(
-            id: .init(value: "manual"),
-            message: .init(value: "Connecting to \(request.host.value)…"),
-            statusLine: .init(value: "Connecting to \(request.host.value):\(request.port.value)…"),
-            clearsIssue: .init(value: true))))
+        self.statusStore.send(.connectionStarted(request.connectionStart))
         defer { self.statusStore.send(.connectionFinished) }
         let authOverride = GatewayConnectionController.ManualAuthOverride.currentManualInput(
             token: self.gatewayToken,

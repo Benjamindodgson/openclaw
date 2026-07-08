@@ -6961,6 +6961,10 @@ struct RootTabsSourceGuardTests {
     @Test func `onboarding manual connection request is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try Self.onboardingFeatureSource()
+        let connectManualFunction = try Self.extract(
+            onboardingSource,
+            from: "private func connectManual() async",
+            to: "private func retryLastAttempt")
         let manualConnectionRequest = try Self.extract(
             onboardingStateSource,
             from: "struct ManualConnectionRequest",
@@ -7035,6 +7039,7 @@ struct RootTabsSourceGuardTests {
         #expect(manualConnectionRequest.contains("var host: OnboardingManualHost"))
         #expect(manualConnectionRequest.contains("var port: OnboardingManualPort"))
         #expect(manualConnectionRequest.contains("var useTLS: OnboardingManualTLS"))
+        #expect(manualConnectionRequest.contains("var connectionStart: OnboardingStatusFeature.Action.ConnectionStart"))
         #expect(manualHostChange.contains("var host: OnboardingManualHost"))
         #expect(manualPortTextChange.contains("var text: OnboardingManualPortText"))
         #expect(manualTLSChange.contains("var useTLS: OnboardingManualTLS"))
@@ -7049,11 +7054,19 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.selectedMode = selection.mode"))
         #expect(onboardingStateSource.contains("state.selectedMode = change.mode"))
         #expect(onboardingStateSource.contains("state.manualConnectionRequest = ManualConnectionRequest("))
-        #expect(onboardingStateSource.contains("host: .init(value: host)"))
-        #expect(onboardingStateSource.contains("port: state.manualPortState"))
+        #expect(onboardingStateSource.contains("let manualHost = OnboardingManualHost(value: host)"))
+        #expect(onboardingStateSource.contains("let manualPort = state.manualPortState"))
+        #expect(onboardingStateSource.contains("host: manualHost"))
+        #expect(onboardingStateSource.contains("port: manualPort"))
         #expect(onboardingStateSource.contains("useTLS: .init(value: state.manualTLS)"))
+        #expect(onboardingStateSource.contains("connectionStart: Self.manualConnectionStart(host: manualHost, port: manualPort)"))
+        #expect(onboardingStateSource.contains("private static func manualConnectionStart("))
+        #expect(onboardingStateSource.contains("id: .init(value: \"manual\")"))
+        #expect(onboardingStateSource.contains("message: .init(value: \"Connecting to \\(host.value)…\")"))
+        #expect(onboardingStateSource.contains("statusLine: .init(value: \"Connecting to \\(host.value):\\(port.value)…\")"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualConnectionRequested)"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualConnectionRequestHandled)"))
+        #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.modeSelected(.init(mode: mode)))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.selectedModeChanged(.init(mode:"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualHostChanged(.init(host: .init(value: $0))))"))
@@ -7081,6 +7094,10 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingStateSource.contains("state.manualPort = min(parsed, 65535)"))
         #expect(!onboardingStateSource.contains("state.manualPortText = \"\""))
         #expect(!onboardingStateSource.contains("var manualTLS = true"))
+        #expect(!connectManualFunction.contains("id: .init(value: \"manual\")"))
+        #expect(!connectManualFunction.contains("message: .init(value: \"Connecting to \\(request.host.value)…\")"))
+        #expect(!connectManualFunction.contains(
+            "statusLine: .init(value: \"Connecting to \\(request.host.value):\\(request.port.value)…\")"))
         #expect(!onboardingStateSource.contains("self.manualTLS = true"))
         #expect(!onboardingStateSource.contains("self.manualTLS = false"))
         #expect(!onboardingStateSource.contains("state.manualTLS ="))
