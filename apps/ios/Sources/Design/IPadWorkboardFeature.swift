@@ -647,7 +647,7 @@ struct IPadWorkboardFeature {
                 canWrite: canWrite)
         }
 
-        func createCardPresentation(canRead: Bool, canWrite: Bool) -> IPadWorkboardCreateCardPresentation {
+        func createCardPresentation(gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCreateCardPresentation {
             let isCreating = self.cardCreationPhase == .inFlight
             return .init(
                 buttonTitle: "New Card",
@@ -663,8 +663,8 @@ struct IPadWorkboardFeature {
                     cancelTitle: "Cancel",
                     confirmationTitle: isCreating ? "Creating..." : "Create",
                     confirmationAccessibilityHint: self.createUnavailableMessage(
-                        canRead: canRead,
-                        canWrite: canWrite) ?? "Creates a workboard card",
+                        canRead: gatewayAccess.canRead,
+                        canWrite: gatewayAccess.canWrite) ?? "Creates a workboard card",
                     isConfirmationDisabled: isCreating))
         }
 

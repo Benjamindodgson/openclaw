@@ -592,9 +592,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var createCardPresentation: IPadWorkboardCreateCardPresentation {
-        self.store.state.createCardPresentation(
-            canRead: self.gatewayAccess.canRead,
-            canWrite: self.gatewayAccess.canWrite)
+        self.store.state.createCardPresentation(gatewayAccess: self.gatewayAccess)
     }
 
     private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation {
