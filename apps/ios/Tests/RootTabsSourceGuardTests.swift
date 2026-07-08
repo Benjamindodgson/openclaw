@@ -5008,6 +5008,10 @@ struct RootTabsSourceGuardTests {
         let onboardingGatewayConnectionStoreDeclaration = try Self.extract(
             onboardingSource,
             from: "@State private var gatewayConnectionStore",
+            to: "@State private var appleReviewDemoStore")
+        let onboardingAppleReviewDemoStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var appleReviewDemoStore",
             to: "@State private var discoveryRestartStore")
         let discoveryRestartStoreDeclaration = try Self.extract(
             onboardingSource,
@@ -5104,6 +5108,29 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("await disconnectClient.disconnect()"))
         #expect(onboardingSource.contains("await self.gatewayConnectionStore.send(.disconnectRequested).finish()"))
         #expect(!onboardingSource.contains("self.appModel.disconnectGateway()"))
+        #expect(onboardingAppleReviewDemoStoreDeclaration
+            .contains("@State private var appleReviewDemoStore: StoreOf<OnboardingAppleReviewDemoFeature>"))
+        #expect(!onboardingAppleReviewDemoStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource
+            .contains("appleReviewDemoStore: StoreOf<OnboardingAppleReviewDemoFeature>? = nil"))
+        #expect(onboardingSource
+            .contains("appleReviewDemoStoreFactory: () -> StoreOf<OnboardingAppleReviewDemoFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedAppleReviewDemoStore = appleReviewDemoStore ?? appleReviewDemoStoreFactory()"))
+        #expect(onboardingSource
+            .contains("self._appleReviewDemoStore = State(wrappedValue: resolvedAppleReviewDemoStore)"))
+        #expect(rootSource.contains("appleReviewDemoStore: self.makeOnboardingAppleReviewDemoStore()"))
+        #expect(storesSource.contains("func makeOnboardingAppleReviewDemoStore()"))
+        #expect(storesSource
+            .contains("OnboardingAppleReviewDemoFeature(appleReviewDemoClient: .live(appModel: self.appModel))"))
+        #expect(onboardingStateSource.contains("struct OnboardingAppleReviewDemoClient"))
+        #expect(onboardingStateSource.contains("var onboardingAppleReviewDemo: OnboardingAppleReviewDemoClient"))
+        #expect(onboardingStateSource.contains("struct OnboardingAppleReviewDemoFeature"))
+        #expect(onboardingStateSource.contains("case enableRequested"))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingAppleReviewDemo)"))
+        #expect(onboardingStateSource.contains("await appleReviewDemoClient.enter()"))
+        #expect(onboardingSource.contains("await self.appleReviewDemoStore.send(.enableRequested).finish()"))
+        #expect(!onboardingSource.contains("self.appModel.enterAppleReviewDemoMode()"))
         #expect(onboardingSource.contains("@State private var discoveryRestartStore"))
         #expect(discoveryRestartStoreDeclaration
             .contains("@State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>"))
@@ -5156,7 +5183,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.photoImportStore.send(.importStarted)"))
         #expect(onboardingSource
             .contains("self.photoImportStore.send(.qrMessageDetected(.init(message: .init(value: self.detectQRCode(from: data)))))"))
-        #expect(onboardingSource.contains("self.handlePhotoImportResult()"))
+        #expect(onboardingSource.contains("await self.handlePhotoImportResult()"))
         #expect(!onboardingSource.contains("GatewayConnectDeepLink.fromSetupInput(message)"))
         #expect(onboardingStateSource
             .contains("var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?"))

@@ -23,6 +23,8 @@ struct OnboardingWizardView: View {
 
     @State private var gatewayConnectionStore: StoreOf<OnboardingGatewayConnectionFeature>
 
+    @State private var appleReviewDemoStore: StoreOf<OnboardingAppleReviewDemoFeature>
+
     @State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>
 
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature>
@@ -77,6 +79,12 @@ struct OnboardingWizardView: View {
                 OnboardingGatewayConnectionFeature()
             }
         },
+        appleReviewDemoStore: StoreOf<OnboardingAppleReviewDemoFeature>? = nil,
+        appleReviewDemoStoreFactory: () -> StoreOf<OnboardingAppleReviewDemoFeature> = {
+            Store(initialState: OnboardingAppleReviewDemoFeature.State()) {
+                OnboardingAppleReviewDemoFeature()
+            }
+        },
         discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>? = nil,
         discoveryRestartStoreFactory: () -> StoreOf<OnboardingDiscoveryRestartFeature> = {
             Store(initialState: OnboardingDiscoveryRestartFeature.State()) {
@@ -118,6 +126,7 @@ struct OnboardingWizardView: View {
         let resolvedStatusStore = statusStore ?? statusStoreFactory()
         let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
         let resolvedGatewayConnectionStore = gatewayConnectionStore ?? gatewayConnectionStoreFactory()
+        let resolvedAppleReviewDemoStore = appleReviewDemoStore ?? appleReviewDemoStoreFactory()
         let resolvedDiscoveryRestartStore = discoveryRestartStore ?? discoveryRestartStoreFactory()
         let resolvedConnectionFormStore = connectionFormStore ?? connectionFormStoreFactory()
         let resolvedSetupCodeStore = setupCodeStore ?? setupCodeStoreFactory()
@@ -127,6 +136,7 @@ struct OnboardingWizardView: View {
         self._statusStore = State(wrappedValue: resolvedStatusStore)
         self._presentationStore = State(wrappedValue: resolvedPresentationStore)
         self._gatewayConnectionStore = State(wrappedValue: resolvedGatewayConnectionStore)
+        self._appleReviewDemoStore = State(wrappedValue: resolvedAppleReviewDemoStore)
         self._discoveryRestartStore = State(wrappedValue: resolvedDiscoveryRestartStore)
         self._connectionFormStore = State(wrappedValue: resolvedConnectionFormStore)
         self._setupCodeStore = State(wrappedValue: resolvedSetupCodeStore)
@@ -327,7 +337,7 @@ struct OnboardingWizardView: View {
                             self.handleScannedLink(link)
                         },
                         onSetupCode: { code in
-                            self.handleScannedSetupCode(code)
+                            Task { @MainActor in await self.handleScannedSetupCode(code) }
                         },
                         onError: { error in
                             self.statusStore.send(.scannerErrorReceived(.init(message: .init(value: error))))
@@ -816,7 +826,7 @@ extension OnboardingWizardView {
 
         switch result {
         case let .appleReviewDemoSetupCode(setupCode):
-            self.handleScannedSetupCode(setupCode.code.value)
+            await self.handleScannedSetupCode(setupCode.code.value)
 
         case let .gatewayLink(link):
             self.statusStore.send(.connectionStarted(.init(
@@ -859,16 +869,16 @@ extension OnboardingWizardView {
         self.saveGatewayCredentials(token: self.gatewayToken, password: self.gatewayPassword)
     }
 
-    private func handleScannedSetupCode(_ code: String) {
+    private func handleScannedSetupCode(_ code: String) async {
         self.setupCodeStore.send(.scannedSetupCodeReceived(.init(code: .init(value: code))))
         guard let result = self.setupCodeStore.applyResult else { return }
         self.setupCodeStore.send(.applyResultHandled)
 
         guard case .appleReviewDemoSetupCode = result else { return }
+        await self.appleReviewDemoStore.send(.enableRequested).finish()
         self.presentationStore.send(.qrScannerDismissed)
         self.statusStore.send(.appleReviewDemoModeEnabled)
         self.connectionFormStore.send(.selectedModeChanged(.init(mode: .homeNetwork)))
-        self.appModel.enterAppleReviewDemoMode()
     }
 
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
@@ -878,15 +888,15 @@ extension OnboardingWizardView {
         Task {
             guard let data = try? await item.loadTransferable(type: Data.self) else {
                 self.photoImportStore.send(.imageLoadFailed)
-                self.handlePhotoImportResult()
+                await self.handlePhotoImportResult()
                 return
             }
             self.photoImportStore.send(.qrMessageDetected(.init(message: .init(value: self.detectQRCode(from: data)))))
-            self.handlePhotoImportResult()
+            await self.handlePhotoImportResult()
         }
     }
 
-    private func handlePhotoImportResult() {
+    private func handlePhotoImportResult() async {
         guard let result = self.photoImportStore.result else { return }
         self.photoImportStore.send(.resultHandled)
 
@@ -894,7 +904,7 @@ extension OnboardingWizardView {
         case let .gatewayLink(link):
             self.handleScannedLink(link)
         case let .appleReviewSetupCode(setupCode):
-            self.handleScannedSetupCode(setupCode.code.value)
+            await self.handleScannedSetupCode(setupCode.code.value)
         case let .failure(failure):
             self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message.value))))
         }

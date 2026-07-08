@@ -187,6 +187,18 @@ import Testing
         #expect(probe.disconnectCount == 1)
     }
 
+    @Test @MainActor func `apple review demo reducer delegates enable through client`() async {
+        let probe = OnboardingAppleReviewDemoProbe()
+        let store = TestStore(initialState: OnboardingAppleReviewDemoFeature.State()) {
+            OnboardingAppleReviewDemoFeature(appleReviewDemoClient: probe.client)
+        }
+
+        await store.send(.enableRequested)
+        await store.finish()
+
+        #expect(probe.enterCount == 1)
+    }
+
     @Test @MainActor func `photo import reducer classifies gateway and demo QR messages`() async {
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
@@ -854,6 +866,16 @@ import Testing
         var client: OnboardingGatewayDisconnectClient {
             OnboardingGatewayDisconnectClient(disconnect: {
                 self.disconnectCount += 1
+            })
+        }
+    }
+
+    private final class OnboardingAppleReviewDemoProbe: @unchecked Sendable {
+        var enterCount = 0
+
+        var client: OnboardingAppleReviewDemoClient {
+            OnboardingAppleReviewDemoClient(enter: {
+                self.enterCount += 1
             })
         }
     }
