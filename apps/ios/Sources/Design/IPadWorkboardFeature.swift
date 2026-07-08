@@ -584,6 +584,10 @@ struct IPadWorkboardFeature {
             Self.cardPresentation(for: card)
         }
 
+        func openSessionKey(for card: IPadWorkboardCard) -> String? {
+            Self.normalizedNonEmpty(card.sessionKey)
+        }
+
         func cardActionControlPresentation(
             for card: IPadWorkboardCard,
             context: IPadWorkboardCardActionControlContext) -> IPadWorkboardCardActionControlPresentation
