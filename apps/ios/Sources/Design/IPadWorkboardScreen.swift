@@ -437,7 +437,7 @@ struct IPadWorkboardScreen: View {
     private var kanbanBoard: some View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
-                ForEach(self.store.kanbanColumnPresentations) { presentation in
+                ForEach(self.screenPresentation.kanbanColumnPresentations) { presentation in
                     IPadWorkboardKanbanColumn(
                         presentation: presentation,
                         cardPresentation: { card in
