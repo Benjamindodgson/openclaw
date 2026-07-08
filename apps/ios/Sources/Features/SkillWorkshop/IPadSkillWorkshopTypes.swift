@@ -294,6 +294,7 @@ struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
     let queryFieldPresentation: IPadSkillWorkshopQueryFieldPresentation
     let feedbackMessages: [IPadSkillWorkshopFeedbackPresentation]
     let queueSummaryPresentation: IPadSkillWorkshopQueueSummaryPresentation
+    let metricPresentations: [IPadSkillWorkshopMetricPresentation]
     let proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
     let proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
     let emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation
