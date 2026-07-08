@@ -413,7 +413,7 @@ struct CommandCenterTab: View {
             defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))))).finish()
     }
 
-    static func sessionWorkItem(
+    nonisolated static func sessionWorkItem(
         for session: OpenClawChatSessionEntry,
         currentSessionKey: String) -> WorkItem
     {
@@ -430,7 +430,7 @@ struct CommandCenterTab: View {
             route: .chat(.recentSession(session.key)))
     }
 
-    fileprivate static func sessionTitle(_ session: OpenClawChatSessionEntry) -> String {
+    fileprivate nonisolated static func sessionTitle(_ session: OpenClawChatSessionEntry) -> String {
         if let title = redactedSessionTitle(for: session.key) {
             return title
         }
@@ -446,7 +446,7 @@ struct CommandCenterTab: View {
         return session.key
     }
 
-    fileprivate static func redactedSessionTitle(for key: String) -> String? {
+    fileprivate nonisolated static func redactedSessionTitle(for key: String) -> String? {
         let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
         let lowercased = trimmed.lowercased()
         guard !trimmed.isEmpty else { return nil }
@@ -465,7 +465,7 @@ struct CommandCenterTab: View {
         return nil
     }
 
-    fileprivate static func humanizedSessionKey(_ key: String) -> String? {
+    fileprivate nonisolated static func humanizedSessionKey(_ key: String) -> String? {
         let words = key
             .replacingOccurrences(of: "_", with: "-")
             .split(separator: "-")
@@ -485,14 +485,14 @@ struct CommandCenterTab: View {
             .joined(separator: " ")
     }
 
-    fileprivate static func sessionDetail(_ session: OpenClawChatSessionEntry) -> String {
+    fileprivate nonisolated static func sessionDetail(_ session: OpenClawChatSessionEntry) -> String {
         if let updatedAt = session.updatedAt, updatedAt > 0 {
             return self.relativeTimeText(forMilliseconds: updatedAt)
         }
         return session.key
     }
 
-    fileprivate static func relativeTimeText(forMilliseconds milliseconds: Double) -> String {
+    fileprivate nonisolated static func relativeTimeText(forMilliseconds milliseconds: Double) -> String {
         let date = Date(timeIntervalSince1970: milliseconds / 1000)
         let formatter = RelativeDateTimeFormatter()
         formatter.dateTimeStyle = .numeric
