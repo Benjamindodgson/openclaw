@@ -757,7 +757,7 @@ struct IPadWorkboardFeatureTests {
         await store.send(.moveRequested(.init(
             card: card,
             status: .init(value: "running"),
-            writeAccess: .init(canWrite: true))))
+            gatewayAccess: .init(canRead: true, canWrite: true))))
         {
             $0.busyCardID = .init(value: "card-1")
             $0.errorText = nil

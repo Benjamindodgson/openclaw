@@ -1787,6 +1787,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "private func createCard() async",
             to: "private func move(_ card: IPadWorkboardCard, to status: String) async")
+        let moveFunction = try Self.extract(
+            source,
+            from: "private func move(_ card: IPadWorkboardCard, to status: String) async",
+            to: "private func archive(_ card: IPadWorkboardCard) async")
         let archiveFunction = try Self.extract(
             source,
             from: "private func archive(_ card: IPadWorkboardCard) async",
@@ -2280,11 +2284,16 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct MoveResponse: Equatable, Sendable"))
         #expect(source.contains("struct IPadWorkboardMoveStatus: Equatable, Sendable"))
         #expect(source.contains("var status: IPadWorkboardMoveStatus"))
+        #expect(source.contains(
+            "struct MoveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var status: IPadWorkboardMoveStatus\n            var gatewayAccess: IPadWorkboardGatewayAccess"))
         #expect(source.contains("status: request.status.value"))
         #expect(source.contains("state.nextPosition(for: request.status.value"))
         #expect(source.contains("case moveRequested(MoveRequest)"))
         #expect(source.contains("case moveResponse(MoveResponse)"))
         #expect(source.contains("status: .init(value: status)"))
+        #expect(moveFunction.contains("gatewayAccess: self.gatewayAccess"))
+        #expect(!moveFunction.contains("writeAccess: .init(canWrite: self.gatewayAccess.canWrite)"))
+        #expect(source.contains("guard request.gatewayAccess.canWrite, state.busyCardID == nil else"))
         #expect(!source.contains("struct MoveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var status: String"))
         #expect(source.contains("struct QueryChange: Equatable, Sendable"))
         #expect(source.contains("case queryChanged(QueryChange)"))
@@ -2319,6 +2328,7 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("struct ArchiveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var canWrite: Bool"))
         #expect(!source.contains("struct DispatchRequest: Equatable, Sendable {\n            var writeAccess: GatewayWriteAccess"))
         #expect(!source.contains("struct DispatchRequest: Equatable, Sendable {\n            var canWrite: Bool"))
+        #expect(!source.contains("struct MoveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var status: IPadWorkboardMoveStatus\n            var writeAccess: GatewayWriteAccess"))
         #expect(!source.contains("struct MoveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var status: IPadWorkboardMoveStatus\n            var canWrite: Bool"))
         #expect(!source.contains("struct RefreshRequest: Equatable, Sendable {\n            var sceneActive: Bool"))
         #expect(!source.contains("struct RefreshResponse: Equatable, Sendable {\n            var boardScope: IPadWorkboardBoardScope\n            var force: Bool"))

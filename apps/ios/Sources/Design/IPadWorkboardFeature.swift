@@ -1101,7 +1101,7 @@ struct IPadWorkboardFeature {
         struct MoveRequest: Equatable, Sendable {
             var card: IPadWorkboardCard
             var status: IPadWorkboardMoveStatus
-            var writeAccess: GatewayWriteAccess
+            var gatewayAccess: IPadWorkboardGatewayAccess
         }
 
         struct MoveResponse: Equatable, Sendable {
@@ -1302,7 +1302,7 @@ struct IPadWorkboardFeature {
                 return .none
 
             case let .moveRequested(request):
-                guard request.writeAccess.canWrite, state.busyCardID == nil else { return .none }
+                guard request.gatewayAccess.canWrite, state.busyCardID == nil else { return .none }
                 state.busyCardID = .init(value: request.card.id)
                 state.errorText = nil
                 let params = IPadWorkboardMoveParams(
