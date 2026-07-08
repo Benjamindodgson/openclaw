@@ -969,18 +969,20 @@ import Testing
 
         await store.send(.applyRequested) {
             $0.applyResult = .gatewayLink(link)
-            $0.gatewayLinkConnectionStart = .init(
-                id: .init(value: "setup-code"),
-                message: .init(value: "Connecting via setup code..."),
-                statusLine: .init(value: "Setup code loaded. Connecting to gateway.example.com:443..."),
-                clearsIssue: .init(value: false))
+            $0.gatewayLinkTransitionRequest = .init(
+                statusAction: .connectionStarted(.init(
+                    id: .init(value: "setup-code"),
+                    message: .init(value: "Connecting via setup code..."),
+                    statusLine: .init(value: "Setup code loaded. Connecting to gateway.example.com:443..."),
+                    clearsIssue: .init(value: false))),
+                stepAction: .stepChanged(.init(step: .connect)))
             $0.setupCodeState = .init(value: "")
             $0.statusState = .init(value: "Setup code applied. Connecting...")
         }
 
         await store.send(.applyResultHandled) {
             $0.applyResult = nil
-            $0.gatewayLinkConnectionStart = nil
+            $0.gatewayLinkTransitionRequest = nil
         }
     }
 
