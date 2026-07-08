@@ -8,6 +8,7 @@ struct OnboardingSetupCodeFeature {
     @ObservableState
     struct State: Equatable, Sendable {
         var applyResult: ApplyResult?
+        var gatewayLinkConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?
         var setupCodeState = OnboardingSetupCode(value: "")
         var statusState = OnboardingSetupCodeStatusMessage(value: nil)
 
@@ -60,12 +61,14 @@ struct OnboardingSetupCodeFeature {
             switch action {
             case .appleReviewDemoCodeAccepted:
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 state.setupCodeState = .init(value: "")
                 state.statusState = .init(value: "Apple Review demo mode enabled.")
                 return .none
 
             case .applyRequested:
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 state.statusState = .init(value: nil)
                 let raw = state.trimmedSetupCode
                 guard !raw.isEmpty else {
@@ -87,35 +90,42 @@ struct OnboardingSetupCodeFeature {
                 state.setupCodeState = .init(value: "")
                 state.statusState = .init(value: "Setup code applied. Connecting...")
                 state.applyResult = .gatewayLink(link)
+                state.gatewayLinkConnectionStart = Self.gatewayLinkConnectionStart(for: link)
                 return .none
 
             case .applyResultHandled:
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 return .none
 
             case .applyStarted:
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 state.statusState = .init(value: nil)
                 return .none
 
             case .emptyCodeSubmitted:
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 state.statusState = .init(value: "Paste a setup code to continue.")
                 return .none
 
             case .invalidSetupCodeSubmitted:
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 state.statusState = .init(value: "Setup code not recognized or uses an insecure ws:// gateway URL.")
                 return .none
 
             case let .scannedGatewayLinkReceived(scan):
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 state.statusState = .init(value: nil)
                 state.applyResult = .gatewayLink(scan.link)
                 return .none
 
             case let .scannedSetupCodeReceived(scan):
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 guard AppleReviewDemoMode.isSetupCode(scan.code.value) else {
                     return .none
                 }
@@ -125,6 +135,7 @@ struct OnboardingSetupCodeFeature {
 
             case .setupCodeAccepted:
                 state.applyResult = nil
+                state.gatewayLinkConnectionStart = nil
                 state.setupCodeState = .init(value: "")
                 state.statusState = .init(value: "Setup code applied. Connecting...")
                 return .none
@@ -139,6 +150,17 @@ struct OnboardingSetupCodeFeature {
             }
         }
         .autoLogActions()
+    }
+
+    private static func gatewayLinkConnectionStart(
+        for link: GatewayConnectDeepLink)
+        -> OnboardingStatusFeature.Action.ConnectionStart
+    {
+        .init(
+            id: .init(value: "setup-code"),
+            message: .init(value: "Connecting via setup code..."),
+            statusLine: .init(value: "Setup code loaded. Connecting to \(link.host):\(link.port)..."),
+            clearsIssue: .init(value: false))
     }
 }
 
