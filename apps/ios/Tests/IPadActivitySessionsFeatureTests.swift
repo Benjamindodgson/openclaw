@@ -6,6 +6,19 @@ import Testing
 
 @MainActor
 struct IPadActivitySessionsFeatureTests {
+    @Test func `chat route open delegates through client`() async {
+        let probe = IPadActivitySessionsProbe()
+        let store = TestStore(initialState: IPadActivitySessionsFeature.State()) {
+            IPadActivitySessionsFeature(client: probe.client)
+        }
+
+        await store.send(.chatRouteOpened(.init(route: .recentSession("chat-1"))))
+        await store.send(.chatRouteOpened(.init(route: .defaultSession)))
+        await store.finish()
+
+        #expect(probe.openedSessionKeys == ["chat-1", nil])
+    }
+
     @Test func `inactive refresh clears loading and leaves current session details unchanged`() async {
         let probe = IPadActivitySessionsProbe()
         var initialState = IPadActivitySessionsFeature.State()
@@ -400,12 +413,17 @@ private enum IPadActivitySessionsProbeError: Error {
 
 private final class IPadActivitySessionsProbe: @unchecked Sendable {
     var requestedLimits: [Int] = []
+    var openedSessionKeys: [String?] = []
     var result: Result<[OpenClawChatSessionEntry], Error> = .success([])
 
     var client: IPadActivitySessionsClient {
-        IPadActivitySessionsClient(listSessions: { limit in
-            self.requestedLimits.append(limit)
-            return try self.result.get()
-        })
+        IPadActivitySessionsClient(
+            listSessions: { limit in
+                self.requestedLimits.append(limit)
+                return try self.result.get()
+            },
+            openChat: { route in
+                self.openedSessionKeys.append(route.sessionKey)
+            })
     }
 }
