@@ -56,6 +56,13 @@ struct OnboardingStatusFeature {
             stepAction: .stepChanged(.init(step: .success)))
     }
 
+    static func retryConnectionRequest(
+        silent: OnboardingRetryConnectionSilence)
+        -> RetryConnectionRequest
+    {
+        .init(statusAction: .retryConnectionStarted(.init(silent: silent)))
+    }
+
     init(clock: OnboardingPairingResumeClockClient? = nil) {
         self.clockOverride = clock
     }
@@ -87,6 +94,10 @@ struct OnboardingStatusFeature {
     struct QRScannerOpeningRequest: Equatable, Sendable {
         var statusAction: OnboardingStatusFeature.Action
         var presentationAction: OnboardingPresentationFeature.Action
+    }
+
+    struct RetryConnectionRequest: Equatable, Sendable {
+        var statusAction: OnboardingStatusFeature.Action
     }
 
     @ObservableState
