@@ -159,6 +159,24 @@ struct IPadActivitySessionsFeature {
                 value: "pending")
         }
 
+        var loadingSessionsPresentation: IPadActivitySessionStatusPresentation {
+            .init(
+                icon: "hourglass",
+                title: "Loading sessions",
+                detail: "Fetching recent activity from the gateway.",
+                value: "loading")
+        }
+
+        var unavailableSessionsPresentation: IPadActivitySessionStatusPresentation? {
+            self.loadErrorText.map {
+                .init(
+                    icon: "exclamationmark.triangle.fill",
+                    title: "Sessions unavailable",
+                    detail: $0.value,
+                    value: "error")
+            }
+        }
+
         func screenPresentation(
             sessionsAvailability: IPadActivitySessionsAvailable,
             sessionsMode: IPadActivitySessionsMode,
@@ -185,7 +203,8 @@ struct IPadActivitySessionsFeature {
                 sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(sessionRows.count)",
                 feedHeaderPresentation: self.feedHeaderPresentation,
                 showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
-                loadErrorText: self.loadErrorText,
+                loadingSessionsPresentation: self.loadingSessionsPresentation,
+                unavailableSessionsPresentation: self.unavailableSessionsPresentation,
                 emptySessionPresentation: self.emptySessionPresentation(sessionsAvailability: sessionsAvailability),
                 shareIntakePresentation: self.shareIntakePresentation(lastShareEventText: lastShareEventText),
                 pendingApprovalPresentation: self.pendingApprovalPresentation(pendingApproval: pendingApproval))
@@ -404,21 +423,22 @@ struct IPadActivityScreen: View {
 
                 if self.screenPresentation.showsLoadingSessionsPlaceholder {
                     Divider().padding(.leading, 58)
+                    let presentation = self.screenPresentation.loadingSessionsPresentation
                     ProStatusRow(
-                        icon: "hourglass",
-                        title: "Loading sessions",
-                        detail: "Fetching recent activity from the gateway.",
-                        value: "loading",
+                        icon: presentation.icon,
+                        title: presentation.title,
+                        detail: presentation.detail,
+                        value: presentation.value,
                         color: OpenClawBrand.accent,
                         actionTitle: nil,
                         action: nil)
-                } else if let loadErrorText = self.screenPresentation.loadErrorText {
+                } else if let presentation = self.screenPresentation.unavailableSessionsPresentation {
                     Divider().padding(.leading, 58)
                     ProStatusRow(
-                        icon: "exclamationmark.triangle.fill",
-                        title: "Sessions unavailable",
-                        detail: loadErrorText.value,
-                        value: "error",
+                        icon: presentation.icon,
+                        title: presentation.title,
+                        detail: presentation.detail,
+                        value: presentation.value,
                         color: OpenClawBrand.warn,
                         actionTitle: nil,
                         action: nil)
@@ -532,7 +552,8 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
     let sessionMetricValue: String
     let feedHeaderPresentation: IPadActivityFeedHeaderPresentation
     let showsLoadingSessionsPlaceholder: Bool
-    let loadErrorText: IPadActivitySessionsFailureMessage?
+    let loadingSessionsPresentation: IPadActivitySessionStatusPresentation
+    let unavailableSessionsPresentation: IPadActivitySessionStatusPresentation?
     let emptySessionPresentation: IPadActivityEmptySessionPresentation
     let shareIntakePresentation: IPadActivityShareIntakePresentation
     let pendingApprovalPresentation: IPadActivityPendingApprovalPresentation?
@@ -566,6 +587,13 @@ struct IPadActivityShareIntakePresentation: Equatable, Sendable {
 }
 
 struct IPadActivityPendingApprovalPresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let detail: String
+    let value: String
+}
+
+struct IPadActivitySessionStatusPresentation: Equatable, Sendable {
     let icon: String
     let title: String
     let detail: String
