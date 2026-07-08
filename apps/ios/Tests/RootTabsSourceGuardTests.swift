@@ -2067,7 +2067,9 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct IPadWorkboardBusyCardID: Equatable, Sendable"))
         #expect(source.contains("var busyCardID: IPadWorkboardBusyCardID?"))
         #expect(source.contains("state.busyCardID = .init(value: request.card.id)"))
-        #expect(source.contains("self.store.busyCardID?.value == card.id"))
+        #expect(source.contains("isBusy: self.busyCardID?.value == card.id"))
+        #expect(source.contains("self.store.state.cardDetailActionControlsPresentation("))
+        #expect(!source.contains("self.store.busyCardID?.value == card.id"))
         #expect(!source.contains("var busyCardID: String?"))
         #expect(source.contains("func createUnavailableMessage(canRead: Bool, canWrite: Bool) -> String?"))
         #expect(source.contains("self.createUnavailableMessage("))
@@ -2483,6 +2485,30 @@ struct RootTabsSourceGuardTests {
         #expect(!queueRowSource.contains("self.isBusy ? \"hourglass\""))
         #expect(!kanbanCardSource.contains("let isBusy: Bool"))
         #expect(!queueRowSource.contains("let isBusy: Bool"))
+    }
+
+    @Test func `workboard card detail action controls presentation is reducer owned`() throws {
+        let source = try Self.iPadWorkboardSource()
+        let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let detailSheetSource = try Self.extract(
+            screenSource,
+            from: "private struct IPadWorkboardCardDetailSheet: View",
+            to: "// swiftformat:disable redundantSendable")
+
+        #expect(source.contains(
+            "struct IPadWorkboardCardDetailActionControlsPresentation: Equatable, Sendable"))
+        #expect(source.contains("let isMutationDisabled: Bool"))
+        #expect(source.contains("func cardDetailActionControlsPresentation("))
+        #expect(source.contains("static func cardDetailActionControlsPresentation("))
+        #expect(source.contains("isMutationDisabled: !canWrite || isBusy"))
+        #expect(screenSource.contains("self.store.state.cardDetailActionControlsPresentation("))
+        #expect(screenSource.contains("canWrite: self.canWrite"))
+        #expect(detailSheetSource.contains(
+            "let actionControlsPresentation: IPadWorkboardCardDetailActionControlsPresentation"))
+        #expect(detailSheetSource.contains(".disabled(self.actionControlsPresentation.isMutationDisabled)"))
+        #expect(!detailSheetSource.contains("let isBusy: Bool"))
+        #expect(!detailSheetSource.contains("let canWrite: Bool"))
+        #expect(!detailSheetSource.contains(".disabled(!self.canWrite || self.isBusy)"))
     }
 
     @Test func `workboard kanban lane presentation is reducer owned`() throws {
