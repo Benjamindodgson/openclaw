@@ -5217,10 +5217,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.disappeared)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.discoveryDomainChanged)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.restartRequestID"))
-        #expect(onboardingSource.contains("self.credentialsStore.send(.setupLinkApplied(.init(link: link)))"))
-        #expect(onboardingSource
-            .contains("await self.credentialsStore.send(.setupAuthPersistenceRequested(request)).finish()"))
-        #expect(onboardingSource.contains("self.credentialsStore.send(.setupAuthPersistenceRequestHandled)"))
+        #expect(onboardingSource.contains("await self.credentialsStore.send(.setupLinkApplied(.init(link: link))).finish()"))
         #expect(onboardingSource.contains("pendingOverride: self.credentialsStore.pendingManualAuthOverride"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.pendingManualAuthOverrideConsumed)"))
         #expect(onboardingSource.contains("self.photoImportStore.send(.importStarted)"))
@@ -5230,17 +5227,19 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("GatewayConnectDeepLink.fromSetupInput(message)"))
         #expect(onboardingStateSource
             .contains("var pendingManualAuthOverride: GatewayConnectionController.ManualAuthOverride?"))
-        #expect(onboardingStateSource
-            .contains("var setupAuthPersistenceRequest: OnboardingGatewaySetupAuthPersistenceRequest?"))
         #expect(onboardingStateSource.contains("case setupAuthApplied(SetupAuthApplication)"))
         #expect(onboardingStateSource.contains("case setupLinkApplied(SetupLinkApplication)"))
         #expect(onboardingStateSource
             .contains("case setupAuthPersistenceRequested(OnboardingGatewaySetupAuthPersistenceRequest)"))
-        #expect(onboardingStateSource.contains("case setupAuthPersistenceRequestHandled"))
         #expect(onboardingStateSource.contains("@Dependency(\\.onboardingGatewaySetupAuthPersistence)"))
+        #expect(onboardingStateSource.contains("return .send(.setupAuthPersistenceRequested(.init("))
         #expect(onboardingStateSource.contains("setupAuthPersistenceClient.currentInstanceID()"))
         #expect(onboardingStateSource.contains("await setupAuthPersistenceClient.prepareForBootstrapPairing"))
         #expect(onboardingStateSource.contains("await setupAuthPersistenceClient.saveSetupAuth(request)"))
+        #expect(!onboardingSource.contains("setupAuthPersistenceRequestHandled"))
+        #expect(!onboardingSource.contains("setupAuthPersistenceRequested(request)"))
+        #expect(!onboardingStateSource.contains("var setupAuthPersistenceRequest: OnboardingGatewaySetupAuthPersistenceRequest?"))
+        #expect(!onboardingStateSource.contains("case setupAuthPersistenceRequestHandled"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewaySetupAuthPersistenceRequest: Equatable"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewaySetupAuthPersistenceClient"))
         #expect(onboardingStateSource.contains("struct OnboardingGatewayCurrentInstanceID: Equatable, Sendable"))
@@ -6835,7 +6834,6 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("case setupLinkApplied(SetupLinkApplication)"))
         #expect(onboardingStateSource
             .contains("case setupAuthPersistenceRequested(OnboardingGatewaySetupAuthPersistenceRequest)"))
-        #expect(onboardingStateSource.contains("case setupAuthPersistenceRequestHandled"))
         #expect(onboardingStateSource.contains("case setupCodeChanged(SetupCodeChange)"))
         #expect(onboardingStateSource.contains("case scannedSetupCodeReceived(ScannedSetupCode)"))
         #expect(onboardingStateSource.contains("case scannedGatewayLinkReceived(ScannedGatewayLink)"))
@@ -6865,14 +6863,10 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.gatewayPasswordState = .init(value: setupAuth.password)"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.credentialsLoadRequested(.init("))
         #expect(onboardingSource.contains("instanceId: .init(value: self.instanceId)"))
-        #expect(onboardingSource.contains("self.credentialsStore.send(.setupLinkApplied(.init(link: link)))"))
-        #expect(onboardingSource
-            .contains("await self.credentialsStore.send(.setupAuthPersistenceRequested(request)).finish()"))
-        #expect(onboardingSource.contains("self.credentialsStore.send(.setupAuthPersistenceRequestHandled)"))
+        #expect(onboardingSource.contains("await self.credentialsStore.send(.setupLinkApplied(.init(link: link))).finish()"))
         #expect(onboardingStateSource.contains("let setupAuth = GatewayConnectionController.ManualAuthOverride." +
             "setupAuth(from: application.link)"))
-        #expect(onboardingStateSource
-            .contains("state.setupAuthPersistenceRequest = OnboardingGatewaySetupAuthPersistenceRequest("))
+        #expect(onboardingStateSource.contains("return .send(.setupAuthPersistenceRequested(.init("))
         #expect(onboardingStateSource.contains("setupAuthPersistenceClient.currentInstanceID()"))
         #expect(onboardingStateSource.contains("await setupAuthPersistenceClient.prepareForBootstrapPairing"))
         #expect(onboardingStateSource.contains("await setupAuthPersistenceClient.saveSetupAuth(request)"))

@@ -871,11 +871,7 @@ extension OnboardingWizardView {
             host: .init(value: link.host),
             port: .init(value: link.port),
             tls: .init(value: link.tls))))
-        self.credentialsStore.send(.setupLinkApplied(.init(link: link)))
-        guard let request = self.credentialsStore.setupAuthPersistenceRequest else { return }
-        defer { self.credentialsStore.send(.setupAuthPersistenceRequestHandled) }
-
-        await self.credentialsStore.send(.setupAuthPersistenceRequested(request)).finish()
+        await self.credentialsStore.send(.setupLinkApplied(.init(link: link))).finish()
     }
 
     private func handleScannedSetupCode(_ code: String) async {
