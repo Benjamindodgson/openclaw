@@ -61,6 +61,7 @@ struct IPadWorkboardScreen: View {
             case let .card(card):
                 IPadWorkboardCardDetailSheet(
                     card: card,
+                    presentation: self.store.state.cardPresentation(for: card),
                     statuses: self.store.statusValues,
                     isBusy: self.store.busyCardID?.value == card.id,
                     canWrite: self.canWrite,
@@ -490,6 +491,7 @@ struct IPadWorkboardScreen: View {
                         }
                         IPadWorkboardQueueRow(
                             card: card,
+                            presentation: self.store.state.cardPresentation(for: card),
                             statuses: self.store.statusValues,
                             isBusy: self.store.busyCardID?.value == card.id,
                             inspect: {
@@ -656,15 +658,9 @@ struct IPadWorkboardScreen: View {
     }
 
     private func open(_ card: IPadWorkboardCard) {
-        guard let sessionKey = Self.normalized(card.sessionKey) else { return }
+        guard let sessionKey = self.store.state.cardPresentation(for: card).sessionKey else { return }
         self.appModel.openChat(sessionKey: sessionKey)
         self.openChat()
-    }
-
-    private static func normalized(_ value: String?) -> String? {
-        guard let value else { return nil }
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
     }
 }
 
@@ -703,6 +699,7 @@ struct IPadWorkboardKanbanColumn: View {
                         }
                         IPadWorkboardKanbanCard(
                             card: card,
+                            presentation: IPadWorkboardFeature.State.cardPresentation(for: card),
                             statuses: self.statuses,
                             isBusy: self.busyCardID == card.id,
                             openSession: {
@@ -726,6 +723,7 @@ struct IPadWorkboardKanbanColumn: View {
 
 private struct IPadWorkboardKanbanCard: View {
     let card: IPadWorkboardCard
+    let presentation: IPadWorkboardCardPresentation
     let statuses: [String]
     let isBusy: Bool
     let openSession: () -> Void
@@ -738,20 +736,20 @@ private struct IPadWorkboardKanbanCard: View {
             Button(action: self.inspect) {
                 VStack(alignment: .leading, spacing: 7) {
                     HStack(alignment: .top, spacing: 10) {
-                        ProIconBadge(systemName: self.icon, color: self.color)
+                        ProIconBadge(systemName: self.presentation.iconSystemName, color: self.color)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(self.card.title)
+                            Text(self.presentation.title)
                                 .font(.subheadline.weight(.semibold))
                                 .lineLimit(2)
-                            Text(self.detail)
+                            Text(self.presentation.detail)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(3)
                         }
                     }
 
-                    if !self.card.labels.isEmpty {
-                        Text(self.card.labels.prefix(3).joined(separator: ", "))
+                    if let labelsSummary = self.presentation.labelsSummary {
+                        Text(labelsSummary)
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -762,11 +760,11 @@ private struct IPadWorkboardKanbanCard: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
-                if self.card.sessionKey?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                if self.presentation.showsOpenSessionAction {
                     Button(action: self.openSession) {
                         Image(systemName: "bubble.left.and.text.bubble.right")
                     }
-                    .accessibilityLabel("Open Session")
+                    .accessibilityLabel(self.presentation.openSessionActionTitle)
                     .buttonStyle(.bordered)
                     .controlSize(.mini)
                 }
@@ -777,32 +775,22 @@ private struct IPadWorkboardKanbanCard: View {
                             self.move(status)
                         }
                     }
-                    Button(self.card.metadata?.archivedAt == nil ? "Archive" : "Unarchive", action: self.archive)
+                    Button(self.presentation.archiveActionTitle, action: self.archive)
                 } label: {
                     Image(systemName: self.isBusy ? "hourglass" : "ellipsis")
                         .frame(width: 22, height: 22)
                 }
-                .accessibilityLabel("Card Actions")
+                .accessibilityLabel(self.presentation.actionMenuAccessibilityLabel)
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
                 .disabled(self.isBusy)
 
                 Spacer(minLength: 4)
-                ProValuePill(value: IPadWorkboardDefaults.label(for: self.card.status), color: self.color)
+                ProValuePill(value: self.presentation.statusLabel, color: self.color)
             }
         }
         .padding(12)
         .contentShape(Rectangle())
-    }
-
-    private var icon: String {
-        switch self.card.status {
-        case "running": "figure.run"
-        case "review": "checklist"
-        case "blocked": "exclamationmark.triangle"
-        case "done": "checkmark.circle"
-        default: "tray"
-        }
     }
 
     private var color: Color {
@@ -814,22 +802,11 @@ private struct IPadWorkboardKanbanCard: View {
         default: OpenClawBrand.accentHot
         }
     }
-
-    private var detail: String {
-        if let notes = card.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
-            return notes
-        }
-        if let sessionKey = card.sessionKey?.trimmingCharacters(in: .whitespacesAndNewlines), !sessionKey.isEmpty {
-            return sessionKey
-        }
-        return self.card.agentId?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-            ? self.card.agentId ?? "Default agent"
-            : "Default agent"
-    }
 }
 
 struct IPadWorkboardQueueRow: View {
     let card: IPadWorkboardCard
+    let presentation: IPadWorkboardCardPresentation
     let statuses: [String]
     let isBusy: Bool
     let inspect: () -> Void
@@ -841,18 +818,18 @@ struct IPadWorkboardQueueRow: View {
         HStack(alignment: .top, spacing: 10) {
             Button(action: self.inspect) {
                 HStack(alignment: .top, spacing: 12) {
-                    ProIconBadge(systemName: self.icon, color: self.color)
+                    ProIconBadge(systemName: self.presentation.iconSystemName, color: self.color)
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(self.card.title)
+                        Text(self.presentation.title)
                             .font(.subheadline.weight(.semibold))
                             .lineLimit(2)
-                        Text(self.detail)
+                        Text(self.presentation.detail)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                     }
                     Spacer(minLength: 8)
-                    ProValuePill(value: IPadWorkboardDefaults.label(for: self.card.status), color: self.color)
+                    ProValuePill(value: self.presentation.statusLabel, color: self.color)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -870,7 +847,7 @@ struct IPadWorkboardQueueRow: View {
             .buttonStyle(.plain)
             .foregroundStyle(OpenClawBrand.accent)
             .disabled(self.isBusy)
-            .accessibilityLabel("Card Actions")
+            .accessibilityLabel(self.presentation.actionMenuAccessibilityLabel)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -878,10 +855,10 @@ struct IPadWorkboardQueueRow: View {
             self.actionMenuItems
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            Button("Inspect", action: self.inspect)
+            Button(self.presentation.inspectActionTitle, action: self.inspect)
                 .tint(OpenClawBrand.accent)
-            if self.card.sessionKey?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                Button("Open", action: self.openSession)
+            if self.presentation.showsOpenSessionAction {
+                Button(self.presentation.compactOpenSessionActionTitle, action: self.openSession)
                     .tint(OpenClawBrand.ok)
             }
         }
@@ -892,23 +869,23 @@ struct IPadWorkboardQueueRow: View {
                 }
                 .tint(OpenClawBrand.accentHot)
             }
-            Button(self.card.metadata?.archivedAt == nil ? "Archive" : "Unarchive", action: self.archive)
+            Button(self.presentation.archiveActionTitle, action: self.archive)
                 .tint(.secondary)
         }
     }
 
     @ViewBuilder
     private var actionMenuItems: some View {
-        if self.card.sessionKey?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-            Button("Open Session", action: self.openSession)
+        if self.presentation.showsOpenSessionAction {
+            Button(self.presentation.openSessionActionTitle, action: self.openSession)
         }
-        Button("Inspect", action: self.inspect)
+        Button(self.presentation.inspectActionTitle, action: self.inspect)
         ForEach(self.statuses, id: \.self) { status in
             Button("Move to \(IPadWorkboardDefaults.label(for: status))") {
                 self.move(status)
             }
         }
-        Button(self.card.metadata?.archivedAt == nil ? "Archive" : "Unarchive", action: self.archive)
+        Button(self.presentation.archiveActionTitle, action: self.archive)
     }
 
     private var nextStatus: String? {
@@ -920,16 +897,6 @@ struct IPadWorkboardQueueRow: View {
         return self.statuses[nextIndex]
     }
 
-    private var icon: String {
-        switch self.card.status {
-        case "running": "figure.run"
-        case "review": "checklist"
-        case "blocked": "exclamationmark.triangle"
-        case "done": "checkmark.circle"
-        default: "tray"
-        }
-    }
-
     private var color: Color {
         switch self.card.status {
         case "running": OpenClawBrand.ok
@@ -939,23 +906,12 @@ struct IPadWorkboardQueueRow: View {
         default: OpenClawBrand.accentHot
         }
     }
-
-    private var detail: String {
-        if let notes = card.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
-            return notes
-        }
-        if let sessionKey = card.sessionKey?.trimmingCharacters(in: .whitespacesAndNewlines), !sessionKey.isEmpty {
-            return sessionKey
-        }
-        return self.card.agentId?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-            ? self.card.agentId ?? "Default agent"
-            : "Default agent"
-    }
 }
 
 private struct IPadWorkboardCardDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     let card: IPadWorkboardCard
+    let presentation: IPadWorkboardCardPresentation
     let statuses: [String]
     let isBusy: Bool
     let canWrite: Bool
@@ -967,18 +923,18 @@ private struct IPadWorkboardCardDetailSheet: View {
         NavigationStack {
             Form {
                 Section("Card") {
-                    LabeledContent("Title", value: self.card.title)
-                    LabeledContent("Status", value: IPadWorkboardDefaults.label(for: self.card.status))
-                    if let notes = self.card.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
+                    LabeledContent("Title", value: self.presentation.title)
+                    LabeledContent("Status", value: self.presentation.statusLabel)
+                    if let notes = self.presentation.notesText {
                         Text(notes)
                     }
                 }
 
                 Section("Actions") {
-                    if self.card.sessionKey?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
-                        Button("Open Session", action: self.openSession)
+                    if self.presentation.showsOpenSessionAction {
+                        Button(self.presentation.openSessionActionTitle, action: self.openSession)
                     }
-                    Menu("Move") {
+                    Menu(self.presentation.moveMenuTitle) {
                         ForEach(self.statuses, id: \.self) { status in
                             Button(IPadWorkboardDefaults.label(for: status)) {
                                 self.move(status)
@@ -986,7 +942,7 @@ private struct IPadWorkboardCardDetailSheet: View {
                         }
                     }
                     .disabled(!self.canWrite || self.isBusy)
-                    Button(self.card.metadata?.archivedAt == nil ? "Archive" : "Unarchive", action: self.archive)
+                    Button(self.presentation.archiveActionTitle, action: self.archive)
                         .disabled(!self.canWrite || self.isBusy)
                 }
             }

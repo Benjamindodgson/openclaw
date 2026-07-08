@@ -71,6 +71,7 @@ private struct IPadWorkboardCompactRowsPreview: View {
                                 }
                                 IPadWorkboardQueueRow(
                                     card: card,
+                                    presentation: IPadWorkboardFeature.State.cardPresentation(for: card),
                                     statuses: self.statuses,
                                     isBusy: card.id == "preview-running",
                                     inspect: {},

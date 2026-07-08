@@ -205,6 +205,26 @@ struct IPadWorkboardMetricPresentation: Equatable, Identifiable, Sendable {
     let tone: IPadWorkboardMetricTone
 }
 
+struct IPadWorkboardCardPresentation: Equatable, Sendable {
+    let title: String
+    let statusLabel: String
+    let detail: String
+    let iconSystemName: String
+    let labelsSummary: String?
+    let sessionKey: String?
+    let openSessionActionTitle: String
+    let compactOpenSessionActionTitle: String
+    let inspectActionTitle: String
+    let moveMenuTitle: String
+    let actionMenuAccessibilityLabel: String
+    let archiveActionTitle: String
+    let notesText: String?
+
+    var showsOpenSessionAction: Bool {
+        self.sessionKey != nil
+    }
+}
+
 struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
     let title: String
     let iconSystemName: String
@@ -469,6 +489,10 @@ struct IPadWorkboardFeature {
             .init(message: Self.compactWriteUnavailableMessage(canRead: canRead))
         }
 
+        func cardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardCardPresentation {
+            Self.cardPresentation(for: card)
+        }
+
         var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
             .init(
                 pickerTitle: "Scope",
@@ -663,6 +687,46 @@ struct IPadWorkboardFeature {
             "\(boardScopeLabel) / \(IPadWorkboardDefaults.label(for: selectedStatus))"
         }
 
+        static func cardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardCardPresentation {
+            .init(
+                title: card.title,
+                statusLabel: IPadWorkboardDefaults.label(for: card.status),
+                detail: self.cardDetail(for: card),
+                iconSystemName: self.cardIconSystemName(for: card.status),
+                labelsSummary: self.labelsSummary(for: card.labels),
+                sessionKey: self.normalizedNonEmpty(card.sessionKey),
+                openSessionActionTitle: "Open Session",
+                compactOpenSessionActionTitle: "Open",
+                inspectActionTitle: "Inspect",
+                moveMenuTitle: "Move",
+                actionMenuAccessibilityLabel: "Card Actions",
+                archiveActionTitle: card.metadata?.archivedAt == nil ? "Archive" : "Unarchive",
+                notesText: self.normalizedNonEmpty(card.notes))
+        }
+
+        static func cardIconSystemName(for status: String) -> String {
+            switch status {
+            case "running": "figure.run"
+            case "review": "checklist"
+            case "blocked": "exclamationmark.triangle"
+            case "done": "checkmark.circle"
+            default: "tray"
+            }
+        }
+
+        static func cardDetail(for card: IPadWorkboardCard) -> String {
+            self.normalizedNonEmpty(card.notes)
+                ?? self.normalizedNonEmpty(card.sessionKey)
+                ?? self.normalizedNonEmpty(card.agentId)
+                ?? "Default agent"
+        }
+
+        static func normalizedNonEmpty(_ value: String?) -> String? {
+            guard let value else { return nil }
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+
         private static let defaultBoardScopeOption = IPadWorkboardBoardScopeOption(id: "", title: "All boards")
 
         private static func statusFilterOptions(
@@ -735,6 +799,11 @@ struct IPadWorkboardFeature {
                 .joined(separator: " ")
                 .lowercased()
                 .contains(trimmedQuery)
+        }
+
+        private static func labelsSummary(for labels: [String]) -> String? {
+            let summary = labels.prefix(3).joined(separator: ", ")
+            return summary.isEmpty ? nil : summary
         }
 
         private mutating func rememberBoardIDs(from cards: [IPadWorkboardCard]) {
