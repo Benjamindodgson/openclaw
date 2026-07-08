@@ -242,6 +242,13 @@ struct IPadWorkboardCardDetailSheetPresentation: Equatable, Sendable {
     let actionControlsPresentation: IPadWorkboardCardDetailActionControlsPresentation
 }
 
+struct IPadWorkboardQueueRowPresentation: Equatable, Sendable {
+    let cardPresentation: IPadWorkboardCardPresentation
+    let moveActions: [IPadWorkboardMoveActionPresentation]
+    let nextMoveAction: IPadWorkboardMoveActionPresentation?
+    let actionControlPresentation: IPadWorkboardCardActionControlPresentation
+}
+
 struct IPadWorkboardMetricPresentation: Equatable, Identifiable, Sendable {
     let id: String
     let iconSystemName: String
@@ -1467,6 +1474,14 @@ extension IPadWorkboardFeature.State {
             actionControlsPresentation: self.cardDetailActionControlsPresentation(
                 for: card,
                 gatewayAccess: gatewayAccess))
+    }
+
+    func queueRowPresentation(for card: IPadWorkboardCard) -> IPadWorkboardQueueRowPresentation {
+        .init(
+            cardPresentation: self.cardPresentation(for: card),
+            moveActions: self.moveActionPresentations,
+            nextMoveAction: self.nextMoveActionPresentation(for: card),
+            actionControlPresentation: self.cardActionControlPresentation(for: card, context: .queue))
     }
 
     func screenPresentation(

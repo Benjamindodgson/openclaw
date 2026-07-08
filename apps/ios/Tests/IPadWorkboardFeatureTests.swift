@@ -423,6 +423,27 @@ struct IPadWorkboardFeatureTests {
         #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: unknown, statuses: []) == nil)
     }
 
+    @Test func `workboard queue row presentation is reducer owned`() {
+        let card = Self.card(id: "card-1", status: "todo", position: 10)
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: ["todo", "running"].map { .init(value: $0) })
+
+        #expect(state.queueRowPresentation(for: card) == .init(
+            cardPresentation: state.cardPresentation(for: card),
+            moveActions: state.moveActionPresentations,
+            nextMoveAction: state.nextMoveActionPresentation(for: card),
+            actionControlPresentation: .init(
+                iconSystemName: "ellipsis.circle",
+                accessibilityLabel: "Card Actions",
+                isDisabled: false)))
+
+        state.busyCardID = .init(value: "card-1")
+        #expect(state.queueRowPresentation(for: card).actionControlPresentation == .init(
+            iconSystemName: "hourglass",
+            accessibilityLabel: "Card Actions",
+            isDisabled: true))
+    }
+
     @Test func `workboard status message presentation is reducer owned`() {
         var state = IPadWorkboardFeature.State()
         #expect(state.statusMessagePresentations == [])
