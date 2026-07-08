@@ -262,6 +262,7 @@ struct IPadSkillWorkshopStatusFilterOption: Equatable, Identifiable, Sendable {
 }
 
 struct IPadSkillWorkshopStatusFilterControlPresentation: Equatable, Sendable {
+    let title: String
     let selectedFilter: String
     let selectedLabel: String
     let options: [IPadSkillWorkshopStatusFilterOption]
