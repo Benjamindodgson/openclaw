@@ -30,8 +30,18 @@ struct OnboardingSetupCodeFeature {
         }
     }
 
+    struct AppleReviewDemoActivation: Equatable, Sendable {
+        var appleReviewDemoAction: OnboardingAppleReviewDemoFeature.Action
+        var presentationAction: OnboardingPresentationFeature.Action
+        var statusAction: OnboardingStatusFeature.Action
+        var connectionFormAction: OnboardingConnectionFormFeature.Action
+    }
+
     enum ApplyResult: Equatable, Sendable {
-        struct AppleReviewDemoSetupCode: Equatable, Sendable { var code: OnboardingSetupCode }
+        struct AppleReviewDemoSetupCode: Equatable, Sendable {
+            var code: OnboardingSetupCode
+            var activation: AppleReviewDemoActivation
+        }
 
         case appleReviewDemoSetupCode(AppleReviewDemoSetupCode)
         case gatewayLink(GatewayConnectDeepLink)
@@ -82,7 +92,7 @@ struct OnboardingSetupCodeFeature {
                 if AppleReviewDemoMode.isSetupCode(raw) {
                     state.setupCodeState = .init(value: "")
                     state.statusState = .init(value: "Apple Review demo mode enabled.")
-                    state.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: raw)))
+                    state.applyResult = Self.appleReviewDemoSetupCode(raw)
                     return .none
                 }
 
@@ -140,8 +150,7 @@ struct OnboardingSetupCodeFeature {
                 guard AppleReviewDemoMode.isSetupCode(scan.code.value) else {
                     return .none
                 }
-                state.applyResult = .appleReviewDemoSetupCode(.init(
-                    code: .init(value: scan.code.value.trimmingCharacters(in: .whitespacesAndNewlines))))
+                state.applyResult = Self.appleReviewDemoSetupCode(scan.code.value)
                 return .none
 
             case .setupCodeAccepted:
@@ -162,6 +171,20 @@ struct OnboardingSetupCodeFeature {
             }
         }
         .autoLogActions()
+    }
+
+    private static func appleReviewDemoSetupCode(_ raw: String) -> ApplyResult {
+        .appleReviewDemoSetupCode(.init(
+            code: .init(value: raw.trimmingCharacters(in: .whitespacesAndNewlines)),
+            activation: self.appleReviewDemoActivation()))
+    }
+
+    private static func appleReviewDemoActivation() -> AppleReviewDemoActivation {
+        .init(
+            appleReviewDemoAction: .enableRequested,
+            presentationAction: .qrScannerDismissed,
+            statusAction: .appleReviewDemoModeEnabled,
+            connectionFormAction: .selectedModeChanged(.init(mode: .homeNetwork)))
     }
 
     private static func gatewayLinkConnectionStart(

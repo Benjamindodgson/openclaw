@@ -939,7 +939,9 @@ import Testing
         }
 
         await store.send(.applyRequested) {
-            $0.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: "APPLE-REVIEW-DEMO")))
+            $0.applyResult = .appleReviewDemoSetupCode(.init(
+                code: .init(value: "APPLE-REVIEW-DEMO"),
+                activation: Self.appleReviewDemoActivation()))
             $0.setupCodeState = .init(value: "")
             $0.statusState = .init(value: "Apple Review demo mode enabled.")
         }
@@ -955,7 +957,9 @@ import Testing
         await store.send(.scannedSetupCodeReceived(.init(code: .init(value: "not a demo code"))))
 
         await store.send(.scannedSetupCodeReceived(.init(code: .init(value: "  APPLE-REVIEW-DEMO  ")))) {
-            $0.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: "APPLE-REVIEW-DEMO")))
+            $0.applyResult = .appleReviewDemoSetupCode(.init(
+                code: .init(value: "APPLE-REVIEW-DEMO"),
+                activation: Self.appleReviewDemoActivation()))
         }
 
         await store.send(.applyResultHandled) {
@@ -990,6 +994,14 @@ import Testing
             $0.applyResult = nil
             $0.scannedGatewayLinkConnectionStatusUpdate = nil
         }
+    }
+
+    private static func appleReviewDemoActivation() -> OnboardingSetupCodeFeature.AppleReviewDemoActivation {
+        .init(
+            appleReviewDemoAction: .enableRequested,
+            presentationAction: .qrScannerDismissed,
+            statusAction: .appleReviewDemoModeEnabled,
+            connectionFormAction: .selectedModeChanged(.init(mode: .homeNetwork)))
     }
 
     private struct TestDefaults {
