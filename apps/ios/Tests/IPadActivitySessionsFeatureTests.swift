@@ -258,6 +258,18 @@ struct IPadActivitySessionsFeatureTests {
         #expect(inactive.refreshTaskID == "gateway:chat-next:fallback:inactive")
     }
 
+    @Test func `screen presentation owns share intake row`() {
+        let state = IPadActivitySessionsFeature.State()
+
+        let presentation = Self.screenPresentation(
+            state,
+            lastShareEventText: "Last share received from Safari.").shareIntakePresentation
+        #expect(presentation.icon == "square.and.arrow.down")
+        #expect(presentation.title == "Share intake")
+        #expect(presentation.detail == "Last share received from Safari.")
+        #expect(presentation.value == "iPad")
+    }
+
     private static func refreshRequest(
         isActive: Bool,
         isAvailable: Bool,
@@ -277,14 +289,16 @@ struct IPadActivitySessionsFeatureTests {
         sessionsMode: String = "fixture",
         currentSessionKey: String = "chat-current",
         defaultSessionKey: String = "main",
-        isActive: Bool = true) -> IPadActivityScreenPresentation
+        isActive: Bool = true,
+        lastShareEventText: String = "No recent shares") -> IPadActivityScreenPresentation
     {
         state.screenPresentation(
             sessionsAvailability: .init(value: sessionsAvailable),
             sessionsMode: .init(value: sessionsMode),
             currentSession: .init(value: currentSessionKey),
             defaultSession: .init(value: defaultSessionKey),
-            sceneActivity: .init(value: isActive))
+            sceneActivity: .init(value: isActive),
+            lastShareEventText: .init(value: lastShareEventText))
     }
 
     private static func session(key: String, updatedAt: Double = 1) -> OpenClawChatSessionEntry {

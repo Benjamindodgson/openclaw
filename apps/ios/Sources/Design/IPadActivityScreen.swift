@@ -40,6 +40,7 @@ struct IPadActivitySceneActive: Equatable, Sendable { var value: Bool }
 struct IPadActivitySessionsAvailable: Equatable, Sendable { var value: Bool }
 struct IPadActivitySessionsMode: Equatable, Sendable { var value: String }
 struct IPadActivitySessionReferenceKey: Equatable, Sendable { var value: String }
+struct IPadActivityShareEventText: Equatable, Sendable { var value: String }
 struct IPadActivitySessionEntries: Equatable, Sendable {
     var entries: [OpenClawChatSessionEntry] = []
 }
@@ -117,12 +118,23 @@ struct IPadActivitySessionsFeature {
                 opensChat: false)
         }
 
+        func shareIntakePresentation(
+            lastShareEventText: IPadActivityShareEventText) -> IPadActivityShareIntakePresentation
+        {
+            .init(
+                icon: "square.and.arrow.down",
+                title: "Share intake",
+                detail: lastShareEventText.value,
+                value: "iPad")
+        }
+
         func screenPresentation(
             sessionsAvailability: IPadActivitySessionsAvailable,
             sessionsMode: IPadActivitySessionsMode,
             currentSession: IPadActivitySessionReferenceKey,
             defaultSession: IPadActivitySessionReferenceKey,
-            sceneActivity: IPadActivitySceneActive) -> IPadActivityScreenPresentation
+            sceneActivity: IPadActivitySceneActive,
+            lastShareEventText: IPadActivityShareEventText) -> IPadActivityScreenPresentation
         {
             let sessionRows = self.visibleSessions.map {
                 CommandCenterTab.sessionWorkItem(
@@ -141,7 +153,8 @@ struct IPadActivitySessionsFeature {
                 feedHeaderValue: self.loadingPhase == .inFlight ? "Loading" : nil,
                 showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
                 loadErrorText: self.loadErrorText,
-                emptySessionPresentation: self.emptySessionPresentation(sessionsAvailability: sessionsAvailability))
+                emptySessionPresentation: self.emptySessionPresentation(sessionsAvailability: sessionsAvailability),
+                shareIntakePresentation: self.shareIntakePresentation(lastShareEventText: lastShareEventText))
         }
     }
 
@@ -345,11 +358,12 @@ struct IPadActivityScreen: View {
 
                 Divider().padding(.leading, 58)
 
+                let shareIntakePresentation = self.screenPresentation.shareIntakePresentation
                 ProStatusRow(
-                    icon: "square.and.arrow.down",
-                    title: "Share intake",
-                    detail: self.appModel.lastShareEventText,
-                    value: "iPad",
+                    icon: shareIntakePresentation.icon,
+                    title: shareIntakePresentation.title,
+                    detail: shareIntakePresentation.detail,
+                    value: shareIntakePresentation.value,
                     color: OpenClawBrand.accent,
                     actionTitle: nil,
                     action: nil)
@@ -424,7 +438,8 @@ struct IPadActivityScreen: View {
             sessionsMode: .init(value: self.sessionsMode),
             currentSession: .init(value: self.appModel.chatSessionKey),
             defaultSession: .init(value: self.appModel.defaultChatSessionKey),
-            sceneActivity: .init(value: self.scenePhase == .active))
+            sceneActivity: .init(value: self.scenePhase == .active),
+            lastShareEventText: .init(value: self.appModel.lastShareEventText))
     }
 
     private func syncGatewayPresentation() {
@@ -475,6 +490,7 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
     let showsLoadingSessionsPlaceholder: Bool
     let loadErrorText: IPadActivitySessionsFailureMessage?
     let emptySessionPresentation: IPadActivityEmptySessionPresentation
+    let shareIntakePresentation: IPadActivityShareIntakePresentation
 }
 
 struct IPadActivityEmptySessionPresentation: Equatable, Sendable {
@@ -484,6 +500,13 @@ struct IPadActivityEmptySessionPresentation: Equatable, Sendable {
     let value: String
     let actionTitle: String?
     let opensChat: Bool
+}
+
+struct IPadActivityShareIntakePresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let detail: String
+    let value: String
 }
 
 struct IPadActivityGatewayPresentationState: Equatable, Sendable {
