@@ -135,6 +135,14 @@ struct OnboardingStatusFeature {
             var selectedMode: OnboardingConnectionMode?
         }
 
+        struct InitializationStatusEvaluation: Equatable, Sendable {
+            struct CredentialPresence: Equatable, Sendable { var value: Bool }
+
+            var hasSavedGatewayConnection: OnboardingHasSavedGatewayConnection
+            var hasGatewayToken: CredentialPresence
+            var hasGatewayPassword: CredentialPresence
+        }
+
         struct ConnectionIssueDetection: Equatable, Sendable {
             var issue: GatewayConnectionIssue
             var requestId: OnboardingConnectionIssueRequestID
@@ -166,6 +174,7 @@ struct OnboardingStatusFeature {
         case gatewayConnectionSucceeded(GatewayConnectionSuccess)
         case gatewayConnectionSuccessHandled
         case gatewayProblemResetScanStarted
+        case initializationStatusEvaluated(InitializationStatusEvaluation)
         case introAdvanced
         case navigationBackStarted
         case noSavedPairingFound
@@ -291,6 +300,14 @@ struct OnboardingStatusFeature {
                 state.authStepPresentation = .init(shouldShow: false)
                 state.authStepNavigationRequest = nil
                 state.statusLineState = .init(value: "Scan a fresh setup QR code from this gateway.")
+                return .none
+
+            case let .initializationStatusEvaluated(evaluation):
+                guard !evaluation.hasSavedGatewayConnection.value,
+                      !evaluation.hasGatewayToken.value,
+                      !evaluation.hasGatewayPassword.value
+                else { return .none }
+                state.statusLineState = .init(value: Self.noSavedPairingStatusLine)
                 return .none
 
             case .introAdvanced:
