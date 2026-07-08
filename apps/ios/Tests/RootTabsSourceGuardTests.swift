@@ -2254,9 +2254,11 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct IPadWorkboardDispatchControlPresentation: Equatable, Sendable"))
         #expect(source.contains(
             "func dispatchControlPresentation(\n            gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardDispatchControlPresentation"))
+        #expect(source.contains("dispatchControlPresentation: self.dispatchControlPresentation(gatewayAccess: gatewayAccess)"))
         #expect(source.contains("isDisabled: !gatewayAccess.canWrite || self.isLoading"))
         #expect(source.contains("private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation"))
-        #expect(source.contains(
+        #expect(source.contains("self.screenPresentation.dispatchControlPresentation"))
+        #expect(!source.contains(
             "self.store.state.dispatchControlPresentation(gatewayAccess: self.gatewayAccess)"))
         #expect(!source.contains("func dispatchControlPresentation(canWrite: Bool)"))
         #expect(!source.contains("dispatchControlPresentation(canWrite: self.gatewayAccess.canWrite)"))

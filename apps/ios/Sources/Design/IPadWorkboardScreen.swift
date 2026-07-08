@@ -584,7 +584,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation {
-        self.store.state.dispatchControlPresentation(gatewayAccess: self.gatewayAccess)
+        self.screenPresentation.dispatchControlPresentation
     }
 
     private var compactCardsPanelPresentation: IPadWorkboardCompactCardsPanelPresentation {
