@@ -1783,6 +1783,10 @@ struct RootTabsSourceGuardTests {
     @Test func `workboard create action surfaces unavailable reasons`() throws {
         let source = try Self.iPadWorkboardSource()
         let screenSource = try String(contentsOf: Self.iPadWorkboardScreenSourceURL(), encoding: .utf8)
+        let loadCardsFunction = try Self.extract(
+            source,
+            from: "private func loadCards(force: Bool) async",
+            to: "private func beginCreateCard()")
         let createFunction = try Self.extract(
             source,
             from: "private func createCard() async",
@@ -2189,8 +2193,8 @@ struct RootTabsSourceGuardTests {
         #expect(!createFunction.contains("readAccess: .init(canRead: self.gatewayAccess.canRead)"))
         #expect(!createFunction.contains("writeAccess: .init(canWrite: self.gatewayAccess.canWrite)"))
         #expect(source.contains("struct SceneActivity: Equatable, Sendable"))
-        #expect(source.contains("struct GatewayReadAccess: Equatable, Sendable"))
-        #expect(source.contains("struct GatewayWriteAccess: Equatable, Sendable"))
+        #expect(!source.contains("struct GatewayReadAccess: Equatable, Sendable"))
+        #expect(!source.contains("struct GatewayWriteAccess: Equatable, Sendable"))
         #expect(source.contains("struct RefreshForce: Equatable, Sendable"))
         #expect(source.contains("struct CreateRequest: Equatable, Sendable"))
         #expect(source.contains("var gatewayAccess: IPadWorkboardGatewayAccess"))
@@ -2241,7 +2245,7 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("Label(\"Dispatch\", systemImage: \"bolt.fill\")"))
         #expect(!source.contains(".disabled(!self.canWrite || self.store.isLoading)"))
         #expect(!source.contains(".disabled(self.store.isLoading)"))
-        #expect(source.contains("request.readAccess.canRead"))
+        #expect(source.contains("request.gatewayAccess.canRead"))
         #expect(source.contains("enum DispatchPhase: Equatable, Sendable"))
         #expect(source.contains("var dispatchPhase = DispatchPhase.idle"))
         #expect(source.contains("enum RefreshPhase: Equatable, Sendable"))
@@ -2305,9 +2309,13 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct RefreshRequest: Equatable, Sendable"))
         #expect(source.contains("struct RefreshResponse: Equatable, Sendable"))
         #expect(source.contains("var sceneActivity: SceneActivity"))
+        #expect(source.contains(
+            "struct RefreshRequest: Equatable, Sendable {\n            var sceneActivity: SceneActivity\n            var gatewayAccess: IPadWorkboardGatewayAccess\n            var force: RefreshForce"))
         #expect(source.contains("guard request.sceneActivity.isActive else"))
-        #expect(source.contains("guard request.readAccess.canRead else"))
+        #expect(source.contains("guard request.gatewayAccess.canRead else"))
         #expect(source.contains("response.force.isForced"))
+        #expect(loadCardsFunction.contains("gatewayAccess: self.gatewayAccess"))
+        #expect(!loadCardsFunction.contains("readAccess: .init(canRead: self.gatewayAccess.canRead)"))
         #expect(source.contains("force: .init(isForced: force)"))
         #expect(source.contains("case refreshRequested(RefreshRequest)"))
         #expect(source.contains("case refreshResponse(RefreshResponse)"))
@@ -2330,6 +2338,7 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("struct DispatchRequest: Equatable, Sendable {\n            var canWrite: Bool"))
         #expect(!source.contains("struct MoveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var status: IPadWorkboardMoveStatus\n            var writeAccess: GatewayWriteAccess"))
         #expect(!source.contains("struct MoveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var status: IPadWorkboardMoveStatus\n            var canWrite: Bool"))
+        #expect(!source.contains("struct RefreshRequest: Equatable, Sendable {\n            var sceneActivity: SceneActivity\n            var readAccess: GatewayReadAccess"))
         #expect(!source.contains("struct RefreshRequest: Equatable, Sendable {\n            var sceneActive: Bool"))
         #expect(!source.contains("struct RefreshResponse: Equatable, Sendable {\n            var boardScope: IPadWorkboardBoardScope\n            var force: Bool"))
         #expect(!source.contains("request.canWrite"))

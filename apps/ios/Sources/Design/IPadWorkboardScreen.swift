@@ -627,7 +627,7 @@ struct IPadWorkboardScreen: View {
     private func loadCards(force: Bool) async {
         await self.store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: self.scenePhase == .active),
-            readAccess: .init(canRead: self.gatewayAccess.canRead),
+            gatewayAccess: self.gatewayAccess,
             force: .init(isForced: force)))).finish()
     }
 
