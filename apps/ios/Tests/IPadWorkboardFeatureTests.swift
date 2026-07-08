@@ -350,6 +350,33 @@ struct IPadWorkboardFeatureTests {
         #expect(IPadWorkboardFeature.State.nextMoveActionPresentation(for: unknown, statuses: []) == nil)
     }
 
+    @Test func `workboard card action control presentation is reducer owned`() {
+        let card = Self.card(id: "card-1", status: "todo", position: 10)
+        var state = IPadWorkboardFeature.State()
+
+        #expect(state.cardActionControlPresentation(for: card, context: .kanban) == .init(
+            iconSystemName: "ellipsis",
+            accessibilityLabel: "Card Actions",
+            isDisabled: false))
+        #expect(state.cardActionControlPresentation(for: card, context: .queue) == .init(
+            iconSystemName: "ellipsis.circle",
+            accessibilityLabel: "Card Actions",
+            isDisabled: false))
+
+        state.busyCardID = .init(value: "card-1")
+        #expect(state.cardActionControlPresentation(for: card, context: .kanban) == .init(
+            iconSystemName: "hourglass",
+            accessibilityLabel: "Card Actions",
+            isDisabled: true))
+        #expect(IPadWorkboardFeature.State.cardActionControlPresentation(
+            isBusy: true,
+            context: .queue,
+            accessibilityLabel: "Custom Actions") == .init(
+            iconSystemName: "hourglass",
+            accessibilityLabel: "Custom Actions",
+            isDisabled: true))
+    }
+
     @Test func `workboard kanban lane presentation is reducer owned`() {
         let cards = [
             Self.card(id: "review-1", status: "in_review", position: 10),

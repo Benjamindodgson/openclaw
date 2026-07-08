@@ -205,6 +205,17 @@ enum IPadWorkboardCardTone: Equatable, Sendable {
     case warn
 }
 
+enum IPadWorkboardCardActionControlContext: Equatable, Sendable {
+    case kanban
+    case queue
+}
+
+struct IPadWorkboardCardActionControlPresentation: Equatable, Sendable {
+    let iconSystemName: String
+    let accessibilityLabel: String
+    let isDisabled: Bool
+}
+
 struct IPadWorkboardMetricPresentation: Equatable, Identifiable, Sendable {
     let id: String
     let iconSystemName: String
@@ -530,6 +541,16 @@ struct IPadWorkboardFeature {
             Self.cardPresentation(for: card)
         }
 
+        func cardActionControlPresentation(
+            for card: IPadWorkboardCard,
+            context: IPadWorkboardCardActionControlContext) -> IPadWorkboardCardActionControlPresentation
+        {
+            Self.cardActionControlPresentation(
+                isBusy: self.busyCardID?.value == card.id,
+                context: context,
+                accessibilityLabel: Self.cardPresentation(for: card).actionMenuAccessibilityLabel)
+        }
+
         func moveActionPresentations(for statuses: [String]) -> [IPadWorkboardMoveActionPresentation] {
             Self.moveActionPresentations(for: statuses)
         }
@@ -791,6 +812,24 @@ struct IPadWorkboardFeature {
                 return nil
             }
             return self.moveActionPresentation(for: nextStatus)
+        }
+
+        static func cardActionControlPresentation(
+            isBusy: Bool,
+            context: IPadWorkboardCardActionControlContext,
+            accessibilityLabel: String) -> IPadWorkboardCardActionControlPresentation
+        {
+            .init(
+                iconSystemName: isBusy ? "hourglass" : self.cardActionIdleIconSystemName(for: context),
+                accessibilityLabel: accessibilityLabel,
+                isDisabled: isBusy)
+        }
+
+        static func cardActionIdleIconSystemName(for context: IPadWorkboardCardActionControlContext) -> String {
+            switch context {
+            case .kanban: "ellipsis"
+            case .queue: "ellipsis.circle"
+            }
         }
 
         static func cardIconSystemName(for status: String) -> String {
