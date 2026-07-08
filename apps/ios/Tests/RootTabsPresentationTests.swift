@@ -1088,10 +1088,10 @@ struct RootTabsPresentationTests {
     }
 
     @Test func `workboard compact unavailable copy explains real capability state`() {
-        #expect(IPadWorkboardScreen
+        #expect(IPadWorkboardFeature.State
             .compactWriteUnavailableMessage(canRead: false) ==
             "Connect from Settings to create, move, and dispatch cards.")
-        #expect(IPadWorkboardScreen.compactWriteUnavailableMessage(canRead: true) == "Read-only gateway.")
+        #expect(IPadWorkboardFeature.State.compactWriteUnavailableMessage(canRead: true) == "Read-only gateway.")
     }
 
     @Test func `skill workshop agent scope normalizes gateway ids`() {

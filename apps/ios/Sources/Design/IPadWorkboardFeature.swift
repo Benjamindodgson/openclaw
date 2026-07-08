@@ -233,6 +233,10 @@ struct IPadWorkboardCompactEmptyStatePresentation: Equatable, Sendable {
     let value: String?
 }
 
+struct IPadWorkboardCompactWriteUnavailablePresentation: Equatable, Sendable {
+    let message: String
+}
+
 struct IPadWorkboardCreateSheetPresentation: Equatable, Sendable {
     let title: String
     let sectionTitle: String
@@ -459,6 +463,10 @@ struct IPadWorkboardFeature {
                 value: nil)
         }
 
+        func compactWriteUnavailablePresentation(canRead: Bool) -> IPadWorkboardCompactWriteUnavailablePresentation {
+            .init(message: Self.compactWriteUnavailableMessage(canRead: canRead))
+        }
+
         var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
             .init(
                 pickerTitle: "Scope",
@@ -616,12 +624,16 @@ struct IPadWorkboardFeature {
                 return "Card creation is already in progress."
             }
             if !canWrite {
-                return IPadWorkboardScreen.compactWriteUnavailableMessage(canRead: canRead)
+                return self.compactWriteUnavailableMessage(canRead: canRead)
             }
             if trimmedDraftTitle.isEmpty {
                 return "Enter a title to create a card."
             }
             return nil
+        }
+
+        static func compactWriteUnavailableMessage(canRead: Bool) -> String {
+            canRead ? "Read-only gateway." : "Connect from Settings to create, move, and dispatch cards."
         }
 
         static func workboardSubtitle(boardScopeLabel: String, selectedStatus: String) -> String {
