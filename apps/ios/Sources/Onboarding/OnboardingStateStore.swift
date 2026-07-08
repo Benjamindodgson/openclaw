@@ -821,6 +821,63 @@ struct OnboardingGatewayConnectionFeature {
     }
 }
 
+struct OnboardingAppleReviewDemoClient {
+    var enter: @MainActor @Sendable () -> Void
+}
+
+extension OnboardingAppleReviewDemoClient: DependencyKey {
+    static let liveValue = OnboardingAppleReviewDemoClient(enter: {})
+    static let testValue = OnboardingAppleReviewDemoClient(enter: {})
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        OnboardingAppleReviewDemoClient(enter: {
+            appModel.enterAppleReviewDemoMode()
+        })
+    }
+}
+
+extension DependencyValues {
+    var onboardingAppleReviewDemo: OnboardingAppleReviewDemoClient {
+        get { self[OnboardingAppleReviewDemoClient.self] }
+        set { self[OnboardingAppleReviewDemoClient.self] = newValue }
+    }
+}
+
+@Reducer
+struct OnboardingAppleReviewDemoFeature {
+    private let appleReviewDemoClientOverride: OnboardingAppleReviewDemoClient?
+
+    init(appleReviewDemoClient: OnboardingAppleReviewDemoClient? = nil) {
+        self.appleReviewDemoClientOverride = appleReviewDemoClient
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {}
+
+    enum Action: Equatable, Sendable {
+        case enableRequested
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            @Dependency(\.onboardingAppleReviewDemo) var dependencyAppleReviewDemoClient
+            let appleReviewDemoClient = self.appleReviewDemoClientOverride ?? dependencyAppleReviewDemoClient
+
+            switch action {
+            case .enableRequested:
+                return .run { [appleReviewDemoClient] _ in
+                    await appleReviewDemoClient.enter()
+                }
+            }
+        }
+        .autoLogActions()
+    }
+}
+
 @Reducer
 struct OnboardingQRPhotoImportFeature {
     static let imageLoadFailureMessage = OnboardingQRPhotoImportFailureMessage(

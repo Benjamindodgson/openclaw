@@ -200,6 +200,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeOnboardingAppleReviewDemoStore() -> StoreOf<OnboardingAppleReviewDemoFeature> {
+        Store(initialState: OnboardingAppleReviewDemoFeature.State()) {
+            OnboardingAppleReviewDemoFeature(appleReviewDemoClient: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewaySetupStatusStore() -> StoreOf<SettingsGatewaySetupStatusFeature> {
         Store(initialState: SettingsGatewaySetupStatusFeature.State()) {
             SettingsGatewaySetupStatusFeature()
