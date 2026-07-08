@@ -314,7 +314,10 @@ struct IPadSkillWorkshopFeature {
 
         var queueSummaryPresentation: IPadSkillWorkshopQueueSummaryPresentation {
             .init(
+                title: "Queue",
                 proposalCount: self.filteredProposalCount,
+                value: "\(self.filteredProposalCount)",
+                proposalCountLabel: "\(self.filteredProposalCount) proposals",
                 statusLabel: self.statusFilterLabel)
         }
 
@@ -929,7 +932,7 @@ struct IPadSkillWorkshopScreen: View {
                 let queueSummary = self.store.queueSummaryPresentation
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("\(queueSummary.proposalCount) proposals")
+                        Text(queueSummary.proposalCountLabel)
                             .font(.headline)
                         Text(queueSummary.statusLabel)
                             .font(.caption)
@@ -1107,8 +1110,8 @@ struct IPadSkillWorkshopScreen: View {
                 let actionControlsPresentation = self.proposalActionControlsPresentation
                 let inspectionControlsPresentation = self.proposalInspectionControlsPresentation
                 ProPanelHeader(
-                    title: "Queue",
-                    value: "\(queueSummary.proposalCount)",
+                    title: queueSummary.title,
+                    value: queueSummary.value,
                     actionTitle: nil,
                     action: nil)
                 ForEach(Array(listPresentation.proposals.enumerated()), id: \.element.id) { index, presentation in
