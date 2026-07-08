@@ -80,6 +80,10 @@ struct IPadActivitySessionsFeature {
                     .sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
                     .prefix(8))
         }
+
+        var screenPresentation: IPadActivityScreenPresentation {
+            .init(gatewayPresentation: self.gatewayPresentation)
+        }
     }
 
     enum Action: Equatable, Sendable {
@@ -227,16 +231,17 @@ struct IPadActivityScreen: View {
     }
 
     private var metrics: [ProMetric] {
-        [
+        let gatewayPresentation = self.screenPresentation.gatewayPresentation
+        return [
             ProMetric(
-                icon: self.store.gatewayPresentation.metricIcon,
+                icon: gatewayPresentation.metricIcon,
                 title: "Gateway",
-                value: self.store.gatewayPresentation.gatewayStateText,
-                color: self.store.gatewayPresentation.gatewayStateColor),
+                value: gatewayPresentation.gatewayStateText,
+                color: gatewayPresentation.gatewayStateColor),
             ProMetric(
                 icon: "person.2.fill",
                 title: "Agents",
-                value: self.store.gatewayPresentation.agentCountText,
+                value: gatewayPresentation.agentCountText,
                 color: OpenClawBrand.accent),
             ProMetric(
                 icon: "bubble.left.and.text.bubble.right",
@@ -269,14 +274,15 @@ struct IPadActivityScreen: View {
                     Divider().padding(.leading, 58)
                 }
 
+                let gatewayPresentation = self.screenPresentation.gatewayPresentation
                 ProStatusRow(
-                    icon: self.store.gatewayPresentation.rowIcon,
+                    icon: gatewayPresentation.rowIcon,
                     title: "Gateway",
-                    detail: self.store.gatewayPresentation.gatewayDetailText,
-                    value: self.store.gatewayPresentation.gatewayRowValue,
-                    color: self.store.gatewayPresentation.gatewayStateColor,
-                    actionTitle: self.store.gatewayPresentation.settingsActionTitle,
-                    action: self.store.gatewayPresentation.showsSettingsAction ? self.openSettings : nil)
+                    detail: gatewayPresentation.gatewayDetailText,
+                    value: gatewayPresentation.gatewayRowValue,
+                    color: gatewayPresentation.gatewayStateColor,
+                    actionTitle: gatewayPresentation.settingsActionTitle,
+                    action: gatewayPresentation.showsSettingsAction ? self.openSettings : nil)
 
                 Divider().padding(.leading, 58)
 
@@ -359,6 +365,10 @@ struct IPadActivityScreen: View {
             gatewayAgentCount: self.appModel.gatewayAgents.count)
     }
 
+    private var screenPresentation: IPadActivityScreenPresentation {
+        self.store.state.screenPresentation
+    }
+
     private func syncGatewayPresentation() {
         let presentation = self.currentGatewayPresentation
         guard self.store.gatewayPresentation != presentation else { return }
@@ -406,9 +416,12 @@ struct IPadActivityGatewayRemoteAddress: Equatable, Sendable { var value: String
 struct IPadActivityGatewayServerName: Equatable, Sendable { var value: String? }
 struct IPadActivityGatewayDisplayStatusText: Equatable, Sendable { var value: String }
 struct IPadActivityGatewayAgentCount: Equatable, Sendable { var value: Int }
-// swiftformat:enable redundantSendable
 
-struct IPadActivityGatewayPresentationState: Equatable {
+struct IPadActivityScreenPresentation: Equatable, Sendable {
+    let gatewayPresentation: IPadActivityGatewayPresentationState
+}
+
+struct IPadActivityGatewayPresentationState: Equatable, Sendable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
     var gatewayDisplayStatusTextState = IPadActivityGatewayDisplayStatusText(value: "Offline")
     var gatewayRemoteAddressState = IPadActivityGatewayRemoteAddress(value: nil)
@@ -495,3 +508,5 @@ struct IPadActivityGatewayPresentationState: Equatable {
         return trimmed.isEmpty ? nil : trimmed
     }
 }
+
+// swiftformat:enable redundantSendable

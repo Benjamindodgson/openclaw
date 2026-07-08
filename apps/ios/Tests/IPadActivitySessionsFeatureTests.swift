@@ -156,6 +156,7 @@ struct IPadActivitySessionsFeatureTests {
         #expect(store.state.gatewayPresentation.gatewayStateText == "Online")
         #expect(store.state.gatewayPresentation.agentCountText == "3")
         #expect(store.state.gatewayPresentation.gatewayDetailText == "studio.local:4455")
+        #expect(store.state.screenPresentation.gatewayPresentation == presentation)
     }
 
     @Test func `gateway presentation owns metric and row fallbacks`() {

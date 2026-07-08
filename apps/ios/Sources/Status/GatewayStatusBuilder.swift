@@ -2,14 +2,14 @@ import ComposableArchitecture
 import Foundation
 import OpenClawKit
 
-enum GatewayDisplayState: Equatable {
+// swiftformat:disable redundantSendable
+enum GatewayDisplayState: Equatable, Sendable {
     case connected
     case connecting
     case error
     case disconnected
 }
 
-// swiftformat:disable redundantSendable
 struct GatewayDisplayServerName: Equatable, Sendable {
     var value: String?
 }
