@@ -285,13 +285,17 @@ struct IPadSkillWorkshopFeatureTests {
             showsProgress: true))
     }
 
-    @Test func `query clear button follows reducer state`() {
+    @Test func `query field presentation follows reducer state`() {
         var state = IPadSkillWorkshopFeature.State()
 
-        #expect(!state.shouldShowQueryClearButton)
+        #expect(state.queryFieldPresentation == .init(
+            text: "",
+            showsClearButton: false))
 
         state.query = .init(value: "gateway")
-        #expect(state.shouldShowQueryClearButton)
+        #expect(state.queryFieldPresentation == .init(
+            text: "gateway",
+            showsClearButton: true))
     }
 
     @Test func `feedback messages follow reducer notice and error state`() {

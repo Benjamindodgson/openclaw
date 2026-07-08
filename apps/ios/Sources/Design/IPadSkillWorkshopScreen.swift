@@ -113,8 +113,10 @@ struct IPadSkillWorkshopFeature {
                 showsProgress: self.isRefreshInFlight)
         }
 
-        var shouldShowQueryClearButton: Bool {
-            !self.query.value.isEmpty
+        var queryFieldPresentation: IPadSkillWorkshopQueryFieldPresentation {
+            .init(
+                text: self.query.value,
+                showsClearButton: !self.query.value.isEmpty)
         }
 
         var feedbackMessages: [IPadSkillWorkshopFeedbackPresentation] {
@@ -873,7 +875,7 @@ struct IPadSkillWorkshopScreen: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.subheadline)
-            if self.store.shouldShowQueryClearButton {
+            if self.store.queryFieldPresentation.showsClearButton {
                 Button {
                     self.store.send(.clearQueryTapped)
                 } label: {
@@ -1243,7 +1245,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private var queryBinding: Binding<String> {
         Binding(
-            get: { self.store.query.value },
+            get: { self.store.queryFieldPresentation.text },
             set: { self.store.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
