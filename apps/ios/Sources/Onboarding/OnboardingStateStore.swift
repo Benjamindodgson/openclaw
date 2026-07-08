@@ -114,6 +114,29 @@ struct OnboardingGatewayCurrentInstanceID: Equatable, Sendable {
     }
 }
 
+struct OnboardingResetClient {
+    var reset: @MainActor @Sendable (_ instanceId: OnboardingGatewayCurrentInstanceID) -> Void
+}
+
+extension OnboardingResetClient: DependencyKey {
+    static let liveValue = OnboardingResetClient(reset: { _ in })
+    static let testValue = OnboardingResetClient(reset: { _ in })
+
+    @MainActor
+    static func live(appModel: NodeAppModel) -> Self {
+        OnboardingResetClient(reset: { instanceId in
+            GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId.value)
+        })
+    }
+}
+
+extension DependencyValues {
+    var onboardingReset: OnboardingResetClient {
+        get { self[OnboardingResetClient.self] }
+        set { self[OnboardingResetClient.self] = newValue }
+    }
+}
+
 struct OnboardingQRMessage: Equatable, Sendable { var value: String? }
 
 struct OnboardingQRPhotoImportFailureMessage: Equatable, Sendable { var value: String }
@@ -137,6 +160,12 @@ struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
 
 @Reducer
 struct OnboardingStateFeature {
+    private let resetClientOverride: OnboardingResetClient?
+
+    init(resetClient: OnboardingResetClient? = nil) {
+        self.resetClientOverride = resetClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -194,10 +223,13 @@ struct OnboardingStateFeature {
 
         struct CompletionMark: Equatable, Sendable { var mode: OnboardingConnectionMode? }
 
+        struct OnboardingResetRequest: Equatable, Sendable { var instanceId: OnboardingGatewayCurrentInstanceID }
+
         case refreshPresentation
         case gatewaySnapshotChanged(GatewaySnapshotChange)
         case markCompleted(CompletionMark)
         case markFirstRunIntroSeen
+        case onboardingResetRequested(OnboardingResetRequest)
         case reset
     }
 
@@ -205,6 +237,9 @@ struct OnboardingStateFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingReset) var dependencyResetClient
+            let resetClient = self.resetClientOverride ?? dependencyResetClient
+
             switch action {
             case .refreshPresentation:
                 state.refreshPresentation()
@@ -229,14 +264,24 @@ struct OnboardingStateFeature {
                 state.refreshPresentation()
                 return .none
 
+            case let .onboardingResetRequested(request):
+                Self.resetState(&state)
+                return .run { _ in
+                    await resetClient.reset(request.instanceId)
+                }
+
             case .reset:
-                state.completion = .init(isCompleted: false)
-                state.firstRunIntroSeenState = .init(value: false)
-                state.refreshPresentation()
+                Self.resetState(&state)
                 return .none
             }
         }
         .autoLogActions()
+    }
+
+    private static func resetState(_ state: inout State) {
+        state.completion = .init(isCompleted: false)
+        state.firstRunIntroSeenState = .init(value: false)
+        state.refreshPresentation()
     }
 }
 

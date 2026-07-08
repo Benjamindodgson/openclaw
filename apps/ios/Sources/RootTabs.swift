@@ -866,6 +866,7 @@ struct RootTabs: View {
                     onClose: {
                         self.setOnboardingPresented(false)
                     },
+                    onboardingStateStore: self.makeOnboardingStateStore(),
                     credentialsStore: self.makeOnboardingCredentialsStore(),
                     gatewayConnectionStore: self.makeOnboardingGatewayConnectionStore(),
                     appleReviewDemoStore: self.makeOnboardingAppleReviewDemoStore(),

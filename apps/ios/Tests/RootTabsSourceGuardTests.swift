@@ -7151,6 +7151,47 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingStateSource.contains("state.statusLine = trimmedStatus"))
     }
 
+    @Test func `onboarding problem reset is reducer effect owned`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
+        let resetFunction = try Self.extract(
+            onboardingSource,
+            from: "private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async",
+            to: "if problem.canTrustRotatedCertificate")
+        let onboardingStateStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var onboardingStateStore",
+            to: "@State private var credentialsStore")
+
+        #expect(onboardingStateSource.contains("struct OnboardingResetClient"))
+        #expect(onboardingStateSource.contains(
+            "var reset: @MainActor @Sendable (_ instanceId: OnboardingGatewayCurrentInstanceID) -> Void"))
+        #expect(onboardingStateSource.contains("GatewayOnboardingReset.reset(appModel: appModel, instanceId: instanceId.value)"))
+        #expect(onboardingStateSource.contains("struct OnboardingResetRequest: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("case onboardingResetRequested(OnboardingResetRequest)"))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingReset)"))
+        #expect(onboardingStateSource.contains("await resetClient.reset(request.instanceId)"))
+        #expect(onboardingStateSource.contains("private static func resetState(_ state: inout State)"))
+        #expect(onboardingSource.contains("onboardingStateStore: StoreOf<OnboardingStateFeature>? = nil"))
+        #expect(onboardingSource.contains("onboardingStateStoreFactory: () -> StoreOf<OnboardingStateFeature>"))
+        #expect(onboardingStateStoreDeclaration
+            .contains("@State private var onboardingStateStore: StoreOf<OnboardingStateFeature>"))
+        #expect(rootSource.contains("onboardingStateStore: self.makeOnboardingStateStore()"))
+        #expect(storesSource.contains("func makeOnboardingStateStore()"))
+        #expect(storesSource.contains("OnboardingStateFeature(resetClient: .live(appModel: self.appModel))"))
+        #expect(resetFunction.contains("await self.onboardingStateStore"))
+        #expect(resetFunction.contains(".send(.onboardingResetRequested(.init("))
+        #expect(resetFunction.contains("instanceId: .init(value: self.instanceId)"))
+        #expect(resetFunction.contains(".finish()"))
+        #expect(resetFunction.contains("self.credentialsStore.send(.reset)"))
+        #expect(resetFunction.contains("self.statusStore.send(.gatewayProblemResetScanStarted)"))
+        #expect(resetFunction.contains("self.stepStore.send(.stepChanged(.init(step: .connect)))"))
+        #expect(resetFunction.contains("self.presentationStore.send(.qrScannerButtonTapped)"))
+        #expect(!resetFunction.contains("GatewayOnboardingReset.reset"))
+    }
+
     @Test func `settings onboarding reset is reducer effect owned`() throws {
         let settingsSource = try Self.settingsProTabCombinedSource()
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
