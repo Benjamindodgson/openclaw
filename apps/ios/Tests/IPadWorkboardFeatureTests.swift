@@ -60,11 +60,34 @@ struct IPadWorkboardFeatureTests {
     @Test func `workboard subtitle is derived by reducer state`() {
         var state = IPadWorkboardFeature.State()
         #expect(state.workboardSubtitle == "All boards / Active")
+        let defaultChrome = IPadWorkboardScreenChromePresentation(
+            title: "Workboard",
+            subtitle: "All boards / Active")
+        #expect(state.screenChromePresentation == defaultChrome)
+        #expect(state.screenPresentation.screenChromePresentation == defaultChrome)
 
         state.selectedBoardID = .init(value: "planning")
         state.selectedStatus = .init(value: "blocked")
 
         #expect(state.workboardSubtitle == "planning / Blocked")
+        #expect(state.screenPresentation.screenChromePresentation == .init(
+            title: "Workboard",
+            subtitle: "planning / Blocked"))
+    }
+
+    @Test func `workboard queue summary presentation is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        state.cardEntries = .init(values: [
+            Self.card(id: "todo-match", title: "Gateway fix", status: "todo", position: 30),
+            Self.card(id: "done-match", title: "Gateway shipped", status: "done", position: 20),
+        ])
+
+        #expect(state.queueSummaryPresentation == .init(
+            title: "Queue",
+            cardCount: 1,
+            value: "1",
+            cardCountLabel: "1 cards"))
+        #expect(state.screenPresentation.queueSummaryPresentation == state.queueSummaryPresentation)
     }
 
     @Test func `kanban cards are filtered by reducer state`() {

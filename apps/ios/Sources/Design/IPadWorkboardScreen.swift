@@ -32,8 +32,8 @@ struct IPadWorkboardScreen: View {
 
     var body: some View {
         IPadSidebarScreenChrome(
-            title: "Workboard",
-            subtitle: self.store.workboardSubtitle,
+            title: self.screenPresentation.screenChromePresentation.title,
+            subtitle: self.screenPresentation.screenChromePresentation.subtitle,
             headerLeadingAction: self.headerLeadingAction,
             gatewayAction: self.openSettings)
         {
@@ -173,7 +173,7 @@ struct IPadWorkboardScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text("\(self.store.filteredCardCount) cards")
+                    Text(self.queueSummaryPresentation.cardCountLabel)
                         .font(.headline)
                     Spacer(minLength: 8)
                     self.compactRefreshButton
@@ -460,8 +460,8 @@ struct IPadWorkboardScreen: View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 ProPanelHeader(
-                    title: "Queue",
-                    value: "\(self.store.filteredCards.count)",
+                    title: self.queueSummaryPresentation.title,
+                    value: self.queueSummaryPresentation.value,
                     actionTitle: nil,
                     action: nil)
                 if self.store.filteredCards.isEmpty {
@@ -565,6 +565,14 @@ struct IPadWorkboardScreen: View {
 
     private var boardScopeLabel: String {
         self.store.boardScopeLabel
+    }
+
+    private var screenPresentation: IPadWorkboardScreenPresentation {
+        self.store.screenPresentation
+    }
+
+    private var queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation {
+        self.screenPresentation.queueSummaryPresentation
     }
 
     private var createUnavailableMessage: String? {
