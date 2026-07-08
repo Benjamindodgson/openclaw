@@ -2213,11 +2213,13 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("guard request.writeAccess.canWrite"))
         #expect(source.contains("struct IPadWorkboardDispatchControlPresentation: Equatable, Sendable"))
         #expect(source.contains(
-            "func dispatchControlPresentation(canWrite: Bool) -> IPadWorkboardDispatchControlPresentation"))
-        #expect(source.contains("isDisabled: !canWrite || self.isLoading"))
+            "func dispatchControlPresentation(\n            gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardDispatchControlPresentation"))
+        #expect(source.contains("isDisabled: !gatewayAccess.canWrite || self.isLoading"))
         #expect(source.contains("private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation"))
         #expect(source.contains(
-            "self.store.state.dispatchControlPresentation(canWrite: self.gatewayAccess.canWrite)"))
+            "self.store.state.dispatchControlPresentation(gatewayAccess: self.gatewayAccess)"))
+        #expect(!source.contains("func dispatchControlPresentation(canWrite: Bool)"))
+        #expect(!source.contains("dispatchControlPresentation(canWrite: self.gatewayAccess.canWrite)"))
         #expect(source.contains("self.dispatchControlPresentation.title"))
         #expect(source.contains("systemImage: self.dispatchControlPresentation.iconSystemName"))
         #expect(source.contains(".disabled(self.dispatchControlPresentation.isDisabled)"))

@@ -186,18 +186,18 @@ struct IPadWorkboardFeatureTests {
 
     @Test func `workboard dispatch control presentation is reducer owned`() {
         var state = IPadWorkboardFeature.State()
-        #expect(state.dispatchControlPresentation(canWrite: true) == .init(
+        #expect(state.dispatchControlPresentation(gatewayAccess: .init(canRead: true, canWrite: true)) == .init(
             title: "Dispatch",
             iconSystemName: "bolt.fill",
             isDisabled: false))
-        #expect(state.dispatchControlPresentation(canWrite: false).isDisabled)
+        #expect(state.dispatchControlPresentation(gatewayAccess: .init(canRead: true, canWrite: false)).isDisabled)
 
         state.refreshPhase = .inFlight(boardID: nil)
-        #expect(state.dispatchControlPresentation(canWrite: true).isDisabled)
+        #expect(state.dispatchControlPresentation(gatewayAccess: .init(canRead: true, canWrite: true)).isDisabled)
 
         state.refreshPhase = .idle
         state.dispatchPhase = .inFlight
-        #expect(state.dispatchControlPresentation(canWrite: true).isDisabled)
+        #expect(state.dispatchControlPresentation(gatewayAccess: .init(canRead: true, canWrite: true)).isDisabled)
     }
 
     @Test func `workboard gateway access is reducer owned`() {

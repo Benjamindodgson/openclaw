@@ -545,11 +545,13 @@ struct IPadWorkboardFeature {
             return messages
         }
 
-        func dispatchControlPresentation(canWrite: Bool) -> IPadWorkboardDispatchControlPresentation {
+        func dispatchControlPresentation(
+            gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardDispatchControlPresentation
+        {
             .init(
                 title: "Dispatch",
                 iconSystemName: "bolt.fill",
-                isDisabled: !canWrite || self.isLoading)
+                isDisabled: !gatewayAccess.canWrite || self.isLoading)
         }
 
         var queryFieldPresentation: IPadWorkboardQueryFieldPresentation {
