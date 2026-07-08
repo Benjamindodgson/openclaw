@@ -263,7 +263,7 @@ struct IPadWorkboardScreen: View {
             self.boardScopeMenuItems
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "rectangle.stack")
+                Image(systemName: self.boardScopeMenuPresentation.leadingIconSystemName)
                     .font(.caption.weight(.semibold))
                 Text(self.boardScopeMenuPresentation.selectedLabel)
                     .font(.caption.weight(.semibold))
@@ -379,7 +379,7 @@ struct IPadWorkboardScreen: View {
                 HStack(spacing: 6) {
                     Text(self.statusFilterControlPresentation.selectedLabel)
                         .font(.subheadline.weight(.semibold))
-                    Image(systemName: "chevron.up.chevron.down")
+                    Image(systemName: self.statusFilterControlPresentation.selectorIconSystemName)
                         .font(.caption2.weight(.bold))
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)

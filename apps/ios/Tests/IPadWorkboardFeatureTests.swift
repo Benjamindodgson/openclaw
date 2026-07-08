@@ -219,6 +219,7 @@ struct IPadWorkboardFeatureTests {
         let defaultPresentation = IPadWorkboardBoardScopeMenuPresentation(
             title: "Board",
             selectedLabel: "All boards",
+            leadingIconSystemName: "rectangle.stack",
             selectorIconSystemName: "chevron.up.chevron.down",
             accessibilityLabel: "Workboard board scope",
             options: [
@@ -246,6 +247,7 @@ struct IPadWorkboardFeatureTests {
         #expect(presentation.menuTitle == "Status")
         #expect(presentation.selectedFilter == "active")
         #expect(presentation.selectedLabel == "Active")
+        #expect(presentation.selectorIconSystemName == "chevron.up.chevron.down")
         #expect(presentation.options.map(\.id) == ["active", "review", "todo", "custom"])
         #expect(presentation.compactOptions.map(\.id) == ["active", "todo", "review", "custom"])
         #expect(presentation.options.first?.accessibilityLabel == "Show Active cards")
