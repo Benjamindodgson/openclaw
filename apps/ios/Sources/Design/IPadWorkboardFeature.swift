@@ -198,6 +198,12 @@ struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
     let showsProgress: Bool
 }
 
+struct IPadWorkboardDispatchControlPresentation: Equatable, Sendable {
+    let title: String
+    let iconSystemName: String
+    let isDisabled: Bool
+}
+
 struct IPadWorkboardCreateSheetPresentation: Equatable, Sendable {
     let title: String
     let sectionTitle: String
@@ -367,6 +373,13 @@ struct IPadWorkboardFeature {
                 compactAccessibilityLabel: "Refresh workboard",
                 isDisabled: self.isLoading,
                 showsProgress: self.isLoading)
+        }
+
+        func dispatchControlPresentation(canWrite: Bool) -> IPadWorkboardDispatchControlPresentation {
+            .init(
+                title: "Dispatch",
+                iconSystemName: "bolt.fill",
+                isDisabled: !canWrite || self.isLoading)
         }
 
         var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
