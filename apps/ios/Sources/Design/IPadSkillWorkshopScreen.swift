@@ -304,8 +304,8 @@ struct IPadSkillWorkshopFeature {
                 isInspecting: proposal.id == self.inspectingProposalID?.value)
         }
 
-        var shouldEnableProposalInspectionControls: Bool {
-            self.inspectingProposalID == nil
+        var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation {
+            .init(canInspect: self.inspectingProposalID == nil)
         }
 
         private func proposalCount(forStatus status: String) -> Int {
@@ -1174,7 +1174,7 @@ struct IPadSkillWorkshopScreen: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .disabled(!self.store.shouldEnableProposalInspectionControls)
+        .disabled(!self.store.proposalInspectionControlsPresentation.canInspect)
     }
 
     private var refreshTaskID: String {
