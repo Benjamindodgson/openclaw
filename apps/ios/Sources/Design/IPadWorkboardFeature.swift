@@ -198,6 +198,25 @@ struct IPadWorkboardRefreshControlPresentation: Equatable, Sendable {
     let showsProgress: Bool
 }
 
+struct IPadWorkboardCreateSheetPresentation: Equatable, Sendable {
+    let title: String
+    let sectionTitle: String
+    let titlePlaceholder: String
+    let notesPlaceholder: String
+    let cancelTitle: String
+    let confirmationTitle: String
+    let confirmationAccessibilityHint: String
+    let isConfirmationDisabled: Bool
+}
+
+struct IPadWorkboardCreateCardPresentation: Equatable, Sendable {
+    let buttonTitle: String
+    let buttonIconSystemName: String
+    let buttonAccessibilityHint: String
+    let isButtonDisabled: Bool
+    let sheet: IPadWorkboardCreateSheetPresentation
+}
+
 struct IPadWorkboardStatusFilterOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
@@ -388,6 +407,26 @@ struct IPadWorkboardFeature {
                 trimmedDraftTitle: self.trimmedDraftTitle,
                 canRead: canRead,
                 canWrite: canWrite)
+        }
+
+        func createCardPresentation(canRead: Bool, canWrite: Bool) -> IPadWorkboardCreateCardPresentation {
+            let isCreating = self.cardCreationPhase == .inFlight
+            return .init(
+                buttonTitle: "New Card",
+                buttonIconSystemName: "plus",
+                buttonAccessibilityHint: "Opens card title and notes entry",
+                isButtonDisabled: isCreating,
+                sheet: .init(
+                    title: "New Card",
+                    sectionTitle: "Card",
+                    titlePlaceholder: "Title",
+                    notesPlaceholder: "Notes",
+                    cancelTitle: "Cancel",
+                    confirmationTitle: isCreating ? "Creating..." : "Create",
+                    confirmationAccessibilityHint: self.createUnavailableMessage(
+                        canRead: canRead,
+                        canWrite: canWrite) ?? "Creates a workboard card",
+                    isConfirmationDisabled: isCreating))
         }
 
         var boardScopeOptions: [String] {

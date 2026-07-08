@@ -237,13 +237,15 @@ struct IPadWorkboardScreen: View {
         Button {
             self.beginCreateCard()
         } label: {
-            Label("New Card", systemImage: "plus")
+            Label(
+                self.createCardPresentation.buttonTitle,
+                systemImage: self.createCardPresentation.buttonIconSystemName)
                 .frame(maxWidth: expands ? .infinity : nil)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.small)
-        .disabled(self.store.cardCreationPhase == .inFlight)
-        .accessibilityHint("Opens card title and notes entry")
+        .disabled(self.createCardPresentation.isButtonDisabled)
+        .accessibilityHint(self.createCardPresentation.buttonAccessibilityHint)
     }
 
     private var compactBoardScopeMenu: some View {
@@ -503,11 +505,14 @@ struct IPadWorkboardScreen: View {
 
     private var createCardSheet: some View {
         Form {
-            Section("Card") {
-                TextField("Title", text: self.draftTitleBinding)
+            Section(self.createCardPresentation.sheet.sectionTitle) {
+                TextField(self.createCardPresentation.sheet.titlePlaceholder, text: self.draftTitleBinding)
                     .textInputAutocapitalization(.sentences)
                     .submitLabel(.next)
-                TextField("Notes", text: self.draftNotesBinding, axis: .vertical)
+                TextField(
+                    self.createCardPresentation.sheet.notesPlaceholder,
+                    text: self.draftNotesBinding,
+                    axis: .vertical)
                     .lineLimit(3...6)
                     .textInputAutocapitalization(.sentences)
             }
@@ -518,11 +523,11 @@ struct IPadWorkboardScreen: View {
                 }
             }
         }
-        .navigationTitle("New Card")
+        .navigationTitle(self.createCardPresentation.sheet.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button(self.createCardPresentation.sheet.cancelTitle) {
                     self.store.send(.sheetDismissed)
                 }
             }
@@ -532,10 +537,10 @@ struct IPadWorkboardScreen: View {
                         await self.createCard()
                     }
                 } label: {
-                    Text(self.store.cardCreationPhase == .inFlight ? "Creating..." : "Create")
+                    Text(self.createCardPresentation.sheet.confirmationTitle)
                 }
-                .disabled(self.store.cardCreationPhase == .inFlight)
-                .accessibilityHint(self.createUnavailableMessage ?? "Creates a workboard card")
+                .disabled(self.createCardPresentation.sheet.isConfirmationDisabled)
+                .accessibilityHint(self.createCardPresentation.sheet.confirmationAccessibilityHint)
             }
         }
     }
@@ -573,14 +578,14 @@ struct IPadWorkboardScreen: View {
         self.screenPresentation.refreshControlPresentation
     }
 
-    private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
-        self.screenPresentation.statusFilterControlPresentation
-    }
-
-    private var createUnavailableMessage: String? {
-        self.store.state.createUnavailableMessage(
+    private var createCardPresentation: IPadWorkboardCreateCardPresentation {
+        self.store.state.createCardPresentation(
             canRead: self.canRead,
             canWrite: self.canWrite)
+    }
+
+    private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
+        self.screenPresentation.statusFilterControlPresentation
     }
 
     private var isCompactWidth: Bool {
