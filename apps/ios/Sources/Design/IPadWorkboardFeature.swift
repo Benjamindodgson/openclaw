@@ -1032,7 +1032,7 @@ struct IPadWorkboardFeature {
 
         struct ArchiveRequest: Equatable, Sendable {
             var card: IPadWorkboardCard
-            var writeAccess: GatewayWriteAccess
+            var gatewayAccess: IPadWorkboardGatewayAccess
         }
 
         struct ArchiveResponse: Equatable, Sendable {
@@ -1149,7 +1149,7 @@ struct IPadWorkboardFeature {
 
             switch action {
             case let .archiveRequested(request):
-                guard request.writeAccess.canWrite, state.busyCardID == nil else { return .none }
+                guard request.gatewayAccess.canWrite, state.busyCardID == nil else { return .none }
                 state.busyCardID = .init(value: request.card.id)
                 state.errorText = nil
                 let params = IPadWorkboardArchiveParams(

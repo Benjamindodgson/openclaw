@@ -1787,6 +1787,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "private func createCard() async",
             to: "private func move(_ card: IPadWorkboardCard, to status: String) async")
+        let archiveFunction = try Self.extract(
+            source,
+            from: "private func archive(_ card: IPadWorkboardCard) async",
+            to: "private func dispatchCards() async")
         let newCardButtonSource = try Self.extract(
             screenSource,
             from: "private func newCardButton(expands: Bool) -> some View",
@@ -2200,10 +2204,15 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.store.send(.boardScopeChanged(.init(boardID: .init(value: option.id))))"))
         #expect(!source.contains("struct BoardScopeChange: Equatable, Sendable {\n            var boardID: String"))
         #expect(source.contains("struct ArchiveRequest: Equatable, Sendable"))
+        #expect(source.contains(
+            "struct ArchiveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var gatewayAccess: IPadWorkboardGatewayAccess"))
         #expect(source.contains("struct ArchiveResponse: Equatable, Sendable"))
         #expect(source.contains("case archiveRequested(ArchiveRequest)"))
         #expect(source.contains("case archiveResponse(ArchiveResponse)"))
         #expect(source.contains("self.store.send(.archiveRequested(.init("))
+        #expect(archiveFunction.contains("gatewayAccess: self.gatewayAccess"))
+        #expect(!archiveFunction.contains("writeAccess: .init(canWrite: self.gatewayAccess.canWrite)"))
+        #expect(source.contains("guard request.gatewayAccess.canWrite, state.busyCardID == nil else"))
         #expect(source.contains("struct DispatchRequest: Equatable, Sendable"))
         #expect(source.contains(
             "struct DispatchRequest: Equatable, Sendable {\n            var gatewayAccess: IPadWorkboardGatewayAccess"))
@@ -2306,6 +2315,7 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("struct CreateRequest: Equatable, Sendable {\n            var readAccess: GatewayReadAccess"))
         #expect(!source.contains("struct CreateRequest: Equatable, Sendable {\n            var writeAccess: GatewayWriteAccess"))
         #expect(!source.contains("struct CreateRequest: Equatable, Sendable {\n            var canRead: Bool"))
+        #expect(!source.contains("struct ArchiveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var writeAccess: GatewayWriteAccess"))
         #expect(!source.contains("struct ArchiveRequest: Equatable, Sendable {\n            var card: IPadWorkboardCard\n            var canWrite: Bool"))
         #expect(!source.contains("struct DispatchRequest: Equatable, Sendable {\n            var writeAccess: GatewayWriteAccess"))
         #expect(!source.contains("struct DispatchRequest: Equatable, Sendable {\n            var canWrite: Bool"))
