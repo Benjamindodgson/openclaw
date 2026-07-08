@@ -266,6 +266,22 @@ struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Senda
     }
 }
 
+struct IPadSkillWorkshopProposalDetailPresentation: Equatable, Identifiable, Sendable {
+    let card: IPadSkillWorkshopProposalCardPresentation
+    let bodyText: String?
+    let emptyBodyText: String
+    let supportFiles: [IPadSkillProposalSupportFile]
+    let showsSupportFiles: Bool
+
+    var id: String {
+        self.card.id
+    }
+
+    var proposal: IPadSkillProposal {
+        self.card.proposal
+    }
+}
+
 struct IPadSkillWorkshopProposalLanePresentation: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
