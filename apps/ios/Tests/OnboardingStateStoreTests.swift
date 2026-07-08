@@ -402,6 +402,8 @@ import Testing
         #expect(OnboardingStatusFeature.qrScannerOpeningRequest.presentationAction == .qrScannerButtonTapped)
         #expect(OnboardingStatusFeature.freshQRScannerOpeningRequest.statusAction == .freshQRScanStarted)
         #expect(OnboardingStatusFeature.freshQRScannerOpeningRequest.presentationAction == .qrScannerButtonTapped)
+        #expect(OnboardingStatusFeature.retryConnectionRequest(silent: .init(value: false)).statusAction ==
+            .retryConnectionStarted(.init(silent: .init(value: false))))
 
         await store.send(.qrScannerOpeningStarted) {
             $0.statusLineState = .init(value: "Opening QR scanner…")
