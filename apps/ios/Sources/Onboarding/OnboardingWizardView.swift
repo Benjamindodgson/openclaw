@@ -1102,14 +1102,10 @@ extension OnboardingWizardView {
             self.presentationStore.send(.qrScannerButtonTapped)
             return
 
-        case let .trustRotatedCertificate(problem):
-            self.statusStore.send(.connectionStarted(.init(
-                id: .init(value: "trust-certificate"),
-                message: .init(value: "Updating gateway certificate…"),
-                statusLine: .init(value: "Updating gateway certificate…"),
-                clearsIssue: .init(value: false))))
+        case let .trustRotatedCertificate(request):
+            self.statusStore.send(.connectionStarted(request.connectionStart))
             defer { self.statusStore.send(.connectionFinished) }
-            _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)
+            _ = await self.gatewayController.trustRotatedGatewayCertificate(from: request.problem)
             return
 
         case let .openProtocolMismatchHelp(problem):
