@@ -29,6 +29,10 @@ struct CommandSessionsFeatureTests {
         await store.finish()
 
         #expect(probe.requestedLimits.isEmpty)
+        let presentation = Self.screenPresentation(store.state, available: false)
+        #expect(presentation.headerDetail == "Gateway offline")
+        #expect(presentation.emptySessionsPresentation.title == "Gateway offline")
+        #expect(presentation.emptySessionsPresentation.detail == "Connect to the gateway.")
     }
 
     @Test func `available refresh loads recent sessions`() async {
@@ -56,6 +60,10 @@ struct CommandSessionsFeatureTests {
             $0.loadingPhase = .inFlight
             $0.loadErrorText = nil
         }
+        let loadingPresentation = Self.screenPresentation(store.state, available: true)
+        #expect(loadingPresentation.headerDetail == "Loading recent sessions")
+        #expect(loadingPresentation.showsLoadingIndicator)
+
         await store.receive(.refreshResponse(.init(result: .success(.init(entries: loadedSessions))))) {
             $0.loadingPhase = .idle
             $0.sessionEntries = .init(entries: loadedSessions)
@@ -64,6 +72,10 @@ struct CommandSessionsFeatureTests {
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
         #expect(store.state.visibleSessions.map(\.key) == ["chat-newer", "chat-older"])
+        let loadedPresentation = Self.screenPresentation(store.state, available: true)
+        #expect(loadedPresentation.headerDetail == "2 sessions")
+        #expect(loadedPresentation.sessionRows.map(\.id) == ["chat-session-chat-newer", "chat-session-chat-older"])
+        #expect(loadedPresentation.sessionRows.first?.state == "open")
     }
 
     @Test func `available refresh clears sessions and shows reconnect copy on failure`() async {
@@ -93,6 +105,10 @@ struct CommandSessionsFeatureTests {
         await store.finish()
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
+        let presentation = Self.screenPresentation(store.state, available: true)
+        #expect(presentation.headerDetail == "No recent sessions")
+        #expect(presentation.unavailableSessionsPresentation?.title == "Sessions unavailable")
+        #expect(presentation.unavailableSessionsPresentation?.detail == "Try again after the gateway reconnects.")
     }
 
     private static func refreshRequest(
@@ -104,6 +120,13 @@ struct CommandSessionsFeatureTests {
             sessionsAvailability: .init(isAvailable: .init(value: available)),
             currentSession: .init(key: .init(value: currentSessionKey)),
             defaultSession: .init(key: .init(value: defaultSessionKey)))
+    }
+
+    private static func screenPresentation(
+        _ state: CommandSessionsFeature.State,
+        available: Bool = true) -> CommandSessionsScreenPresentation
+    {
+        state.screenPresentation(sessionsAvailability: .init(value: available))
     }
 
     private static func session(key: String, updatedAt: Double = 1) -> OpenClawChatSessionEntry {

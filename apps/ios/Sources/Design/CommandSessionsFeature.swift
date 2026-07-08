@@ -46,6 +46,22 @@ enum CommandSessionsError: Error, Equatable, Sendable {
     case failed
 }
 
+struct CommandSessionsStatusPresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let detail: String
+}
+
+struct CommandSessionsScreenPresentation: Equatable, Sendable {
+    let headerTitle: String
+    let headerDetail: String
+    let panelTitle: String
+    let showsLoadingIndicator: Bool
+    let unavailableSessionsPresentation: CommandSessionsStatusPresentation?
+    let emptySessionsPresentation: CommandSessionsStatusPresentation
+    let sessionRows: [CommandCenterTab.WorkItem]
+}
+
 // swiftformat:enable redundantSendable
 
 @Reducer
@@ -73,6 +89,68 @@ struct CommandSessionsFeature {
             self.sessionEntries.entries
                 .filter { CommandCenterTab.isRecentChatSession($0.key, defaultSessionKey: self.defaultSession.value) }
                 .sorted { ($0.updatedAt ?? 0) > ($1.updatedAt ?? 0) }
+        }
+
+        func sessionRows() -> [CommandCenterTab.WorkItem] {
+            self.visibleSessions.map {
+                CommandCenterTab.sessionWorkItem(
+                    for: $0,
+                    currentSessionKey: self.currentSession.value)
+            }
+        }
+
+        func headerDetail(
+            sessionRows: [CommandCenterTab.WorkItem],
+            sessionsAvailability: CommandSessionsAvailable) -> String
+        {
+            if self.loadingPhase == .inFlight, self.sessions.isEmpty {
+                return "Loading recent sessions"
+            }
+            let count = sessionRows.count
+            guard count > 0 else {
+                return sessionsAvailability.value ? "No recent sessions" : "Gateway offline"
+            }
+            return "\(count) \(count == 1 ? "session" : "sessions")"
+        }
+
+        var unavailableSessionsPresentation: CommandSessionsStatusPresentation? {
+            self.loadErrorText.map {
+                .init(
+                    icon: "exclamationmark.triangle.fill",
+                    title: "Sessions unavailable",
+                    detail: $0.value)
+            }
+        }
+
+        func emptySessionsPresentation(
+            sessionsAvailability: CommandSessionsAvailable) -> CommandSessionsStatusPresentation
+        {
+            if sessionsAvailability.value {
+                return .init(
+                    icon: "bubble.left.and.text.bubble.right.fill",
+                    title: "No recent sessions",
+                    detail: "Start a chat and it will appear here.")
+            }
+            return .init(
+                icon: "wifi.slash",
+                title: "Gateway offline",
+                detail: "Connect to the gateway.")
+        }
+
+        func screenPresentation(
+            sessionsAvailability: CommandSessionsAvailable) -> CommandSessionsScreenPresentation
+        {
+            let sessionRows = self.sessionRows()
+            return .init(
+                headerTitle: "Sessions",
+                headerDetail: self.headerDetail(
+                    sessionRows: sessionRows,
+                    sessionsAvailability: sessionsAvailability),
+                panelTitle: "Recent sessions",
+                showsLoadingIndicator: self.loadingPhase == .inFlight,
+                unavailableSessionsPresentation: self.unavailableSessionsPresentation,
+                emptySessionsPresentation: self.emptySessionsPresentation(sessionsAvailability: sessionsAvailability),
+                sessionRows: sessionRows)
         }
     }
 

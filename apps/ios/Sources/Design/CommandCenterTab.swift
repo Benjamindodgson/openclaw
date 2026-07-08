@@ -750,9 +750,9 @@ struct CommandSessionsScreen: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Sessions")
+                Text(self.screenPresentation.headerTitle)
                     .font(.system(size: 27, weight: .bold, design: .rounded))
-                Text(self.headerDetail)
+                Text(self.screenPresentation.headerDetail)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
             }
@@ -764,10 +764,10 @@ struct CommandSessionsScreen: View {
         CommandPanel(padding: 0) {
             VStack(spacing: 0) {
                 HStack(spacing: 8) {
-                    Text("Recent sessions")
+                    Text(self.screenPresentation.panelTitle)
                         .font(.subheadline.weight(.bold))
                     Spacer(minLength: 8)
-                    if self.store.loadingPhase == .inFlight {
+                    if self.screenPresentation.showsLoadingIndicator {
                         ProgressView()
                             .controlSize(.small)
                     }
@@ -776,26 +776,24 @@ struct CommandSessionsScreen: View {
                 .padding(.top, 10)
                 .padding(.bottom, 3)
 
-                if let loadErrorText = self.store.loadErrorText {
+                if let presentation = self.screenPresentation.unavailableSessionsPresentation {
                     CommandEmptyStateRow(
-                        icon: "exclamationmark.triangle.fill",
-                        title: "Sessions unavailable",
-                        detail: loadErrorText.value)
+                        icon: presentation.icon,
+                        title: presentation.title,
+                        detail: presentation.detail)
                         .padding(.horizontal, 10)
                         .padding(.bottom, 10)
-                } else if self.sessionRows.isEmpty {
+                } else if self.screenPresentation.sessionRows.isEmpty {
+                    let presentation = self.screenPresentation.emptySessionsPresentation
                     CommandEmptyStateRow(
-                        icon: self.appModel
-                            .isCommandSessionListAvailable ? "bubble.left.and.text.bubble.right.fill" : "wifi.slash",
-                        title: self.appModel.isCommandSessionListAvailable ? "No recent sessions" : "Gateway offline",
-                        detail: self.appModel
-                            .isCommandSessionListAvailable ? "Start a chat and it will appear here." :
-                            "Connect to the gateway.")
+                        icon: presentation.icon,
+                        title: presentation.title,
+                        detail: presentation.detail)
                         .padding(.horizontal, 10)
                         .padding(.bottom, 10)
                 } else {
                     VStack(spacing: 8) {
-                        ForEach(self.sessionRows) { item in
+                        ForEach(self.screenPresentation.sessionRows) { item in
                             Button {
                                 self.open(item)
                             } label: {
@@ -812,22 +810,9 @@ struct CommandSessionsScreen: View {
         .padding(.horizontal, OpenClawProMetric.pagePadding)
     }
 
-    private var headerDetail: String {
-        if self.store.loadingPhase == .inFlight, self.store.sessions.isEmpty { return "Loading recent sessions" }
-        let count = self.sessionRows.count
-        if count == 0 {
-            return self.appModel.isCommandSessionListAvailable ? "No recent sessions" : "Gateway offline"
-        }
-        return "\(count) \(count == 1 ? "session" : "sessions")"
-    }
-
-    private var sessionRows: [CommandCenterTab.WorkItem] {
-        self.store.visibleSessions
-            .map {
-                CommandCenterTab.sessionWorkItem(
-                    for: $0,
-                    currentSessionKey: self.store.currentSession.value)
-            }
+    private var screenPresentation: CommandSessionsScreenPresentation {
+        self.store.state.screenPresentation(
+            sessionsAvailability: .init(value: self.appModel.isCommandSessionListAvailable))
     }
 
     private var refreshID: String {
