@@ -373,6 +373,11 @@ struct IPadSkillWorkshopFeature {
             }
         }
 
+        var presentedProposalPresentation: IPadSkillWorkshopProposalCardPresentation? {
+            guard let proposalID = self.presentedProposalRoute?.proposalID else { return nil }
+            return self.proposalDetailPresentation(forID: proposalID)
+        }
+
         var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation {
             .init(canInspect: self.inspectingProposalID == nil)
         }
@@ -803,10 +808,10 @@ struct IPadSkillWorkshopScreen: View {
         .refreshable {
             await self.loadProposals(force: true)
         }
-        .sheet(item: self.presentedProposalRouteBinding) { route in
+        .sheet(item: self.presentedProposalRouteBinding) { _ in
             NavigationStack {
                 ScrollView {
-                    self.presentedProposalDetail(proposalID: route.proposalID)
+                    self.presentedProposalDetail
                         .padding(.horizontal, OpenClawProMetric.pagePadding)
                         .padding(.vertical, 16)
                 }
@@ -1117,8 +1122,8 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     @ViewBuilder
-    private func presentedProposalDetail(proposalID: String) -> some View {
-        if let presentation = self.store.state.proposalDetailPresentation(forID: proposalID) {
+    private var presentedProposalDetail: some View {
+        if let presentation = self.store.presentedProposalPresentation {
             self.proposalDetailCard(presentation)
         } else {
             ProCard(radius: OpenClawProMetric.cardRadius) {
