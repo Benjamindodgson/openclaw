@@ -122,6 +122,35 @@ struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
     let statusLabel: String
 }
 
+struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Sendable {
+    let proposal: IPadSkillProposal
+    let isSelected: Bool
+    let isInspecting: Bool
+    let showsProposalActions: Bool
+
+    var id: String {
+        self.proposal.id
+    }
+}
+
+struct IPadSkillWorkshopProposalLanePresentation: Equatable, Identifiable, Sendable {
+    let id: String
+    let title: String
+    let proposals: [IPadSkillWorkshopProposalCardPresentation]
+}
+
+struct IPadSkillWorkshopProposalBoardPresentation: Equatable, Sendable {
+    let lanes: [IPadSkillWorkshopProposalLanePresentation]
+}
+
+struct IPadSkillWorkshopProposalListPresentation: Equatable, Sendable {
+    let proposals: [IPadSkillWorkshopProposalCardPresentation]
+
+    var isEmpty: Bool {
+        self.proposals.isEmpty
+    }
+}
+
 enum IPadSkillWorkshopMetricTone: Equatable, Sendable {
     case pending
     case applied

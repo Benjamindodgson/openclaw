@@ -567,14 +567,20 @@ private struct IPadSkillWorkshopKanbanPreview: View {
                 ScrollView(.horizontal) {
                     HStack(alignment: .top, spacing: 12) {
                         ForEach(self.lanes, id: \.self) { status in
-                            IPadSkillProposalKanbanColumn(
-                                status: status,
-                                proposals: self.proposals.filter { $0.status == status },
-                                proposalPresentation: { proposal in
-                                    IPadSkillProposalPresentation(
+                            let proposals = self.proposals.filter { $0.status == status }
+                            let lane = IPadSkillWorkshopProposalLanePresentation(
+                                id: status,
+                                title: IPadSkillWorkshopFeature.State.proposalLaneLabel(status),
+                                proposals: proposals.map { proposal in
+                                    IPadSkillWorkshopProposalCardPresentation(
+                                        proposal: proposal,
                                         isSelected: proposal.id == "preview-pending",
-                                        isInspecting: proposal.id == "preview-needs-review")
-                                },
+                                        isInspecting: proposal.id == "preview-needs-review",
+                                        showsProposalActions: IPadSkillWorkshopFeature.State
+                                            .shouldShowProposalActions(status: proposal.status))
+                                })
+                            IPadSkillProposalKanbanColumn(
+                                lane: lane,
                                 canRunProposalActions: true,
                                 select: { _ in },
                                 inspect: { _ in },

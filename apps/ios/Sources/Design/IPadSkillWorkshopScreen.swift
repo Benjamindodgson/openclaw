@@ -323,10 +323,39 @@ struct IPadSkillWorkshopFeature {
             self.proposals.first { $0.id == id }
         }
 
-        func proposalPresentation(for proposal: IPadSkillProposal) -> IPadSkillProposalPresentation {
+        func proposalCardPresentation(
+            for proposal: IPadSkillProposal) -> IPadSkillWorkshopProposalCardPresentation
+        {
             .init(
+                proposal: proposal,
                 isSelected: proposal.id == self.selectedProposalID?.value,
-                isInspecting: proposal.id == self.inspectingProposalID?.value)
+                isInspecting: proposal.id == self.inspectingProposalID?.value,
+                showsProposalActions: self.shouldShowProposalActions(for: proposal))
+        }
+
+        var proposalListPresentation: IPadSkillWorkshopProposalListPresentation {
+            .init(proposals: self.filteredProposals.map { proposal in
+                self.proposalCardPresentation(for: proposal)
+            })
+        }
+
+        var proposalBoardPresentation: IPadSkillWorkshopProposalBoardPresentation {
+            .init(lanes: self.visibleProposalLaneStatuses.map { status in
+                IPadSkillWorkshopProposalLanePresentation(
+                    id: status,
+                    title: Self.proposalLaneLabel(status),
+                    proposals: self.proposals(forLaneStatus: status).map { proposal in
+                        self.proposalCardPresentation(for: proposal)
+                    })
+            })
+        }
+
+        func proposalDetailPresentation(
+            forID id: String) -> IPadSkillWorkshopProposalCardPresentation?
+        {
+            self.proposal(withID: id).map { proposal in
+                self.proposalCardPresentation(for: proposal)
+            }
         }
 
         var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation {
@@ -941,7 +970,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private var proposalContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if self.store.filteredProposals.isEmpty {
+            if self.store.proposalListPresentation.isEmpty {
                 ProCard(radius: OpenClawProMetric.cardRadius) {
                     ProStatusRow(
                         icon: self.emptyProposalPresentation.icon,
@@ -969,31 +998,28 @@ struct IPadSkillWorkshopScreen: View {
     private var proposalBoard: some View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
-                ForEach(self.store.visibleProposalLaneStatuses, id: \.self) { status in
+                let boardPresentation = self.store.proposalBoardPresentation
+                ForEach(boardPresentation.lanes) { lane in
                     IPadSkillProposalKanbanColumn(
-                        status: status,
-                        proposals: self.store.state.proposals(forLaneStatus: status),
-                        proposalPresentation: { proposal in
-                            self.store.state.proposalPresentation(for: proposal)
-                        },
+                        lane: lane,
                         canRunProposalActions: self.proposalActionControlsPresentation.canRunActions,
-                        select: { proposal in
+                        select: { presentation in
                             self.selectProposal(
-                                proposal,
+                                presentation.proposal,
                                 opening: .sheet,
                                 forceInspect: false)
                         },
-                        inspect: { proposal in
+                        inspect: { presentation in
                             self.selectProposal(
-                                proposal,
+                                presentation.proposal,
                                 opening: .sheet,
                                 forceInspect: true)
                         },
-                        apply: { proposal in
-                            Task { await self.run(.apply, proposal: proposal) }
+                        apply: { presentation in
+                            Task { await self.run(.apply, proposal: presentation.proposal) }
                         },
-                        reject: { proposal in
-                            Task { await self.run(.reject, proposal: proposal) }
+                        reject: { presentation in
+                            Task { await self.run(.reject, proposal: presentation.proposal) }
                         })
                         .frame(width: 282)
                 }
@@ -1007,16 +1033,17 @@ struct IPadSkillWorkshopScreen: View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 let queueSummary = self.store.queueSummaryPresentation
+                let listPresentation = self.store.proposalListPresentation
                 ProPanelHeader(
                     title: "Queue",
                     value: "\(queueSummary.proposalCount)",
                     actionTitle: nil,
                     action: nil)
-                ForEach(Array(self.store.filteredProposals.enumerated()), id: \.element.id) { index, proposal in
+                ForEach(Array(listPresentation.proposals.enumerated()), id: \.element.id) { index, presentation in
+                    let proposal = presentation.proposal
                     if index > 0 {
                         Divider().padding(.leading, 58)
                     }
-                    let presentation = self.store.state.proposalPresentation(for: proposal)
                     Button {
                         self.selectProposal(
                             proposal,
@@ -1036,7 +1063,7 @@ struct IPadSkillWorkshopScreen: View {
                                 opening: .sheet,
                                 forceInspect: true)
                         }
-                        if self.store.state.shouldShowProposalActions(for: proposal) {
+                        if presentation.showsProposalActions {
                             Button("Apply") {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
@@ -1048,7 +1075,7 @@ struct IPadSkillWorkshopScreen: View {
                         }
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if self.store.state.shouldShowProposalActions(for: proposal) {
+                        if presentation.showsProposalActions {
                             Button("Apply") {
                                 Task { await self.run(.apply, proposal: proposal) }
                             }
@@ -1076,8 +1103,8 @@ struct IPadSkillWorkshopScreen: View {
 
     @ViewBuilder
     private func presentedProposalDetail(proposalID: String) -> some View {
-        if let proposal = self.store.state.proposal(withID: proposalID) {
-            self.proposalDetailCard(proposal)
+        if let presentation = self.store.state.proposalDetailPresentation(forID: proposalID) {
+            self.proposalDetailCard(presentation)
         } else {
             ProCard(radius: OpenClawProMetric.cardRadius) {
                 ProStatusRow(
@@ -1092,8 +1119,9 @@ struct IPadSkillWorkshopScreen: View {
         }
     }
 
-    private func proposalDetailCard(_ proposal: IPadSkillProposal) -> some View {
-        ProCard(radius: OpenClawProMetric.cardRadius) {
+    private func proposalDetailCard(_ presentation: IPadSkillWorkshopProposalCardPresentation) -> some View {
+        let proposal = presentation.proposal
+        return ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top, spacing: 12) {
                     ProIconBadge(systemName: "hammer", color: proposal.statusColor)
@@ -1109,7 +1137,7 @@ struct IPadSkillWorkshopScreen: View {
                     ProValuePill(value: proposal.status, color: proposal.statusColor)
                 }
 
-                if self.store.state.proposalPresentation(for: proposal).isInspecting {
+                if presentation.isInspecting {
                     ProgressView().controlSize(.small)
                 }
 
@@ -1138,7 +1166,7 @@ struct IPadSkillWorkshopScreen: View {
                     }
                 }
 
-                if self.store.state.shouldShowProposalActions(for: proposal) {
+                if presentation.showsProposalActions {
                     if self.isCompactWidth {
                         VStack(spacing: 8) {
                             self.proposalApplyButton(proposal)
@@ -1315,58 +1343,50 @@ struct IPadSkillWorkshopScreen: View {
 }
 
 struct IPadSkillProposalKanbanColumn: View {
-    let status: String
-    let proposals: [IPadSkillProposal]
-    let proposalPresentation: (IPadSkillProposal) -> IPadSkillProposalPresentation
+    let lane: IPadSkillWorkshopProposalLanePresentation
     let canRunProposalActions: Bool
-    let select: (IPadSkillProposal) -> Void
-    let inspect: (IPadSkillProposal) -> Void
-    let apply: (IPadSkillProposal) -> Void
-    let reject: (IPadSkillProposal) -> Void
+    let select: (IPadSkillWorkshopProposalCardPresentation) -> Void
+    let inspect: (IPadSkillWorkshopProposalCardPresentation) -> Void
+    let apply: (IPadSkillWorkshopProposalCardPresentation) -> Void
+    let reject: (IPadSkillWorkshopProposalCardPresentation) -> Void
 
     var body: some View {
-        let laneLabel = IPadSkillWorkshopFeature.State.proposalLaneLabel(self.status)
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 ProPanelHeader(
-                    title: laneLabel,
-                    value: "\(self.proposals.count)",
+                    title: self.lane.title,
+                    value: "\(self.lane.proposals.count)",
                     actionTitle: nil,
                     action: nil)
 
-                if self.proposals.isEmpty {
+                if self.lane.proposals.isEmpty {
                     ProStatusRow(
                         icon: "hammer",
-                        title: "No \(laneLabel.lowercased()) proposals",
+                        title: "No \(self.lane.title.lowercased()) proposals",
                         detail: "Matching proposals appear here after gateway refresh.",
                         value: "empty",
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)
                 } else {
-                    ForEach(Array(self.proposals.enumerated()), id: \.element.id) { index, proposal in
+                    ForEach(Array(self.lane.proposals.enumerated()), id: \.element.id) { index, presentation in
                         if index > 0 {
                             Divider().padding(.leading, 12)
                         }
-                        let presentation = self.proposalPresentation(proposal)
                         IPadSkillProposalKanbanCard(
-                            proposal: proposal,
-                            isSelected: presentation.isSelected,
-                            isInspecting: presentation.isInspecting,
-                            showsProposalActions: IPadSkillWorkshopFeature.State
-                                .shouldShowProposalActions(status: proposal.status),
+                            presentation: presentation,
                             canRunProposalActions: self.canRunProposalActions,
                             select: {
-                                self.select(proposal)
+                                self.select(presentation)
                             },
                             inspect: {
-                                self.inspect(proposal)
+                                self.inspect(presentation)
                             },
                             apply: {
-                                self.apply(proposal)
+                                self.apply(presentation)
                             },
                             reject: {
-                                self.reject(proposal)
+                                self.reject(presentation)
                             })
                     }
                 }
@@ -1376,15 +1396,16 @@ struct IPadSkillProposalKanbanColumn: View {
 }
 
 private struct IPadSkillProposalKanbanCard: View {
-    let proposal: IPadSkillProposal
-    let isSelected: Bool
-    let isInspecting: Bool
-    let showsProposalActions: Bool
+    let presentation: IPadSkillWorkshopProposalCardPresentation
     let canRunProposalActions: Bool
     let select: () -> Void
     let inspect: () -> Void
     let apply: () -> Void
     let reject: () -> Void
+
+    private var proposal: IPadSkillProposal {
+        self.presentation.proposal
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -1392,12 +1413,12 @@ private struct IPadSkillProposalKanbanCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .top, spacing: 10) {
                         ProIconBadge(
-                            systemName: self.isInspecting ? "hourglass" : "hammer",
+                            systemName: self.presentation.isInspecting ? "hourglass" : "hammer",
                             color: self.proposal.statusColor)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(self.proposal.title)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(self.isSelected ? OpenClawBrand.accent : .primary)
+                                .foregroundStyle(self.presentation.isSelected ? OpenClawBrand.accent : .primary)
                                 .lineLimit(2)
                             Text(self.proposal.description)
                                 .font(.caption)
@@ -1418,7 +1439,7 @@ private struct IPadSkillProposalKanbanCard: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
-                if self.showsProposalActions {
+                if self.presentation.showsProposalActions {
                     Button(action: self.apply) {
                         Image(systemName: "checkmark.circle")
                     }
@@ -1442,17 +1463,17 @@ private struct IPadSkillProposalKanbanCard: View {
                 .accessibilityLabel("Inspect Proposal")
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
-                .disabled(self.isInspecting)
+                .disabled(self.presentation.isInspecting)
             }
         }
         .padding(12)
         .background(
-            self.isSelected ? OpenClawBrand.accent.opacity(0.08) : Color.clear,
+            self.presentation.isSelected ? OpenClawBrand.accent.opacity(0.08) : Color.clear,
             in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
         .contextMenu {
             Button("Inspect", action: self.inspect)
-            if self.showsProposalActions {
+            if self.presentation.showsProposalActions {
                 Button("Apply", action: self.apply)
                     .disabled(!self.canRunProposalActions)
                 Button("Reject", role: .destructive, action: self.reject)
@@ -1515,11 +1536,6 @@ extension IPadSkillWorkshopMetricTone {
 }
 
 // swiftformat:disable redundantSendable
-struct IPadSkillProposalPresentation: Equatable, Sendable {
-    let isSelected: Bool
-    let isInspecting: Bool
-}
-
 struct IPadSkillProposalSheetRoute: Equatable, Identifiable, Sendable {
     let proposalID: String
 

@@ -144,6 +144,13 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.proposals(forLaneStatus: "applied").map(\.id) == ["applied-match"])
         #expect(state.proposal(withID: "pending-match")?.id == "pending-match")
         #expect(state.proposal(withID: "missing") == nil)
+        #expect(state.proposalListPresentation.proposals.map(\.id) == ["pending-match"])
+        #expect(state.proposalListPresentation.proposals.map(\.showsProposalActions) == [true])
+        #expect(state.proposalBoardPresentation.lanes.map(\.id) == ["pending"])
+        #expect(state.proposalBoardPresentation.lanes.map(\.title) == ["Pending"])
+        #expect(state.proposalBoardPresentation.lanes.first?.proposals.map(\.id) ?? [] == ["pending-match"])
+        #expect(state.proposalDetailPresentation(forID: "pending-match")?.proposal.id == "pending-match")
+        #expect(state.proposalDetailPresentation(forID: "missing") == nil)
 
         state.statusFilter = .init(value: "all")
         #expect(state.statusFilterLabel == "All")
@@ -157,16 +164,38 @@ struct IPadSkillWorkshopFeatureTests {
             proposalCount: 3,
             statusLabel: "All"))
         #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
+        #expect(state.proposalListPresentation.proposals.map(\.id) == [
+            "pending-match",
+            "applied-match",
+            "stale-match",
+        ])
+        #expect(state.proposalBoardPresentation.lanes.map(\.id) == [
+            "pending",
+            "quarantined",
+            "stale",
+            "applied",
+            "rejected",
+        ])
+        let boardLanes = state.proposalBoardPresentation.lanes
+        #expect(boardLanes[0].proposals.map(\.id) == ["pending-match"])
+        #expect(boardLanes[1].proposals.map(\.id) == [])
+        #expect(boardLanes[2].proposals.map(\.id) == ["stale-match"])
+        #expect(boardLanes[3].proposals.map(\.id) == ["applied-match"])
+        #expect(boardLanes[4].proposals.map(\.id) == [])
     }
 
     @Test func `proposal action visibility follows reducer state`() {
         let state = IPadSkillWorkshopFeature.State()
+        let pendingProposal = Self.proposal(id: "pending-1", status: "pending")
+        let rejectedProposal = Self.proposal(id: "rejected-1", status: "rejected")
 
         #expect(IPadSkillWorkshopFeature.State.shouldShowProposalActions(status: "pending"))
         #expect(!IPadSkillWorkshopFeature.State.shouldShowProposalActions(status: "applied"))
         #expect(!IPadSkillWorkshopFeature.State.shouldShowProposalActions(status: "stale"))
-        #expect(state.shouldShowProposalActions(for: Self.proposal(id: "pending-1", status: "pending")))
-        #expect(!state.shouldShowProposalActions(for: Self.proposal(id: "rejected-1", status: "rejected")))
+        #expect(state.shouldShowProposalActions(for: pendingProposal))
+        #expect(!state.shouldShowProposalActions(for: rejectedProposal))
+        #expect(state.proposalCardPresentation(for: pendingProposal).showsProposalActions)
+        #expect(!state.proposalCardPresentation(for: rejectedProposal).showsProposalActions)
     }
 
     @Test func `proposal action controls require mutation access and idle state`() {
@@ -214,20 +243,26 @@ struct IPadSkillWorkshopFeatureTests {
         let inspectingProposal = Self.proposal(id: "pending-2", status: "pending")
 
         #expect(state.proposalInspectionControlsPresentation == .init(canInspect: true))
-        #expect(state.proposalPresentation(for: selectedProposal) == .init(
+        #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
+            proposal: selectedProposal,
             isSelected: false,
-            isInspecting: false))
+            isInspecting: false,
+            showsProposalActions: true))
 
         state.selectedProposalID = .init(value: selectedProposal.id)
         state.inspectingProposalID = .init(value: inspectingProposal.id)
 
         #expect(state.proposalInspectionControlsPresentation == .init(canInspect: false))
-        #expect(state.proposalPresentation(for: selectedProposal) == .init(
+        #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
+            proposal: selectedProposal,
             isSelected: true,
-            isInspecting: false))
-        #expect(state.proposalPresentation(for: inspectingProposal) == .init(
+            isInspecting: false,
+            showsProposalActions: true))
+        #expect(state.proposalCardPresentation(for: inspectingProposal) == .init(
+            proposal: inspectingProposal,
             isSelected: false,
-            isInspecting: true))
+            isInspecting: true,
+            showsProposalActions: true))
     }
 
     @Test func `agent scope snapshot updates reducer presentation state`() async {
