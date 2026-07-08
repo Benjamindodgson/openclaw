@@ -270,6 +270,13 @@ struct IPadActivitySessionsFeatureTests {
         #expect(presentation.value == "iPad")
     }
 
+    @Test func `screen presentation owns chrome copy`() {
+        let presentation = Self.screenPresentation(IPadActivitySessionsFeature.State()).screenChromePresentation
+
+        #expect(presentation.title == "Activity")
+        #expect(presentation.subtitle == "Live device and gateway activity.")
+    }
+
     private static func refreshRequest(
         isActive: Bool,
         isAvailable: Bool,
