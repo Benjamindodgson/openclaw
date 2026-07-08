@@ -268,7 +268,10 @@ struct IPadSkillWorkshopStatusFilterControlPresentation: Equatable, Sendable {
 }
 
 struct IPadSkillWorkshopQueueSummaryPresentation: Equatable, Sendable {
+    let title: String
     let proposalCount: Int
+    let value: String
+    let proposalCountLabel: String
     let statusLabel: String
 }
 

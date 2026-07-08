@@ -117,7 +117,10 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.filteredProposals.map(\.id) == ["pending-match"])
         #expect(state.filteredProposalCount == 1)
         #expect(state.queueSummaryPresentation == .init(
+            title: "Queue",
             proposalCount: 1,
+            value: "1",
+            proposalCountLabel: "1 proposals",
             statusLabel: "Pending"))
         #expect(state.pendingProposalCount == 2)
         #expect(state.appliedProposalCount == 1)
@@ -162,7 +165,10 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.filteredProposals.map(\.id) == ["pending-match", "applied-match", "stale-match"])
         #expect(state.filteredProposalCount == 3)
         #expect(state.queueSummaryPresentation == .init(
+            title: "Queue",
             proposalCount: 3,
+            value: "3",
+            proposalCountLabel: "3 proposals",
             statusLabel: "All"))
         #expect(state.visibleProposalLaneStatuses == ["pending", "quarantined", "stale", "applied", "rejected"])
         #expect(state.proposalListPresentation.proposals.map(\.id) == [
