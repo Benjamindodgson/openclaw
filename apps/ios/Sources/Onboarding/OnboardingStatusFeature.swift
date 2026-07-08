@@ -91,6 +91,7 @@ struct OnboardingStatusFeature {
         }
 
         struct ConnectionActivityStart: Equatable, Sendable { var id: OnboardingConnectionID }
+        struct RetryConnectionStart: Equatable, Sendable { var silent: OnboardingRetryConnectionSilence }
         struct ScannerError: Equatable, Sendable { var message: OnboardingScannerErrorMessage }
 
         case automaticPairingResumeRequested(AutomaticPairingResumeRequest)
@@ -109,6 +110,7 @@ struct OnboardingStatusFeature {
         case noSavedPairingFound
         case pairingResumeStarted
         case qrScannerOpeningStarted
+        case retryConnectionStarted(RetryConnectionStart)
         case scannerErrorReceived(ScannerError)
     }
 
@@ -228,6 +230,15 @@ struct OnboardingStatusFeature {
 
             case .qrScannerOpeningStarted:
                 state.statusLineState = .init(value: "Opening QR scanner…")
+                return .none
+
+            case let .retryConnectionStarted(start):
+                let connectionID = start.silent.value ? "retry-auto" : "retry"
+                state.connectingGatewayIDState = .init(value: connectionID)
+                if !start.silent.value {
+                    state.connectMessageState = .init(value: "Retrying…")
+                    state.statusLineState = .init(value: "Retrying last connection…")
+                }
                 return .none
 
             case let .scannerErrorReceived(error):
