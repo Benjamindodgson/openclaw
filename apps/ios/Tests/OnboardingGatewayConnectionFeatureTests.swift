@@ -3,7 +3,7 @@ import Testing
 @testable import OpenClaw
 
 @Suite(.serialized) struct OnboardingGatewayConnectionFeatureTests {
-    @Test @MainActor func `discovered gateway presentation trims host and prepares connection start`() async {
+    @Test @MainActor func `discovered gateway presentation trims host and prepares connection status action`() async {
         let store = TestStore(initialState: OnboardingGatewayConnectionFeature.State()) {
             OnboardingGatewayConnectionFeature()
         }
@@ -30,15 +30,15 @@ import Testing
             id: .init(value: "gateway-1"),
             name: .init(value: "Studio Mac"))))
         {
-            $0.discoveredGatewayConnectionStart = .init(
+            $0.discoveredGatewayConnectionStatusAction = .connectionStarted(.init(
                 id: .init(value: "gateway-1"),
                 message: .init(value: "Connecting to Studio Mac…"),
                 statusLine: .init(value: "Connecting to Studio Mac…"),
-                clearsIssue: .init(value: true))
+                clearsIssue: .init(value: true)))
         }
 
-        await store.send(.discoveredGatewayConnectionStartHandled) {
-            $0.discoveredGatewayConnectionStart = nil
+        await store.send(.discoveredGatewayConnectionStatusHandled) {
+            $0.discoveredGatewayConnectionStatusAction = nil
         }
     }
 }

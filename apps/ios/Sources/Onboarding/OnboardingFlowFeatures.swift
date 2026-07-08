@@ -199,7 +199,7 @@ struct OnboardingGatewayConnectionFeature {
             var canConnect: Bool
         }
 
-        var discoveredGatewayConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?
+        var discoveredGatewayConnectionStatusAction: OnboardingStatusFeature.Action?
 
         static func discoveredGatewayRowPresentation(
             lanHost: OnboardingDiscoveredGatewayHost,
@@ -221,7 +221,7 @@ struct OnboardingGatewayConnectionFeature {
 
         case disconnectRequested
         case discoveredGatewayConnectionRequested(DiscoveredGatewayConnectionRequest)
-        case discoveredGatewayConnectionStartHandled
+        case discoveredGatewayConnectionStatusHandled
     }
 
     // swiftformat:enable redundantSendable
@@ -238,15 +238,15 @@ struct OnboardingGatewayConnectionFeature {
                 }
 
             case let .discoveredGatewayConnectionRequested(request):
-                state.discoveredGatewayConnectionStart = .init(
+                state.discoveredGatewayConnectionStatusAction = .connectionStarted(.init(
                     id: request.id,
                     message: .init(value: "Connecting to \(request.name.value)…"),
                     statusLine: .init(value: "Connecting to \(request.name.value)…"),
-                    clearsIssue: .init(value: true))
+                    clearsIssue: .init(value: true)))
                 return .none
 
-            case .discoveredGatewayConnectionStartHandled:
-                state.discoveredGatewayConnectionStart = nil
+            case .discoveredGatewayConnectionStatusHandled:
+                state.discoveredGatewayConnectionStatusAction = nil
                 return .none
             }
         }

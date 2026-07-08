@@ -1053,9 +1053,9 @@ extension OnboardingWizardView {
         self.gatewayConnectionStore.send(.discoveredGatewayConnectionRequested(.init(
             id: .init(value: gateway.id),
             name: .init(value: gateway.name))))
-        guard let connectionStart = self.gatewayConnectionStore.discoveredGatewayConnectionStart else { return }
-        self.gatewayConnectionStore.send(.discoveredGatewayConnectionStartHandled)
-        self.statusStore.send(.connectionStarted(connectionStart))
+        guard let statusAction = self.gatewayConnectionStore.discoveredGatewayConnectionStatusAction else { return }
+        self.gatewayConnectionStore.send(.discoveredGatewayConnectionStatusHandled)
+        self.statusStore.send(statusAction)
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connect(gateway)
     }
