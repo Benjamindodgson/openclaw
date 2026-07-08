@@ -475,6 +475,7 @@ struct IPadWorkboardFeatureTests {
     @Test func `workboard card detail action controls presentation is reducer owned`() {
         let card = Self.card(id: "card-1", status: "todo", position: 10)
         var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: ["todo", "running"].map { .init(value: $0) })
 
         #expect(state.cardDetailActionControlsPresentation(
             for: card,
@@ -493,6 +494,23 @@ struct IPadWorkboardFeatureTests {
         #expect(IPadWorkboardFeature.State.cardDetailActionControlsPresentation(
             isBusy: false,
             canWrite: false) == .init(isMutationDisabled: true))
+
+        let busyExpected = IPadWorkboardCardDetailSheetPresentation(
+            cardPresentation: state.cardPresentation(for: card),
+            moveActions: state.moveActionPresentations,
+            actionControlsPresentation: .init(isMutationDisabled: true))
+        #expect(state.cardDetailSheetPresentation(
+            for: card,
+            gatewayAccess: .init(canRead: true, canWrite: true)) == busyExpected)
+
+        state.busyCardID = nil
+        let readyExpected = IPadWorkboardCardDetailSheetPresentation(
+            cardPresentation: state.cardPresentation(for: card),
+            moveActions: state.moveActionPresentations,
+            actionControlsPresentation: .init(isMutationDisabled: false))
+        #expect(state.cardDetailSheetPresentation(
+            for: card,
+            gatewayAccess: .init(canRead: true, canWrite: true)) == readyExpected)
     }
 
     @Test func `workboard kanban lane presentation is reducer owned`() {
