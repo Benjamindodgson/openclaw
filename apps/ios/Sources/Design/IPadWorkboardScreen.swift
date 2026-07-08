@@ -52,20 +52,18 @@ struct IPadWorkboardScreen: View {
         .refreshable {
             await self.loadCards(force: true)
         }
-        .sheet(item: self.presentedSheetBinding) { sheet in
-            switch sheet {
+        .sheet(item: self.presentedSheetBinding) { presentation in
+            switch presentation {
             case .create:
                 NavigationStack {
                     self.createCardSheet
                 }
-            case let .card(card):
+            case let .card(presentation):
                 IPadWorkboardCardDetailSheet(
-                    presentation: self.store.state.cardDetailSheetPresentation(
-                        for: card,
-                        gatewayAccess: self.gatewayAccess),
-                    openSession: { self.open(card) },
-                    move: { status in Task { await self.move(card, to: status) } },
-                    archive: { Task { await self.archive(card) } })
+                    presentation: presentation.sheetPresentation,
+                    openSession: { self.open(presentation.card) },
+                    move: { status in Task { await self.move(presentation.card, to: status) } },
+                    archive: { Task { await self.archive(presentation.card) } })
             }
         }
     }
@@ -408,9 +406,9 @@ struct IPadWorkboardScreen: View {
             set: { self.store.send(.draftTitleChanged(.init(title: .init(value: $0)))) })
     }
 
-    private var presentedSheetBinding: Binding<IPadWorkboardSheet?> {
+    private var presentedSheetBinding: Binding<IPadWorkboardPresentedSheetPresentation?> {
         Binding(
-            get: { self.store.presentedSheet },
+            get: { self.screenPresentation.presentedSheetPresentation },
             set: { sheet in
                 if sheet == nil {
                     self.store.send(.sheetDismissed)
