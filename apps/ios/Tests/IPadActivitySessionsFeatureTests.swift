@@ -91,7 +91,7 @@ struct IPadActivitySessionsFeatureTests {
             $0.loadingPhase = .inFlight
             $0.loadErrorText = nil
         }
-        let loadingPresentation = store.state.screenPresentation(sessionsAvailability: .init(value: true))
+        let loadingPresentation = Self.screenPresentation(store.state)
         #expect(loadingPresentation.sessionMetricValue == "...")
         #expect(loadingPresentation.feedHeaderValue == "Loading")
         #expect(loadingPresentation.showsLoadingSessionsPlaceholder)
@@ -102,7 +102,7 @@ struct IPadActivitySessionsFeatureTests {
         await store.finish()
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
-        let loadedPresentation = store.state.screenPresentation(sessionsAvailability: .init(value: true))
+        let loadedPresentation = Self.screenPresentation(store.state)
         #expect(loadedPresentation.sessionMetricValue == "8")
         #expect(loadedPresentation.sessionRows.map(\.id) == [
             "chat-session-chat-9",
@@ -156,7 +156,7 @@ struct IPadActivitySessionsFeatureTests {
         await store.finish()
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
-        let presentation = store.state.screenPresentation(sessionsAvailability: .init(value: true))
+        let presentation = Self.screenPresentation(store.state)
         #expect(presentation.sessionMetricValue == "0")
         #expect(presentation.loadErrorText?.value == "Try again after the gateway reconnects.")
     }
@@ -178,7 +178,7 @@ struct IPadActivitySessionsFeatureTests {
         #expect(store.state.gatewayPresentation.agentCountText == "3")
         #expect(store.state.gatewayPresentation.gatewayDetailText == "studio.local:4455")
         #expect(
-            store.state.screenPresentation(sessionsAvailability: .init(value: true)).gatewayPresentation
+            Self.screenPresentation(store.state).gatewayPresentation
                 == presentation)
     }
 
@@ -221,7 +221,7 @@ struct IPadActivitySessionsFeatureTests {
     @Test func `screen presentation owns empty session copy`() {
         let state = IPadActivitySessionsFeature.State()
 
-        let available = state.screenPresentation(sessionsAvailability: .init(value: true)).emptySessionPresentation
+        let available = Self.screenPresentation(state, sessionsAvailable: true).emptySessionPresentation
         #expect(available.icon == "bubble.left.and.text.bubble.right")
         #expect(available.title == "No recent sessions")
         #expect(available.detail == "Start a chat and it will appear here.")
@@ -229,13 +229,33 @@ struct IPadActivitySessionsFeatureTests {
         #expect(available.actionTitle == "Chat")
         #expect(available.opensChat)
 
-        let offline = state.screenPresentation(sessionsAvailability: .init(value: false)).emptySessionPresentation
+        let offline = Self.screenPresentation(state, sessionsAvailable: false).emptySessionPresentation
         #expect(offline.icon == "bubble.left.and.text.bubble.right")
         #expect(offline.title == "Session activity offline")
         #expect(offline.detail == "Connect to the gateway to load recent chat activity.")
         #expect(offline.value == "offline")
         #expect(offline.actionTitle == nil)
         #expect(!offline.opensChat)
+    }
+
+    @Test func `screen presentation owns refresh task identifier`() {
+        let state = IPadActivitySessionsFeature.State()
+
+        let active = Self.screenPresentation(
+            state,
+            sessionsMode: "fixture",
+            currentSessionKey: "chat-current",
+            defaultSessionKey: "main",
+            isActive: true)
+        #expect(active.refreshTaskID == "fixture:chat-current:main:active")
+
+        let inactive = Self.screenPresentation(
+            state,
+            sessionsMode: "gateway",
+            currentSessionKey: "chat-next",
+            defaultSessionKey: "fallback",
+            isActive: false)
+        #expect(inactive.refreshTaskID == "gateway:chat-next:fallback:inactive")
     }
 
     private static func refreshRequest(
@@ -249,6 +269,22 @@ struct IPadActivitySessionsFeatureTests {
             sessionsAvailability: .init(isAvailable: .init(value: isAvailable)),
             currentSession: .init(key: .init(value: currentSessionKey)),
             defaultSession: .init(key: .init(value: defaultSessionKey)))
+    }
+
+    private static func screenPresentation(
+        _ state: IPadActivitySessionsFeature.State,
+        sessionsAvailable: Bool = true,
+        sessionsMode: String = "fixture",
+        currentSessionKey: String = "chat-current",
+        defaultSessionKey: String = "main",
+        isActive: Bool = true) -> IPadActivityScreenPresentation
+    {
+        state.screenPresentation(
+            sessionsAvailability: .init(value: sessionsAvailable),
+            sessionsMode: .init(value: sessionsMode),
+            currentSession: .init(value: currentSessionKey),
+            defaultSession: .init(value: defaultSessionKey),
+            sceneActivity: .init(value: isActive))
     }
 
     private static func session(key: String, updatedAt: Double = 1) -> OpenClawChatSessionEntry {
