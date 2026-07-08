@@ -213,6 +213,7 @@ struct IPadSkillWorkshopFeature {
                 queryFieldPresentation: self.queryFieldPresentation,
                 feedbackMessages: self.feedbackMessages,
                 queueSummaryPresentation: self.queueSummaryPresentation,
+                metricPresentations: self.metricPresentations,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -904,7 +905,7 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var metrics: [ProMetric] {
-        self.store.metricPresentations.map { presentation in
+        self.screenPresentation.metricPresentations.map { presentation in
             ProMetric(
                 icon: presentation.icon,
                 title: presentation.title,

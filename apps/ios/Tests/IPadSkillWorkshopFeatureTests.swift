@@ -137,7 +137,7 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.pendingProposalCount == 2)
         #expect(state.appliedProposalCount == 1)
         #expect(state.heldProposalCount == 1)
-        #expect(state.metricPresentations == [
+        let expectedMetrics = [
             IPadSkillWorkshopMetricPresentation(
                 id: .pending,
                 icon: "clock",
@@ -153,7 +153,11 @@ struct IPadSkillWorkshopFeatureTests {
                 icon: "shield",
                 title: "Held",
                 value: "1"),
-        ])
+        ]
+        #expect(state.metricPresentations == expectedMetrics)
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).metricPresentations == expectedMetrics)
         #expect(state.visibleProposalLaneStatuses == ["pending"])
         #expect(state.proposals(forLaneStatus: "pending").map(\.id) == ["pending-match"])
         #expect(state.proposals(forLaneStatus: "applied").map(\.id) == ["applied-match"])
