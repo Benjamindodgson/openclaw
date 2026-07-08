@@ -2278,11 +2278,16 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("isSelected: proposal.id == self.selectedProposalID,"))
         #expect(source.contains("var inspectingProposalID: IPadSkillWorkshopProposalID?"))
         #expect(source.contains("state.inspectingProposalID = request.proposalID"))
-        #expect(source.contains("var shouldEnableProposalInspectionControls: Bool"))
+        #expect(typeSource.contains(
+            "struct IPadSkillWorkshopProposalInspectionControlsPresentation: Equatable, Sendable"))
+        #expect(source.contains(
+            "var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation"))
         #expect(source.contains("self.inspectingProposalID == nil"))
         #expect(source.contains("isBusy: presentation.isInspecting"))
         #expect(source.contains("if self.store.state.proposalPresentation(for: proposal).isInspecting"))
-        #expect(source.contains(".disabled(!self.store.shouldEnableProposalInspectionControls)"))
+        #expect(source.contains(".disabled(!self.store.proposalInspectionControlsPresentation.canInspect)"))
+        #expect(!source.contains("var shouldEnableProposalInspectionControls: Bool"))
+        #expect(!source.contains(".disabled(!self.store.shouldEnableProposalInspectionControls)"))
         #expect(!source.contains("var inspectingProposalID: String?"))
         #expect(!source.contains("state.inspectingProposalID = request.proposalID.value"))
         #expect(!source.contains("inspectingProposalID: self.store.inspectingProposalID,"))
