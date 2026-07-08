@@ -181,12 +181,16 @@ import Testing
         let store = TestStore(initialState: OnboardingPresentationFeature.State()) {
             OnboardingPresentationFeature()
         }
+        let scannerError = OnboardingPresentationFeature.Action.QRScannerError(
+            message: .init(value: "Camera unavailable"))
 
         await store.send(.qrScannerButtonTapped) {
             $0.destination = .qrScanner
         }
 
-        await store.send(.qrScannerErrorReceived(.init(message: .init(value: "Camera unavailable")))) {
+        #expect(scannerError.statusError == .init(message: .init(value: "Camera unavailable")))
+
+        await store.send(.qrScannerErrorReceived(scannerError)) {
             $0.destination = .scannerError(.init(value: "Camera unavailable"))
         }
         await store.send(.qrScannerDismissed)
