@@ -30,12 +30,23 @@ struct OnboardingStatusFeature {
     static let defaultStatusLine = "In your OpenClaw chat, run /pair qr, then scan the code here."
     static let noSavedPairingStatusLine =
         "No saved pairing found. In your OpenClaw chat, run /pair qr, then scan the code here."
+    static let qrScannerOpeningRequest = QRScannerOpeningRequest(
+        statusAction: .qrScannerOpeningStarted,
+        presentationAction: .qrScannerButtonTapped)
+    static let freshQRScannerOpeningRequest = QRScannerOpeningRequest(
+        statusAction: .freshQRScanStarted,
+        presentationAction: .qrScannerButtonTapped)
 
     init(clock: OnboardingPairingResumeClockClient? = nil) {
         self.clockOverride = clock
     }
 
     // swiftformat:disable redundantSendable
+    struct QRScannerOpeningRequest: Equatable, Sendable {
+        var statusAction: OnboardingStatusFeature.Action
+        var presentationAction: OnboardingPresentationFeature.Action
+    }
+
     @ObservableState
     struct State: Equatable, Sendable {
         var connectMessageState = OnboardingConnectionStatusMessage(value: nil)
