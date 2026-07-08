@@ -96,6 +96,13 @@ struct IPadActivitySessionsFeature {
                 subtitle: "Live device and gateway activity.")
         }
 
+        var feedHeaderPresentation: IPadActivityFeedHeaderPresentation {
+            .init(
+                title: "Recent activity",
+                value: self.loadingPhase == .inFlight ? "Loading" : nil,
+                actionTitle: "Refresh")
+        }
+
         func refreshTaskID(
             sessionsMode: IPadActivitySessionsMode,
             currentSession: IPadActivitySessionReferenceKey,
@@ -176,7 +183,7 @@ struct IPadActivitySessionsFeature {
                     sceneActivity: sceneActivity),
                 sessionRows: sessionRows,
                 sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(sessionRows.count)",
-                feedHeaderValue: self.loadingPhase == .inFlight ? "Loading" : nil,
+                feedHeaderPresentation: self.feedHeaderPresentation,
                 showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
                 loadErrorText: self.loadErrorText,
                 emptySessionPresentation: self.emptySessionPresentation(sessionsAvailability: sessionsAvailability),
@@ -354,9 +361,9 @@ struct IPadActivityScreen: View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 ProPanelHeader(
-                    title: "Recent activity",
-                    value: self.screenPresentation.feedHeaderValue,
-                    actionTitle: "Refresh",
+                    title: self.screenPresentation.feedHeaderPresentation.title,
+                    value: self.screenPresentation.feedHeaderPresentation.value,
+                    actionTitle: self.screenPresentation.feedHeaderPresentation.actionTitle,
                     action: {
                         Task { await self.refreshSessions() }
                     })
@@ -523,7 +530,7 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
     let refreshTaskID: String
     let sessionRows: [CommandCenterTab.WorkItem]
     let sessionMetricValue: String
-    let feedHeaderValue: String?
+    let feedHeaderPresentation: IPadActivityFeedHeaderPresentation
     let showsLoadingSessionsPlaceholder: Bool
     let loadErrorText: IPadActivitySessionsFailureMessage?
     let emptySessionPresentation: IPadActivityEmptySessionPresentation
@@ -534,6 +541,12 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
 struct IPadActivityScreenChromePresentation: Equatable, Sendable {
     let title: String
     let subtitle: String
+}
+
+struct IPadActivityFeedHeaderPresentation: Equatable, Sendable {
+    let title: String
+    let value: String?
+    let actionTitle: String
 }
 
 struct IPadActivityEmptySessionPresentation: Equatable, Sendable {
