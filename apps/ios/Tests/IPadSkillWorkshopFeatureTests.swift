@@ -299,6 +299,7 @@ struct IPadSkillWorkshopFeatureTests {
             canInspect: true))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,
+            iconSystemName: "hammer",
             isSelected: false,
             isInspecting: false,
             showsProposalActions: true))
@@ -320,11 +321,13 @@ struct IPadSkillWorkshopFeatureTests {
             canInspect: false))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,
+            iconSystemName: "hammer",
             isSelected: true,
             isInspecting: false,
             showsProposalActions: true))
         #expect(state.proposalCardPresentation(for: inspectingProposal) == .init(
             proposal: inspectingProposal,
+            iconSystemName: "hourglass",
             isSelected: false,
             isInspecting: true,
             showsProposalActions: true))
@@ -340,6 +343,7 @@ struct IPadSkillWorkshopFeatureTests {
         state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "pending-1")
         #expect(state.presentedProposalPresentation?.card == .init(
             proposal: pendingProposal,
+            iconSystemName: "hammer",
             isSelected: false,
             isInspecting: false,
             showsProposalActions: true))
@@ -358,6 +362,7 @@ struct IPadSkillWorkshopFeatureTests {
         state.inspectingProposalID = .init(value: "pending-1")
         #expect(state.presentedProposalPresentation?.card == .init(
             proposal: pendingProposal,
+            iconSystemName: "hourglass",
             isSelected: true,
             isInspecting: true,
             showsProposalActions: true))

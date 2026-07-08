@@ -281,6 +281,7 @@ struct IPadSkillWorkshopScreenPresentation: Equatable, Sendable {
 
 struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Sendable {
     let proposal: IPadSkillProposal
+    let iconSystemName: String
     let isSelected: Bool
     let isInspecting: Bool
     let showsProposalActions: Bool
