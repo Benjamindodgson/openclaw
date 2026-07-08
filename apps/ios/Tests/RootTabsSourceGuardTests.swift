@@ -5012,6 +5012,10 @@ struct RootTabsSourceGuardTests {
         let onboardingAppleReviewDemoStoreDeclaration = try Self.extract(
             onboardingSource,
             from: "@State private var appleReviewDemoStore",
+            to: "@State private var pairingResumeStore")
+        let onboardingPairingResumeStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var pairingResumeStore",
             to: "@State private var discoveryRestartStore")
         let discoveryRestartStoreDeclaration = try Self.extract(
             onboardingSource,
@@ -5131,6 +5135,34 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("await appleReviewDemoClient.enter()"))
         #expect(onboardingSource.contains("await self.appleReviewDemoStore.send(.enableRequested).finish()"))
         #expect(!onboardingSource.contains("self.appModel.enterAppleReviewDemoMode()"))
+        #expect(onboardingPairingResumeStoreDeclaration
+            .contains("@State private var pairingResumeStore: StoreOf<OnboardingPairingResumeFeature>"))
+        #expect(!onboardingPairingResumeStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource
+            .contains("pairingResumeStore: StoreOf<OnboardingPairingResumeFeature>? = nil"))
+        #expect(onboardingSource
+            .contains("pairingResumeStoreFactory: () -> StoreOf<OnboardingPairingResumeFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedPairingResumeStore = pairingResumeStore ?? pairingResumeStoreFactory()"))
+        #expect(onboardingSource
+            .contains("self._pairingResumeStore = State(wrappedValue: resolvedPairingResumeStore)"))
+        #expect(rootSource.contains("pairingResumeStore: self.makeOnboardingPairingResumeStore()"))
+        #expect(storesSource.contains("func makeOnboardingPairingResumeStore()"))
+        #expect(storesSource
+            .contains("OnboardingPairingResumeFeature(resumeClient: .live(appModel: self.appModel))"))
+        #expect(onboardingStateSource.contains("struct OnboardingPairingResumeClient"))
+        #expect(onboardingStateSource.contains("var onboardingPairingResume: OnboardingPairingResumeClient"))
+        #expect(onboardingStateSource.contains("struct OnboardingPairingResumeFeature"))
+        #expect(onboardingStateSource.contains("case resumeRequested"))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingPairingResume)"))
+        #expect(onboardingStateSource.contains("await resumeClient.resume()"))
+        #expect(onboardingStateSource.contains("appModel.gatewayAutoReconnectEnabled = true"))
+        #expect(onboardingStateSource.contains("appModel.gatewayPairingPaused = false"))
+        #expect(onboardingStateSource.contains("appModel.gatewayPairingRequestId = nil"))
+        #expect(onboardingSource.contains("await self.pairingResumeStore.send(.resumeRequested).finish()"))
+        #expect(!onboardingSource.contains("self.appModel.gatewayAutoReconnectEnabled = true"))
+        #expect(!onboardingSource.contains("self.appModel.gatewayPairingPaused = false"))
+        #expect(!onboardingSource.contains("self.appModel.gatewayPairingRequestId = nil"))
         #expect(onboardingSource.contains("@State private var discoveryRestartStore"))
         #expect(discoveryRestartStoreDeclaration
             .contains("@State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>"))

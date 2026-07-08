@@ -199,6 +199,18 @@ import Testing
         #expect(probe.enterCount == 1)
     }
 
+    @Test @MainActor func `pairing resume reducer delegates resume through client`() async {
+        let probe = OnboardingPairingResumeProbe()
+        let store = TestStore(initialState: OnboardingPairingResumeFeature.State()) {
+            OnboardingPairingResumeFeature(resumeClient: probe.client)
+        }
+
+        await store.send(.resumeRequested)
+        await store.finish()
+
+        #expect(probe.resumeCount == 1)
+    }
+
     @Test @MainActor func `photo import reducer classifies gateway and demo QR messages`() async {
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
@@ -876,6 +888,16 @@ import Testing
         var client: OnboardingAppleReviewDemoClient {
             OnboardingAppleReviewDemoClient(enter: {
                 self.enterCount += 1
+            })
+        }
+    }
+
+    private final class OnboardingPairingResumeProbe: @unchecked Sendable {
+        var resumeCount = 0
+
+        var client: OnboardingPairingResumeClient {
+            OnboardingPairingResumeClient(resume: {
+                self.resumeCount += 1
             })
         }
     }

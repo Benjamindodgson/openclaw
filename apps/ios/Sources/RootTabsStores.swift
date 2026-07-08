@@ -207,6 +207,13 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeOnboardingPairingResumeStore() -> StoreOf<OnboardingPairingResumeFeature> {
+        Store(initialState: OnboardingPairingResumeFeature.State()) {
+            OnboardingPairingResumeFeature(resumeClient: .live(appModel: self.appModel))
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewaySetupStatusStore() -> StoreOf<SettingsGatewaySetupStatusFeature> {
         Store(initialState: SettingsGatewaySetupStatusFeature.State()) {
             SettingsGatewaySetupStatusFeature()
