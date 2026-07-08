@@ -6767,6 +6767,10 @@ struct RootTabsSourceGuardTests {
             onboardingStateSource,
             from: "struct AppleReviewDemoSetupCode",
             to: "case appleReviewDemoSetupCode")
+        let applySetupCodeFunction = try Self.extract(
+            onboardingSource,
+            from: "private func applySetupCodeAndConnect() async",
+            to: "private func handleScannedLink")
         let applyGatewayLinkFunction = try Self.extract(
             onboardingSource,
             from: "func applyGatewayLink(_ link: GatewayConnectDeepLink) async",
@@ -6805,6 +6809,8 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct SetupCodeChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("var setupCodeState = OnboardingSetupCode(value: \"\")"))
+        #expect(onboardingStateSource
+            .contains("var gatewayLinkConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?"))
         #expect(onboardingStateSource.contains("var statusState = OnboardingSetupCodeStatusMessage(value: nil)"))
         #expect(onboardingStateSource.contains("var setupCode: String {\n            self.setupCodeState.value"))
         #expect(onboardingStateSource.contains("var status: String? {\n            self.statusState.value"))
@@ -6879,13 +6885,26 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.setupCodeState = .init(value: \"\")"))
         #expect(onboardingStateSource.contains("state.applyResult = .appleReviewDemoSetupCode(.init(code: .init(value: raw)))"))
         #expect(onboardingStateSource.contains("state.applyResult = .gatewayLink(link)"))
+        #expect(onboardingStateSource.contains(
+            "state.gatewayLinkConnectionStart = Self.gatewayLinkConnectionStart(for: link)"))
+        #expect(onboardingStateSource.contains("state.gatewayLinkConnectionStart = nil"))
+        #expect(onboardingStateSource.contains("private static func gatewayLinkConnectionStart("))
+        #expect(onboardingStateSource.contains("id: .init(value: \"setup-code\")"))
+        #expect(onboardingStateSource.contains("message: .init(value: \"Connecting via setup code...\")"))
+        #expect(onboardingStateSource.contains(
+            "statusLine: .init(value: \"Setup code loaded. Connecting to \\(link.host):\\(link.port)...\")"))
         #expect(onboardingStateSource.contains("state.statusState = .init(value: \"Paste a setup code to continue.\")"))
         #expect(onboardingStateSource.contains(
             "state.statusState = .init(value: \"Setup code not recognized or uses an insecure ws:// gateway URL.\")"))
         #expect(onboardingStateSource.contains("state.statusState = .init(value: \"Setup code applied. Connecting...\")"))
         #expect(onboardingSource.contains("self.setupCodeStore.status"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.applyRequested)"))
+        #expect(applySetupCodeFunction.contains(
+            "let gatewayLinkConnectionStart = self.setupCodeStore.gatewayLinkConnectionStart"))
         #expect(onboardingSource.contains("self.setupCodeStore.send(.applyResultHandled)"))
+        #expect(applySetupCodeFunction.contains(
+            "guard let connectionStart = gatewayLinkConnectionStart else { return }"))
+        #expect(applySetupCodeFunction.contains("self.statusStore.send(.connectionStarted(connectionStart))"))
         #expect(onboardingSource.contains("await self.applyGatewayLink(link)"))
         #expect(onboardingSource.contains("await self.applyGatewayLink(scannedLink)"))
         #expect(!onboardingStateSource.contains("case appleReviewDemoSetupCode(String)"))
@@ -6934,6 +6953,9 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("let raw = self.setupCodeStore.trimmedSetupCode"))
         #expect(!onboardingSource.contains("GatewayConnectDeepLink.fromSetupInput(raw)"))
         #expect(!onboardingSource.contains("AppleReviewDemoMode.isSetupCode(raw)"))
+        #expect(!applySetupCodeFunction.contains("id: .init(value: \"setup-code\")"))
+        #expect(!applySetupCodeFunction.contains("message: .init(value: \"Connecting via setup code...\")"))
+        #expect(!applySetupCodeFunction.contains("Setup code loaded. Connecting to \\(link.host):\\(link.port)"))
     }
 
     @Test func `onboarding manual connection request is reducer owned`() throws {

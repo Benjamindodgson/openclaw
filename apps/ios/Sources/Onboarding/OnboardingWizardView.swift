@@ -846,6 +846,7 @@ extension OnboardingWizardView {
     private func applySetupCodeAndConnect() async {
         self.setupCodeStore.send(.applyRequested)
         guard let result = self.setupCodeStore.applyResult else { return }
+        let gatewayLinkConnectionStart = self.setupCodeStore.gatewayLinkConnectionStart
         self.setupCodeStore.send(.applyResultHandled)
 
         switch result {
@@ -853,11 +854,8 @@ extension OnboardingWizardView {
             await self.handleScannedSetupCode(setupCode.code.value)
 
         case let .gatewayLink(link):
-            self.statusStore.send(.connectionStarted(.init(
-                id: .init(value: "setup-code"),
-                message: .init(value: "Connecting via setup code..."),
-                statusLine: .init(value: "Setup code loaded. Connecting to \(link.host):\(link.port)..."),
-                clearsIssue: .init(value: false))))
+            guard let connectionStart = gatewayLinkConnectionStart else { return }
+            self.statusStore.send(.connectionStarted(connectionStart))
             await self.applyGatewayLink(link)
             self.stepStore.send(.stepChanged(.init(step: .connect)))
             await self.connectManual()
