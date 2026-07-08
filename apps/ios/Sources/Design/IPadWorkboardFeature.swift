@@ -401,6 +401,8 @@ struct IPadWorkboardCreateSheetErrorPresentation: Equatable, Sendable {
 struct IPadWorkboardCreateSheetPresentation: Equatable, Sendable {
     let title: String
     let sectionTitle: String
+    let titleText: String
+    let notesText: String
     let titlePlaceholder: String
     let notesPlaceholder: String
     let errorMessage: IPadWorkboardCreateSheetErrorPresentation?
@@ -723,6 +725,8 @@ struct IPadWorkboardFeature {
                 sheet: .init(
                     title: "New Card",
                     sectionTitle: "Card",
+                    titleText: self.draftTitle.value,
+                    notesText: self.draftNotes.value,
                     titlePlaceholder: "Title",
                     notesPlaceholder: "Notes",
                     errorMessage: self.errorText.map { .init(text: $0.value, tone: .warn) },
