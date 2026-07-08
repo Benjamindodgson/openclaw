@@ -707,6 +707,36 @@ import Testing
         #expect(probe.savedPasswords == ["instance-1:password-2"])
     }
 
+    @Test @MainActor func `credentials reducer persists manual input changes through client`() async {
+        let probe = OnboardingGatewayCredentialsPersistenceProbe()
+        let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
+            OnboardingCredentialsFeature(credentialsPersistenceClient: probe.client)
+        }
+
+        await store.send(.gatewayTokenInputChanged(.init(
+            value: .init(value: " token-3 "),
+            instanceId: .init(value: " instance-1 "))))
+        {
+            $0.gatewayTokenState = .init(value: " token-3 ")
+        }
+        await store.receive(.gatewayTokenPersistenceRequested(.init(
+            value: .init(rawValue: " token-3 "),
+            instanceId: .init(value: " instance-1 "))))
+        await store.send(.gatewayPasswordInputChanged(.init(
+            value: .init(value: " password-3 "),
+            instanceId: .init(value: " instance-1 "))))
+        {
+            $0.gatewayPasswordState = .init(value: " password-3 ")
+        }
+        await store.receive(.gatewayPasswordPersistenceRequested(.init(
+            value: .init(rawValue: " password-3 "),
+            instanceId: .init(value: " instance-1 "))))
+        await store.finish()
+
+        #expect(probe.savedTokens == ["instance-1:token-3"])
+        #expect(probe.savedPasswords == ["instance-1:password-3"])
+    }
+
     @Test @MainActor func `credentials reducer skips manual persistence without instance id`() async {
         let probe = OnboardingGatewayCredentialsPersistenceProbe()
         let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
