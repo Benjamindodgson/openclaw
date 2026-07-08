@@ -148,6 +148,7 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.proposalListPresentation.proposals.map(\.showsProposalActions) == [true])
         #expect(state.proposalBoardPresentation.lanes.map(\.id) == ["pending"])
         #expect(state.proposalBoardPresentation.lanes.map(\.title) == ["Pending"])
+        #expect(state.proposalBoardPresentation.lanes.map(\.value) == ["1"])
         #expect(state.proposalBoardPresentation.lanes.first?.proposals.map(\.id) ?? [] == ["pending-match"])
         #expect(state.proposalDetailPresentation(forID: "pending-match")?.proposal.id == "pending-match")
         #expect(state.proposalDetailPresentation(forID: "missing") == nil)
@@ -177,8 +178,14 @@ struct IPadSkillWorkshopFeatureTests {
             "rejected",
         ])
         let boardLanes = state.proposalBoardPresentation.lanes
+        #expect(boardLanes.map(\.value) == ["1", "0", "1", "1", "0"])
         #expect(boardLanes[0].proposals.map(\.id) == ["pending-match"])
         #expect(boardLanes[1].proposals.map(\.id) == [])
+        #expect(boardLanes[1].emptyPresentation == .init(
+            icon: "hammer",
+            title: "No quarantined proposals",
+            detail: "Matching proposals appear here after gateway refresh.",
+            value: "empty"))
         #expect(boardLanes[2].proposals.map(\.id) == ["stale-match"])
         #expect(boardLanes[3].proposals.map(\.id) == ["applied-match"])
         #expect(boardLanes[4].proposals.map(\.id) == [])

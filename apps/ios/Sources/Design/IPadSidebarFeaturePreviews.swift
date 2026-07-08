@@ -568,9 +568,16 @@ private struct IPadSkillWorkshopKanbanPreview: View {
                     HStack(alignment: .top, spacing: 12) {
                         ForEach(self.lanes, id: \.self) { status in
                             let proposals = self.proposals.filter { $0.status == status }
+                            let title = IPadSkillWorkshopFeature.State.proposalLaneLabel(status)
                             let lane = IPadSkillWorkshopProposalLanePresentation(
                                 id: status,
-                                title: IPadSkillWorkshopFeature.State.proposalLaneLabel(status),
+                                title: title,
+                                value: "\(proposals.count)",
+                                emptyPresentation: .init(
+                                    icon: "hammer",
+                                    title: "No \(title.lowercased()) proposals",
+                                    detail: "Matching proposals appear here after gateway refresh.",
+                                    value: "empty"),
                                 proposals: proposals.map { proposal in
                                     IPadSkillWorkshopProposalCardPresentation(
                                         proposal: proposal,

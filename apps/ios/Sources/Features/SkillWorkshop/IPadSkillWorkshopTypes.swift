@@ -285,6 +285,8 @@ struct IPadSkillWorkshopProposalDetailPresentation: Equatable, Identifiable, Sen
 struct IPadSkillWorkshopProposalLanePresentation: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
+    let value: String
+    let emptyPresentation: IPadSkillWorkshopEmptyProposalPresentation
     let proposals: [IPadSkillWorkshopProposalCardPresentation]
 }
 
