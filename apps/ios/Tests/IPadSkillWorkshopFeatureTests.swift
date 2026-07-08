@@ -224,36 +224,40 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableAdmin) == .init(
             canApplyMutations: true,
             canRunActions: true,
-            showsAdminScopeNotice: false))
+            adminScopeNotice: nil))
         #expect(state.screenPresentation(
             gatewayAccess: writableAdmin,
             sceneIsActive: true).proposalActionControlsPresentation == .init(
             canApplyMutations: true,
             canRunActions: true,
-            showsAdminScopeNotice: false))
+            adminScopeNotice: nil))
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableNonAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableNonAdmin) == .init(
             canApplyMutations: false,
             canRunActions: false,
-            showsAdminScopeNotice: true))
+            adminScopeNotice: .init(
+                iconSystemName: "lock.shield",
+                text: "Admin scope required.")))
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: reviewModeAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: reviewModeAdmin) == .init(
             canApplyMutations: false,
             canRunActions: false,
-            showsAdminScopeNotice: true))
+            adminScopeNotice: .init(
+                iconSystemName: "lock.shield",
+                text: "Admin scope required.")))
 
         state.busyAction = IPadSkillProposalAction(kind: .apply, proposalID: "pending-1")
         #expect(!state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableAdmin) == .init(
             canApplyMutations: true,
             canRunActions: false,
-            showsAdminScopeNotice: false))
+            adminScopeNotice: nil))
         #expect(state.screenPresentation(
             gatewayAccess: writableAdmin,
             sceneIsActive: true).proposalActionControlsPresentation == .init(
             canApplyMutations: true,
             canRunActions: false,
-            showsAdminScopeNotice: false))
+            adminScopeNotice: nil))
     }
 
     @Test func `proposal inspection presentation follows selected and inspecting state`() {

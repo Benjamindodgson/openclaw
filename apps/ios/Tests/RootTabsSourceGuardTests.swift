@@ -2445,6 +2445,8 @@ struct RootTabsSourceGuardTests {
             "func shouldEnableProposalActionControls(gatewayAccess: IPadSkillWorkshopGatewayAccess) -> Bool"))
         #expect(typeSource.contains(
             "struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable"))
+        #expect(typeSource.contains(
+            "struct IPadSkillWorkshopAdminScopeNoticePresentation: Equatable, Sendable"))
         #expect(source.contains(
             "func proposalActionControlsPresentation(\n            gatewayAccess: IPadSkillWorkshopGatewayAccess) -> IPadSkillWorkshopProposalActionControlsPresentation"))
         #expect(source.contains(
@@ -2454,7 +2456,13 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("self.screenPresentation.proposalActionControlsPresentation"))
         #expect(!source.contains("self.store.state.proposalActionControlsPresentation("))
         #expect(source.contains("self.proposalActionControlsPresentation.canRunActions"))
-        #expect(source.contains("if self.proposalActionControlsPresentation.showsAdminScopeNotice"))
+        #expect(source.contains("adminScopeNotice: canApplyMutations ? nil : .init("))
+        #expect(source.contains("iconSystemName: \"lock.shield\""))
+        #expect(source.contains("text: \"Admin scope required.\""))
+        #expect(source.contains("if let notice = self.proposalActionControlsPresentation.adminScopeNotice"))
+        #expect(source.contains("self.adminScopeNotice(notice)"))
+        #expect(source.contains("Image(systemName: presentation.iconSystemName)"))
+        #expect(source.contains("Text(presentation.text)"))
         #expect(source.contains("private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation"))
         #expect(source.contains("self.screenPresentation.emptyProposalPresentation"))
         #expect(!source.contains("self.store.state.emptyProposalPresentation("))
@@ -2483,6 +2491,10 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("icon: self.gatewayAccess.canRead ? \"hammer\" : \"wifi.slash\""))
         #expect(!source.contains("title: self.gatewayAccess.canRead ? \"No proposals\" : \"No proposals loaded\""))
         #expect(!source.contains("static func shouldEnableProposalMutation"))
+        #expect(!source.contains("showsAdminScopeNotice"))
+        #expect(!source.contains("private var adminScopeNotice: some View"))
+        #expect(!source.contains("Image(systemName: \"lock.shield\")"))
+        #expect(!source.contains("Text(\"Admin scope required.\")"))
         #expect(!source.contains("IPadSkillWorkshopScreen.normalizedScopeID("))
         #expect(!source.contains("@State private var statusFilter"))
         #expect(typeSource.contains("struct IPadSkillWorkshopStatusFilter: Equatable, Sendable"))
