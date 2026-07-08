@@ -3589,6 +3589,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `activity sessions refresh response action is typed`() throws {
         let source = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
+        let commandCenterSource = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
         let feature = try Self.extract(
             source,
             from: "@Reducer\nstruct IPadActivitySessionsFeature",
@@ -3619,8 +3620,13 @@ struct RootTabsSourceGuardTests {
         #expect(feature.contains(".prefix(8)"))
         #expect(source.contains("struct IPadActivityScreenPresentation: Equatable, Sendable"))
         #expect(source.contains("let gatewayPresentation: IPadActivityGatewayPresentationState"))
+        #expect(commandCenterSource.contains("struct WorkItem: Equatable, Identifiable, Sendable"))
+        #expect(source.contains("let sessionRows: [CommandCenterTab.WorkItem]"))
         #expect(feature.contains("var screenPresentation: IPadActivityScreenPresentation"))
         #expect(feature.contains("gatewayPresentation: self.gatewayPresentation"))
+        #expect(feature.contains("let sessionRows = self.visibleSessions.map"))
+        #expect(feature.contains("currentSessionKey: self.currentSession.value"))
+        #expect(feature.contains("sessionRows: sessionRows"))
         #expect(source.contains("private var screenPresentation: IPadActivityScreenPresentation"))
         #expect(source.contains("self.store.state.screenPresentation"))
         #expect(source.contains("let gatewayPresentation = self.screenPresentation.gatewayPresentation"))
@@ -3638,6 +3644,11 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("value: self.screenPresentation.feedHeaderValue"))
         #expect(source.contains("if self.screenPresentation.showsLoadingSessionsPlaceholder"))
         #expect(source.contains("detail: loadErrorText.value"))
+        #expect(source.contains("ForEach(self.screenPresentation.sessionRows)"))
+        #expect(source.contains("} else if self.screenPresentation.sessionRows.isEmpty"))
+        #expect(!source.contains("private var sessionRows: [CommandCenterTab.WorkItem]"))
+        #expect(!source.contains("self.store.visibleSessions"))
+        #expect(!source.contains("currentSessionKey: self.store.currentSession.value"))
         #expect(!source.contains("value: self.store.loadingPhase == .inFlight ? \"Loading\" : nil"))
         #expect(!source.contains("if self.store.loadingPhase == .inFlight, self.store.sessions.isEmpty"))
         #expect(!source.contains("} else if let loadErrorText = self.store.loadErrorText"))
@@ -3667,8 +3678,6 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("currentSession: .init(key: .init(value: self.appModel.chatSessionKey))"))
         #expect(source.contains("defaultSession: .init(key: .init(value: self.appModel.defaultChatSessionKey))"))
         #expect(source.contains("self.appModel.defaultChatSessionKey,"))
-        #expect(source.contains("self.store.visibleSessions"))
-        #expect(source.contains("currentSessionKey: self.store.currentSession.value"))
         #expect(feature.contains("case refreshResponse(RefreshResponse)"))
         #expect(feature.contains("var result: Result<IPadActivitySessionEntries, IPadActivitySessionsError>"))
         #expect(feature.contains("await send(.refreshResponse(.init(result: .success(.init(entries: sessions)))))"))

@@ -102,6 +102,16 @@ struct IPadActivitySessionsFeatureTests {
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
         #expect(store.state.screenPresentation.sessionMetricValue == "8")
+        #expect(store.state.screenPresentation.sessionRows.map(\.id) == [
+            "chat-session-chat-9",
+            "chat-session-chat-8",
+            "chat-session-chat-7",
+            "chat-session-chat-6",
+            "chat-session-chat-5",
+            "chat-session-chat-4",
+            "chat-session-chat-3",
+            "chat-session-chat-2",
+        ])
         #expect(store.state.screenPresentation.feedHeaderValue == nil)
         #expect(!store.state.screenPresentation.showsLoadingSessionsPlaceholder)
         #expect(store.state.visibleSessions.map(\.key) == [
