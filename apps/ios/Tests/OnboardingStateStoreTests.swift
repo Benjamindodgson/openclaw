@@ -286,7 +286,10 @@ import Testing
 
         await store.send(.imageLoadFailed) {
             $0.importPhase = .idle
-            $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.imageLoadFailureMessage))
+            $0.result = .failure(.init(
+                message: OnboardingQRPhotoImportFeature.imageLoadFailureMessage,
+                presentationError: .init(message: .init(
+                    value: OnboardingQRPhotoImportFeature.imageLoadFailureMessage.value))))
         }
 
         await store.send(.resultHandled) {
@@ -299,7 +302,10 @@ import Testing
 
         await store.send(.qrMessageDetected(.init(message: .init(value: nil)))) {
             $0.importPhase = .idle
-            $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage))
+            $0.result = .failure(.init(
+                message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage,
+                presentationError: .init(message: .init(
+                    value: OnboardingQRPhotoImportFeature.invalidQRCodeMessage.value))))
         }
 
         await store.send(.importStarted) {
@@ -309,7 +315,10 @@ import Testing
 
         await store.send(.qrMessageDetected(.init(message: .init(value: "not a setup code")))) {
             $0.importPhase = .idle
-            $0.result = .failure(.init(message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage))
+            $0.result = .failure(.init(
+                message: OnboardingQRPhotoImportFeature.invalidQRCodeMessage,
+                presentationError: .init(message: .init(
+                    value: OnboardingQRPhotoImportFeature.invalidQRCodeMessage.value))))
         }
     }
 

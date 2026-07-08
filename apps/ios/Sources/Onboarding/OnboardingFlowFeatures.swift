@@ -469,7 +469,10 @@ struct OnboardingQRPhotoImportFeature {
 
     enum ImportResult: Equatable, Sendable {
         struct AppleReviewSetupCode: Equatable, Sendable { var code: OnboardingSetupCode }
-        struct Failure: Equatable, Sendable { var message: OnboardingQRPhotoImportFailureMessage }
+        struct Failure: Equatable, Sendable {
+            var message: OnboardingQRPhotoImportFailureMessage
+            var presentationError: OnboardingPresentationFeature.Action.QRScannerError
+        }
 
         case appleReviewSetupCode(AppleReviewSetupCode)
         case failure(Failure)
@@ -492,7 +495,7 @@ struct OnboardingQRPhotoImportFeature {
             switch action {
             case .imageLoadFailed:
                 state.importPhase = .idle
-                state.result = .failure(.init(message: Self.imageLoadFailureMessage))
+                state.result = Self.failureResult(message: Self.imageLoadFailureMessage)
                 return .none
 
             case .importStarted:
@@ -515,7 +518,7 @@ struct OnboardingQRPhotoImportFeature {
 
     private static func importResult(message: String?) -> ImportResult {
         guard let message else {
-            return .failure(.init(message: self.invalidQRCodeMessage))
+            return self.failureResult(message: self.invalidQRCodeMessage)
         }
         if let link = GatewayConnectDeepLink.fromSetupInput(message) {
             return .gatewayLink(link)
@@ -523,6 +526,12 @@ struct OnboardingQRPhotoImportFeature {
         if AppleReviewDemoMode.isSetupCode(message) {
             return .appleReviewSetupCode(.init(code: .init(value: message)))
         }
-        return .failure(.init(message: Self.invalidQRCodeMessage))
+        return self.failureResult(message: self.invalidQRCodeMessage)
+    }
+
+    private static func failureResult(message: OnboardingQRPhotoImportFailureMessage) -> ImportResult {
+        .failure(.init(
+            message: message,
+            presentationError: .init(message: .init(value: message.value))))
     }
 }
