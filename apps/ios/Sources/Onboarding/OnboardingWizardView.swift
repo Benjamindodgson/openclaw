@@ -370,8 +370,10 @@ struct OnboardingWizardView: View {
                             Task { @MainActor in await self.handleScannedSetupCode(code) }
                         },
                         onError: { error in
-                            self.statusStore.send(.scannerErrorReceived(.init(message: .init(value: error))))
-                            self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: error))))
+                            let scannerError = OnboardingPresentationFeature.Action.QRScannerError(
+                                message: .init(value: error))
+                            self.statusStore.send(.scannerErrorReceived(scannerError.statusError))
+                            self.presentationStore.send(.qrScannerErrorReceived(scannerError))
                         },
                         onDismiss: {
                             self.presentationStore.send(.qrScannerDismissed)

@@ -30,7 +30,13 @@ struct OnboardingPresentationFeature {
     }
 
     enum Action: Equatable, Sendable {
-        struct QRScannerError: Equatable, Sendable { var message: OnboardingScannerErrorMessage }
+        struct QRScannerError: Equatable, Sendable {
+            var message: OnboardingScannerErrorMessage
+
+            var statusError: OnboardingStatusFeature.Action.ScannerError {
+                .init(message: self.message)
+            }
+        }
 
         case gatewayProblemDetailsButtonTapped
         case gatewayProblemDetailsDismissed
