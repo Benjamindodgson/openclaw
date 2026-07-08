@@ -379,11 +379,16 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
         var primaryActionDecision: PrimaryActionDecision?
     }
 
+    struct CertificateTrustRequest: Equatable, Sendable {
+        var problem: GatewayConnectionProblem
+        var connectionStart: OnboardingStatusFeature.Action.ConnectionStart
+    }
+
     enum PrimaryActionDecision: Equatable, Sendable {
         case openProtocolMismatchHelp(GatewayConnectionProblem)
         case resetAndScan
         case retryConnection
-        case trustRotatedCertificate(GatewayConnectionProblem)
+        case trustRotatedCertificate(CertificateTrustRequest)
     }
 
     enum Action: Equatable, Sendable {
@@ -418,7 +423,7 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
             return .resetAndScan
         }
         if problem.canTrustRotatedCertificate {
-            return .trustRotatedCertificate(problem)
+            return .trustRotatedCertificate(self.certificateTrustRequest(for: problem))
         }
         if problem.kind == .protocolMismatch {
             return .openProtocolMismatchHelp(problem)
@@ -427,6 +432,19 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
             return .retryConnection
         }
         return nil
+    }
+
+    private static func certificateTrustRequest(
+        for problem: GatewayConnectionProblem)
+        -> CertificateTrustRequest
+    {
+        CertificateTrustRequest(
+            problem: problem,
+            connectionStart: .init(
+                id: .init(value: "trust-certificate"),
+                message: .init(value: "Updating gateway certificate…"),
+                statusLine: .init(value: "Updating gateway certificate…"),
+                clearsIssue: .init(value: false)))
     }
 }
 

@@ -18,7 +18,13 @@ import Testing
 
         let rotatedCertificateProblem = Self.rotatedCertificateProblem()
         await store.send(.primaryActionTapped(.init(problem: rotatedCertificateProblem))) {
-            $0.primaryActionDecision = .trustRotatedCertificate(rotatedCertificateProblem)
+            $0.primaryActionDecision = .trustRotatedCertificate(.init(
+                problem: rotatedCertificateProblem,
+                connectionStart: .init(
+                    id: .init(value: "trust-certificate"),
+                    message: .init(value: "Updating gateway certificate…"),
+                    statusLine: .init(value: "Updating gateway certificate…"),
+                    clearsIssue: .init(value: false))))
         }
         await store.send(.primaryActionDecisionHandled) {
             $0.primaryActionDecision = nil
