@@ -41,6 +41,7 @@ struct OnboardingStatusFeature {
         var connectMessageState = OnboardingConnectionStatusMessage(value: nil)
         var connectingGatewayIDState: OnboardingConnectionID?
         var completionMark = OnboardingGatewayMarkedCompleted(value: false)
+        var gatewayConnectionCompletionRequest: OnboardingStateFeature.Action.CompletionMark?
         var issue: GatewayConnectionIssue = .none
         var lastPairingAutoResumeAttemptState: OnboardingPairingResumeRequestTime?
         var pairingRequestIdState = OnboardingConnectionIssueRequestID(value: nil)
@@ -102,6 +103,10 @@ struct OnboardingStatusFeature {
             var markedCompleted: OnboardingGatewayMarkedCompleted
         }
 
+        struct GatewayConnectionSuccess: Equatable, Sendable {
+            var selectedMode: OnboardingConnectionMode?
+        }
+
         struct ConnectionIssueDetection: Equatable, Sendable {
             var issue: GatewayConnectionIssue
             var requestId: OnboardingConnectionIssueRequestID
@@ -129,6 +134,8 @@ struct OnboardingStatusFeature {
         case connectionStatusUpdated(ConnectionStatusUpdate)
         case freshQRScanStarted
         case gatewayConnected(GatewayConnectionCompletion)
+        case gatewayConnectionSucceeded(GatewayConnectionSuccess)
+        case gatewayConnectionSuccessHandled
         case gatewayProblemResetScanStarted
         case introAdvanced
         case navigationBackStarted
@@ -189,6 +196,7 @@ struct OnboardingStatusFeature {
                 return .none
 
             case let .connectionStarted(start):
+                state.gatewayConnectionCompletionRequest = nil
                 state.connectingGatewayIDState = start.id
                 if start.clearsIssue.value {
                     state.issue = .none
@@ -210,6 +218,7 @@ struct OnboardingStatusFeature {
             case .freshQRScanStarted:
                 state.connectingGatewayIDState = nil
                 state.connectMessageState = .init(value: nil)
+                state.gatewayConnectionCompletionRequest = nil
                 state.issue = .none
                 state.lastPairingAutoResumeAttemptState = nil
                 state.pairingRequestIdState = .init(value: nil)
@@ -219,15 +228,27 @@ struct OnboardingStatusFeature {
                 return .none
 
             case let .gatewayConnected(completion):
-                state.statusLineState = .init(value: "Connected.")
-                if completion.markedCompleted.value {
-                    state.completionMark = completion.markedCompleted
-                }
+                Self.applyGatewayConnected(completion, to: &state)
+                return .none
+
+            case let .gatewayConnectionSucceeded(success):
+                state.gatewayConnectionCompletionRequest = nil
+                let completionRequest = state.completionMark.value
+                    ? nil
+                    : success.selectedMode.map { OnboardingStateFeature.Action.CompletionMark(mode: $0) }
+                state.gatewayConnectionCompletionRequest = completionRequest
+                Self.applyGatewayConnected(.init(
+                    markedCompleted: .init(value: completionRequest != nil)), to: &state)
+                return .none
+
+            case .gatewayConnectionSuccessHandled:
+                state.gatewayConnectionCompletionRequest = nil
                 return .none
 
             case .gatewayProblemResetScanStarted:
                 state.connectingGatewayIDState = nil
                 state.connectMessageState = .init(value: nil)
+                state.gatewayConnectionCompletionRequest = nil
                 state.issue = .none
                 state.lastPairingAutoResumeAttemptState = nil
                 state.pairingRequestIdState = .init(value: nil)
@@ -243,6 +264,7 @@ struct OnboardingStatusFeature {
             case .navigationBackStarted:
                 state.connectingGatewayIDState = nil
                 state.connectMessageState = .init(value: nil)
+                state.gatewayConnectionCompletionRequest = nil
                 return .none
 
             case .noSavedPairingFound:
@@ -303,6 +325,16 @@ struct OnboardingStatusFeature {
                 state.connectMessageState = .init(value: trimmedStatus)
                 state.statusLineState = .init(value: trimmedStatus)
             }
+        }
+    }
+
+    private static func applyGatewayConnected(
+        _ completion: Action.GatewayConnectionCompletion,
+        to state: inout State)
+    {
+        state.statusLineState = .init(value: "Connected.")
+        if completion.markedCompleted.value {
+            state.completionMark = completion.markedCompleted
         }
     }
 

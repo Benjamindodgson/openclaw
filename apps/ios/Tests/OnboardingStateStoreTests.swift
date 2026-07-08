@@ -448,6 +448,25 @@ import Testing
         }
     }
 
+    @Test @MainActor func `status reducer derives gateway connection completion request`() async {
+        let store = TestStore(initialState: OnboardingStatusFeature.State()) {
+            OnboardingStatusFeature()
+        }
+
+        await store.send(.gatewayConnectionSucceeded(.init(selectedMode: .homeNetwork))) {
+            $0.gatewayConnectionCompletionRequest = .init(mode: .homeNetwork)
+            $0.completionMark = .init(value: true)
+            $0.statusLineState = .init(value: "Connected.")
+        }
+
+        await store.send(.gatewayConnectionSuccessHandled) {
+            $0.gatewayConnectionCompletionRequest = nil
+        }
+
+        await store.send(.gatewayConnectionSucceeded(.init(selectedMode: .remoteDomain)))
+        #expect(store.state.gatewayConnectionCompletionRequest == nil)
+    }
+
     @Test @MainActor func `status reducer preserves sticky pairing and auth issues`() async {
         let store = TestStore(initialState: OnboardingStatusFeature.State()) {
             OnboardingStatusFeature()
