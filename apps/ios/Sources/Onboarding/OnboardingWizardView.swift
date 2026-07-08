@@ -576,12 +576,12 @@ struct OnboardingWizardView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(self.gatewayController.gateways) { gateway in
-                        let hasHost = self.gatewayHasResolvableHost(gateway)
+                        let presentation = self.discoveredGatewayRowPresentation(gateway)
 
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(gateway.name)
-                                if let host = gateway.lanHost ?? gateway.tailnetDns {
+                                if let host = presentation.displayHost.value {
                                     Text(host)
                                         .font(.footnote)
                                         .foregroundStyle(.secondary)
@@ -594,13 +594,13 @@ struct OnboardingWizardView: View {
                                 if self.connectingGatewayID == gateway.id {
                                     ProgressView()
                                         .progressViewStyle(.circular)
-                                } else if !hasHost {
+                                } else if !presentation.canConnect {
                                     Text("Resolving…")
                                 } else {
                                     Text("Connect")
                                 }
                             }
-                            .disabled(self.connectingGatewayID != nil || !hasHost)
+                            .disabled(self.connectingGatewayID != nil || !presentation.canConnect)
                         }
                     }
                 }
@@ -1023,11 +1023,12 @@ extension OnboardingWizardView {
     }
 
     private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
-        self.statusStore.send(.connectionStarted(.init(
+        self.gatewayConnectionStore.send(.discoveredGatewayConnectionRequested(.init(
             id: .init(value: gateway.id),
-            message: .init(value: "Connecting to \(gateway.name)…"),
-            statusLine: .init(value: "Connecting to \(gateway.name)…"),
-            clearsIssue: .init(value: true))))
+            name: .init(value: gateway.name))))
+        guard let connectionStart = self.gatewayConnectionStore.discoveredGatewayConnectionStart else { return }
+        self.gatewayConnectionStore.send(.discoveredGatewayConnectionStartHandled)
+        self.statusStore.send(.connectionStarted(connectionStart))
         defer { self.statusStore.send(.connectionFinished) }
         await self.gatewayController.connect(gateway)
     }
@@ -1036,11 +1037,13 @@ extension OnboardingWizardView {
         self.connectionFormStore.send(.modeSelected(.init(mode: mode)))
     }
 
-    private func gatewayHasResolvableHost(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) -> Bool {
-        let lanHost = gateway.lanHost?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !lanHost.isEmpty { return true }
-        let tailnetDns = gateway.tailnetDns?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return !tailnetDns.isEmpty
+    private func discoveredGatewayRowPresentation(
+        _ gateway: GatewayDiscoveryModel.DiscoveredGateway)
+        -> OnboardingGatewayConnectionFeature.State.DiscoveredGatewayRowPresentation
+    {
+        OnboardingGatewayConnectionFeature.State.discoveredGatewayRowPresentation(
+            lanHost: .init(value: gateway.lanHost),
+            tailnetDNS: .init(value: gateway.tailnetDns))
     }
 
     private func connectManual() async {

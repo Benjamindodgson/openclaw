@@ -187,16 +187,41 @@ struct OnboardingGatewayConnectionFeature {
 
     // swiftformat:disable redundantSendable
     @ObservableState
-    struct State: Equatable, Sendable {}
+    struct State: Equatable, Sendable {
+        struct DiscoveredGatewayRowPresentation: Equatable, Sendable {
+            var displayHost: OnboardingDiscoveredGatewayHost
+            var canConnect: Bool
+        }
+
+        var discoveredGatewayConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?
+
+        static func discoveredGatewayRowPresentation(
+            lanHost: OnboardingDiscoveredGatewayHost,
+            tailnetDNS: OnboardingDiscoveredGatewayHost)
+            -> DiscoveredGatewayRowPresentation
+        {
+            let displayHost = lanHost.trimmedValue ?? tailnetDNS.trimmedValue
+            return .init(
+                displayHost: .init(value: displayHost),
+                canConnect: displayHost != nil)
+        }
+    }
 
     enum Action: Equatable, Sendable {
+        struct DiscoveredGatewayConnectionRequest: Equatable, Sendable {
+            var id: OnboardingConnectionID
+            var name: OnboardingDiscoveredGatewayName
+        }
+
         case disconnectRequested
+        case discoveredGatewayConnectionRequested(DiscoveredGatewayConnectionRequest)
+        case discoveredGatewayConnectionStartHandled
     }
 
     // swiftformat:enable redundantSendable
 
     var body: some ReducerOf<Self> {
-        Reduce { _, action in
+        Reduce { state, action in
             @Dependency(\.onboardingGatewayDisconnect) var dependencyDisconnectClient
             let disconnectClient = self.disconnectClientOverride ?? dependencyDisconnectClient
 
@@ -205,6 +230,18 @@ struct OnboardingGatewayConnectionFeature {
                 return .run { [disconnectClient] _ in
                     await disconnectClient.disconnect()
                 }
+
+            case let .discoveredGatewayConnectionRequested(request):
+                state.discoveredGatewayConnectionStart = .init(
+                    id: request.id,
+                    message: .init(value: "Connecting to \(request.name.value)…"),
+                    statusLine: .init(value: "Connecting to \(request.name.value)…"),
+                    clearsIssue: .init(value: true))
+                return .none
+
+            case .discoveredGatewayConnectionStartHandled:
+                state.discoveredGatewayConnectionStart = nil
+                return .none
             }
         }
         .autoLogActions()
