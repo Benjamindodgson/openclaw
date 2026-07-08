@@ -77,7 +77,10 @@ Sources/Model/NodeAppModel.swift
 Sources/Model/WatchReplyCoordinator.swift
 Sources/Motion/MotionService.swift
 Sources/Onboarding/GatewayOnboardingReset.swift
+Sources/Onboarding/OnboardingConnectionFormFeature.swift
+Sources/Onboarding/OnboardingFlowFeatures.swift
 Sources/Onboarding/OnboardingStateStore.swift
+Sources/Onboarding/OnboardingStatusFeature.swift
 Sources/Onboarding/OnboardingWizardSteps.swift
 Sources/Onboarding/OnboardingWizardView.swift
 Sources/Onboarding/QRScannerView.swift

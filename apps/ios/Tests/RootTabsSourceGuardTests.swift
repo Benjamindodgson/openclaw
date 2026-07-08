@@ -4983,11 +4983,7 @@ struct RootTabsSourceGuardTests {
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let navigationSource = try String(contentsOf: Self.rootTabsNavigationSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateStoreSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
-        let onboardingCredentialsSource = try String(
-            contentsOf: Self.onboardingCredentialsFeatureSourceURL(),
-            encoding: .utf8)
-        let onboardingStateSource = onboardingStateStoreSource + "\n" + onboardingCredentialsSource
+        let onboardingStateSource = try Self.onboardingFeatureSource()
         let actionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let gatewaySetupFeaturesSource = try String(
             contentsOf: Self.settingsGatewaySetupFeaturesSourceURL(),
@@ -5764,7 +5760,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding qr scanner errors are reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingStateAndStatusSource()
 
         #expect(onboardingStateSource.contains("struct ScannerError: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct QRScannerError: Equatable, Sendable"))
@@ -5876,7 +5872,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding gateway connected action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingStateAndStatusSource()
         let gatewayConnectionCompletion = try Self.extract(
             onboardingStateSource,
             from: "struct GatewayConnectionCompletion",
@@ -5896,7 +5892,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding automatic pairing resume action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingStateAndStatusSource()
         let statusFeatureSource = try Self.extract(
             onboardingStateSource,
             from: "struct OnboardingStatusFeature",
@@ -5931,7 +5927,7 @@ struct RootTabsSourceGuardTests {
     }
 
     @Test func `onboarding status reducer stores flow flags as typed state`() throws {
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingStateAndStatusSource()
         let statusFeatureSource = try Self.extract(
             onboardingStateSource,
             from: "@Reducer\nstruct OnboardingStatusFeature",
@@ -5968,7 +5964,7 @@ struct RootTabsSourceGuardTests {
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let supportSource = try String(contentsOf: Self.settingsProTabSupportSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingFeatureSource()
 
         #expect(setupLinkFeatureSource.contains("struct ScannedSetupCode: Equatable, Sendable"))
         #expect(supportSource.contains("struct SettingsGatewaySetupCode: Equatable, Sendable { var value: String }"))
@@ -6021,7 +6017,7 @@ struct RootTabsSourceGuardTests {
         let setupLinkFeatureSource = try String(contentsOf: Self.settingsGatewaySetupLinkFeatureSourceURL(), encoding: .utf8)
         let settingsActionsSource = try String(contentsOf: Self.settingsProTabActionsSourceURL(), encoding: .utf8)
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingFeatureSource()
         let handleFunction = try Self.extract(
             settingsActionsSource,
             from: "func handleScannedGatewayLink(_ link: GatewayConnectDeepLink)",
@@ -6738,11 +6734,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding setup code apply result is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateStoreSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
-        let onboardingCredentialsSource = try String(
-            contentsOf: Self.onboardingCredentialsFeatureSourceURL(),
-            encoding: .utf8)
-        let onboardingStateSource = onboardingStateStoreSource + "\n" + onboardingCredentialsSource
+        let onboardingStateSource = try Self.onboardingFeatureSource()
         let setupCodeFeatureSource = try Self.extract(
             onboardingStateSource,
             from: "struct OnboardingSetupCodeFeature",
@@ -6946,7 +6938,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding manual connection request is reducer owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingFeatureSource()
         let manualConnectionRequest = try Self.extract(
             onboardingStateSource,
             from: "struct ManualConnectionRequest",
@@ -7088,7 +7080,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding connection start action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingStateAndStatusSource()
         let connectionStart = try Self.extract(
             onboardingStateSource,
             from: "struct ConnectionStart",
@@ -7143,7 +7135,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding connection status action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingStateAndStatusSource()
         let connectionStatusUpdate = try Self.extract(
             onboardingStateSource,
             from: "struct ConnectionStatusUpdate",
@@ -7168,10 +7160,14 @@ struct RootTabsSourceGuardTests {
 
     @Test func `onboarding connection issue action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
-        let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingStateAndStatusSource()
         let connectionIssueDetection = try Self.extract(
             onboardingStateSource,
             from: "struct ConnectionIssueDetection",
+            to: "struct ConnectionProblemUpdate")
+        let connectionProblemUpdate = try Self.extract(
+            onboardingStateSource,
+            from: "struct ConnectionProblemUpdate",
             to: "struct ConnectionActivityStart")
         let statusStateBlock = try Self.extract(
             onboardingStateSource,
@@ -7183,11 +7179,22 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct OnboardingConnectionIssueStatusText: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingConnectionPauseReconnect: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ConnectionIssueDetection: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct ConnectionProblemUpdate: Equatable, Sendable"))
         #expect(connectionIssueDetection.contains("var requestId: OnboardingConnectionIssueRequestID"))
         #expect(connectionIssueDetection.contains("var pauseReconnect: OnboardingConnectionPauseReconnect"))
         #expect(connectionIssueDetection.contains("var message: OnboardingConnectionIssueMessage"))
         #expect(connectionIssueDetection.contains("var statusText: OnboardingConnectionIssueStatusText"))
+        #expect(connectionProblemUpdate.contains("var problem: GatewayConnectionProblem?"))
+        #expect(connectionProblemUpdate.contains("var statusText: OnboardingConnectionIssueStatusText"))
         #expect(onboardingStateSource.contains("case connectionIssueDetected(ConnectionIssueDetection)"))
+        #expect(onboardingStateSource.contains("case connectionProblemUpdated(ConnectionProblemUpdate)"))
+        #expect(onboardingStateSource.contains("Self.applyConnectionIssueDetection(detection, to: &state)"))
+        #expect(onboardingStateSource.contains("let detectedIssue = GatewayConnectionIssue.detect(problem: update.problem)"))
+        #expect(onboardingStateSource.contains("GatewayConnectionIssue.detect(from: update.statusText.value)"))
+        #expect(onboardingStateSource.contains("requestId: .init(value: update.problem?.requestId ?? fallbackIssue.requestId)"))
+        #expect(onboardingStateSource.contains("pauseReconnect: .init(value: update.problem?.pauseReconnect == true)"))
+        #expect(onboardingStateSource.contains("message: .init(value: update.problem?.message)"))
+        #expect(onboardingStateSource.contains("statusText: update.statusText"))
         #expect(onboardingStateSource.contains("detected: detection.issue"))
         #expect(onboardingStateSource.contains("var pairingRequestIdState = OnboardingConnectionIssueRequestID(value: nil)"))
         #expect(onboardingStateSource.contains("var pairingRequestId: String? {\n            self.pairingRequestIdState.value"))
@@ -7198,16 +7205,21 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.statusLineState = .init(value: message)"))
         #expect(onboardingStateSource.contains("state.connectMessageState = .init(value: trimmedStatus)"))
         #expect(onboardingStateSource.contains("state.statusLineState = .init(value: trimmedStatus)"))
-        #expect(onboardingSource.contains("self.statusStore.send(.connectionIssueDetected(.init("))
-        #expect(onboardingSource.contains("requestId: .init(value: problem?.requestId ?? fallback.requestId)"))
-        #expect(onboardingSource.contains("pauseReconnect: .init(value: problem?.pauseReconnect == true)"))
-        #expect(onboardingSource.contains("message: .init(value: problem?.message)"))
+        #expect(onboardingSource.contains("self.statusStore.send(.connectionProblemUpdated(.init("))
+        #expect(onboardingSource.contains("problem: problem"))
         #expect(onboardingSource.contains("statusText: .init(value: statusText)"))
         #expect(!connectionIssueDetection.contains("var requestId: String?"))
         #expect(!connectionIssueDetection.contains("var pauseReconnect: Bool"))
         #expect(!connectionIssueDetection.contains("var message: String?"))
         #expect(!connectionIssueDetection.contains("var statusText: String"))
+        #expect(!connectionProblemUpdate.contains("var statusText: String"))
         #expect(!statusStateBlock.contains("var pairingRequestId: String?"))
+        #expect(!onboardingSource.contains("self.statusStore.send(.connectionIssueDetected(.init("))
+        #expect(!onboardingSource.contains("GatewayConnectionIssue.detect(problem:"))
+        #expect(!onboardingSource.contains("GatewayConnectionIssue.detect(from: statusText)"))
+        #expect(!onboardingSource.contains("requestId: .init(value: problem?.requestId"))
+        #expect(!onboardingSource.contains("pauseReconnect: .init(value: problem?.pauseReconnect == true)"))
+        #expect(!onboardingSource.contains("message: .init(value: problem?.message)"))
         #expect(!onboardingStateSource.contains("state.pairingRequestId = requestId"))
         #expect(!onboardingStateSource.contains("state.connectMessage = message"))
         #expect(!onboardingStateSource.contains("state.statusLine = message"))
@@ -8941,6 +8953,44 @@ struct RootTabsSourceGuardTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Onboarding/OnboardingStateStore.swift")
+    }
+
+    private static func onboardingStatusFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Onboarding/OnboardingStatusFeature.swift")
+    }
+
+    private static func onboardingFlowFeaturesSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Onboarding/OnboardingFlowFeatures.swift")
+    }
+
+    private static func onboardingConnectionFormFeatureSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Onboarding/OnboardingConnectionFormFeature.swift")
+    }
+
+    private static func onboardingFeatureSource() throws -> String {
+        let sourceURLs = [
+            Self.onboardingStatusFeatureSourceURL(),
+            Self.onboardingFlowFeaturesSourceURL(),
+            Self.onboardingConnectionFormFeatureSourceURL(),
+            Self.onboardingCredentialsFeatureSourceURL(),
+            Self.onboardingStateStoreSourceURL(),
+        ]
+        return try sourceURLs
+            .map { try String(contentsOf: $0, encoding: .utf8) }
+            .joined(separator: "\n")
+    }
+
+    private static func onboardingStateAndStatusSource() throws -> String {
+        try Self.onboardingFeatureSource()
     }
 
     private static func onboardingCredentialsFeatureSourceURL() -> URL {

@@ -510,6 +510,50 @@ import Testing
         #expect(store.state.shouldShowAuthStep)
     }
 
+    @Test @MainActor func `status reducer detects connection issues from problem updates`() async {
+        let store = TestStore(initialState: OnboardingStatusFeature.State()) {
+            OnboardingStatusFeature()
+        }
+        let problem = GatewayConnectionProblem(
+            kind: .pairingRequired,
+            owner: .gateway,
+            title: "Pairing required",
+            message: "Approve this device",
+            requestId: "pair-2",
+            retryable: true,
+            pauseReconnect: true)
+
+        await store.send(.connectionProblemUpdated(.init(
+            problem: problem,
+            statusText: .init(value: "Connecting"))))
+        {
+            $0.connectMessageState = .init(value: "Approve this device")
+            $0.issue = .pairingRequired(requestId: "pair-2")
+            $0.pairingRequestIdState = .init(value: "pair-2")
+            $0.authStepPresentation = .init(shouldShow: true)
+            $0.statusLineState = .init(value: "Approve this device")
+        }
+
+        await store.send(.pairingResumeStarted) {
+            $0.connectMessageState = .init(value: "Retrying after approval…")
+            $0.issue = .none
+            $0.automaticPairingResume = .init(shouldResume: false)
+            $0.authStepPresentation = .init(shouldShow: false)
+            $0.statusLineState = .init(value: "Retrying after approval…")
+        }
+
+        await store.send(.connectionProblemUpdated(.init(
+            problem: nil,
+            statusText: .init(value: "pairing required (requestId: fallback-1)"))))
+        {
+            $0.connectMessageState = .init(value: "pairing required (requestId: fallback-1)")
+            $0.issue = .pairingRequired(requestId: "fallback-1")
+            $0.pairingRequestIdState = .init(value: "fallback-1")
+            $0.authStepPresentation = .init(shouldShow: true)
+            $0.statusLineState = .init(value: "pairing required (requestId: fallback-1)")
+        }
+    }
+
     @Test @MainActor func `status reducer throttles automatic pairing resume attempts`() async {
         let store = TestStore(initialState: OnboardingStatusFeature.State()) {
             OnboardingStatusFeature()
