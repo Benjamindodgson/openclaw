@@ -419,6 +419,7 @@ struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let kanbanColumnPresentations: [IPadWorkboardKanbanColumnPresentation]
     let createCardPresentation: IPadWorkboardCreateCardPresentation
     let dispatchControlPresentation: IPadWorkboardDispatchControlPresentation
+    let compactCardsPanelPresentation: IPadWorkboardCompactCardsPanelPresentation
     let refreshControlPresentation: IPadWorkboardRefreshControlPresentation
     let boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation
     let statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation
@@ -1563,6 +1564,7 @@ extension IPadWorkboardFeature.State {
             kanbanColumnPresentations: self.kanbanColumnPresentations,
             createCardPresentation: self.createCardPresentation(gatewayAccess: gatewayAccess),
             dispatchControlPresentation: self.dispatchControlPresentation(gatewayAccess: gatewayAccess),
+            compactCardsPanelPresentation: self.compactCardsPanelPresentation(gatewayAccess: gatewayAccess),
             refreshControlPresentation: self.refreshControlPresentation,
             boardScopeMenuPresentation: self.boardScopeMenuPresentation,
             statusFilterControlPresentation: self.statusFilterControlPresentation,
