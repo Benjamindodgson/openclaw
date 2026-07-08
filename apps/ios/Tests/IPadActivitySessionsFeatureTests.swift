@@ -277,6 +277,27 @@ struct IPadActivitySessionsFeatureTests {
         #expect(presentation.subtitle == "Live device and gateway activity.")
     }
 
+    @Test func `screen presentation owns pending approval row`() {
+        let state = IPadActivitySessionsFeature.State()
+
+        #expect(Self.screenPresentation(state).pendingApprovalPresentation == nil)
+
+        let preview = Self.screenPresentation(
+            state,
+            pendingApproval: Self.pendingApproval(
+                commandText: "openclaw apply risky change",
+                commandPreview: "Apply risky change")).pendingApprovalPresentation
+        #expect(preview?.icon == "hand.raised.fill")
+        #expect(preview?.title == "Approval needed")
+        #expect(preview?.detail == "Apply risky change")
+        #expect(preview?.value == "pending")
+
+        let commandText = Self.screenPresentation(
+            state,
+            pendingApproval: Self.pendingApproval(commandText: "openclaw run checks")).pendingApprovalPresentation
+        #expect(commandText?.detail == "openclaw run checks")
+    }
+
     private static func refreshRequest(
         isActive: Bool,
         isAvailable: Bool,
@@ -297,7 +318,8 @@ struct IPadActivitySessionsFeatureTests {
         currentSessionKey: String = "chat-current",
         defaultSessionKey: String = "main",
         isActive: Bool = true,
-        lastShareEventText: String = "No recent shares") -> IPadActivityScreenPresentation
+        lastShareEventText: String = "No recent shares",
+        pendingApproval: IPadActivityPendingApprovalSnapshot? = nil) -> IPadActivityScreenPresentation
     {
         state.screenPresentation(
             sessionsAvailability: .init(value: sessionsAvailable),
@@ -305,7 +327,17 @@ struct IPadActivitySessionsFeatureTests {
             currentSession: .init(value: currentSessionKey),
             defaultSession: .init(value: defaultSessionKey),
             sceneActivity: .init(value: isActive),
-            lastShareEventText: .init(value: lastShareEventText))
+            lastShareEventText: .init(value: lastShareEventText),
+            pendingApproval: pendingApproval)
+    }
+
+    private static func pendingApproval(
+        commandText: String,
+        commandPreview: String? = nil) -> IPadActivityPendingApprovalSnapshot
+    {
+        .init(
+            commandText: .init(value: commandText),
+            commandPreview: .init(value: commandPreview))
     }
 
     private static func session(key: String, updatedAt: Double = 1) -> OpenClawChatSessionEntry {

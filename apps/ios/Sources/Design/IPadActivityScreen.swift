@@ -41,6 +41,13 @@ struct IPadActivitySessionsAvailable: Equatable, Sendable { var value: Bool }
 struct IPadActivitySessionsMode: Equatable, Sendable { var value: String }
 struct IPadActivitySessionReferenceKey: Equatable, Sendable { var value: String }
 struct IPadActivityShareEventText: Equatable, Sendable { var value: String }
+struct IPadActivityPendingApprovalCommandText: Equatable, Sendable { var value: String }
+struct IPadActivityPendingApprovalCommandPreview: Equatable, Sendable { var value: String? }
+struct IPadActivityPendingApprovalSnapshot: Equatable, Sendable {
+    var commandText: IPadActivityPendingApprovalCommandText
+    var commandPreview: IPadActivityPendingApprovalCommandPreview
+}
+
 struct IPadActivitySessionEntries: Equatable, Sendable {
     var entries: [OpenClawChatSessionEntry] = []
 }
@@ -134,13 +141,25 @@ struct IPadActivitySessionsFeature {
                 value: "iPad")
         }
 
+        func pendingApprovalPresentation(
+            pendingApproval: IPadActivityPendingApprovalSnapshot?) -> IPadActivityPendingApprovalPresentation?
+        {
+            guard let pendingApproval else { return nil }
+            return .init(
+                icon: "hand.raised.fill",
+                title: "Approval needed",
+                detail: pendingApproval.commandPreview.value ?? pendingApproval.commandText.value,
+                value: "pending")
+        }
+
         func screenPresentation(
             sessionsAvailability: IPadActivitySessionsAvailable,
             sessionsMode: IPadActivitySessionsMode,
             currentSession: IPadActivitySessionReferenceKey,
             defaultSession: IPadActivitySessionReferenceKey,
             sceneActivity: IPadActivitySceneActive,
-            lastShareEventText: IPadActivityShareEventText) -> IPadActivityScreenPresentation
+            lastShareEventText: IPadActivityShareEventText,
+            pendingApproval: IPadActivityPendingApprovalSnapshot?) -> IPadActivityScreenPresentation
         {
             let sessionRows = self.visibleSessions.map {
                 CommandCenterTab.sessionWorkItem(
@@ -161,7 +180,8 @@ struct IPadActivitySessionsFeature {
                 showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
                 loadErrorText: self.loadErrorText,
                 emptySessionPresentation: self.emptySessionPresentation(sessionsAvailability: sessionsAvailability),
-                shareIntakePresentation: self.shareIntakePresentation(lastShareEventText: lastShareEventText))
+                shareIntakePresentation: self.shareIntakePresentation(lastShareEventText: lastShareEventText),
+                pendingApprovalPresentation: self.pendingApprovalPresentation(pendingApproval: pendingApproval))
         }
     }
 
@@ -341,12 +361,12 @@ struct IPadActivityScreen: View {
                         Task { await self.refreshSessions() }
                     })
 
-                if let pendingExecApprovalPrompt = self.appModel.pendingExecApprovalPrompt {
+                if let pendingApprovalPresentation = self.screenPresentation.pendingApprovalPresentation {
                     ProStatusRow(
-                        icon: "hand.raised.fill",
-                        title: "Approval needed",
-                        detail: pendingExecApprovalPrompt.commandPreview ?? pendingExecApprovalPrompt.commandText,
-                        value: "pending",
+                        icon: pendingApprovalPresentation.icon,
+                        title: pendingApprovalPresentation.title,
+                        detail: pendingApprovalPresentation.detail,
+                        value: pendingApprovalPresentation.value,
                         color: OpenClawBrand.warn,
                         actionTitle: nil,
                         action: nil)
@@ -446,7 +466,8 @@ struct IPadActivityScreen: View {
             currentSession: .init(value: self.appModel.chatSessionKey),
             defaultSession: .init(value: self.appModel.defaultChatSessionKey),
             sceneActivity: .init(value: self.scenePhase == .active),
-            lastShareEventText: .init(value: self.appModel.lastShareEventText))
+            lastShareEventText: .init(value: self.appModel.lastShareEventText),
+            pendingApproval: self.pendingApprovalSnapshot)
     }
 
     private func syncGatewayPresentation() {
@@ -461,6 +482,14 @@ struct IPadActivityScreen: View {
 
     private var sessionsMode: String {
         self.appModel.chatTransportModeID
+    }
+
+    private var pendingApprovalSnapshot: IPadActivityPendingApprovalSnapshot? {
+        self.appModel.pendingExecApprovalPrompt.map {
+            .init(
+                commandText: .init(value: $0.commandText),
+                commandPreview: .init(value: $0.commandPreview))
+        }
     }
 
     private func refreshSessions() async {
@@ -499,6 +528,7 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
     let loadErrorText: IPadActivitySessionsFailureMessage?
     let emptySessionPresentation: IPadActivityEmptySessionPresentation
     let shareIntakePresentation: IPadActivityShareIntakePresentation
+    let pendingApprovalPresentation: IPadActivityPendingApprovalPresentation?
 }
 
 struct IPadActivityScreenChromePresentation: Equatable, Sendable {
@@ -516,6 +546,13 @@ struct IPadActivityEmptySessionPresentation: Equatable, Sendable {
 }
 
 struct IPadActivityShareIntakePresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let detail: String
+    let value: String
+}
+
+struct IPadActivityPendingApprovalPresentation: Equatable, Sendable {
     let icon: String
     let title: String
     let detail: String
