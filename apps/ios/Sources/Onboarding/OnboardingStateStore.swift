@@ -185,6 +185,17 @@ struct OnboardingSetupCodeStatusMessage: Equatable, Sendable { var value: String
 
 struct OnboardingDiscoveryRestartRequestID: Equatable, Sendable { var value: Int }
 
+struct OnboardingDiscoveredGatewayName: Equatable, Sendable { var value: String }
+
+struct OnboardingDiscoveredGatewayHost: Equatable, Sendable {
+    var value: String?
+
+    var trimmedValue: String? {
+        let trimmed = self.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
 struct OnboardingManualHost: Equatable, Sendable { var value: String }
 
 struct OnboardingManualPort: Equatable, Sendable { var value: Int }

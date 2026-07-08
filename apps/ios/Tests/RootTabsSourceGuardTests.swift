@@ -7078,6 +7078,55 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("guard !host.isEmpty, self.manualPort > 0, self.manualPort <= 65535"))
     }
 
+    @Test func `onboarding discovered gateway connection presentation is reducer owned`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingStateSource = try Self.onboardingFeatureSource()
+        let gatewayConnectionFeature = try Self.extract(
+            onboardingStateSource,
+            from: "@Reducer\nstruct OnboardingGatewayConnectionFeature",
+            to: "struct OnboardingAppleReviewDemoClient")
+        let connectFunction = try Self.extract(
+            onboardingSource,
+            from: "private func connectDiscoveredGateway",
+            to: "private func selectMode")
+        let rowPresentationFunction = try Self.extract(
+            onboardingSource,
+            from: "private func discoveredGatewayRowPresentation",
+            to: "private func connectManual")
+
+        #expect(onboardingStateSource.contains("struct OnboardingDiscoveredGatewayName: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingDiscoveredGatewayHost: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("var trimmedValue: String?"))
+        #expect(gatewayConnectionFeature.contains("struct DiscoveredGatewayRowPresentation: Equatable, Sendable"))
+        #expect(gatewayConnectionFeature.contains("var displayHost: OnboardingDiscoveredGatewayHost"))
+        #expect(gatewayConnectionFeature.contains("var canConnect: Bool"))
+        #expect(gatewayConnectionFeature
+            .contains("var discoveredGatewayConnectionStart: OnboardingStatusFeature.Action.ConnectionStart?"))
+        #expect(gatewayConnectionFeature.contains("struct DiscoveredGatewayConnectionRequest: Equatable, Sendable"))
+        #expect(gatewayConnectionFeature.contains("var id: OnboardingConnectionID"))
+        #expect(gatewayConnectionFeature.contains("var name: OnboardingDiscoveredGatewayName"))
+        #expect(gatewayConnectionFeature.contains("case discoveredGatewayConnectionRequested"))
+        #expect(gatewayConnectionFeature.contains("case discoveredGatewayConnectionStartHandled"))
+        #expect(gatewayConnectionFeature.contains("lanHost.trimmedValue ?? tailnetDNS.trimmedValue"))
+        #expect(gatewayConnectionFeature.contains("canConnect: displayHost != nil"))
+        #expect(gatewayConnectionFeature.contains("state.discoveredGatewayConnectionStart = .init("))
+        #expect(gatewayConnectionFeature.contains("message: .init(value: \"Connecting to \\(request.name.value)…\")"))
+        #expect(gatewayConnectionFeature.contains("state.discoveredGatewayConnectionStart = nil"))
+        #expect(onboardingSource.contains("let presentation = self.discoveredGatewayRowPresentation(gateway)"))
+        #expect(onboardingSource.contains("presentation.displayHost.value"))
+        #expect(onboardingSource.contains("presentation.canConnect"))
+        #expect(connectFunction.contains("self.gatewayConnectionStore.send(.discoveredGatewayConnectionRequested(.init("))
+        #expect(connectFunction.contains("id: .init(value: gateway.id)"))
+        #expect(connectFunction.contains("name: .init(value: gateway.name)"))
+        #expect(connectFunction.contains("self.gatewayConnectionStore.discoveredGatewayConnectionStart"))
+        #expect(connectFunction.contains("self.gatewayConnectionStore.send(.discoveredGatewayConnectionStartHandled)"))
+        #expect(connectFunction.contains("self.statusStore.send(.connectionStarted(connectionStart))"))
+        #expect(rowPresentationFunction.contains("OnboardingGatewayConnectionFeature.State.discoveredGatewayRowPresentation"))
+        #expect(!onboardingSource.contains("private func gatewayHasResolvableHost"))
+        #expect(!connectFunction.contains("Connecting to \\(gateway.name)"))
+        #expect(!rowPresentationFunction.contains("trimmingCharacters(in: .whitespacesAndNewlines)"))
+    }
+
     @Test func `onboarding connection start action is typed`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try Self.onboardingStateAndStatusSource()
