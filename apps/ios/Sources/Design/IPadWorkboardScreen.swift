@@ -93,7 +93,7 @@ struct IPadWorkboardScreen: View {
         }
     }
 
-    private static func statusMessageColor(for tone: IPadWorkboardStatusMessageTone) -> Color {
+    private static func messageColor(for tone: IPadWorkboardStatusMessageTone) -> Color {
         switch tone {
         case .accent:
             OpenClawBrand.accent
@@ -203,7 +203,7 @@ struct IPadWorkboardScreen: View {
         ForEach(self.store.statusMessagePresentations) { message in
             Text(message.text)
                 .font(.caption2)
-                .foregroundStyle(Self.statusMessageColor(for: message.tone))
+                .foregroundStyle(Self.messageColor(for: message.tone))
         }
     }
 
@@ -533,10 +533,10 @@ struct IPadWorkboardScreen: View {
                     .lineLimit(3...6)
                     .textInputAutocapitalization(.sentences)
             }
-            if let errorText = self.store.errorText {
+            if let errorMessage = self.createCardPresentation.sheet.errorMessage {
                 Section {
-                    Text(errorText.value)
-                        .foregroundStyle(OpenClawBrand.warn)
+                    Text(errorMessage.text)
+                        .foregroundStyle(Self.messageColor(for: errorMessage.tone))
                 }
             }
         }

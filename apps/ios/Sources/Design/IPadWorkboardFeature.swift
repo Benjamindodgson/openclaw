@@ -317,11 +317,17 @@ struct IPadWorkboardCompactWriteUnavailablePresentation: Equatable, Sendable {
     let message: String
 }
 
+struct IPadWorkboardCreateSheetErrorPresentation: Equatable, Sendable {
+    let text: String
+    let tone: IPadWorkboardStatusMessageTone
+}
+
 struct IPadWorkboardCreateSheetPresentation: Equatable, Sendable {
     let title: String
     let sectionTitle: String
     let titlePlaceholder: String
     let notesPlaceholder: String
+    let errorMessage: IPadWorkboardCreateSheetErrorPresentation?
     let cancelTitle: String
     let confirmationTitle: String
     let confirmationAccessibilityHint: String
@@ -645,6 +651,7 @@ struct IPadWorkboardFeature {
                     sectionTitle: "Card",
                     titlePlaceholder: "Title",
                     notesPlaceholder: "Notes",
+                    errorMessage: self.errorText.map { .init(text: $0.value, tone: .warn) },
                     cancelTitle: "Cancel",
                     confirmationTitle: isCreating ? "Creating..." : "Create",
                     confirmationAccessibilityHint: self.createUnavailableMessage(

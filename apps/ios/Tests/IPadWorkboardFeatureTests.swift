@@ -70,6 +70,7 @@ struct IPadWorkboardFeatureTests {
                 sectionTitle: "Card",
                 titlePlaceholder: "Title",
                 notesPlaceholder: "Notes",
+                errorMessage: nil,
                 cancelTitle: "Cancel",
                 confirmationTitle: "Create",
                 confirmationAccessibilityHint: "Enter a title to create a card.",
@@ -89,6 +90,11 @@ struct IPadWorkboardFeatureTests {
         state.cardCreationPhase = .idle
         #expect(state.createCardPresentation(canRead: false, canWrite: false).sheet.confirmationAccessibilityHint ==
             "Connect from Settings to create, move, and dispatch cards.")
+
+        state.errorText = .init(value: "workboard boom")
+        #expect(state.createCardPresentation(canRead: true, canWrite: true).sheet.errorMessage == .init(
+            text: "workboard boom",
+            tone: .warn))
     }
 
     @Test func `workboard subtitle is derived by reducer state`() {
