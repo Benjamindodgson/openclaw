@@ -75,7 +75,7 @@ struct ChatProTab: View {
             self.syncPresentationState()
             self.syncChatViewModel()
         }
-        .onChange(of: self.currentPresentationState) { _, _ in
+        .onChange(of: self.currentPresentationSnapshot) { _, _ in
             self.syncPresentationState()
         }
         .onChange(of: self.appModel.chatSessionKey) { _, _ in
@@ -107,7 +107,7 @@ struct ChatProTab: View {
                         drawsBackground: false,
                         showsSessionSwitcher: false,
                         userAccent: self.chatUserAccent,
-                        assistantName: self.agentDisplayName,
+                        assistantName: self.presentationState.agentDisplayName,
                         assistantAvatarText: self.presentationState.agentBadge,
                         assistantAvatarTint: OpenClawBrand.accent,
                         showsAssistantAvatars: false,
@@ -233,11 +233,6 @@ struct ChatProTab: View {
             })
     }
 
-    private var activeAgentID: String {
-        self.normalized(self.appModel.chatAgentId)
-            ?? "main"
-    }
-
     @ViewBuilder
     private var connectionPillButton: some View {
         if let openSettings {
@@ -273,20 +268,25 @@ struct ChatProTab: View {
     }
 
     private var currentPresentationState: ChatProPresentationState {
-        ChatProPresentationState(
+        .init(snapshot: self.currentPresentationSnapshot)
+    }
+
+    private var currentPresentationSnapshot: ChatProPresentationSnapshot {
+        ChatProPresentationSnapshot(
             gatewayDisplayState: self.gatewayDisplayState,
             isGatewayUsable: self.gatewayConnected,
-            agentDisplayName: self.agentDisplayName,
+            activeAgentID: self.appModel.chatAgentId,
+            fallbackAgentDisplayName: self.appModel.chatAgentName,
+            agents: self.appModel.gatewayAgents.map(ChatProAgentEntry.init(agent:)),
             headerTitle: self.headerTitle,
             headerSubtitle: self.headerSubtitle,
-            showsAgentBadge: self.showsAgentBadge,
-            agentBadgeOverride: self.agentBadgeOverride)
+            showsAgentBadge: self.showsAgentBadge)
     }
 
     private func syncPresentationState() {
-        let presentation = self.currentPresentationState
-        guard self.presentationStore.presentation != presentation else { return }
-        self.presentationStore.send(.presentationChanged(.init(presentation: presentation)))
+        let snapshot = self.currentPresentationSnapshot
+        guard self.presentationStore.snapshot != snapshot else { return }
+        self.presentationStore.send(.snapshotChanged(.init(snapshot: snapshot)))
     }
 
     private var gatewayConnected: Bool {
@@ -302,29 +302,6 @@ struct ChatProTab: View {
 
     private var chatUserAccent: Color {
         self.colorScheme == .light ? OpenClawBrand.info : OpenClawBrand.accent
-    }
-
-    private var activeAgent: AgentSummary? {
-        self.appModel.gatewayAgents.first { $0.id == self.activeAgentID }
-    }
-
-    private var agentDisplayName: String {
-        self.normalized(self.activeAgent?.name) ?? self.appModel.chatAgentName
-    }
-
-    private var agentBadgeOverride: String? {
-        if let identity = self.activeAgent?.identity,
-           let emoji = identity["emoji"]?.value as? String
-        {
-            return emoji
-        }
-        return nil
-    }
-
-    private func normalized(_ value: String?) -> String? {
-        guard let value else { return nil }
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
     }
 }
 
@@ -444,15 +421,19 @@ struct ChatProPresentationFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
-        var presentation = ChatProPresentationState()
+        var snapshot = ChatProPresentationSnapshot()
+
+        var presentation: ChatProPresentationState {
+            .init(snapshot: self.snapshot)
+        }
     }
 
     enum Action: Equatable, Sendable {
-        struct PresentationChange: Equatable, Sendable {
-            var presentation: ChatProPresentationState
+        struct SnapshotChange: Equatable, Sendable {
+            var snapshot: ChatProPresentationSnapshot
         }
 
-        case presentationChanged(PresentationChange)
+        case snapshotChanged(SnapshotChange)
     }
 
     // swiftformat:enable redundantSendable
@@ -460,8 +441,8 @@ struct ChatProPresentationFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .presentationChanged(change):
-                state.presentation = change.presentation
+            case let .snapshotChanged(change):
+                state.snapshot = change.snapshot
                 return .none
             }
         }
@@ -471,6 +452,8 @@ struct ChatProPresentationFeature {
 
 // swiftformat:disable redundantSendable
 struct ChatProGatewayUsability: Equatable, Sendable { var value: Bool }
+struct ChatProActiveAgentID: Equatable, Sendable { var value: String }
+struct ChatProFallbackAgentDisplayName: Equatable, Sendable { var value: String }
 struct ChatProAgentDisplayName: Equatable, Sendable { var value: String }
 struct ChatProHeaderTitle: Equatable, Sendable { var value: String? }
 struct ChatProHeaderSubtitle: Equatable, Sendable { var value: String? }
@@ -478,7 +461,113 @@ struct ChatProShowsAgentBadge: Equatable, Sendable { var value: Bool }
 struct ChatProAgentBadgeOverride: Equatable, Sendable { var value: String? }
 // swiftformat:enable redundantSendable
 
-struct ChatProPresentationState: Equatable {
+// swiftformat:disable redundantSendable
+struct ChatProAgentEntry: Equatable, Sendable {
+    var id: String
+    var name: String?
+    var emoji: String?
+}
+
+// swiftformat:enable redundantSendable
+
+extension ChatProAgentEntry {
+    init(agent: AgentSummary) {
+        self.init(
+            id: agent.id,
+            name: agent.name,
+            emoji: agent.identity?["emoji"]?.value as? String)
+    }
+}
+
+// swiftformat:disable redundantSendable
+struct ChatProAgentEntries: Equatable, Sendable { var values: [ChatProAgentEntry] = [] }
+// swiftformat:enable redundantSendable
+
+// swiftformat:disable redundantSendable
+struct ChatProPresentationSnapshot: Equatable, Sendable {
+    var gatewayDisplayState: GatewayDisplayState = .disconnected
+    var gatewayUsabilityValue = ChatProGatewayUsability(value: false)
+    var activeAgentIDValue = ChatProActiveAgentID(value: "main")
+    var fallbackAgentDisplayNameValue = ChatProFallbackAgentDisplayName(value: "OpenClaw")
+    var agentEntries = ChatProAgentEntries()
+    var headerTitleValue = ChatProHeaderTitle(value: nil)
+    var headerSubtitleValue = ChatProHeaderSubtitle(value: nil)
+    var showsAgentBadgeValue = ChatProShowsAgentBadge(value: true)
+
+    init(
+        gatewayDisplayState: GatewayDisplayState = .disconnected,
+        isGatewayUsable: Bool = false,
+        activeAgentID: String = "main",
+        fallbackAgentDisplayName: String = "OpenClaw",
+        agents: [ChatProAgentEntry] = [],
+        headerTitle: String? = nil,
+        headerSubtitle: String? = nil,
+        showsAgentBadge: Bool = true)
+    {
+        self.gatewayDisplayState = gatewayDisplayState
+        self.gatewayUsabilityValue = .init(value: isGatewayUsable)
+        self.activeAgentIDValue = .init(value: activeAgentID)
+        self.fallbackAgentDisplayNameValue = .init(value: fallbackAgentDisplayName)
+        self.agentEntries = .init(values: agents)
+        self.headerTitleValue = .init(value: headerTitle)
+        self.headerSubtitleValue = .init(value: headerSubtitle)
+        self.showsAgentBadgeValue = .init(value: showsAgentBadge)
+    }
+
+    var isGatewayUsable: Bool {
+        self.gatewayUsabilityValue.value
+    }
+
+    var activeAgentID: String {
+        Self.normalized(self.activeAgentIDValue.value) ?? "main"
+    }
+
+    var fallbackAgentDisplayName: String {
+        self.fallbackAgentDisplayNameValue.value
+    }
+
+    var agents: [ChatProAgentEntry] {
+        self.agentEntries.values
+    }
+
+    var headerTitle: String? {
+        self.headerTitleValue.value
+    }
+
+    var headerSubtitle: String? {
+        self.headerSubtitleValue.value
+    }
+
+    var showsAgentBadge: Bool {
+        self.showsAgentBadgeValue.value
+    }
+
+    var activeAgent: ChatProAgentEntry? {
+        self.agents.first { $0.id == self.activeAgentID }
+    }
+
+    var resolvedAgentDisplayName: String {
+        if let name = Self.normalized(self.activeAgent?.name) {
+            return name
+        }
+        return self.fallbackAgentDisplayName
+    }
+
+    var resolvedAgentBadgeOverride: String? {
+        self.activeAgent?.emoji
+    }
+
+    private static func normalized(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+// swiftformat:enable redundantSendable
+
+// swiftformat:disable redundantSendable
+struct ChatProPresentationState: Equatable, Sendable {
     var gatewayDisplayState: GatewayDisplayState = .disconnected
     var gatewayUsabilityValue = ChatProGatewayUsability(value: false)
     var agentDisplayNameValue = ChatProAgentDisplayName(value: "OpenClaw")
@@ -503,6 +592,17 @@ struct ChatProPresentationState: Equatable {
         self.headerSubtitleValue = .init(value: headerSubtitle)
         self.showsAgentBadgeValue = .init(value: showsAgentBadge)
         self.agentBadgeOverrideValue = .init(value: agentBadgeOverride)
+    }
+
+    init(snapshot: ChatProPresentationSnapshot) {
+        self.init(
+            gatewayDisplayState: snapshot.gatewayDisplayState,
+            isGatewayUsable: snapshot.isGatewayUsable,
+            agentDisplayName: snapshot.resolvedAgentDisplayName,
+            headerTitle: snapshot.headerTitle,
+            headerSubtitle: snapshot.headerSubtitle,
+            showsAgentBadge: snapshot.showsAgentBadge,
+            agentBadgeOverride: snapshot.resolvedAgentBadgeOverride)
     }
 
     var agentDisplayName: String {
@@ -592,3 +692,5 @@ struct ChatProPresentationState: Equatable {
         return trimmed.isEmpty ? nil : trimmed
     }
 }
+
+// swiftformat:enable redundantSendable

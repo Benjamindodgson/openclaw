@@ -87,17 +87,40 @@ struct GatewayStatusBuilderTests {
     }
 
     @Test func `chat presentation reducer updates state`() async {
-        let presentation = Self.chatState(.connected, isGatewayUsable: true)
+        let snapshot = Self.chatSnapshot(.connected, isGatewayUsable: true)
         let store = TestStore(initialState: ChatProPresentationFeature.State()) {
             ChatProPresentationFeature()
         }
 
-        await store.send(.presentationChanged(.init(presentation: presentation))) {
-            $0.presentation = presentation
+        await store.send(.snapshotChanged(.init(snapshot: snapshot))) {
+            $0.snapshot = snapshot
         }
 
         #expect(store.state.presentation.gatewayPillTitle == "Connected")
         #expect(store.state.presentation.messagePlaceholder == "Message Joshtimus Prime...")
+    }
+
+    @Test func `chat presentation reducer resolves active agent identity from snapshot`() async {
+        let snapshot = Self.chatSnapshot(
+            .connected,
+            isGatewayUsable: true,
+            activeAgentID: "  builder  ",
+            fallbackAgentDisplayName: "Fallback",
+            agents: [
+                ChatProAgentEntry(id: "other", name: "Other", emoji: nil),
+                ChatProAgentEntry(id: "builder", name: "  Builder Bot  ", emoji: "  BB  "),
+            ])
+        let store = TestStore(initialState: ChatProPresentationFeature.State()) {
+            ChatProPresentationFeature()
+        }
+
+        await store.send(.snapshotChanged(.init(snapshot: snapshot))) {
+            $0.snapshot = snapshot
+        }
+
+        #expect(store.state.presentation.agentDisplayName == "Builder Bot")
+        #expect(store.state.presentation.agentBadge == "BB")
+        #expect(store.state.presentation.messagePlaceholder == "Message Builder Bot...")
     }
 
     @Test func `chat view model lifecycle reducer records transport mode`() async {
@@ -170,6 +193,29 @@ struct GatewayStatusBuilderTests {
             headerSubtitle: headerSubtitle,
             showsAgentBadge: showsAgentBadge,
             agentBadgeOverride: agentBadgeOverride)
+    }
+
+    private static func chatSnapshot(
+        _ gatewayDisplayState: GatewayDisplayState,
+        isGatewayUsable: Bool = false,
+        activeAgentID: String = "main",
+        fallbackAgentDisplayName: String = "Joshtimus Prime",
+        agents: [ChatProAgentEntry] = [
+            ChatProAgentEntry(id: "main", name: "Joshtimus Prime", emoji: nil),
+        ],
+        headerTitle: String? = nil,
+        headerSubtitle: String? = nil,
+        showsAgentBadge: Bool = true) -> ChatProPresentationSnapshot
+    {
+        ChatProPresentationSnapshot(
+            gatewayDisplayState: gatewayDisplayState,
+            isGatewayUsable: isGatewayUsable,
+            activeAgentID: activeAgentID,
+            fallbackAgentDisplayName: fallbackAgentDisplayName,
+            agents: agents,
+            headerTitle: headerTitle,
+            headerSubtitle: headerSubtitle,
+            showsAgentBadge: showsAgentBadge)
     }
 }
 
