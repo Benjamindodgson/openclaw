@@ -2144,6 +2144,10 @@ struct RootTabsSourceGuardTests {
             source,
             from: "private var proposalList: some View",
             to: "@ViewBuilder\n    private var presentedProposalDetail")
+        let presentedProposalDetail = try Self.extract(
+            source,
+            from: "@ViewBuilder\n    private var presentedProposalDetail",
+            to: "private func proposalDetailCard")
         let kanbanCard = try Self.extract(
             source,
             from: "private struct IPadSkillProposalKanbanCard",
@@ -2556,11 +2560,23 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("Text(presentation.text)"))
         #expect(source.contains("private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation"))
         #expect(source.contains("self.screenPresentation.emptyProposalPresentation"))
+        #expect(typeSource.contains("let proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation"))
+        #expect(source.contains("var proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation"))
+        #expect(source.contains("proposalUnavailablePresentation: self.proposalUnavailablePresentation"))
+        #expect(source.contains(
+            "private var proposalUnavailablePresentation: IPadSkillWorkshopEmptyProposalPresentation"))
+        #expect(source.contains("self.screenPresentation.proposalUnavailablePresentation"))
         #expect(!source.contains("self.store.state.emptyProposalPresentation("))
         #expect(source.contains("icon: self.emptyProposalPresentation.icon"))
         #expect(source.contains("title: self.emptyProposalPresentation.title"))
         #expect(source.contains("detail: self.emptyProposalPresentation.detail"))
         #expect(source.contains("value: self.emptyProposalPresentation.value"))
+        #expect(presentedProposalDetail.contains("icon: self.proposalUnavailablePresentation.icon"))
+        #expect(presentedProposalDetail.contains("title: self.proposalUnavailablePresentation.title"))
+        #expect(presentedProposalDetail.contains("detail: self.proposalUnavailablePresentation.detail"))
+        #expect(presentedProposalDetail.contains("value: self.proposalUnavailablePresentation.value"))
+        #expect(!presentedProposalDetail.contains("title: \"Proposal unavailable\""))
+        #expect(!presentedProposalDetail.contains("value: \"missing\""))
         #expect(!source.contains("var selectedAgentScopeID = \"\""))
         #expect(!source.contains("struct AgentScopeChange: Equatable, Sendable {\n            var agentID: String"))
         #expect(!source.contains("private var agentScopeOptions: [IPadSkillWorkshopAgentScopeOption]"))
