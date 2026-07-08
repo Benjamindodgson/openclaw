@@ -46,7 +46,7 @@ struct IPadWorkboardScreen: View {
                 self.kanbanBoard
             }
         }
-        .task(id: self.refreshID) {
+        .task(id: self.refreshTaskID) {
             await self.loadCards(force: false)
         }
         .refreshable {
@@ -562,12 +562,8 @@ struct IPadWorkboardScreen: View {
         }
     }
 
-    private var refreshID: String {
-        [
-            self.canRead ? "connected" : "offline",
-            self.scenePhase == .active ? "active" : "inactive",
-            self.store.selectedBoardID.value.isEmpty ? "all" : self.store.selectedBoardID.value,
-        ].joined(separator: ":")
+    private var refreshTaskID: String {
+        self.screenPresentation.refreshTaskID
     }
 
     private var canRead: Bool {
@@ -580,7 +576,9 @@ struct IPadWorkboardScreen: View {
     }
 
     private var screenPresentation: IPadWorkboardScreenPresentation {
-        self.store.screenPresentation
+        self.store.state.screenPresentation(
+            canRead: self.canRead,
+            sceneIsActive: self.scenePhase == .active)
     }
 
     private var boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation {

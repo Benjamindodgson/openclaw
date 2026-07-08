@@ -361,6 +361,7 @@ struct IPadWorkboardStatusFilterControlPresentation: Equatable, Sendable {
 
 struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let screenChromePresentation: IPadWorkboardScreenChromePresentation
+    let refreshTaskID: String
     let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
     let refreshControlPresentation: IPadWorkboardRefreshControlPresentation
     let boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation
@@ -607,15 +608,6 @@ struct IPadWorkboardFeature {
                 compactOptions: Self.statusFilterOptions(
                     for: self.compactStatuses,
                     selectedStatus: self.selectedStatus.value))
-        }
-
-        var screenPresentation: IPadWorkboardScreenPresentation {
-            .init(
-                screenChromePresentation: self.screenChromePresentation,
-                queueSummaryPresentation: self.queueSummaryPresentation,
-                refreshControlPresentation: self.refreshControlPresentation,
-                boardScopeMenuPresentation: self.boardScopeMenuPresentation,
-                statusFilterControlPresentation: self.statusFilterControlPresentation)
         }
 
         var isLoading: Bool {
@@ -1409,6 +1401,27 @@ struct IPadWorkboardFeature {
 
     private static func failure(for error: Error) -> IPadWorkboardError {
         .failed(.init(message: .init(value: self.message(for: error))))
+    }
+}
+
+extension IPadWorkboardFeature.State {
+    func screenPresentation(canRead: Bool, sceneIsActive: Bool) -> IPadWorkboardScreenPresentation {
+        .init(
+            screenChromePresentation: self.screenChromePresentation,
+            refreshTaskID: self.refreshTaskID(
+                canRead: canRead,
+                sceneIsActive: sceneIsActive),
+            queueSummaryPresentation: self.queueSummaryPresentation,
+            refreshControlPresentation: self.refreshControlPresentation,
+            boardScopeMenuPresentation: self.boardScopeMenuPresentation,
+            statusFilterControlPresentation: self.statusFilterControlPresentation)
+    }
+
+    func refreshTaskID(canRead: Bool, sceneIsActive: Bool) -> String {
+        let connection = canRead ? "connected" : "offline"
+        let scene = sceneIsActive ? "active" : "inactive"
+        let board = self.selectedBoardID.value.isEmpty ? "all" : self.selectedBoardID.value
+        return [connection, scene, board].joined(separator: ":")
     }
 }
 
