@@ -4162,6 +4162,7 @@ struct RootTabsSourceGuardTests {
 
     @Test func `command center chat routes use typed payload`() throws {
         let source = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
+        let featureSource = try String(contentsOf: Self.commandSessionsFeatureSourceURL(), encoding: .utf8)
         let activitySource = try String(contentsOf: Self.iPadActivityScreenSourceURL(), encoding: .utf8)
         let previewsSource = try String(contentsOf: Self.iPadSidebarFeaturePreviewsSourceURL(), encoding: .utf8)
 
@@ -4171,7 +4172,12 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("static func recentSession(_ sessionKey: String) -> Self"))
         #expect(source.contains("self.open(.chat(.defaultSession))"))
         #expect(source.contains("route: .chat(.recentSession(session.key))"))
-        #expect(source.contains("self.appModel.openChat(sessionKey: route.sessionKey)"))
+        #expect(featureSource.contains("var openChat: @Sendable @MainActor (_ route: CommandCenterTab.ChatRoute) -> Void"))
+        #expect(featureSource.contains("case chatRouteOpened(ChatRouteOpenRequest)"))
+        #expect(featureSource.contains("await client.openChat(request.route)"))
+        #expect(source.contains("await self.recentSessionsStore.send(.chatRouteOpened(.init(route: route))).finish()"))
+        #expect(source.contains("await self.store.send(.chatRouteOpened(.init(route: route))).finish()"))
+        #expect(!source.contains("self.appModel.openChat(sessionKey: route.sessionKey)"))
         #expect(!source.contains("case chat(String?)"))
         #expect(!source.contains(".chat(nil)"))
         #expect(!source.contains(".chat(session.key)"))
