@@ -7295,6 +7295,54 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingStateSource.contains("state.statusLine = trimmedStatus"))
     }
 
+    @Test func `onboarding gateway problem primary action is reducer decision owned`() throws {
+        let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
+        let onboardingFeatureSource = try Self.onboardingFeatureSource()
+        let actionPrefix = try Self.extract(
+            onboardingSource,
+            from: "private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async",
+            to: "        switch decision {")
+
+        #expect(onboardingFeatureSource.contains("@Reducer\nstruct OnboardingGatewayProblemPrimaryActionFeature"))
+        #expect(onboardingFeatureSource.contains("static func title(for problem: GatewayConnectionProblem) -> String?"))
+        #expect(onboardingFeatureSource.contains("GatewayProblemPrimaryAction.title("))
+        #expect(onboardingFeatureSource.contains("retryTitle: \"Retry connection\""))
+        #expect(onboardingFeatureSource.contains("resetTitle: \"Scan QR again\""))
+        #expect(onboardingFeatureSource.contains("var primaryActionDecision: PrimaryActionDecision?"))
+        #expect(onboardingFeatureSource.contains("enum PrimaryActionDecision: Equatable, Sendable"))
+        #expect(onboardingFeatureSource.contains("case resetAndScan"))
+        #expect(onboardingFeatureSource.contains("case trustRotatedCertificate(GatewayConnectionProblem)"))
+        #expect(onboardingFeatureSource.contains("case openProtocolMismatchHelp(GatewayConnectionProblem)"))
+        #expect(onboardingFeatureSource.contains("case retryConnection"))
+        #expect(onboardingFeatureSource.contains("struct PrimaryActionRequest: Equatable, Sendable"))
+        #expect(onboardingFeatureSource.contains("case primaryActionTapped(PrimaryActionRequest)"))
+        #expect(onboardingFeatureSource.contains("case primaryActionDecisionHandled"))
+        #expect(onboardingFeatureSource.contains(
+            "state.primaryActionDecision = Self.primaryActionDecision(for: problem)"))
+        #expect(onboardingFeatureSource.contains("state.primaryActionDecision = nil"))
+        #expect(onboardingFeatureSource.contains("if problem.suggestsOnboardingReset"))
+        #expect(onboardingFeatureSource.contains("if problem.canTrustRotatedCertificate"))
+        #expect(onboardingFeatureSource.contains("if problem.kind == .protocolMismatch"))
+        #expect(onboardingFeatureSource.contains("if problem.retryable"))
+        #expect(onboardingSource.contains("@State private var gatewayProblemPrimaryActionStore: StoreOf<"
+            + "OnboardingGatewayProblemPrimaryActionFeature>"))
+        #expect(onboardingSource.contains(
+            "gatewayProblemPrimaryActionStore: StoreOf<OnboardingGatewayProblemPrimaryActionFeature>? = nil"))
+        #expect(onboardingSource.contains(
+            "gatewayProblemPrimaryActionStoreFactory: () -> StoreOf<OnboardingGatewayProblemPrimaryActionFeature>"))
+        #expect(onboardingSource.contains("OnboardingGatewayProblemPrimaryActionFeature()"))
+        #expect(onboardingSource.contains("OnboardingGatewayProblemPrimaryActionFeature.title(for: problem)"))
+        #expect(actionPrefix.contains(".send(.primaryActionTapped(.init(problem: problem)))"))
+        #expect(actionPrefix.contains(
+            "guard let decision = self.gatewayProblemPrimaryActionStore.primaryActionDecision else { return }"))
+        #expect(actionPrefix.contains(".send(.primaryActionDecisionHandled)"))
+        #expect(!onboardingSource.contains("GatewayProblemPrimaryAction.title("))
+        #expect(!actionPrefix.contains("problem.suggestsOnboardingReset"))
+        #expect(!actionPrefix.contains("problem.canTrustRotatedCertificate"))
+        #expect(!actionPrefix.contains("problem.kind == .protocolMismatch"))
+        #expect(!actionPrefix.contains("problem.retryable"))
+    }
+
     @Test func `onboarding problem reset is reducer effect owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingStateSource = try String(contentsOf: Self.onboardingStateStoreSourceURL(), encoding: .utf8)
@@ -7302,8 +7350,8 @@ struct RootTabsSourceGuardTests {
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let resetFunction = try Self.extract(
             onboardingSource,
-            from: "private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async",
-            to: "if problem.canTrustRotatedCertificate")
+            from: "case .resetAndScan:",
+            to: "case let .trustRotatedCertificate")
         let onboardingStateStoreDeclaration = try Self.extract(
             onboardingSource,
             from: "@State private var onboardingStateStore",
@@ -9058,7 +9106,7 @@ struct RootTabsSourceGuardTests {
     }
 
     private static func onboardingStateAndStatusSource() throws -> String {
-        try Self.onboardingFeatureSource()
+        try onboardingFeatureSource()
     }
 
     private static func onboardingCredentialsFeatureSourceURL() -> URL {
