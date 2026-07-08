@@ -55,14 +55,6 @@ struct IPadSkillWorkshopFeature {
                 .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
         }
 
-        var shouldEnableAgentScopeMenu: Bool {
-            !self.agentScopeOptions.isEmpty
-        }
-
-        var agentScopeMenuOptions: [IPadSkillWorkshopAgentScopeOption] {
-            [IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent")] + self.agentScopeOptions
-        }
-
         var agentScopeLabel: String {
             let selected = Self.normalizedScopeID(self.selectedAgentScopeID.value)
             guard !selected.isEmpty else { return self.defaultAgentScopeLabel }
@@ -79,6 +71,14 @@ struct IPadSkillWorkshopFeature {
             }
             let activeName = Self.normalizedScopeID(self.activeAgentName.value)
             return activeName.isEmpty ? "Default agent" : activeName
+        }
+
+        var agentScopeMenuPresentation: IPadSkillWorkshopAgentScopeMenuPresentation {
+            let options = self.agentScopeOptions
+            return .init(
+                selectedLabel: self.agentScopeLabel,
+                options: [IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent")] + options,
+                isEnabled: !options.isEmpty)
         }
 
         static func normalizedScopeID(_ value: String?) -> String {
@@ -888,19 +888,20 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private var agentScopeMenu: some View {
-        HStack(spacing: 8) {
+        let presentation = self.store.agentScopeMenuPresentation
+        return HStack(spacing: 8) {
             Text("Agent")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Menu {
-                ForEach(self.store.agentScopeMenuOptions, id: \.id) { option in
+                ForEach(presentation.options, id: \.id) { option in
                     Button(option.title) {
                         self.store.send(.agentScopeChanged(.init(agentID: .init(value: option.id))))
                     }
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text(self.store.agentScopeLabel)
+                    Text(presentation.selectedLabel)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
                     Image(systemName: "chevron.up.chevron.down")
@@ -911,7 +912,7 @@ struct IPadSkillWorkshopScreen: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .tint(self.neutralControlTint)
-            .disabled(!self.store.shouldEnableAgentScopeMenu)
+            .disabled(!presentation.isEnabled)
             .accessibilityLabel("Skill Workshop agent scope")
         }
     }
