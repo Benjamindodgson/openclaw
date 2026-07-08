@@ -353,6 +353,12 @@ struct IPadWorkboardCompactEmptyStatePresentation: Equatable, Sendable {
     let value: String?
 }
 
+struct IPadWorkboardCompactCardsPanelPresentation: Equatable, Sendable {
+    let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
+    let emptyStatePresentation: IPadWorkboardCompactEmptyStatePresentation
+    let rowItemPresentations: [IPadWorkboardQueueRowItemPresentation]
+}
+
 struct IPadWorkboardCompactWriteUnavailablePresentation: Equatable, Sendable {
     let message: String
 }
@@ -1471,6 +1477,15 @@ extension IPadWorkboardFeature.State {
             showsWriteControls: gatewayAccess.canWrite,
             unavailablePresentation: .init(message: Self
                 .compactWriteUnavailableMessage(canRead: gatewayAccess.canRead)))
+    }
+
+    func compactCardsPanelPresentation(
+        gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCompactCardsPanelPresentation
+    {
+        .init(
+            queueSummaryPresentation: self.queueSummaryPresentation,
+            emptyStatePresentation: self.compactEmptyStatePresentation(gatewayAccess: gatewayAccess),
+            rowItemPresentations: self.queueRowItemPresentations)
     }
 
     func cardDetailActionControlsPresentation(
