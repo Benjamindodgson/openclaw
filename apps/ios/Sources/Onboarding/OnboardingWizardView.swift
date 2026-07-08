@@ -1022,12 +1022,8 @@ extension OnboardingWizardView {
             tls: .init(value: initialConnection.tls),
             lastMode: OnboardingStateStore.lastMode())))
 
-        let trimmedInstanceId = self.instanceId.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedInstanceId.isEmpty {
-            self.credentialsStore.send(.credentialsLoaded(.init(
-                token: .init(value: GatewaySettingsStore.loadGatewayToken(instanceId: trimmedInstanceId) ?? ""),
-                password: .init(value: GatewaySettingsStore.loadGatewayPassword(instanceId: trimmedInstanceId) ?? ""))))
-        }
+        self.credentialsStore.send(.credentialsLoadRequested(.init(
+            instanceId: .init(value: self.instanceId))))
 
         let hasSavedGateway = GatewaySettingsStore.loadLastGatewayConnection() != nil
         if !hasSavedGateway, !self.credentialsStore.hasGatewayToken, !self.credentialsStore.hasGatewayPassword {

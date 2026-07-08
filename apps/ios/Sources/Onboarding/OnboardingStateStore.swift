@@ -97,6 +97,11 @@ struct OnboardingGatewayToken: Equatable, Sendable { var value: String }
 
 struct OnboardingGatewayPassword: Equatable, Sendable { var value: String }
 
+struct OnboardingGatewayStoredCredentials: Equatable, Sendable {
+    var token: String
+    var password: String
+}
+
 struct OnboardingGatewayCredentialValue: Equatable, Sendable {
     var value: String
 
@@ -661,6 +666,8 @@ extension DependencyValues {
 }
 
 struct OnboardingGatewayCredentialsPersistenceClient {
+    var loadCredentials: @Sendable (_ instanceId: OnboardingGatewayCurrentInstanceID)
+        -> OnboardingGatewayStoredCredentials
     var saveGatewayPassword: @MainActor @Sendable (
         _ value: OnboardingGatewayCredentialValue,
         _ instanceId: OnboardingGatewayCurrentInstanceID)
@@ -673,6 +680,14 @@ struct OnboardingGatewayCredentialsPersistenceClient {
 
 extension OnboardingGatewayCredentialsPersistenceClient: DependencyKey {
     static let liveValue = OnboardingGatewayCredentialsPersistenceClient(
+        loadCredentials: { instanceId in
+            guard let instanceId = instanceId.trimmedValue else {
+                return .init(token: "", password: "")
+            }
+            return OnboardingGatewayStoredCredentials(
+                token: GatewaySettingsStore.loadGatewayToken(instanceId: instanceId) ?? "",
+                password: GatewaySettingsStore.loadGatewayPassword(instanceId: instanceId) ?? "")
+        },
         saveGatewayPassword: { value, instanceId in
             guard let instanceId = instanceId.trimmedValue else { return }
             GatewaySettingsStore.saveGatewayPassword(value.value, instanceId: instanceId)
@@ -683,6 +698,7 @@ extension OnboardingGatewayCredentialsPersistenceClient: DependencyKey {
         })
 
     static let testValue = OnboardingGatewayCredentialsPersistenceClient(
+        loadCredentials: { _ in .init(token: "", password: "") },
         saveGatewayPassword: { _, _ in },
         saveGatewayToken: { _, _ in })
 }
@@ -733,6 +749,10 @@ struct OnboardingCredentialsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct CredentialsLoadRequest: Equatable, Sendable {
+            var instanceId: OnboardingGatewayCurrentInstanceID
+        }
+
         struct LoadedCredentials: Equatable, Sendable {
             var token: OnboardingGatewayToken
             var password: OnboardingGatewayPassword
@@ -751,6 +771,7 @@ struct OnboardingCredentialsFeature {
 
         struct SetupLinkApplication: Equatable, Sendable { var link: GatewayConnectDeepLink }
 
+        case credentialsLoadRequested(CredentialsLoadRequest)
         case credentialsLoaded(LoadedCredentials)
         case gatewayPasswordChanged(GatewayPasswordChange)
         case gatewayPasswordPersistenceRequested(ManualCredentialPersistenceRequest)
@@ -776,6 +797,13 @@ struct OnboardingCredentialsFeature {
                 ?? dependencySetupAuthPersistenceClient
 
             switch action {
+            case let .credentialsLoadRequested(request):
+                guard request.instanceId.trimmedValue != nil else { return .none }
+                let credentials = credentialsPersistenceClient.loadCredentials(request.instanceId)
+                state.gatewayTokenState = .init(value: credentials.token)
+                state.gatewayPasswordState = .init(value: credentials.password)
+                return .none
+
             case let .credentialsLoaded(credentials):
                 state.gatewayTokenState = credentials.token
                 state.gatewayPasswordState = credentials.password
