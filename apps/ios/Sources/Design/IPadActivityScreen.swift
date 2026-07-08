@@ -38,6 +38,7 @@ enum IPadActivitySessionsLoadingPhase: Equatable, Sendable {
 
 struct IPadActivitySceneActive: Equatable, Sendable { var value: Bool }
 struct IPadActivitySessionsAvailable: Equatable, Sendable { var value: Bool }
+struct IPadActivitySessionsMode: Equatable, Sendable { var value: String }
 struct IPadActivitySessionReferenceKey: Equatable, Sendable { var value: String }
 struct IPadActivitySessionEntries: Equatable, Sendable {
     var entries: [OpenClawChatSessionEntry] = []
@@ -81,6 +82,20 @@ struct IPadActivitySessionsFeature {
                     .prefix(8))
         }
 
+        func refreshTaskID(
+            sessionsMode: IPadActivitySessionsMode,
+            currentSession: IPadActivitySessionReferenceKey,
+            defaultSession: IPadActivitySessionReferenceKey,
+            sceneActivity: IPadActivitySceneActive) -> String
+        {
+            [
+                sessionsMode.value,
+                currentSession.value,
+                defaultSession.value,
+                sceneActivity.value ? "active" : "inactive",
+            ].joined(separator: ":")
+        }
+
         func emptySessionPresentation(
             sessionsAvailability: IPadActivitySessionsAvailable) -> IPadActivityEmptySessionPresentation
         {
@@ -103,7 +118,11 @@ struct IPadActivitySessionsFeature {
         }
 
         func screenPresentation(
-            sessionsAvailability: IPadActivitySessionsAvailable) -> IPadActivityScreenPresentation
+            sessionsAvailability: IPadActivitySessionsAvailable,
+            sessionsMode: IPadActivitySessionsMode,
+            currentSession: IPadActivitySessionReferenceKey,
+            defaultSession: IPadActivitySessionReferenceKey,
+            sceneActivity: IPadActivitySceneActive) -> IPadActivityScreenPresentation
         {
             let sessionRows = self.visibleSessions.map {
                 CommandCenterTab.sessionWorkItem(
@@ -112,6 +131,11 @@ struct IPadActivitySessionsFeature {
             }
             return .init(
                 gatewayPresentation: self.gatewayPresentation,
+                refreshTaskID: self.refreshTaskID(
+                    sessionsMode: sessionsMode,
+                    currentSession: currentSession,
+                    defaultSession: defaultSession,
+                    sceneActivity: sceneActivity),
                 sessionRows: sessionRows,
                 sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(sessionRows.count)",
                 feedHeaderValue: self.loadingPhase == .inFlight ? "Loading" : nil,
@@ -382,12 +406,7 @@ struct IPadActivityScreen: View {
     }
 
     private var refreshID: String {
-        [
-            self.sessionsMode,
-            self.appModel.chatSessionKey,
-            self.appModel.defaultChatSessionKey,
-            self.scenePhase == .active ? "active" : "inactive",
-        ].joined(separator: ":")
+        self.screenPresentation.refreshTaskID
     }
 
     private var currentGatewayPresentation: IPadActivityGatewayPresentationState {
@@ -400,7 +419,12 @@ struct IPadActivityScreen: View {
     }
 
     private var screenPresentation: IPadActivityScreenPresentation {
-        self.store.state.screenPresentation(sessionsAvailability: .init(value: self.sessionsAvailable))
+        self.store.state.screenPresentation(
+            sessionsAvailability: .init(value: self.sessionsAvailable),
+            sessionsMode: .init(value: self.sessionsMode),
+            currentSession: .init(value: self.appModel.chatSessionKey),
+            defaultSession: .init(value: self.appModel.defaultChatSessionKey),
+            sceneActivity: .init(value: self.scenePhase == .active))
     }
 
     private func syncGatewayPresentation() {
@@ -444,6 +468,7 @@ struct IPadActivityGatewayAgentCount: Equatable, Sendable { var value: Int }
 
 struct IPadActivityScreenPresentation: Equatable, Sendable {
     let gatewayPresentation: IPadActivityGatewayPresentationState
+    let refreshTaskID: String
     let sessionRows: [CommandCenterTab.WorkItem]
     let sessionMetricValue: String
     let feedHeaderValue: String?
