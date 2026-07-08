@@ -103,6 +103,26 @@ struct IPadActivitySessionsFeature {
                 actionTitle: "Refresh")
         }
 
+        func metricPresentations(sessionMetricValue: String) -> [IPadActivityMetricPresentation] {
+            [
+                .init(
+                    icon: self.gatewayPresentation.metricIcon,
+                    title: "Gateway",
+                    value: self.gatewayPresentation.gatewayStateText,
+                    color: self.gatewayPresentation.gatewayStateColor),
+                .init(
+                    icon: "person.2.fill",
+                    title: "Agents",
+                    value: self.gatewayPresentation.agentCountText,
+                    color: OpenClawBrand.accent),
+                .init(
+                    icon: "bubble.left.and.text.bubble.right",
+                    title: "Sessions",
+                    value: sessionMetricValue,
+                    color: OpenClawBrand.accentHot),
+            ]
+        }
+
         func refreshTaskID(
             sessionsMode: IPadActivitySessionsMode,
             currentSession: IPadActivitySessionReferenceKey,
@@ -191,6 +211,7 @@ struct IPadActivitySessionsFeature {
                     for: $0,
                     currentSessionKey: self.currentSession.value)
             }
+            let sessionMetricValue = self.loadingPhase == .inFlight ? "..." : "\(sessionRows.count)"
             return .init(
                 screenChromePresentation: self.screenChromePresentation,
                 gatewayPresentation: self.gatewayPresentation,
@@ -200,7 +221,7 @@ struct IPadActivitySessionsFeature {
                     defaultSession: defaultSession,
                     sceneActivity: sceneActivity),
                 sessionRows: sessionRows,
-                sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(sessionRows.count)",
+                metricPresentations: self.metricPresentations(sessionMetricValue: sessionMetricValue),
                 feedHeaderPresentation: self.feedHeaderPresentation,
                 showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
                 loadingSessionsPresentation: self.loadingSessionsPresentation,
@@ -356,24 +377,13 @@ struct IPadActivityScreen: View {
     }
 
     private var metrics: [ProMetric] {
-        let gatewayPresentation = self.screenPresentation.gatewayPresentation
-        return [
+        self.screenPresentation.metricPresentations.map {
             ProMetric(
-                icon: gatewayPresentation.metricIcon,
-                title: "Gateway",
-                value: gatewayPresentation.gatewayStateText,
-                color: gatewayPresentation.gatewayStateColor),
-            ProMetric(
-                icon: "person.2.fill",
-                title: "Agents",
-                value: gatewayPresentation.agentCountText,
-                color: OpenClawBrand.accent),
-            ProMetric(
-                icon: "bubble.left.and.text.bubble.right",
-                title: "Sessions",
-                value: self.screenPresentation.sessionMetricValue,
-                color: OpenClawBrand.accentHot),
-        ]
+                icon: $0.icon,
+                title: $0.title,
+                value: $0.value,
+                color: $0.color)
+        }
     }
 
     private var activityFeed: some View {
@@ -549,7 +559,7 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
     let gatewayPresentation: IPadActivityGatewayPresentationState
     let refreshTaskID: String
     let sessionRows: [CommandCenterTab.WorkItem]
-    let sessionMetricValue: String
+    let metricPresentations: [IPadActivityMetricPresentation]
     let feedHeaderPresentation: IPadActivityFeedHeaderPresentation
     let showsLoadingSessionsPlaceholder: Bool
     let loadingSessionsPresentation: IPadActivitySessionStatusPresentation
@@ -568,6 +578,13 @@ struct IPadActivityFeedHeaderPresentation: Equatable, Sendable {
     let title: String
     let value: String?
     let actionTitle: String
+}
+
+struct IPadActivityMetricPresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
 }
 
 struct IPadActivityEmptySessionPresentation: Equatable, Sendable {

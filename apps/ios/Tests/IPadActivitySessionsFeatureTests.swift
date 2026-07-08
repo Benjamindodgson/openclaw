@@ -92,7 +92,8 @@ struct IPadActivitySessionsFeatureTests {
             $0.loadErrorText = nil
         }
         let loadingPresentation = Self.screenPresentation(store.state)
-        #expect(loadingPresentation.sessionMetricValue == "...")
+        #expect(loadingPresentation.metricPresentations.map(\.title) == ["Gateway", "Agents", "Sessions"])
+        #expect(loadingPresentation.metricPresentations.last?.value == "...")
         #expect(loadingPresentation.feedHeaderPresentation.value == "Loading")
         #expect(loadingPresentation.showsLoadingSessionsPlaceholder)
         #expect(loadingPresentation.loadingSessionsPresentation.title == "Loading sessions")
@@ -106,7 +107,7 @@ struct IPadActivitySessionsFeatureTests {
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
         let loadedPresentation = Self.screenPresentation(store.state)
-        #expect(loadedPresentation.sessionMetricValue == "8")
+        #expect(loadedPresentation.metricPresentations.last?.value == "8")
         #expect(loadedPresentation.sessionRows.map(\.id) == [
             "chat-session-chat-9",
             "chat-session-chat-8",
@@ -160,7 +161,7 @@ struct IPadActivitySessionsFeatureTests {
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
         let presentation = Self.screenPresentation(store.state)
-        #expect(presentation.sessionMetricValue == "0")
+        #expect(presentation.metricPresentations.last?.value == "0")
         #expect(presentation.unavailableSessionsPresentation?.title == "Sessions unavailable")
         #expect(presentation.unavailableSessionsPresentation?.detail == "Try again after the gateway reconnects.")
         #expect(presentation.unavailableSessionsPresentation?.value == "error")
@@ -185,6 +186,7 @@ struct IPadActivitySessionsFeatureTests {
         #expect(
             Self.screenPresentation(store.state).gatewayPresentation
                 == presentation)
+        #expect(Self.screenPresentation(store.state).metricPresentations.first?.value == "Online")
     }
 
     @Test func `gateway presentation owns metric and row fallbacks`() {
