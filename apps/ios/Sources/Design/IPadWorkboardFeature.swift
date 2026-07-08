@@ -602,8 +602,8 @@ struct IPadWorkboardFeature {
             Self.nextMoveActionPresentation(for: card, statuses: self.statusValues)
         }
 
-        func kanbanLanePresentation(status: String, cards: [IPadWorkboardCard]) -> IPadWorkboardKanbanLanePresentation {
-            Self.kanbanLanePresentation(status: status, cardCount: cards.count)
+        func kanbanLanePresentation(status: String) -> IPadWorkboardKanbanLanePresentation {
+            Self.kanbanLanePresentation(status: status, cardCount: self.cards(forKanbanStatus: status).count)
         }
 
         var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
