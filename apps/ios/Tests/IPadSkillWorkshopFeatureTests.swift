@@ -221,10 +221,12 @@ struct IPadSkillWorkshopFeatureTests {
             hasOperatorAdminScope: true)
         let applyButton = IPadSkillWorkshopProposalActionButtonPresentation(
             title: "Apply",
-            iconSystemName: "checkmark.circle")
+            iconSystemName: "checkmark.circle",
+            accessibilityLabel: "Apply Proposal")
         let rejectButton = IPadSkillWorkshopProposalActionButtonPresentation(
             title: "Reject",
-            iconSystemName: "xmark.circle")
+            iconSystemName: "xmark.circle",
+            accessibilityLabel: "Reject Proposal")
 
         #expect(state.shouldEnableProposalActionControls(gatewayAccess: writableAdmin))
         #expect(state.proposalActionControlsPresentation(gatewayAccess: writableAdmin) == .init(
@@ -286,12 +288,14 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.proposalInspectionControlsPresentation == .init(
             title: "Inspect",
             iconSystemName: "doc.text.magnifyingglass",
+            accessibilityLabel: "Inspect Proposal",
             canInspect: true))
         #expect(state.screenPresentation(
             gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
             sceneIsActive: true).proposalInspectionControlsPresentation == .init(
             title: "Inspect",
             iconSystemName: "doc.text.magnifyingglass",
+            accessibilityLabel: "Inspect Proposal",
             canInspect: true))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,
@@ -305,12 +309,14 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.proposalInspectionControlsPresentation == .init(
             title: "Inspect",
             iconSystemName: "doc.text.magnifyingglass",
+            accessibilityLabel: "Inspect Proposal",
             canInspect: false))
         #expect(state.screenPresentation(
             gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
             sceneIsActive: true).proposalInspectionControlsPresentation == .init(
             title: "Inspect",
             iconSystemName: "doc.text.magnifyingglass",
+            accessibilityLabel: "Inspect Proposal",
             canInspect: false))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,

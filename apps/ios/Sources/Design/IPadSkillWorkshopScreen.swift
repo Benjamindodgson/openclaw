@@ -153,10 +153,12 @@ struct IPadSkillWorkshopFeature {
             return .init(
                 applyButton: .init(
                     title: "Apply",
-                    iconSystemName: "checkmark.circle"),
+                    iconSystemName: "checkmark.circle",
+                    accessibilityLabel: "Apply Proposal"),
                 rejectButton: .init(
                     title: "Reject",
-                    iconSystemName: "xmark.circle"),
+                    iconSystemName: "xmark.circle",
+                    accessibilityLabel: "Reject Proposal"),
                 canApplyMutations: canApplyMutations,
                 canRunActions: canApplyMutations && self.busyAction == nil,
                 adminScopeNotice: canApplyMutations ? nil : .init(
@@ -420,6 +422,7 @@ struct IPadSkillWorkshopFeature {
             .init(
                 title: "Inspect",
                 iconSystemName: "doc.text.magnifyingglass",
+                accessibilityLabel: "Inspect Proposal",
                 canInspect: self.inspectingProposalID == nil)
         }
 
@@ -1061,10 +1064,13 @@ struct IPadSkillWorkshopScreen: View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
                 let boardPresentation = self.store.proposalBoardPresentation
+                let actionControlsPresentation = self.proposalActionControlsPresentation
+                let inspectionControlsPresentation = self.proposalInspectionControlsPresentation
                 ForEach(boardPresentation.lanes) { lane in
                     IPadSkillProposalKanbanColumn(
                         lane: lane,
-                        canRunProposalActions: self.proposalActionControlsPresentation.canRunActions,
+                        actionControlsPresentation: actionControlsPresentation,
+                        inspectionControlsPresentation: inspectionControlsPresentation,
                         select: { presentation in
                             self.selectProposal(
                                 presentation.proposal,
@@ -1418,7 +1424,8 @@ struct IPadSkillWorkshopScreen: View {
 
 struct IPadSkillProposalKanbanColumn: View {
     let lane: IPadSkillWorkshopProposalLanePresentation
-    let canRunProposalActions: Bool
+    let actionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
+    let inspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
     let select: (IPadSkillWorkshopProposalCardPresentation) -> Void
     let inspect: (IPadSkillWorkshopProposalCardPresentation) -> Void
     let apply: (IPadSkillWorkshopProposalCardPresentation) -> Void
@@ -1449,7 +1456,8 @@ struct IPadSkillProposalKanbanColumn: View {
                         }
                         IPadSkillProposalKanbanCard(
                             presentation: presentation,
-                            canRunProposalActions: self.canRunProposalActions,
+                            actionControlsPresentation: self.actionControlsPresentation,
+                            inspectionControlsPresentation: self.inspectionControlsPresentation,
                             select: {
                                 self.select(presentation)
                             },
@@ -1471,7 +1479,8 @@ struct IPadSkillProposalKanbanColumn: View {
 
 private struct IPadSkillProposalKanbanCard: View {
     let presentation: IPadSkillWorkshopProposalCardPresentation
-    let canRunProposalActions: Bool
+    let actionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation
+    let inspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation
     let select: () -> Void
     let inspect: () -> Void
     let apply: () -> Void
@@ -1515,26 +1524,26 @@ private struct IPadSkillProposalKanbanCard: View {
             HStack(spacing: 8) {
                 if self.presentation.showsProposalActions {
                     Button(action: self.apply) {
-                        Image(systemName: "checkmark.circle")
+                        Image(systemName: self.actionControlsPresentation.applyButton.iconSystemName)
                     }
-                    .accessibilityLabel("Apply Proposal")
+                    .accessibilityLabel(self.actionControlsPresentation.applyButton.accessibilityLabel)
                     .buttonStyle(.bordered)
                     .controlSize(.mini)
-                    .disabled(!self.canRunProposalActions)
+                    .disabled(!self.actionControlsPresentation.canRunActions)
 
                     Button(role: .destructive, action: self.reject) {
-                        Image(systemName: "xmark.circle")
+                        Image(systemName: self.actionControlsPresentation.rejectButton.iconSystemName)
                     }
-                    .accessibilityLabel("Reject Proposal")
+                    .accessibilityLabel(self.actionControlsPresentation.rejectButton.accessibilityLabel)
                     .buttonStyle(.bordered)
                     .controlSize(.mini)
-                    .disabled(!self.canRunProposalActions)
+                    .disabled(!self.actionControlsPresentation.canRunActions)
                 }
 
                 Button(action: self.inspect) {
-                    Image(systemName: "doc.text.magnifyingglass")
+                    Image(systemName: self.inspectionControlsPresentation.iconSystemName)
                 }
-                .accessibilityLabel("Inspect Proposal")
+                .accessibilityLabel(self.inspectionControlsPresentation.accessibilityLabel)
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
                 .disabled(self.presentation.isInspecting)
@@ -1546,12 +1555,12 @@ private struct IPadSkillProposalKanbanCard: View {
             in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
         .contextMenu {
-            Button("Inspect", action: self.inspect)
+            Button(self.inspectionControlsPresentation.title, action: self.inspect)
             if self.presentation.showsProposalActions {
-                Button("Apply", action: self.apply)
-                    .disabled(!self.canRunProposalActions)
-                Button("Reject", role: .destructive, action: self.reject)
-                    .disabled(!self.canRunProposalActions)
+                Button(self.actionControlsPresentation.applyButton.title, action: self.apply)
+                    .disabled(!self.actionControlsPresentation.canRunActions)
+                Button(self.actionControlsPresentation.rejectButton.title, role: .destructive, action: self.reject)
+                    .disabled(!self.actionControlsPresentation.canRunActions)
             }
         }
     }

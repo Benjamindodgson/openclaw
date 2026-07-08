@@ -558,6 +558,23 @@ private struct IPadSkillWorkshopStatesPreview: View {
 private struct IPadSkillWorkshopKanbanPreview: View {
     private let lanes = IPadSkillWorkshopPreviewFixtures.kanbanStatuses
     private let proposals = IPadSkillWorkshopPreviewFixtures.proposals
+    private let actionControlsPresentation = IPadSkillWorkshopProposalActionControlsPresentation(
+        applyButton: .init(
+            title: "Apply",
+            iconSystemName: "checkmark.circle",
+            accessibilityLabel: "Apply Proposal"),
+        rejectButton: .init(
+            title: "Reject",
+            iconSystemName: "xmark.circle",
+            accessibilityLabel: "Reject Proposal"),
+        canApplyMutations: true,
+        canRunActions: true,
+        adminScopeNotice: nil)
+    private let inspectionControlsPresentation = IPadSkillWorkshopProposalInspectionControlsPresentation(
+        title: "Inspect",
+        iconSystemName: "doc.text.magnifyingglass",
+        accessibilityLabel: "Inspect Proposal",
+        canInspect: true)
 
     var body: some View {
         ZStack {
@@ -588,7 +605,8 @@ private struct IPadSkillWorkshopKanbanPreview: View {
                                 })
                             IPadSkillProposalKanbanColumn(
                                 lane: lane,
-                                canRunProposalActions: true,
+                                actionControlsPresentation: self.actionControlsPresentation,
+                                inspectionControlsPresentation: self.inspectionControlsPresentation,
                                 select: { _ in },
                                 inspect: { _ in },
                                 apply: { _ in },
