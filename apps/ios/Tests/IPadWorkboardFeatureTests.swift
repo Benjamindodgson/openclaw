@@ -795,7 +795,7 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: true)))) {
+        await store.send(.dispatchRequested(.init(gatewayAccess: .init(canRead: true, canWrite: true)))) {
             $0.dispatchPhase = .inFlight
             $0.errorText = nil
             $0.dispatchSummaryText = nil
