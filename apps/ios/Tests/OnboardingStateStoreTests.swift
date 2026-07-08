@@ -495,6 +495,7 @@ import Testing
             $0.issue = .pairingRequired(requestId: "pair-1")
             $0.pairingRequestIdState = .init(value: "pair-1")
             $0.authStepPresentation = .init(shouldShow: true)
+            $0.authStepNavigationRequest = .init(stepAction: .stepChanged(.init(step: .auth)))
             $0.statusLineState = .init(value: "Pairing required")
         }
 
@@ -519,6 +520,7 @@ import Testing
             $0.connectMessageState = .init(value: "Retrying after approval…")
             $0.issue = .none
             $0.authStepPresentation = .init(shouldShow: false)
+            $0.authStepNavigationRequest = nil
             $0.statusLineState = .init(value: "Retrying after approval…")
         }
 
@@ -532,6 +534,7 @@ import Testing
             $0.connectMessageState = .init(value: "Unauthorized")
             $0.issue = .unauthorized
             $0.authStepPresentation = .init(shouldShow: true)
+            $0.authStepNavigationRequest = .init(stepAction: .stepChanged(.init(step: .auth)))
             $0.statusLineState = .init(value: "Unauthorized")
         }
 
@@ -571,7 +574,12 @@ import Testing
             $0.issue = .pairingRequired(requestId: "pair-2")
             $0.pairingRequestIdState = .init(value: "pair-2")
             $0.authStepPresentation = .init(shouldShow: true)
+            $0.authStepNavigationRequest = .init(stepAction: .stepChanged(.init(step: .auth)))
             $0.statusLineState = .init(value: "Approve this device")
+        }
+
+        await store.send(.authStepNavigationHandled) {
+            $0.authStepNavigationRequest = nil
         }
 
         await store.send(.pairingResumeStarted) {
@@ -590,6 +598,7 @@ import Testing
             $0.issue = .pairingRequired(requestId: "fallback-1")
             $0.pairingRequestIdState = .init(value: "fallback-1")
             $0.authStepPresentation = .init(shouldShow: true)
+            $0.authStepNavigationRequest = .init(stepAction: .stepChanged(.init(step: .auth)))
             $0.statusLineState = .init(value: "pairing required (requestId: fallback-1)")
         }
     }
@@ -615,6 +624,7 @@ import Testing
             $0.issue = .pairingRequired(requestId: "pair-1")
             $0.pairingRequestIdState = .init(value: "pair-1")
             $0.authStepPresentation = .init(shouldShow: true)
+            $0.authStepNavigationRequest = .init(stepAction: .stepChanged(.init(step: .auth)))
             $0.statusLineState = .init(value: "Pairing required")
         }
 
