@@ -467,22 +467,23 @@ struct IPadWorkboardScreen: View {
     private var compactCardsPanel: some View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
+                let presentation = self.compactCardsPanelPresentation
                 ProPanelHeader(
-                    title: self.queueSummaryPresentation.title,
-                    value: self.queueSummaryPresentation.value,
+                    title: presentation.queueSummaryPresentation.title,
+                    value: presentation.queueSummaryPresentation.value,
                     actionTitle: nil,
                     action: nil)
-                if self.store.queueRowItemPresentations.isEmpty {
+                if presentation.rowItemPresentations.isEmpty {
                     ProStatusRow(
-                        icon: self.compactEmptyStatePresentation.icon,
-                        title: self.compactEmptyStatePresentation.title,
-                        detail: self.compactEmptyStatePresentation.detail,
-                        value: self.compactEmptyStatePresentation.value,
+                        icon: presentation.emptyStatePresentation.icon,
+                        title: presentation.emptyStatePresentation.title,
+                        detail: presentation.emptyStatePresentation.detail,
+                        value: presentation.emptyStatePresentation.value,
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)
                 } else {
-                    ForEach(Array(self.store.queueRowItemPresentations.enumerated()), id: \.element.id) { index, item in
+                    ForEach(Array(presentation.rowItemPresentations.enumerated()), id: \.element.id) { index, item in
                         if index > 0 {
                             Divider().padding(.leading, 58)
                         }
@@ -586,8 +587,8 @@ struct IPadWorkboardScreen: View {
         self.store.state.dispatchControlPresentation(gatewayAccess: self.gatewayAccess)
     }
 
-    private var compactEmptyStatePresentation: IPadWorkboardCompactEmptyStatePresentation {
-        self.store.state.compactEmptyStatePresentation(gatewayAccess: self.gatewayAccess)
+    private var compactCardsPanelPresentation: IPadWorkboardCompactCardsPanelPresentation {
+        self.store.state.compactCardsPanelPresentation(gatewayAccess: self.gatewayAccess)
     }
 
     private var compactWriteControlsPresentation: IPadWorkboardCompactWriteControlsPresentation {

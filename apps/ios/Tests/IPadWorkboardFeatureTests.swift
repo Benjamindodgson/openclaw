@@ -462,6 +462,28 @@ struct IPadWorkboardFeatureTests {
             rowPresentation: state.queueRowPresentation(for: matchingCard)))
     }
 
+    @Test func `workboard compact cards panel presentation is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: ["todo", "running"].map { .init(value: $0) })
+        let card = Self.card(id: "card-1", status: "todo", position: 10)
+        state.cardEntries = .init(values: [card])
+
+        #expect(state.compactCardsPanelPresentation(gatewayAccess: .init(canRead: true, canWrite: true)) == .init(
+            queueSummaryPresentation: state.queueSummaryPresentation,
+            emptyStatePresentation: state.compactEmptyStatePresentation(gatewayAccess: .init(
+                canRead: true,
+                canWrite: true)),
+            rowItemPresentations: state.queueRowItemPresentations))
+
+        state.cardEntries = .init(values: [])
+        let offlinePanel = state.compactCardsPanelPresentation(gatewayAccess: .init(canRead: false, canWrite: false))
+        #expect(offlinePanel.emptyStatePresentation == .init(
+            icon: "wifi.slash",
+            title: "No cards loaded",
+            detail: "Connect from Settings to load workboard cards.",
+            value: nil))
+    }
+
     @Test func `workboard kanban card presentation is reducer owned`() {
         let card = Self.card(id: "card-1", status: "todo", position: 10)
         var state = IPadWorkboardFeature.State()
