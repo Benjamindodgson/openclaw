@@ -444,6 +444,24 @@ struct IPadWorkboardFeatureTests {
             isDisabled: true))
     }
 
+    @Test func `workboard queue row item presentations are reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: ["todo", "running"].map { .init(value: $0) })
+        let matchingCard = Self.card(id: "todo-match", title: "Gateway fix", status: "todo", position: 10)
+        state.cardEntries = .init(values: [
+            matchingCard,
+            Self.card(id: "todo-other", title: "Other", status: "todo", position: 20),
+            Self.card(id: "running-match", title: "Gateway run", status: "running", position: 30),
+        ])
+        state.query = .init(value: "gateway")
+
+        #expect(state.queueRowItemPresentations.map(\.id) == ["todo-match", "running-match"])
+        #expect(state.queueRowItemPresentations.first == .init(
+            id: matchingCard.id,
+            card: matchingCard,
+            rowPresentation: state.queueRowPresentation(for: matchingCard)))
+    }
+
     @Test func `workboard kanban card presentation is reducer owned`() {
         let card = Self.card(id: "card-1", status: "todo", position: 10)
         var state = IPadWorkboardFeature.State()
