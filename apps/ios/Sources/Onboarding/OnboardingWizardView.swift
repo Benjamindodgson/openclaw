@@ -1012,8 +1012,12 @@ extension OnboardingWizardView {
 
     private func navigateBack() {
         guard self.step.canGoBack else { return }
-        self.statusStore.send(.navigationBackStarted)
-        self.stepStore.send(.backButtonTapped)
+        self.applyNavigationBackRequest(OnboardingStatusFeature.navigationBackRequest)
+    }
+
+    private func applyNavigationBackRequest(_ request: OnboardingStatusFeature.NavigationBackRequest) {
+        self.statusStore.send(request.statusAction)
+        self.stepStore.send(request.stepAction)
     }
 
     private func initializeState() {
