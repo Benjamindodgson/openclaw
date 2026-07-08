@@ -424,12 +424,16 @@ struct IPadSkillWorkshopFeatureTests {
 
         #expect(!state.isRefreshInFlight)
         #expect(state.refreshControlPresentation == .init(
+            title: "Refresh",
+            iconSystemName: "arrow.clockwise",
             isDisabled: false,
             showsProgress: false))
 
         state.loadingPhase = .inFlight
         #expect(state.isRefreshInFlight)
         #expect(state.refreshControlPresentation == .init(
+            title: "Refresh",
+            iconSystemName: "arrow.clockwise",
             isDisabled: true,
             showsProgress: true))
     }

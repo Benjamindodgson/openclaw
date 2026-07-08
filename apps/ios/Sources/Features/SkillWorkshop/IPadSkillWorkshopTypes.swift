@@ -202,6 +202,8 @@ struct IPadSkillWorkshopFeedbackPresentation: Equatable, Identifiable, Sendable 
 }
 
 struct IPadSkillWorkshopRefreshControlPresentation: Equatable, Sendable {
+    let title: String
+    let iconSystemName: String
     let isDisabled: Bool
     let showsProgress: Bool
 }
