@@ -7407,7 +7407,8 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("state.statusLineState = start.statusLine"))
         #expect(onboardingStateSource.contains("if start.clearsIssue.value"))
         #expect(onboardingStateSource.contains("state.discoveredGatewayConnectionStatusAction = .connectionStarted(.init("))
-        #expect(onboardingSource.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
+        #expect(onboardingSource.contains("self.statusStore.send(request.statusAction)"))
+        #expect(!onboardingSource.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
         #expect(onboardingStateSource.contains("let connectionID = start.silent.value ? \"retry-auto\" : \"retry\""))
         #expect(onboardingStateSource.contains("state.connectingGatewayIDState = .init(value: connectionID)"))
         #expect(onboardingStateSource.contains("state.connectMessageState = .init(value: \"Retrying…\")"))
@@ -7554,7 +7555,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingFeatureSource.contains("var primaryActionDecision: PrimaryActionDecision?"))
         #expect(onboardingFeatureSource.contains("struct CertificateTrustRequest: Equatable, Sendable"))
         #expect(onboardingFeatureSource.contains("var problem: GatewayConnectionProblem"))
-        #expect(onboardingFeatureSource.contains("var connectionStart: OnboardingStatusFeature.Action.ConnectionStart"))
+        #expect(onboardingFeatureSource.contains("var statusAction: OnboardingStatusFeature.Action"))
         #expect(onboardingFeatureSource.contains("struct ResetAndScanRequest: Equatable, Sendable"))
         #expect(onboardingFeatureSource.contains("var credentialsAction: OnboardingCredentialsFeature.Action"))
         #expect(onboardingFeatureSource.contains("var statusAction: OnboardingStatusFeature.Action"))
@@ -7599,7 +7600,8 @@ struct RootTabsSourceGuardTests {
         #expect(actionPrefix.contains(
             "guard let decision = self.gatewayProblemPrimaryActionStore.primaryActionDecision else { return }"))
         #expect(actionPrefix.contains(".send(.primaryActionDecisionHandled)"))
-        #expect(trustCertificateAction.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
+        #expect(trustCertificateAction.contains("self.statusStore.send(request.statusAction)"))
+        #expect(!trustCertificateAction.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
         #expect(trustCertificateAction.contains(
             "trustRotatedGatewayCertificate(from: request.problem)"))
         #expect(!onboardingSource.contains("GatewayProblemPrimaryAction.title("))

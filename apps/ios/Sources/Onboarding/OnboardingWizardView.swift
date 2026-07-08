@@ -1121,7 +1121,7 @@ extension OnboardingWizardView {
             return
 
         case let .trustRotatedCertificate(request):
-            self.statusStore.send(.connectionStarted(request.connectionStart))
+            self.statusStore.send(request.statusAction)
             defer { self.statusStore.send(.connectionFinished) }
             _ = await self.gatewayController.trustRotatedGatewayCertificate(from: request.problem)
             return
