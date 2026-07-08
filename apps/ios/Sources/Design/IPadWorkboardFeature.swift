@@ -236,6 +236,12 @@ struct IPadWorkboardCardDetailActionControlsPresentation: Equatable, Sendable {
     let isMutationDisabled: Bool
 }
 
+struct IPadWorkboardCardDetailSheetPresentation: Equatable, Sendable {
+    let cardPresentation: IPadWorkboardCardPresentation
+    let moveActions: [IPadWorkboardMoveActionPresentation]
+    let actionControlsPresentation: IPadWorkboardCardDetailActionControlsPresentation
+}
+
 struct IPadWorkboardMetricPresentation: Equatable, Identifiable, Sendable {
     let id: String
     let iconSystemName: String
@@ -1449,6 +1455,18 @@ extension IPadWorkboardFeature.State {
         Self.cardDetailActionControlsPresentation(
             isBusy: self.busyCardID?.value == card.id,
             canWrite: gatewayAccess.canWrite)
+    }
+
+    func cardDetailSheetPresentation(
+        for card: IPadWorkboardCard,
+        gatewayAccess: IPadWorkboardGatewayAccess) -> IPadWorkboardCardDetailSheetPresentation
+    {
+        .init(
+            cardPresentation: self.cardPresentation(for: card),
+            moveActions: self.moveActionPresentations,
+            actionControlsPresentation: self.cardDetailActionControlsPresentation(
+                for: card,
+                gatewayAccess: gatewayAccess))
     }
 
     func screenPresentation(

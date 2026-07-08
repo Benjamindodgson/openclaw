@@ -60,10 +60,7 @@ struct IPadWorkboardScreen: View {
                 }
             case let .card(card):
                 IPadWorkboardCardDetailSheet(
-                    card: card,
-                    presentation: self.store.state.cardPresentation(for: card),
-                    moveActions: self.store.moveActionPresentations,
-                    actionControlsPresentation: self.store.state.cardDetailActionControlsPresentation(
+                    presentation: self.store.state.cardDetailSheetPresentation(
                         for: card,
                         gatewayAccess: self.gatewayAccess),
                     openSession: { self.open(card) },
@@ -905,10 +902,7 @@ struct IPadWorkboardQueueRow: View {
 
 private struct IPadWorkboardCardDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
-    let card: IPadWorkboardCard
-    let presentation: IPadWorkboardCardPresentation
-    let moveActions: [IPadWorkboardMoveActionPresentation]
-    let actionControlsPresentation: IPadWorkboardCardDetailActionControlsPresentation
+    let presentation: IPadWorkboardCardDetailSheetPresentation
     let openSession: () -> Void
     let move: (String) -> Void
     let archive: () -> Void
@@ -916,35 +910,39 @@ private struct IPadWorkboardCardDetailSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(self.presentation.detailSectionTitle) {
-                    LabeledContent(self.presentation.titleFieldTitle, value: self.presentation.title)
-                    LabeledContent(self.presentation.statusFieldTitle, value: self.presentation.statusLabel)
-                    if let notes = self.presentation.notesText {
+                Section(self.presentation.cardPresentation.detailSectionTitle) {
+                    LabeledContent(
+                        self.presentation.cardPresentation.titleFieldTitle,
+                        value: self.presentation.cardPresentation.title)
+                    LabeledContent(
+                        self.presentation.cardPresentation.statusFieldTitle,
+                        value: self.presentation.cardPresentation.statusLabel)
+                    if let notes = self.presentation.cardPresentation.notesText {
                         Text(notes)
                     }
                 }
 
-                Section(self.presentation.actionsSectionTitle) {
-                    if self.presentation.showsOpenSessionAction {
-                        Button(self.presentation.openSessionActionTitle, action: self.openSession)
+                Section(self.presentation.cardPresentation.actionsSectionTitle) {
+                    if self.presentation.cardPresentation.showsOpenSessionAction {
+                        Button(self.presentation.cardPresentation.openSessionActionTitle, action: self.openSession)
                     }
-                    Menu(self.presentation.moveMenuTitle) {
-                        ForEach(self.moveActions) { action in
+                    Menu(self.presentation.cardPresentation.moveMenuTitle) {
+                        ForEach(self.presentation.moveActions) { action in
                             Button(action.title) {
                                 self.move(action.status)
                             }
                         }
                     }
-                    .disabled(self.actionControlsPresentation.isMutationDisabled)
-                    Button(self.presentation.archiveActionTitle, action: self.archive)
-                        .disabled(self.actionControlsPresentation.isMutationDisabled)
+                    .disabled(self.presentation.actionControlsPresentation.isMutationDisabled)
+                    Button(self.presentation.cardPresentation.archiveActionTitle, action: self.archive)
+                        .disabled(self.presentation.actionControlsPresentation.isMutationDisabled)
                 }
             }
-            .navigationTitle(self.presentation.detailSheetTitle)
+            .navigationTitle(self.presentation.cardPresentation.detailSheetTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(self.presentation.doneActionTitle) {
+                    Button(self.presentation.cardPresentation.doneActionTitle) {
                         self.dismiss()
                     }
                 }
