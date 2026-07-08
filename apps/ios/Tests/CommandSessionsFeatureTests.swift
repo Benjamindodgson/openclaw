@@ -74,6 +74,7 @@ struct CommandSessionsFeatureTests {
         #expect(store.state.visibleSessions.map(\.key) == ["chat-newer", "chat-older"])
         let loadedPresentation = Self.screenPresentation(store.state, available: true)
         #expect(loadedPresentation.headerDetail == "2 sessions")
+        #expect(loadedPresentation.refreshTaskID == "live:chat-newer:main")
         #expect(loadedPresentation.sessionRows.map(\.id) == ["chat-session-chat-newer", "chat-session-chat-older"])
         #expect(loadedPresentation.sessionRows.first?.state == "open")
     }
@@ -126,7 +127,11 @@ struct CommandSessionsFeatureTests {
         _ state: CommandSessionsFeature.State,
         available: Bool = true) -> CommandSessionsScreenPresentation
     {
-        state.screenPresentation(sessionsAvailability: .init(value: available))
+        state.screenPresentation(
+            sessionsAvailability: .init(value: available),
+            sessionsMode: .init(value: "live"),
+            currentSession: state.currentSession,
+            defaultSession: state.defaultSession)
     }
 
     private static func session(key: String, updatedAt: Double = 1) -> OpenClawChatSessionEntry {

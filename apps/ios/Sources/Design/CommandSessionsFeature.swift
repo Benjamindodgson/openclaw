@@ -35,6 +35,7 @@ enum CommandSessionsLoadingPhase: Equatable, Sendable {
 }
 
 struct CommandSessionsAvailable: Equatable, Sendable { var value: Bool }
+struct CommandSessionsMode: Equatable, Sendable { var value: String }
 struct CommandSessionReferenceKey: Equatable, Sendable { var value: String }
 struct CommandSessionEntries: Equatable, Sendable {
     var entries: [OpenClawChatSessionEntry] = []
@@ -56,6 +57,7 @@ struct CommandSessionsScreenPresentation: Equatable, Sendable {
     let headerTitle: String
     let headerDetail: String
     let panelTitle: String
+    let refreshTaskID: String
     let showsLoadingIndicator: Bool
     let unavailableSessionsPresentation: CommandSessionsStatusPresentation?
     let emptySessionsPresentation: CommandSessionsStatusPresentation
@@ -119,6 +121,18 @@ struct CommandSessionsFeature {
             return "\(count) \(count == 1 ? "session" : "sessions")"
         }
 
+        func refreshTaskID(
+            sessionsMode: CommandSessionsMode,
+            currentSession: CommandSessionReferenceKey,
+            defaultSession: CommandSessionReferenceKey) -> String
+        {
+            [
+                sessionsMode.value,
+                currentSession.value,
+                defaultSession.value,
+            ].joined(separator: ":")
+        }
+
         var unavailableSessionsPresentation: CommandSessionsStatusPresentation? {
             self.loadErrorText.map {
                 .init(
@@ -144,7 +158,10 @@ struct CommandSessionsFeature {
         }
 
         func screenPresentation(
-            sessionsAvailability: CommandSessionsAvailable) -> CommandSessionsScreenPresentation
+            sessionsAvailability: CommandSessionsAvailable,
+            sessionsMode: CommandSessionsMode,
+            currentSession: CommandSessionReferenceKey,
+            defaultSession: CommandSessionReferenceKey) -> CommandSessionsScreenPresentation
         {
             let sessionRows = self.sessionRows()
             return .init(
@@ -153,6 +170,10 @@ struct CommandSessionsFeature {
                     sessionRows: sessionRows,
                     sessionsAvailability: sessionsAvailability),
                 panelTitle: "Recent sessions",
+                refreshTaskID: self.refreshTaskID(
+                    sessionsMode: sessionsMode,
+                    currentSession: currentSession,
+                    defaultSession: defaultSession),
                 showsLoadingIndicator: self.loadingPhase == .inFlight,
                 unavailableSessionsPresentation: self.unavailableSessionsPresentation,
                 emptySessionsPresentation: self.emptySessionsPresentation(sessionsAvailability: sessionsAvailability),
