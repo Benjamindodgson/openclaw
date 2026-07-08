@@ -5264,18 +5264,22 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("struct AppleReviewSetupCode: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct AppleReviewSetupCode: Equatable, Sendable { var code: OnboardingSetupCode }"))
         #expect(onboardingStateSource.contains("struct Failure: Equatable, Sendable"))
-        #expect(onboardingStateSource
-            .contains("struct Failure: Equatable, Sendable { var message: OnboardingQRPhotoImportFailureMessage }"))
+        #expect(onboardingStateSource.contains("var message: OnboardingQRPhotoImportFailureMessage"))
+        #expect(onboardingStateSource.contains(
+            "var presentationError: OnboardingPresentationFeature.Action.QRScannerError"))
         #expect(onboardingStateSource.contains("case qrMessageDetected(QRMessageDetection)"))
         #expect(onboardingStateSource.contains("case appleReviewSetupCode(AppleReviewSetupCode)"))
         #expect(onboardingStateSource.contains("case failure(Failure)"))
         #expect(onboardingStateSource.contains("Self.importResult(message: detection.message.value)"))
         #expect(onboardingStateSource.contains(".appleReviewSetupCode(.init(code: .init(value: message)))"))
-        #expect(onboardingStateSource.contains(".failure(.init(message: Self.invalidQRCodeMessage))"))
-        #expect(onboardingSource.contains(".qrScannerErrorReceived(.init(message: .init(value: failure.message.value)))"))
+        #expect(onboardingStateSource.contains("private static func failureResult("))
+        #expect(onboardingStateSource.contains("presentationError: .init(message: .init(value: message.value))"))
+        #expect(onboardingSource.contains(".qrScannerErrorReceived(failure.presentationError)"))
         #expect(!onboardingStateSource.contains("struct QRMessageDetection: Equatable, Sendable { var message: String? }"))
         #expect(!onboardingStateSource.contains("struct AppleReviewSetupCode: Equatable, Sendable { var code: String }"))
         #expect(!onboardingStateSource.contains("struct Failure: Equatable, Sendable { var message: String }"))
+        #expect(!onboardingStateSource
+            .contains("struct Failure: Equatable, Sendable { var message: OnboardingQRPhotoImportFailureMessage }"))
         #expect(!onboardingStateSource.contains("var isImporting = false"))
         #expect(!onboardingStateSource.contains("state.isImporting = true"))
         #expect(!onboardingStateSource.contains("state.isImporting = false"))
@@ -5283,6 +5287,7 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingStateSource.contains("case appleReviewSetupCode(String)"))
         #expect(!onboardingStateSource.contains("case failure(String)"))
         #expect(!onboardingSource.contains(".qrScannerErrorReceived(.init(message: .init(value: failure.message)))"))
+        #expect(!onboardingSource.contains(".qrScannerErrorReceived(.init(message: .init(value: failure.message.value)))"))
         #expect(onboardingStateSource.contains(".cancellable(id: CancelID.restart, cancelInFlight: true)"))
         #expect(actionsSource.contains("self.manualGatewayEndpointStore.send(.localNetworkAccessRequested("))
         #expect(gatewaySetupFeaturesSource
@@ -5777,7 +5782,7 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains(
             "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: error))))"))
         #expect(onboardingSource.contains(
-            "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message.value))))"))
+            "self.presentationStore.send(.qrScannerErrorReceived(failure.presentationError))"))
         #expect(!onboardingStateSource.contains("state.scannerError = error.message.value"))
         #expect(!onboardingStateSource.contains("state.statusLine = \"Scanner error: \\(error.message.value)\""))
         #expect(!onboardingStateSource.contains("var scannerError: String?\n"))
@@ -5785,6 +5790,8 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingStateSource.contains("var showQRScanner = false"))
         #expect(!onboardingStateSource.contains("struct ScannerError: Equatable, Sendable { var message: String }"))
         #expect(!onboardingStateSource.contains("struct QRScannerError: Equatable, Sendable { var message: String }"))
+        #expect(!onboardingSource.contains(
+            "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message.value))))"))
         #expect(!onboardingSource.contains(
             "self.presentationStore.send(.qrScannerErrorReceived(.init(message: .init(value: failure.message))))"))
     }
