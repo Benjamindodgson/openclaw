@@ -93,7 +93,7 @@ struct CommandCenterTab: View {
                 self.content
             }
         }
-        .task(id: self.recentSessionsRefreshID) {
+        .task(id: self.recentSessionsPresentation.refreshTaskID) {
             self.syncGatewayPresentation()
             await self.refreshRecentSessionsIfNeeded()
         }
@@ -325,25 +325,15 @@ struct CommandCenterTab: View {
         self.gatewayStore.send(.presentationChanged(.init(presentation: presentation)))
     }
 
-    private var recentSessionsRefreshID: String {
-        [
-            self.sessionListMode,
-            self.appModel.chatSessionKey,
-            self.scenePhase == .active ? "active" : "inactive",
-        ].joined(separator: ":")
-    }
-
     private var sessionListAvailable: Bool {
         self.appModel.isLocalChatFixtureEnabled || self.appModel.isOperatorGatewayConnected
-    }
-
-    private var sessionListMode: String {
-        self.appModel.chatTransportModeID
     }
 
     private var recentSessionsPresentation: CommandCenterRecentSessionsPresentation {
         self.recentSessionsStore.state.presentation(
             activeAgentName: .init(value: self.appModel.activeAgentName),
+            sessionsMode: .init(value: self.appModel.chatTransportModeID),
+            sceneActivity: .init(value: self.scenePhase == .active),
             currentSession: .init(value: self.appModel.chatSessionKey),
             defaultSession: .init(value: self.appModel.defaultChatSessionKey))
     }

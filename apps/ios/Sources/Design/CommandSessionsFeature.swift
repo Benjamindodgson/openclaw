@@ -67,6 +67,7 @@ struct CommandSessionsScreenPresentation: Equatable, Sendable {
 struct CommandCenterRecentSessionsPresentation: Equatable, Sendable {
     let defaultChatWorkItem: CommandCenterTab.WorkItem
     let previewRows: [CommandCenterTab.WorkItem]
+    let refreshTaskID: String
     let showsViewMore: Bool
 }
 
@@ -308,6 +309,8 @@ struct CommandCenterRecentSessionsFeature {
 
         func presentation(
             activeAgentName: CommandCenterGatewayActiveAgentName,
+            sessionsMode: CommandSessionsMode,
+            sceneActivity: CommandSceneActive,
             currentSession: CommandSessionReferenceKey,
             defaultSession: CommandSessionReferenceKey) -> CommandCenterRecentSessionsPresentation
         {
@@ -322,6 +325,11 @@ struct CommandCenterRecentSessionsFeature {
                     currentSession: currentSession,
                     defaultSession: defaultSession),
                 previewRows: Array(rows.prefix(3)),
+                refreshTaskID: [
+                    sessionsMode.value,
+                    currentSession.value,
+                    sceneActivity.value ? "active" : "inactive",
+                ].joined(separator: ":"),
                 showsViewMore: rows.count > 3)
         }
     }
