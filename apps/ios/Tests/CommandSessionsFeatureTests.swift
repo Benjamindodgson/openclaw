@@ -5,6 +5,19 @@ import Testing
 
 @MainActor
 struct CommandSessionsFeatureTests {
+    @Test func `chat route open delegates through client`() async {
+        let probe = CommandSessionsProbe()
+        let store = TestStore(initialState: CommandSessionsFeature.State()) {
+            CommandSessionsFeature(client: probe.client)
+        }
+
+        await store.send(.chatRouteOpened(.init(route: .recentSession("chat-1"))))
+        await store.send(.chatRouteOpened(.init(route: .defaultSession)))
+        await store.finish()
+
+        #expect(probe.openedSessionKeys == ["chat-1", nil])
+    }
+
     @Test func `unavailable refresh clears sessions and errors without loading`() async {
         let probe = CommandSessionsProbe()
         var initialState = CommandSessionsFeature.State()
@@ -160,6 +173,19 @@ struct CommandSessionsFeatureTests {
 
 @MainActor
 struct CommandCenterRecentSessionsFeatureTests {
+    @Test func `overview chat route open delegates through client`() async {
+        let probe = CommandSessionsProbe()
+        let store = TestStore(initialState: CommandCenterRecentSessionsFeature.State()) {
+            CommandCenterRecentSessionsFeature(client: probe.client)
+        }
+
+        await store.send(.chatRouteOpened(.init(route: .recentSession("chat-preview"))))
+        await store.send(.chatRouteOpened(.init(route: .defaultSession)))
+        await store.finish()
+
+        #expect(probe.openedSessionKeys == ["chat-preview", nil])
+    }
+
     @Test func `inactive refresh leaves cached overview sessions unchanged`() async {
         let probe = CommandSessionsProbe()
         var initialState = CommandCenterRecentSessionsFeature.State()
@@ -327,12 +353,17 @@ private enum CommandSessionsProbeError: Error {
 
 private final class CommandSessionsProbe: @unchecked Sendable {
     var requestedLimits: [Int] = []
+    var openedSessionKeys: [String?] = []
     var result: Result<[OpenClawChatSessionEntry], Error> = .success([])
 
     var client: CommandSessionsClient {
-        CommandSessionsClient(listSessions: { limit in
-            self.requestedLimits.append(limit)
-            return try self.result.get()
-        })
+        CommandSessionsClient(
+            listSessions: { limit in
+                self.requestedLimits.append(limit)
+                return try self.result.get()
+            },
+            openChat: { route in
+                self.openedSessionKeys.append(route.sessionKey)
+            })
     }
 }

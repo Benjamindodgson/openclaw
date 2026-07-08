@@ -247,7 +247,9 @@ struct CommandCenterTab: View {
                 self.cardHeader(title: "Agent session")
 
                 Button {
-                    self.open(.chat(.defaultSession))
+                    Task { @MainActor in
+                        await self.open(.chat(.defaultSession))
+                    }
                 } label: {
                     CommandSessionRow(item: self.recentSessionsPresentation.defaultChatWorkItem)
                 }
@@ -270,7 +272,9 @@ struct CommandCenterTab: View {
                     VStack(spacing: 8) {
                         ForEach(self.recentSessionsPresentation.previewRows) { item in
                             Button {
-                                self.open(item.route)
+                                Task { @MainActor in
+                                    await self.open(item.route)
+                                }
                             } label: {
                                 CommandSessionRow(item: item)
                             }
@@ -338,10 +342,10 @@ struct CommandCenterTab: View {
             defaultSession: .init(value: self.appModel.defaultChatSessionKey))
     }
 
-    private func open(_ route: WorkRoute) {
+    private func open(_ route: WorkRoute) async {
         switch route {
         case let .chat(route):
-            self.appModel.openChat(sessionKey: route.sessionKey)
+            await self.recentSessionsStore.send(.chatRouteOpened(.init(route: route))).finish()
             self.openChat()
         case .settings:
             self.openSettings()
@@ -774,7 +778,9 @@ struct CommandSessionsScreen: View {
                     VStack(spacing: 8) {
                         ForEach(self.screenPresentation.sessionRows) { item in
                             Button {
-                                self.open(item)
+                                Task { @MainActor in
+                                    await self.open(item)
+                                }
                             } label: {
                                 CommandSessionRow(item: item)
                             }
@@ -797,10 +803,10 @@ struct CommandSessionsScreen: View {
             defaultSession: .init(value: self.appModel.defaultChatSessionKey))
     }
 
-    private func open(_ item: CommandCenterTab.WorkItem) {
+    private func open(_ item: CommandCenterTab.WorkItem) async {
         switch item.route {
         case let .chat(route):
-            self.appModel.openChat(sessionKey: route.sessionKey)
+            await self.store.send(.chatRouteOpened(.init(route: route))).finish()
             self.dismiss()
             self.openChat()
         case .settings:

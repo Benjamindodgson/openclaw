@@ -3,19 +3,28 @@ import OpenClawChatUI
 
 struct CommandSessionsClient {
     var listSessions: @Sendable @MainActor (_ limit: Int) async throws -> [OpenClawChatSessionEntry]
+    var openChat: @Sendable @MainActor (_ route: CommandCenterTab.ChatRoute) -> Void
 }
 
 extension CommandSessionsClient: DependencyKey {
-    static let liveValue = CommandSessionsClient(listSessions: { _ in [] })
-    static let testValue = CommandSessionsClient(listSessions: { _ in [] })
+    static let liveValue = CommandSessionsClient(
+        listSessions: { _ in [] },
+        openChat: { _ in })
+    static let testValue = CommandSessionsClient(
+        listSessions: { _ in [] },
+        openChat: { _ in })
 
     @MainActor
     static func live(appModel: NodeAppModel) -> Self {
-        CommandSessionsClient(listSessions: { limit in
-            let transport = appModel.makeChatTransport()
-            let response = try await transport.listSessions(limit: limit)
-            return response.sessions
-        })
+        CommandSessionsClient(
+            listSessions: { limit in
+                let transport = appModel.makeChatTransport()
+                let response = try await transport.listSessions(limit: limit)
+                return response.sessions
+            },
+            openChat: { route in
+                appModel.openChat(sessionKey: route.sessionKey)
+            })
     }
 }
 
@@ -183,6 +192,10 @@ struct CommandSessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ChatRouteOpenRequest: Equatable, Sendable {
+            var route: CommandCenterTab.ChatRoute
+        }
+
         struct SessionsAvailability: Equatable, Sendable {
             var isAvailable: CommandSessionsAvailable
         }
@@ -201,6 +214,7 @@ struct CommandSessionsFeature {
             var key: CommandSessionReferenceKey
         }
 
+        case chatRouteOpened(ChatRouteOpenRequest)
         case refreshRequested(RefreshRequest)
         case refreshResponse(RefreshResponse)
     }
@@ -213,6 +227,11 @@ struct CommandSessionsFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
+            case let .chatRouteOpened(request):
+                return .run { [client] _ in
+                    await client.openChat(request.route)
+                }
+
             case let .refreshRequested(request):
                 state.currentSession = request.currentSession.key
                 state.defaultSession = request.defaultSession.key
@@ -340,6 +359,10 @@ struct CommandCenterRecentSessionsFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ChatRouteOpenRequest: Equatable, Sendable {
+            var route: CommandCenterTab.ChatRoute
+        }
+
         struct SceneActivity: Equatable, Sendable {
             var isActive: CommandSceneActive
         }
@@ -363,6 +386,7 @@ struct CommandCenterRecentSessionsFeature {
             var result: Result<Snapshot, CommandSessionsError>
         }
 
+        case chatRouteOpened(ChatRouteOpenRequest)
         case refreshRequested(RefreshRequest)
         case refreshResponse(RefreshResponse)
     }
@@ -375,6 +399,11 @@ struct CommandCenterRecentSessionsFeature {
             let client = self.clientOverride ?? dependencyClient
 
             switch action {
+            case let .chatRouteOpened(request):
+                return .run { [client] _ in
+                    await client.openChat(request.route)
+                }
+
             case let .refreshRequested(request):
                 guard request.sceneActivity.isActive.value else { return .none }
                 guard request.sessionsAvailability.isAvailable.value else {
