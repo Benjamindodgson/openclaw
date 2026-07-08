@@ -83,6 +83,12 @@ struct IPadActivitySessionsFeature {
                     .prefix(8))
         }
 
+        var screenChromePresentation: IPadActivityScreenChromePresentation {
+            .init(
+                title: "Activity",
+                subtitle: "Live device and gateway activity.")
+        }
+
         func refreshTaskID(
             sessionsMode: IPadActivitySessionsMode,
             currentSession: IPadActivitySessionReferenceKey,
@@ -142,6 +148,7 @@ struct IPadActivitySessionsFeature {
                     currentSessionKey: self.currentSession.value)
             }
             return .init(
+                screenChromePresentation: self.screenChromePresentation,
                 gatewayPresentation: self.gatewayPresentation,
                 refreshTaskID: self.refreshTaskID(
                     sessionsMode: sessionsMode,
@@ -282,8 +289,8 @@ struct IPadActivityScreen: View {
 
     var body: some View {
         IPadSidebarScreenChrome(
-            title: "Activity",
-            subtitle: "Live device and gateway activity.",
+            title: self.screenPresentation.screenChromePresentation.title,
+            subtitle: self.screenPresentation.screenChromePresentation.subtitle,
             headerLeadingAction: self.headerLeadingAction,
             gatewayAction: self.openSettings)
         {
@@ -482,6 +489,7 @@ struct IPadActivityGatewayDisplayStatusText: Equatable, Sendable { var value: St
 struct IPadActivityGatewayAgentCount: Equatable, Sendable { var value: Int }
 
 struct IPadActivityScreenPresentation: Equatable, Sendable {
+    let screenChromePresentation: IPadActivityScreenChromePresentation
     let gatewayPresentation: IPadActivityGatewayPresentationState
     let refreshTaskID: String
     let sessionRows: [CommandCenterTab.WorkItem]
@@ -491,6 +499,11 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
     let loadErrorText: IPadActivitySessionsFailureMessage?
     let emptySessionPresentation: IPadActivityEmptySessionPresentation
     let shareIntakePresentation: IPadActivityShareIntakePresentation
+}
+
+struct IPadActivityScreenChromePresentation: Equatable, Sendable {
+    let title: String
+    let subtitle: String
 }
 
 struct IPadActivityEmptySessionPresentation: Equatable, Sendable {
