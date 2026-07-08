@@ -727,7 +727,7 @@ struct CommandSessionsScreen: View {
         }
         .navigationTitle("Sessions")
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: self.refreshID) {
+        .task(id: self.screenPresentation.refreshTaskID) {
             await self.refreshSessions()
         }
     }
@@ -801,15 +801,10 @@ struct CommandSessionsScreen: View {
 
     private var screenPresentation: CommandSessionsScreenPresentation {
         self.store.state.screenPresentation(
-            sessionsAvailability: .init(value: self.appModel.isCommandSessionListAvailable))
-    }
-
-    private var refreshID: String {
-        [
-            self.appModel.commandSessionListMode,
-            self.appModel.chatSessionKey,
-            self.appModel.defaultChatSessionKey,
-        ].joined(separator: ":")
+            sessionsAvailability: .init(value: self.appModel.isCommandSessionListAvailable),
+            sessionsMode: .init(value: self.appModel.commandSessionListMode),
+            currentSession: .init(value: self.appModel.chatSessionKey),
+            defaultSession: .init(value: self.appModel.defaultChatSessionKey))
     }
 
     private func open(_ item: CommandCenterTab.WorkItem) {
