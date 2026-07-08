@@ -153,6 +153,11 @@ struct IPadWorkboardBoardScope: Equatable, Sendable {
     var boardID: IPadWorkboardBoardScopeID?
 }
 
+struct IPadWorkboardGatewayAccess: Equatable, Sendable {
+    let canRead: Bool
+    let canWrite: Bool
+}
+
 struct IPadWorkboardBoardScopeOption: Equatable, Identifiable, Sendable {
     let id: String
     let title: String
@@ -1421,6 +1426,15 @@ struct IPadWorkboardFeature {
 }
 
 extension IPadWorkboardFeature.State {
+    static func gatewayAccess(
+        isOperatorGatewayConnected: Bool,
+        isAppleReviewDemoModeEnabled: Bool) -> IPadWorkboardGatewayAccess
+    {
+        .init(
+            canRead: isOperatorGatewayConnected,
+            canWrite: isOperatorGatewayConnected && !isAppleReviewDemoModeEnabled)
+    }
+
     func compactWriteControlsPresentation(
         canRead: Bool,
         canWrite: Bool) -> IPadWorkboardCompactWriteControlsPresentation

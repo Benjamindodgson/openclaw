@@ -65,7 +65,7 @@ struct IPadWorkboardScreen: View {
                     moveActions: self.store.state.moveActionPresentations(for: self.store.statusValues),
                     actionControlsPresentation: self.store.state.cardDetailActionControlsPresentation(
                         for: card,
-                        canWrite: self.canWrite),
+                        canWrite: self.gatewayAccess.canWrite),
                     openSession: { self.open(card) },
                     move: { status in Task { await self.move(card, to: status) } },
                     archive: { Task { await self.archive(card) } })
@@ -567,18 +567,15 @@ struct IPadWorkboardScreen: View {
         self.screenPresentation.refreshTaskID
     }
 
-    private var canRead: Bool {
-        self.appModel.isOperatorGatewayConnected
-    }
-
-    private var canWrite: Bool {
-        self.appModel.isOperatorGatewayConnected && !self.appModel
-            .isAppleReviewDemoModeEnabled
+    private var gatewayAccess: IPadWorkboardGatewayAccess {
+        IPadWorkboardFeature.State.gatewayAccess(
+            isOperatorGatewayConnected: self.appModel.isOperatorGatewayConnected,
+            isAppleReviewDemoModeEnabled: self.appModel.isAppleReviewDemoModeEnabled)
     }
 
     private var screenPresentation: IPadWorkboardScreenPresentation {
         self.store.state.screenPresentation(
-            canRead: self.canRead,
+            canRead: self.gatewayAccess.canRead,
             sceneIsActive: self.scenePhase == .active)
     }
 
@@ -596,22 +593,22 @@ struct IPadWorkboardScreen: View {
 
     private var createCardPresentation: IPadWorkboardCreateCardPresentation {
         self.store.state.createCardPresentation(
-            canRead: self.canRead,
-            canWrite: self.canWrite)
+            canRead: self.gatewayAccess.canRead,
+            canWrite: self.gatewayAccess.canWrite)
     }
 
     private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation {
-        self.store.state.dispatchControlPresentation(canWrite: self.canWrite)
+        self.store.state.dispatchControlPresentation(canWrite: self.gatewayAccess.canWrite)
     }
 
     private var compactEmptyStatePresentation: IPadWorkboardCompactEmptyStatePresentation {
-        self.store.state.compactEmptyStatePresentation(canRead: self.canRead)
+        self.store.state.compactEmptyStatePresentation(canRead: self.gatewayAccess.canRead)
     }
 
     private var compactWriteControlsPresentation: IPadWorkboardCompactWriteControlsPresentation {
         self.store.state.compactWriteControlsPresentation(
-            canRead: self.canRead,
-            canWrite: self.canWrite)
+            canRead: self.gatewayAccess.canRead,
+            canWrite: self.gatewayAccess.canWrite)
     }
 
     private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
@@ -634,7 +631,7 @@ struct IPadWorkboardScreen: View {
     private func loadCards(force: Bool) async {
         await self.store.send(.refreshRequested(.init(
             sceneActivity: .init(isActive: self.scenePhase == .active),
-            readAccess: .init(canRead: self.canRead),
+            readAccess: .init(canRead: self.gatewayAccess.canRead),
             force: .init(isForced: force)))).finish()
     }
 
@@ -644,25 +641,26 @@ struct IPadWorkboardScreen: View {
 
     private func createCard() async {
         await self.store.send(.createRequested(.init(
-            readAccess: .init(canRead: self.canRead),
-            writeAccess: .init(canWrite: self.canWrite)))).finish()
+            readAccess: .init(canRead: self.gatewayAccess.canRead),
+            writeAccess: .init(canWrite: self.gatewayAccess.canWrite)))).finish()
     }
 
     private func move(_ card: IPadWorkboardCard, to status: String) async {
         await self.store.send(.moveRequested(.init(
             card: card,
             status: .init(value: status),
-            writeAccess: .init(canWrite: self.canWrite)))).finish()
+            writeAccess: .init(canWrite: self.gatewayAccess.canWrite)))).finish()
     }
 
     private func archive(_ card: IPadWorkboardCard) async {
         await self.store.send(.archiveRequested(.init(
             card: card,
-            writeAccess: .init(canWrite: self.canWrite)))).finish()
+            writeAccess: .init(canWrite: self.gatewayAccess.canWrite)))).finish()
     }
 
     private func dispatchCards() async {
-        await self.store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: self.canWrite)))).finish()
+        await self.store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: self.gatewayAccess.canWrite))))
+            .finish()
     }
 
     private func open(_ card: IPadWorkboardCard) {
