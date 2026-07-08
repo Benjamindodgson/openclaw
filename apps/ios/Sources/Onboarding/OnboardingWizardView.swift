@@ -1004,29 +1004,14 @@ extension OnboardingWizardView {
     }
 
     private func initializeState() {
-        let initialConnection: (host: String, port: Int, tls: Bool) = if let last = GatewaySettingsStore
-            .loadLastGatewayConnection()
-        {
-            switch last {
-            case let .manual(host, port, useTLS, _):
-                (host, port, useTLS)
-            case .discovered:
-                ("openclaw.local", 18789, true)
-            }
-        } else {
-            ("openclaw.local", 18789, true)
-        }
-        self.connectionFormStore.send(.initialized(.init(
-            host: .init(value: initialConnection.host),
-            port: .init(value: initialConnection.port),
-            tls: .init(value: initialConnection.tls),
-            lastMode: OnboardingStateStore.lastMode())))
-
+        self.connectionFormStore.send(.initialConnectionLoadRequested)
         self.credentialsStore.send(.credentialsLoadRequested(.init(
             instanceId: .init(value: self.instanceId))))
 
-        let hasSavedGateway = GatewaySettingsStore.loadLastGatewayConnection() != nil
-        if !hasSavedGateway, !self.credentialsStore.hasGatewayToken, !self.credentialsStore.hasGatewayPassword {
+        if !self.connectionFormStore.hasSavedGatewayConnection,
+           !self.credentialsStore.hasGatewayToken,
+           !self.credentialsStore.hasGatewayPassword
+        {
             self.statusStore.send(.noSavedPairingFound)
         }
     }
