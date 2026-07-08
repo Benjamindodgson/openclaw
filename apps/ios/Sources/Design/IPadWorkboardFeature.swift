@@ -212,6 +212,13 @@ struct IPadWorkboardQueryFieldPresentation: Equatable, Sendable {
     let showsClearButton: Bool
 }
 
+struct IPadWorkboardCompactEmptyStatePresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let detail: String
+    let value: String?
+}
+
 struct IPadWorkboardCreateSheetPresentation: Equatable, Sendable {
     let title: String
     let sectionTitle: String
@@ -397,6 +404,21 @@ struct IPadWorkboardFeature {
                 iconSystemName: "magnifyingglass",
                 clearButtonSystemName: "xmark.circle.fill",
                 showsClearButton: !self.query.value.isEmpty)
+        }
+
+        func compactEmptyStatePresentation(canRead: Bool) -> IPadWorkboardCompactEmptyStatePresentation {
+            if canRead {
+                return .init(
+                    icon: "tray",
+                    title: "No cards",
+                    detail: "Create a card or change the filter.",
+                    value: "empty")
+            }
+            return .init(
+                icon: "wifi.slash",
+                title: "No cards loaded",
+                detail: "Connect from Settings to load workboard cards.",
+                value: nil)
         }
 
         var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {

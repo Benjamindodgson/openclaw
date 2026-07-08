@@ -182,6 +182,22 @@ struct IPadWorkboardFeatureTests {
             showsClearButton: true))
     }
 
+    @Test func `workboard compact empty state presentation is reducer owned`() {
+        let state = IPadWorkboardFeature.State()
+
+        #expect(state.compactEmptyStatePresentation(canRead: true) == .init(
+            icon: "tray",
+            title: "No cards",
+            detail: "Create a card or change the filter.",
+            value: "empty"))
+
+        #expect(state.compactEmptyStatePresentation(canRead: false) == .init(
+            icon: "wifi.slash",
+            title: "No cards loaded",
+            detail: "Connect from Settings to load workboard cards.",
+            value: nil))
+    }
+
     @Test func `workboard board scope menu presentation is reducer owned`() {
         var state = IPadWorkboardFeature.State()
         state.knownBoardIDEntries = .init(values: [.init(value: "ops")])

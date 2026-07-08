@@ -475,12 +475,10 @@ struct IPadWorkboardScreen: View {
                     action: nil)
                 if self.store.filteredCards.isEmpty {
                     ProStatusRow(
-                        icon: self.canRead ? "tray" : "wifi.slash",
-                        title: self.canRead ? "No cards" : "No cards loaded",
-                        detail: self.canRead
-                            ? "Create a card or change the filter."
-                            : "Connect from Settings to load workboard cards.",
-                        value: self.canRead ? "empty" : nil,
+                        icon: self.compactEmptyStatePresentation.icon,
+                        title: self.compactEmptyStatePresentation.title,
+                        detail: self.compactEmptyStatePresentation.detail,
+                        value: self.compactEmptyStatePresentation.value,
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)
@@ -595,6 +593,10 @@ struct IPadWorkboardScreen: View {
 
     private var dispatchControlPresentation: IPadWorkboardDispatchControlPresentation {
         self.store.state.dispatchControlPresentation(canWrite: self.canWrite)
+    }
+
+    private var compactEmptyStatePresentation: IPadWorkboardCompactEmptyStatePresentation {
+        self.store.state.compactEmptyStatePresentation(canRead: self.canRead)
     }
 
     private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
