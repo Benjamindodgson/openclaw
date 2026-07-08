@@ -10,7 +10,11 @@ import Testing
         }
 
         await store.send(.primaryActionTapped(.init(problem: Self.resetProblem()))) {
-            $0.primaryActionDecision = .resetAndScan
+            $0.primaryActionDecision = .resetAndScan(.init(
+                credentialsAction: .reset,
+                statusAction: .gatewayProblemResetScanStarted,
+                stepAction: .stepChanged(.init(step: .connect)),
+                presentationAction: .qrScannerButtonTapped))
         }
         await store.send(.primaryActionDecisionHandled) {
             $0.primaryActionDecision = nil
