@@ -115,6 +115,13 @@ struct IPadSkillWorkshopFeatureTests {
             selectedFilter: "pending",
             selectedLabel: "Pending",
             options: statusFilterOptions))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).statusFilterControlPresentation == .init(
+            title: "Status",
+            selectedFilter: "pending",
+            selectedLabel: "Pending",
+            options: statusFilterOptions))
         #expect(state.filteredProposals.map(\.id) == ["pending-match"])
         #expect(state.filteredProposalCount == 1)
         #expect(state.queueSummaryPresentation == .init(
@@ -160,6 +167,13 @@ struct IPadSkillWorkshopFeatureTests {
         state.statusFilter = .init(value: "all")
         #expect(state.statusFilterLabel == "All")
         #expect(state.statusFilterControlPresentation == .init(
+            title: "Status",
+            selectedFilter: "all",
+            selectedLabel: "All",
+            options: statusFilterOptions))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).statusFilterControlPresentation == .init(
             title: "Status",
             selectedFilter: "all",
             selectedLabel: "All",

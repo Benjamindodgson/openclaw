@@ -3344,8 +3344,14 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("selectedLabel: self.statusFilterLabel"))
         #expect(source.contains("options: Self.proposalStatusFilters.map { filter in"))
         #expect(source.contains("title: Self.proposalStatusFilterLabel(filter)"))
-        #expect(source.contains("let statusFilterPresentation = self.store.statusFilterControlPresentation"))
+        #expect(source.contains("statusFilterControlPresentation: self.statusFilterControlPresentation"))
+        #expect(source.contains(
+            "let statusFilterPresentation = self.screenPresentation.statusFilterControlPresentation"))
+        #expect(source.contains(
+            "get: { self.screenPresentation.statusFilterControlPresentation.selectedFilter }"))
         #expect(source.contains("ForEach(statusFilterPresentation.options) { option in"))
+        #expect(!source.contains("let statusFilterPresentation = self.store.statusFilterControlPresentation"))
+        #expect(!source.contains("get: { self.store.statusFilterControlPresentation.selectedFilter }"))
         #expect(source.contains("Text(option.title).tag(option.id)"))
         #expect(!source.contains("IPadSkillWorkshopFeature.State.proposalStatusFilters"))
         #expect(!source.contains("IPadSkillWorkshopFeature.State.proposalStatusFilterLabel(filter)"))
@@ -3370,7 +3376,6 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("filter: self.statusFilter.value"))
         #expect(source.contains("var filter: IPadSkillWorkshopStatusFilter"))
         #expect(source.contains("state.statusFilter = change.filter"))
-        #expect(source.contains("get: { self.store.statusFilterControlPresentation.selectedFilter }"))
         #expect(!source.contains("var statusFilter = \"pending\""))
         #expect(!source.contains("var filter: String"))
         #expect(!source.contains("get: { self.store.statusFilter.value }"))

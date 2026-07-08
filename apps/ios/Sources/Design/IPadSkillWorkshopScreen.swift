@@ -209,6 +209,7 @@ struct IPadSkillWorkshopFeature {
                     gatewayAccess: gatewayAccess,
                     sceneIsActive: sceneIsActive),
                 refreshControlPresentation: self.refreshControlPresentation,
+                statusFilterControlPresentation: self.statusFilterControlPresentation,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -913,7 +914,7 @@ struct IPadSkillWorkshopScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
                 let refreshPresentation = self.screenPresentation.refreshControlPresentation
-                let statusFilterPresentation = self.store.statusFilterControlPresentation
+                let statusFilterPresentation = self.screenPresentation.statusFilterControlPresentation
                 self.agentScopeMenu
                 self.proposalSearchField
                 Picker(statusFilterPresentation.title, selection: self.statusFilterBinding) {
@@ -947,7 +948,7 @@ struct IPadSkillWorkshopScreen: View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
                 let refreshPresentation = self.screenPresentation.refreshControlPresentation
-                let statusFilterPresentation = self.store.statusFilterControlPresentation
+                let statusFilterPresentation = self.screenPresentation.statusFilterControlPresentation
                 let queueSummary = self.store.queueSummaryPresentation
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
@@ -958,9 +959,7 @@ struct IPadSkillWorkshopScreen: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 8)
-                    if refreshPresentation.showsProgress {
-                        ProgressView().controlSize(.small)
-                    }
+                    if refreshPresentation.showsProgress { ProgressView().controlSize(.small) }
                 }
 
                 self.agentScopeMenu
@@ -1409,7 +1408,7 @@ struct IPadSkillWorkshopScreen: View {
 
     private var statusFilterBinding: Binding<String> {
         Binding(
-            get: { self.store.statusFilterControlPresentation.selectedFilter },
+            get: { self.screenPresentation.statusFilterControlPresentation.selectedFilter },
             set: { self.store.send(.statusFilterChanged(.init(filter: .init(value: $0)))) })
     }
 
