@@ -283,6 +283,32 @@ struct IPadSkillWorkshopFeatureTests {
             showsProposalActions: true))
     }
 
+    @Test func `presented proposal presentation follows sheet route state`() {
+        var state = IPadSkillWorkshopFeature.State()
+        let pendingProposal = Self.proposal(id: "pending-1", status: "pending")
+        state.proposalEntries = .init(values: [pendingProposal])
+
+        #expect(state.presentedProposalPresentation == nil)
+
+        state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "pending-1")
+        #expect(state.presentedProposalPresentation == .init(
+            proposal: pendingProposal,
+            isSelected: false,
+            isInspecting: false,
+            showsProposalActions: true))
+
+        state.selectedProposalID = .init(value: "pending-1")
+        state.inspectingProposalID = .init(value: "pending-1")
+        #expect(state.presentedProposalPresentation == .init(
+            proposal: pendingProposal,
+            isSelected: true,
+            isInspecting: true,
+            showsProposalActions: true))
+
+        state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "missing")
+        #expect(state.presentedProposalPresentation == nil)
+    }
+
     @Test func `agent scope snapshot updates reducer presentation state`() async {
         #expect(IPadSkillWorkshopFeature.State().agentScopeMenuPresentation == .init(
             selectedLabel: "Default Agent",
