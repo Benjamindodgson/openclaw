@@ -193,10 +193,12 @@ struct IPadSkillWorkshopFeatureTests {
     }
 
     @Test func `agent scope snapshot updates reducer presentation state`() async {
-        #expect(!IPadSkillWorkshopFeature.State().shouldEnableAgentScopeMenu)
-        #expect(IPadSkillWorkshopFeature.State().agentScopeMenuOptions == [
-            IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent"),
-        ])
+        #expect(IPadSkillWorkshopFeature.State().agentScopeMenuPresentation == .init(
+            selectedLabel: "Default Agent",
+            options: [
+                IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent"),
+            ],
+            isEnabled: false))
 
         let snapshot = IPadSkillWorkshopFeature.Action.AgentScopeSnapshot(
             gatewayDefaultAgentID: .init(value: " main "),
@@ -231,24 +233,26 @@ struct IPadSkillWorkshopFeatureTests {
             IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
             IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
         ])
-        #expect(state.agentScopeMenuOptions == [
-            IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent"),
-            IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
-            IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
-        ])
-        #expect(state.shouldEnableAgentScopeMenu)
+        #expect(state.agentScopeMenuPresentation == .init(
+            selectedLabel: "Main Agent",
+            options: [
+                IPadSkillWorkshopAgentScopeOption(id: "", title: "Default agent"),
+                IPadSkillWorkshopAgentScopeOption(id: "agent-a", title: "agent-a"),
+                IPadSkillWorkshopAgentScopeOption(id: "agent-b", title: "Beta"),
+            ],
+            isEnabled: true))
 
         await store.send(.agentScopeChanged(.init(agentID: .init(value: "agent-b")))) {
             $0.selectedAgentScopeID = .init(value: "agent-b")
         }
         state.selectedAgentScopeID = .init(value: "agent-b")
-        #expect(state.agentScopeLabel == "Beta")
+        #expect(state.agentScopeMenuPresentation.selectedLabel == "Beta")
 
         await store.send(.agentScopeChanged(.init(agentID: .init(value: "missing")))) {
             $0.selectedAgentScopeID = .init(value: "missing")
         }
         state.selectedAgentScopeID = .init(value: "missing")
-        #expect(state.agentScopeLabel == "missing")
+        #expect(state.agentScopeMenuPresentation.selectedLabel == "missing")
     }
 
     @Test func `refresh task identifier is reducer state`() {

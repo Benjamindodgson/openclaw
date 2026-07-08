@@ -96,4 +96,10 @@ struct IPadSkillWorkshopAgentScopeOption: Equatable, Identifiable, Sendable {
     let title: String
 }
 
+struct IPadSkillWorkshopAgentScopeMenuPresentation: Equatable, Sendable {
+    let selectedLabel: String
+    let options: [IPadSkillWorkshopAgentScopeOption]
+    let isEnabled: Bool
+}
+
 // swiftformat:enable redundantSendable
