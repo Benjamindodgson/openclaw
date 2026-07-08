@@ -493,13 +493,14 @@ struct IPadWorkboardFeatureTests {
     }
 
     @Test func `workboard kanban lane presentation is reducer owned`() {
-        let cards = [
-            Self.card(id: "review-1", status: "in_review", position: 10),
-            Self.card(id: "review-2", status: "in_review", position: 20),
-        ]
-        let state = IPadWorkboardFeature.State()
+        var state = IPadWorkboardFeature.State()
+        state.cardEntries = .init(values: [
+            Self.card(id: "review-1", title: "Gateway review", status: "in_review", position: 10),
+            Self.card(id: "review-2", title: "Other review", status: "in_review", position: 20),
+            Self.card(id: "done-1", status: "done", position: 30),
+        ])
 
-        #expect(state.kanbanLanePresentation(status: "in_review", cards: cards) == .init(
+        #expect(state.kanbanLanePresentation(status: "in_review") == .init(
             status: "in_review",
             title: "In Review",
             cardCount: 2,
@@ -509,6 +510,8 @@ struct IPadWorkboardFeatureTests {
                 title: "No in review cards",
                 detail: "Cards moved into this lane appear here.",
                 value: "empty")))
+        state.query = .init(value: "gateway")
+        #expect(state.kanbanLanePresentation(status: "in_review").cardCount == 1)
         #expect(IPadWorkboardFeature.State.kanbanLanePresentation(status: "blocked", cardCount: 0) == .init(
             status: "blocked",
             title: "Blocked",

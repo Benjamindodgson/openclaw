@@ -2607,13 +2607,14 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("struct IPadWorkboardKanbanLanePresentation: Equatable, Sendable"))
         #expect(source.contains("let emptyState: IPadWorkboardKanbanLaneEmptyStatePresentation"))
         #expect(source.contains(
-            "func kanbanLanePresentation(status: String, cards: [IPadWorkboardCard]) -> IPadWorkboardKanbanLanePresentation"))
+            "func kanbanLanePresentation(status: String) -> IPadWorkboardKanbanLanePresentation"))
         #expect(source.contains("static func kanbanLanePresentation("))
         #expect(source.contains("title: \"No \\(title.lowercased()) cards\""))
         #expect(source.contains("detail: \"Cards moved into this lane appear here.\""))
         #expect(kanbanBoardSource.contains("let cards = self.store.state.cards(forKanbanStatus: status)"))
         #expect(kanbanBoardSource.contains(
-            "presentation: self.store.state.kanbanLanePresentation(status: status, cards: cards)"))
+            "presentation: self.store.state.kanbanLanePresentation(status: status)"))
+        #expect(!kanbanBoardSource.contains("kanbanLanePresentation(status: status, cards: cards)"))
         #expect(kanbanBoardSource.contains("cards: cards"))
         #expect(kanbanColumnSource.contains("let presentation: IPadWorkboardKanbanLanePresentation"))
         #expect(kanbanColumnSource.contains("title: self.presentation.title"))

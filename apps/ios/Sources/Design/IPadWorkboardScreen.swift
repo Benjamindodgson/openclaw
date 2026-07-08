@@ -443,7 +443,7 @@ struct IPadWorkboardScreen: View {
                 ForEach(self.store.visibleKanbanStatuses, id: \.self) { status in
                     let cards = self.store.state.cards(forKanbanStatus: status)
                     IPadWorkboardKanbanColumn(
-                        presentation: self.store.state.kanbanLanePresentation(status: status, cards: cards),
+                        presentation: self.store.state.kanbanLanePresentation(status: status),
                         cards: cards,
                         moveActions: self.store.moveActionPresentations,
                         actionControlPresentation: { card in
