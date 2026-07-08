@@ -2039,7 +2039,10 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("compactCardsPanelPresentation: self.compactCardsPanelPresentation(gatewayAccess: gatewayAccess)"))
         #expect(source.contains("self.screenPresentation.compactCardsPanelPresentation"))
         #expect(!source.contains("self.store.state.compactCardsPanelPresentation(gatewayAccess: self.gatewayAccess)"))
-        #expect(source.contains("self.store.state.compactWriteControlsPresentation(gatewayAccess: self.gatewayAccess)"))
+        #expect(source.contains(
+            "compactWriteControlsPresentation: self.compactWriteControlsPresentation(gatewayAccess: gatewayAccess)"))
+        #expect(source.contains("self.screenPresentation.compactWriteControlsPresentation"))
+        #expect(!source.contains("self.store.state.compactWriteControlsPresentation(gatewayAccess: self.gatewayAccess)"))
         #expect(source.contains("let presentation = self.compactCardsPanelPresentation"))
         #expect(source.contains("icon: presentation.emptyStatePresentation.icon"))
         #expect(source.contains("title: presentation.emptyStatePresentation.title"))
