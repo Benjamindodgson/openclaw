@@ -990,10 +990,14 @@ extension OnboardingWizardView {
     }
 
     private func advanceFromIntro() {
-        self.onboardingStateStore.send(.markFirstRunIntroSeen)
-        self.requestLocalNetworkAccess(reason: "onboarding_continue")
-        self.statusStore.send(.introAdvanced)
-        self.stepStore.send(.stepChanged(.init(step: .welcome)))
+        self.applyIntroAdvanceRequest(OnboardingStatusFeature.introAdvanceRequest)
+    }
+
+    private func applyIntroAdvanceRequest(_ request: OnboardingStatusFeature.IntroAdvanceRequest) {
+        self.onboardingStateStore.send(request.stateAction)
+        self.requestLocalNetworkAccess(reason: request.localNetworkReason.value)
+        self.statusStore.send(request.statusAction)
+        self.stepStore.send(request.stepAction)
     }
 
     private func requestLocalNetworkAccessIfPastIntro(reason: String) {
