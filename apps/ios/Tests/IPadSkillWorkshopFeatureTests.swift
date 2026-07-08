@@ -285,25 +285,37 @@ struct IPadSkillWorkshopFeatureTests {
 
     @Test func `presented proposal presentation follows sheet route state`() {
         var state = IPadSkillWorkshopFeature.State()
-        let pendingProposal = Self.proposal(id: "pending-1", status: "pending")
+        var pendingProposal = Self.proposal(id: "pending-1", status: "pending")
         state.proposalEntries = .init(values: [pendingProposal])
 
         #expect(state.presentedProposalPresentation == nil)
 
         state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "pending-1")
-        #expect(state.presentedProposalPresentation == .init(
+        #expect(state.presentedProposalPresentation?.card == .init(
             proposal: pendingProposal,
             isSelected: false,
             isInspecting: false,
             showsProposalActions: true))
+        #expect(state.presentedProposalPresentation?.bodyText == nil)
+        #expect(state.presentedProposalPresentation?.emptyBodyText == "Select refresh to load the proposal body.")
+        #expect(state.presentedProposalPresentation?.supportFiles == [])
+        #expect(state.presentedProposalPresentation?.showsSupportFiles == false)
 
+        pendingProposal.content = "inspected body"
+        pendingProposal.supportFiles = [
+            IPadSkillProposalSupportFile(path: "skills/sample/SKILL.md", content: nil),
+        ]
+        state.proposalEntries = .init(values: [pendingProposal])
         state.selectedProposalID = .init(value: "pending-1")
         state.inspectingProposalID = .init(value: "pending-1")
-        #expect(state.presentedProposalPresentation == .init(
+        #expect(state.presentedProposalPresentation?.card == .init(
             proposal: pendingProposal,
             isSelected: true,
             isInspecting: true,
             showsProposalActions: true))
+        #expect(state.presentedProposalPresentation?.bodyText == "inspected body")
+        #expect(state.presentedProposalPresentation?.supportFiles == pendingProposal.supportFiles)
+        #expect(state.presentedProposalPresentation?.showsSupportFiles == true)
 
         state.presentedProposalRoute = IPadSkillProposalSheetRoute(proposalID: "missing")
         #expect(state.presentedProposalPresentation == nil)

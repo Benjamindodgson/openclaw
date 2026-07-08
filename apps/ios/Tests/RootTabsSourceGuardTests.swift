@@ -2266,6 +2266,8 @@ struct RootTabsSourceGuardTests {
         #expect(typeSource.contains(
             "struct IPadSkillWorkshopProposalCardPresentation: Equatable, Identifiable, Sendable"))
         #expect(typeSource.contains(
+            "struct IPadSkillWorkshopProposalDetailPresentation: Equatable, Identifiable, Sendable"))
+        #expect(typeSource.contains(
             "struct IPadSkillWorkshopProposalLanePresentation: Equatable, Identifiable, Sendable"))
         #expect(typeSource.contains("struct IPadSkillWorkshopProposalBoardPresentation: Equatable, Sendable"))
         #expect(typeSource.contains("struct IPadSkillWorkshopProposalListPresentation: Equatable, Sendable"))
@@ -2277,7 +2279,9 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains(
             "var proposalBoardPresentation: IPadSkillWorkshopProposalBoardPresentation"))
         #expect(source.contains("func proposalDetailPresentation("))
-        #expect(source.contains("var presentedProposalPresentation: IPadSkillWorkshopProposalCardPresentation?"))
+        #expect(source.contains(
+            "for proposal: IPadSkillProposal) -> IPadSkillWorkshopProposalDetailPresentation"))
+        #expect(source.contains("var presentedProposalPresentation: IPadSkillWorkshopProposalDetailPresentation?"))
         #expect(source.contains("self.store.proposalListPresentation"))
         #expect(source.contains("let boardPresentation = self.store.proposalBoardPresentation"))
         #expect(source.contains("ForEach(boardPresentation.lanes) { lane in"))
@@ -2296,6 +2300,14 @@ struct RootTabsSourceGuardTests {
         #expect(!source.contains("proposals: self.store.state.proposals(forLaneStatus: status)"))
         #expect(!source.contains("self.store.state.proposal(withID: proposalID)"))
         #expect(!source.contains("self.store.state.proposalDetailPresentation(forID: proposalID)"))
+        #expect(source.contains("let card = presentation.card"))
+        #expect(source.contains("if let bodyText = presentation.bodyText"))
+        #expect(source.contains("Text(presentation.emptyBodyText)"))
+        #expect(source.contains("if presentation.showsSupportFiles"))
+        #expect(source.contains("ForEach(presentation.supportFiles, id: \\.path)"))
+        #expect(source.contains("if card.showsProposalActions"))
+        #expect(!source.contains("if let content = proposal.content, !content.isEmpty"))
+        #expect(!source.contains("if !proposal.supportFiles.isEmpty"))
         #expect(!source.contains("private var filteredProposals: [IPadSkillProposal]"))
         #expect(!source.contains("private func count(_ status: String)"))
         #expect(!source.contains("private func proposal(withID id: String)"))
@@ -2341,7 +2353,7 @@ struct RootTabsSourceGuardTests {
             "var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation"))
         #expect(source.contains("self.inspectingProposalID == nil"))
         #expect(source.contains("isBusy: presentation.isInspecting"))
-        #expect(source.contains("if presentation.isInspecting"))
+        #expect(source.contains("if card.isInspecting"))
         #expect(!source.contains("if self.store.state.proposalPresentation(for: proposal).isInspecting"))
         #expect(source.contains(
             ".disabled(!self.screenPresentation.proposalInspectionControlsPresentation.canInspect)"))

@@ -366,14 +366,28 @@ struct IPadSkillWorkshopFeature {
         }
 
         func proposalDetailPresentation(
-            forID id: String) -> IPadSkillWorkshopProposalCardPresentation?
+            for proposal: IPadSkillProposal) -> IPadSkillWorkshopProposalDetailPresentation
+        {
+            let bodyText = proposal.content.flatMap { content in
+                content.isEmpty ? nil : content
+            }
+            return .init(
+                card: self.proposalCardPresentation(for: proposal),
+                bodyText: bodyText,
+                emptyBodyText: "Select refresh to load the proposal body.",
+                supportFiles: proposal.supportFiles,
+                showsSupportFiles: !proposal.supportFiles.isEmpty)
+        }
+
+        func proposalDetailPresentation(
+            forID id: String) -> IPadSkillWorkshopProposalDetailPresentation?
         {
             self.proposal(withID: id).map { proposal in
-                self.proposalCardPresentation(for: proposal)
+                self.proposalDetailPresentation(for: proposal)
             }
         }
 
-        var presentedProposalPresentation: IPadSkillWorkshopProposalCardPresentation? {
+        var presentedProposalPresentation: IPadSkillWorkshopProposalDetailPresentation? {
             guard let proposalID = self.presentedProposalRoute?.proposalID else { return nil }
             return self.proposalDetailPresentation(forID: proposalID)
         }
@@ -1139,7 +1153,8 @@ struct IPadSkillWorkshopScreen: View {
         }
     }
 
-    private func proposalDetailCard(_ presentation: IPadSkillWorkshopProposalCardPresentation) -> some View {
+    private func proposalDetailCard(_ presentation: IPadSkillWorkshopProposalDetailPresentation) -> some View {
+        let card = presentation.card
         let proposal = presentation.proposal
         return ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 14) {
@@ -1157,27 +1172,27 @@ struct IPadSkillWorkshopScreen: View {
                     ProValuePill(value: proposal.status, color: proposal.statusColor)
                 }
 
-                if presentation.isInspecting {
+                if card.isInspecting {
                     ProgressView().controlSize(.small)
                 }
 
-                if let content = proposal.content, !content.isEmpty {
-                    Text(content)
+                if let bodyText = presentation.bodyText {
+                    Text(bodyText)
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                         .lineLimit(16)
                         .textSelection(.enabled)
                 } else {
-                    Text("Select refresh to load the proposal body.")
+                    Text(presentation.emptyBodyText)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
-                if !proposal.supportFiles.isEmpty {
+                if presentation.showsSupportFiles {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Support files")
                             .font(.subheadline.weight(.semibold))
-                        ForEach(proposal.supportFiles, id: \.path) { file in
+                        ForEach(presentation.supportFiles, id: \.path) { file in
                             Text(file.path)
                                 .font(.caption2.monospaced())
                                 .foregroundStyle(.secondary)
@@ -1186,7 +1201,7 @@ struct IPadSkillWorkshopScreen: View {
                     }
                 }
 
-                if presentation.showsProposalActions {
+                if card.showsProposalActions {
                     if self.isCompactWidth {
                         VStack(spacing: 8) {
                             self.proposalApplyButton(proposal)
