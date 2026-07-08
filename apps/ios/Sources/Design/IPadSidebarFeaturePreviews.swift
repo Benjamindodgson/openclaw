@@ -374,8 +374,12 @@ private struct IPadWorkboardStatesPreview: View {
 
                     self.previewHeader("Empty")
                     IPadWorkboardKanbanColumn(
-                        presentation: IPadWorkboardFeature.State.kanbanLanePresentation(status: "todo", cardCount: 0),
-                        cards: [],
+                        presentation: .init(
+                            id: "todo",
+                            lanePresentation: IPadWorkboardFeature.State.kanbanLanePresentation(
+                                status: "todo",
+                                cardCount: 0),
+                            cards: []),
                         cardPresentation: { card in
                             self.kanbanCardPresentation(for: card)
                         },
@@ -420,10 +424,12 @@ private struct IPadWorkboardStatesPreview: View {
                 ForEach(self.statuses, id: \.self) { status in
                     let cards = self.connectedCards.filter { $0.status == status }
                     IPadWorkboardKanbanColumn(
-                        presentation: IPadWorkboardFeature.State.kanbanLanePresentation(
-                            status: status,
-                            cardCount: cards.count),
-                        cards: cards,
+                        presentation: .init(
+                            id: status,
+                            lanePresentation: IPadWorkboardFeature.State.kanbanLanePresentation(
+                                status: status,
+                                cardCount: cards.count),
+                            cards: cards),
                         cardPresentation: { card in
                             self.kanbanCardPresentation(for: card)
                         },

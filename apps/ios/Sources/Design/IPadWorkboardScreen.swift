@@ -437,11 +437,9 @@ struct IPadWorkboardScreen: View {
     private var kanbanBoard: some View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
-                ForEach(self.store.visibleKanbanStatuses, id: \.self) { status in
-                    let cards = self.store.state.cards(forKanbanStatus: status)
+                ForEach(self.store.kanbanColumnPresentations) { presentation in
                     IPadWorkboardKanbanColumn(
-                        presentation: self.store.state.kanbanLanePresentation(status: status),
-                        cards: cards,
+                        presentation: presentation,
                         cardPresentation: { card in
                             self.store.state.kanbanCardPresentation(for: card)
                         },
@@ -654,8 +652,7 @@ struct IPadWorkboardScreen: View {
 }
 
 struct IPadWorkboardKanbanColumn: View {
-    let presentation: IPadWorkboardKanbanLanePresentation
-    let cards: [IPadWorkboardCard]
+    let presentation: IPadWorkboardKanbanColumnPresentation
     let cardPresentation: (IPadWorkboardCard) -> IPadWorkboardKanbanCardPresentation
     let openSession: (IPadWorkboardCard) -> Void
     let inspect: (IPadWorkboardCard) -> Void
@@ -666,22 +663,22 @@ struct IPadWorkboardKanbanColumn: View {
         ProCard(padding: 0, radius: OpenClawProMetric.cardRadius) {
             VStack(spacing: 0) {
                 ProPanelHeader(
-                    title: self.presentation.title,
-                    value: self.presentation.value,
+                    title: self.presentation.lanePresentation.title,
+                    value: self.presentation.lanePresentation.value,
                     actionTitle: nil,
                     action: nil)
 
-                if self.cards.isEmpty {
+                if self.presentation.cards.isEmpty {
                     ProStatusRow(
-                        icon: self.presentation.emptyState.icon,
-                        title: self.presentation.emptyState.title,
-                        detail: self.presentation.emptyState.detail,
-                        value: self.presentation.emptyState.value,
+                        icon: self.presentation.lanePresentation.emptyState.icon,
+                        title: self.presentation.lanePresentation.emptyState.title,
+                        detail: self.presentation.lanePresentation.emptyState.detail,
+                        value: self.presentation.lanePresentation.emptyState.value,
                         color: .secondary,
                         actionTitle: nil,
                         action: nil)
                 } else {
-                    ForEach(Array(self.cards.enumerated()), id: \.element.id) { index, card in
+                    ForEach(Array(self.presentation.cards.enumerated()), id: \.element.id) { index, card in
                         if index > 0 {
                             Divider().padding(.leading, 12)
                         }
