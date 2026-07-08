@@ -1097,15 +1097,15 @@ extension OnboardingWizardView {
         self.gatewayProblemPrimaryActionStore.send(.primaryActionDecisionHandled)
 
         switch decision {
-        case .resetAndScan:
+        case let .resetAndScan(request):
             await self.onboardingStateStore
                 .send(.onboardingResetRequested(.init(
                     instanceId: .init(value: self.instanceId))))
                 .finish()
-            self.credentialsStore.send(.reset)
-            self.statusStore.send(.gatewayProblemResetScanStarted)
-            self.stepStore.send(.stepChanged(.init(step: .connect)))
-            self.presentationStore.send(.qrScannerButtonTapped)
+            self.credentialsStore.send(request.credentialsAction)
+            self.statusStore.send(request.statusAction)
+            self.stepStore.send(request.stepAction)
+            self.presentationStore.send(request.presentationAction)
             return
 
         case let .trustRotatedCertificate(request):

@@ -7431,8 +7431,13 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingFeatureSource.contains("struct CertificateTrustRequest: Equatable, Sendable"))
         #expect(onboardingFeatureSource.contains("var problem: GatewayConnectionProblem"))
         #expect(onboardingFeatureSource.contains("var connectionStart: OnboardingStatusFeature.Action.ConnectionStart"))
+        #expect(onboardingFeatureSource.contains("struct ResetAndScanRequest: Equatable, Sendable"))
+        #expect(onboardingFeatureSource.contains("var credentialsAction: OnboardingCredentialsFeature.Action"))
+        #expect(onboardingFeatureSource.contains("var statusAction: OnboardingStatusFeature.Action"))
+        #expect(onboardingFeatureSource.contains("var stepAction: OnboardingStepFeature.Action"))
+        #expect(onboardingFeatureSource.contains("var presentationAction: OnboardingPresentationFeature.Action"))
         #expect(onboardingFeatureSource.contains("enum PrimaryActionDecision: Equatable, Sendable"))
-        #expect(onboardingFeatureSource.contains("case resetAndScan"))
+        #expect(onboardingFeatureSource.contains("case resetAndScan(ResetAndScanRequest)"))
         #expect(onboardingFeatureSource.contains("case trustRotatedCertificate(CertificateTrustRequest)"))
         #expect(onboardingFeatureSource.contains("case openProtocolMismatchHelp(GatewayConnectionProblem)"))
         #expect(onboardingFeatureSource.contains("case retryConnection"))
@@ -7443,6 +7448,12 @@ struct RootTabsSourceGuardTests {
             "state.primaryActionDecision = Self.primaryActionDecision(for: problem)"))
         #expect(onboardingFeatureSource.contains("state.primaryActionDecision = nil"))
         #expect(onboardingFeatureSource.contains("if problem.suggestsOnboardingReset"))
+        #expect(onboardingFeatureSource.contains("return .resetAndScan(self.resetAndScanRequest())"))
+        #expect(onboardingFeatureSource.contains("private static func resetAndScanRequest() -> ResetAndScanRequest"))
+        #expect(onboardingFeatureSource.contains("credentialsAction: .reset"))
+        #expect(onboardingFeatureSource.contains("statusAction: .gatewayProblemResetScanStarted"))
+        #expect(onboardingFeatureSource.contains("stepAction: .stepChanged(.init(step: .connect))"))
+        #expect(onboardingFeatureSource.contains("presentationAction: .qrScannerButtonTapped"))
         #expect(onboardingFeatureSource.contains("if problem.canTrustRotatedCertificate"))
         #expect(onboardingFeatureSource.contains("return .trustRotatedCertificate(self.certificateTrustRequest(for: problem))"))
         #expect(onboardingFeatureSource.contains("private static func certificateTrustRequest("))
@@ -7484,7 +7495,7 @@ struct RootTabsSourceGuardTests {
         let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let resetFunction = try Self.extract(
             onboardingSource,
-            from: "case .resetAndScan:",
+            from: "case let .resetAndScan(request):",
             to: "case let .trustRotatedCertificate")
         let onboardingStateStoreDeclaration = try Self.extract(
             onboardingSource,
@@ -7513,11 +7524,15 @@ struct RootTabsSourceGuardTests {
         #expect(resetFunction.contains(".send(.onboardingResetRequested(.init("))
         #expect(resetFunction.contains("instanceId: .init(value: self.instanceId)"))
         #expect(resetFunction.contains(".finish()"))
-        #expect(resetFunction.contains("self.credentialsStore.send(.reset)"))
-        #expect(resetFunction.contains("self.statusStore.send(.gatewayProblemResetScanStarted)"))
-        #expect(resetFunction.contains("self.stepStore.send(.stepChanged(.init(step: .connect)))"))
-        #expect(resetFunction.contains("self.presentationStore.send(.qrScannerButtonTapped)"))
+        #expect(resetFunction.contains("self.credentialsStore.send(request.credentialsAction)"))
+        #expect(resetFunction.contains("self.statusStore.send(request.statusAction)"))
+        #expect(resetFunction.contains("self.stepStore.send(request.stepAction)"))
+        #expect(resetFunction.contains("self.presentationStore.send(request.presentationAction)"))
         #expect(!resetFunction.contains("GatewayOnboardingReset.reset"))
+        #expect(!resetFunction.contains("self.credentialsStore.send(.reset)"))
+        #expect(!resetFunction.contains("self.statusStore.send(.gatewayProblemResetScanStarted)"))
+        #expect(!resetFunction.contains("self.stepStore.send(.stepChanged(.init(step: .connect)))"))
+        #expect(!resetFunction.contains("self.presentationStore.send(.qrScannerButtonTapped)"))
     }
 
     @Test func `settings onboarding reset is reducer effect owned`() throws {

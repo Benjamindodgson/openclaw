@@ -390,9 +390,16 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
         var connectionStart: OnboardingStatusFeature.Action.ConnectionStart
     }
 
+    struct ResetAndScanRequest: Equatable, Sendable {
+        var credentialsAction: OnboardingCredentialsFeature.Action
+        var statusAction: OnboardingStatusFeature.Action
+        var stepAction: OnboardingStepFeature.Action
+        var presentationAction: OnboardingPresentationFeature.Action
+    }
+
     enum PrimaryActionDecision: Equatable, Sendable {
         case openProtocolMismatchHelp(GatewayConnectionProblem)
-        case resetAndScan
+        case resetAndScan(ResetAndScanRequest)
         case retryConnection
         case trustRotatedCertificate(CertificateTrustRequest)
     }
@@ -426,7 +433,7 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
 
     private static func primaryActionDecision(for problem: GatewayConnectionProblem) -> PrimaryActionDecision? {
         if problem.suggestsOnboardingReset {
-            return .resetAndScan
+            return .resetAndScan(self.resetAndScanRequest())
         }
         if problem.canTrustRotatedCertificate {
             return .trustRotatedCertificate(self.certificateTrustRequest(for: problem))
@@ -438,6 +445,14 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
             return .retryConnection
         }
         return nil
+    }
+
+    private static func resetAndScanRequest() -> ResetAndScanRequest {
+        .init(
+            credentialsAction: .reset,
+            statusAction: .gatewayProblemResetScanStarted,
+            stepAction: .stepChanged(.init(step: .connect)),
+            presentationAction: .qrScannerButtonTapped)
     }
 
     private static func certificateTrustRequest(
