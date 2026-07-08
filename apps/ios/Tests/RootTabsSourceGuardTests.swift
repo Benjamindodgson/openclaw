@@ -2260,6 +2260,11 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("var proposals: [IPadSkillProposal] {\n            self.proposalEntries.values\n        }"))
         #expect(source.contains("var statusFilterLabel: String"))
         #expect(source.contains("var statusFilterControlPresentation: IPadSkillWorkshopStatusFilterControlPresentation"))
+        #expect(typeSource.contains(
+            "struct IPadSkillWorkshopStatusFilterControlPresentation: Equatable, Sendable {\n    let title: String"))
+        #expect(source.contains("title: \"Status\",\n                selectedFilter: self.statusFilter.value"))
+        #expect(source.contains("Picker(statusFilterPresentation.title, selection: self.statusFilterBinding)"))
+        #expect(!source.contains("Picker(\"Status\", selection: self.statusFilterBinding)"))
         #expect(source.contains("Text(queueSummary.statusLabel)"))
         #expect(!source.contains("self.store.statusFilterLabel"))
         #expect(!source.contains("private var statusFilterLabel: String"))

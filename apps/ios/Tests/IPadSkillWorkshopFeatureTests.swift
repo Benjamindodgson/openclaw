@@ -111,6 +111,7 @@ struct IPadSkillWorkshopFeatureTests {
 
         #expect(state.statusFilterLabel == "Pending")
         #expect(state.statusFilterControlPresentation == .init(
+            title: "Status",
             selectedFilter: "pending",
             selectedLabel: "Pending",
             options: statusFilterOptions))
@@ -159,6 +160,7 @@ struct IPadSkillWorkshopFeatureTests {
         state.statusFilter = .init(value: "all")
         #expect(state.statusFilterLabel == "All")
         #expect(state.statusFilterControlPresentation == .init(
+            title: "Status",
             selectedFilter: "all",
             selectedLabel: "All",
             options: statusFilterOptions))

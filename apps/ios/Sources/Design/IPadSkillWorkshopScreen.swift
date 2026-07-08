@@ -260,6 +260,7 @@ struct IPadSkillWorkshopFeature {
 
         var statusFilterControlPresentation: IPadSkillWorkshopStatusFilterControlPresentation {
             .init(
+                title: "Status",
                 selectedFilter: self.statusFilter.value,
                 selectedLabel: self.statusFilterLabel,
                 options: Self.proposalStatusFilters.map { filter in
@@ -904,7 +905,7 @@ struct IPadSkillWorkshopScreen: View {
                 let statusFilterPresentation = self.store.statusFilterControlPresentation
                 self.agentScopeMenu
                 self.proposalSearchField
-                Picker("Status", selection: self.statusFilterBinding) {
+                Picker(statusFilterPresentation.title, selection: self.statusFilterBinding) {
                     ForEach(statusFilterPresentation.options) { option in
                         Text(option.title).tag(option.id)
                     }
@@ -954,7 +955,7 @@ struct IPadSkillWorkshopScreen: View {
                 }
 
                 self.agentScopeMenu
-                Picker("Status", selection: self.statusFilterBinding) {
+                Picker(statusFilterPresentation.title, selection: self.statusFilterBinding) {
                     ForEach(statusFilterPresentation.options) { option in
                         Text(option.title).tag(option.id)
                     }
