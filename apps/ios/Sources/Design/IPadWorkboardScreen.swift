@@ -186,7 +186,7 @@ struct IPadWorkboardScreen: View {
                         .disabled(self.dispatchControlPresentation.isDisabled)
                     }
                 } else {
-                    Text(Self.compactWriteUnavailableMessage(canRead: self.canRead))
+                    Text(self.compactWriteUnavailablePresentation.message)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
@@ -600,6 +600,10 @@ struct IPadWorkboardScreen: View {
         self.store.state.compactEmptyStatePresentation(canRead: self.canRead)
     }
 
+    private var compactWriteUnavailablePresentation: IPadWorkboardCompactWriteUnavailablePresentation {
+        self.store.state.compactWriteUnavailablePresentation(canRead: self.canRead)
+    }
+
     private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
         self.screenPresentation.statusFilterControlPresentation
     }
@@ -615,10 +619,6 @@ struct IPadWorkboardScreen: View {
         verticalSizeClass: UserInterfaceSizeClass?) -> Bool
     {
         horizontalSizeClass == .compact || verticalSizeClass == .compact
-    }
-
-    nonisolated static func compactWriteUnavailableMessage(canRead: Bool) -> String {
-        canRead ? "Read-only gateway." : "Connect from Settings to create, move, and dispatch cards."
     }
 
     nonisolated static func boardScopeOptions(knownBoardIDs: [String], cardBoardIDs: [String]) -> [String] {

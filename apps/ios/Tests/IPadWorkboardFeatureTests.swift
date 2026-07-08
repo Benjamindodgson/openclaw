@@ -198,6 +198,17 @@ struct IPadWorkboardFeatureTests {
             value: nil))
     }
 
+    @Test func `workboard compact write unavailable presentation is reducer owned`() {
+        let state = IPadWorkboardFeature.State()
+
+        #expect(state.compactWriteUnavailablePresentation(canRead: false) == .init(
+            message: "Connect from Settings to create, move, and dispatch cards."))
+        #expect(state.compactWriteUnavailablePresentation(canRead: true) == .init(message: "Read-only gateway."))
+        #expect(IPadWorkboardFeature.State.compactWriteUnavailableMessage(canRead: false) ==
+            "Connect from Settings to create, move, and dispatch cards.")
+        #expect(IPadWorkboardFeature.State.compactWriteUnavailableMessage(canRead: true) == "Read-only gateway.")
+    }
+
     @Test func `workboard board scope menu presentation is reducer owned`() {
         var state = IPadWorkboardFeature.State()
         state.knownBoardIDEntries = .init(values: [.init(value: "ops")])
