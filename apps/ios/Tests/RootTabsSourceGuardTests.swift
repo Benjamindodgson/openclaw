@@ -2361,13 +2361,25 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("state.inspectingProposalID = request.proposalID"))
         #expect(typeSource.contains(
             "struct IPadSkillWorkshopProposalInspectionControlsPresentation: Equatable, Sendable"))
+        #expect(typeSource.contains("let title: String"))
+        #expect(typeSource.contains("let iconSystemName: String"))
         #expect(source.contains(
             "var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation"))
+        #expect(source.contains("title: \"Inspect\""))
+        #expect(source.contains("iconSystemName: \"doc.text.magnifyingglass\""))
         #expect(source.contains("self.inspectingProposalID == nil"))
+        #expect(source.contains(
+            "private var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation"))
+        #expect(source.contains("self.screenPresentation.proposalInspectionControlsPresentation"))
         #expect(source.contains("isBusy: presentation.isInspecting"))
         #expect(source.contains("if card.isInspecting"))
         #expect(!source.contains("if self.store.state.proposalPresentation(for: proposal).isInspecting"))
         #expect(source.contains(
+            "Label(inspectionPresentation.title, systemImage: inspectionPresentation.iconSystemName)"))
+        #expect(source.contains(
+            ".disabled(!inspectionPresentation.canInspect)"))
+        #expect(!source.contains("Label(\"Inspect\", systemImage: \"doc.text.magnifyingglass\")"))
+        #expect(!source.contains(
             ".disabled(!self.screenPresentation.proposalInspectionControlsPresentation.canInspect)"))
         #expect(!source.contains(".disabled(!self.store.proposalInspectionControlsPresentation.canInspect)"))
         #expect(!source.contains("var shouldEnableProposalInspectionControls: Bool"))
