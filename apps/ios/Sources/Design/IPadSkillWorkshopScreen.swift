@@ -153,7 +153,9 @@ struct IPadSkillWorkshopFeature {
             return .init(
                 canApplyMutations: canApplyMutations,
                 canRunActions: canApplyMutations && self.busyAction == nil,
-                showsAdminScopeNotice: !canApplyMutations)
+                adminScopeNotice: canApplyMutations ? nil : .init(
+                    iconSystemName: "lock.shield",
+                    text: "Admin scope required."))
         }
 
         func emptyProposalPresentation(
@@ -1232,8 +1234,8 @@ struct IPadSkillWorkshopScreen: View {
                             self.proposalInspectButton(proposal)
                         }
                     }
-                    if self.proposalActionControlsPresentation.showsAdminScopeNotice {
-                        self.adminScopeNotice
+                    if let notice = self.proposalActionControlsPresentation.adminScopeNotice {
+                        self.adminScopeNotice(notice)
                     }
                 }
             }
@@ -1310,11 +1312,11 @@ struct IPadSkillWorkshopScreen: View {
             activeAgentName: .init(value: self.appModel.activeAgentName))
     }
 
-    private var adminScopeNotice: some View {
+    private func adminScopeNotice(_ presentation: IPadSkillWorkshopAdminScopeNoticePresentation) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "lock.shield")
+            Image(systemName: presentation.iconSystemName)
                 .foregroundStyle(OpenClawBrand.warn)
-            Text("Admin scope required.")
+            Text(presentation.text)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Spacer(minLength: 8)

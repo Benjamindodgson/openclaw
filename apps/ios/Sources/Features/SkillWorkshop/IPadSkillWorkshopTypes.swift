@@ -208,10 +208,15 @@ struct IPadSkillWorkshopRefreshControlPresentation: Equatable, Sendable {
     let showsProgress: Bool
 }
 
+struct IPadSkillWorkshopAdminScopeNoticePresentation: Equatable, Sendable {
+    let iconSystemName: String
+    let text: String
+}
+
 struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable {
     let canApplyMutations: Bool
     let canRunActions: Bool
-    let showsAdminScopeNotice: Bool
+    let adminScopeNotice: IPadSkillWorkshopAdminScopeNoticePresentation?
 }
 
 struct IPadSkillWorkshopProposalInspectionControlsPresentation: Equatable, Sendable {
