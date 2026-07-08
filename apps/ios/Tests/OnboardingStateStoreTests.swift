@@ -639,6 +639,42 @@ import Testing
         }
     }
 
+    @Test @MainActor func `credentials reducer persists manual values through client`() async {
+        let probe = OnboardingGatewayCredentialsPersistenceProbe()
+        let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
+            OnboardingCredentialsFeature(credentialsPersistenceClient: probe.client)
+        }
+
+        await store.send(.gatewayTokenPersistenceRequested(.init(
+            value: .init(rawValue: " token-2 "),
+            instanceId: .init(value: " instance-1 "))))
+        await store.send(.gatewayPasswordPersistenceRequested(.init(
+            value: .init(rawValue: " password-2 "),
+            instanceId: .init(value: " instance-1 "))))
+        await store.finish()
+
+        #expect(probe.savedTokens == ["instance-1:token-2"])
+        #expect(probe.savedPasswords == ["instance-1:password-2"])
+    }
+
+    @Test @MainActor func `credentials reducer skips manual persistence without instance id`() async {
+        let probe = OnboardingGatewayCredentialsPersistenceProbe()
+        let store = TestStore(initialState: OnboardingCredentialsFeature.State()) {
+            OnboardingCredentialsFeature(credentialsPersistenceClient: probe.client)
+        }
+
+        await store.send(.gatewayTokenPersistenceRequested(.init(
+            value: .init(rawValue: "token-2"),
+            instanceId: .init(value: " "))))
+        await store.send(.gatewayPasswordPersistenceRequested(.init(
+            value: .init(rawValue: "password-2"),
+            instanceId: .init(value: " "))))
+        await store.finish()
+
+        #expect(probe.savedTokens.isEmpty)
+        #expect(probe.savedPasswords.isEmpty)
+    }
+
     @Test @MainActor func `credentials reducer persists setup auth through client`() async {
         let probe = OnboardingGatewaySetupAuthPersistenceProbe()
         let link = GatewayConnectDeepLink(
@@ -956,6 +992,23 @@ import Testing
             OnboardingPairingResumeClient(resume: {
                 self.resumeCount += 1
             })
+        }
+    }
+
+    private final class OnboardingGatewayCredentialsPersistenceProbe: @unchecked Sendable {
+        var savedPasswords: [String] = []
+        var savedTokens: [String] = []
+
+        var client: OnboardingGatewayCredentialsPersistenceClient {
+            OnboardingGatewayCredentialsPersistenceClient(
+                saveGatewayPassword: { value, instanceId in
+                    guard let instanceId = instanceId.trimmedValue else { return }
+                    self.savedPasswords.append("\(instanceId):\(value.value)")
+                },
+                saveGatewayToken: { value, instanceId in
+                    guard let instanceId = instanceId.trimmedValue else { return }
+                    self.savedTokens.append("\(instanceId):\(value.value)")
+                })
         }
     }
 

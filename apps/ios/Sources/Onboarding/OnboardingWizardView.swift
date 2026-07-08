@@ -193,13 +193,13 @@ struct OnboardingWizardView: View {
     private var gatewayPasswordBinding: Binding<String> {
         Binding(
             get: { self.credentialsStore.gatewayPassword },
-            set: { self.credentialsStore.send(.gatewayPasswordChanged(.init(password: .init(value: $0)))) })
+            set: { self.updateGatewayPassword($0) })
     }
 
     private var gatewayTokenBinding: Binding<String> {
         Binding(
             get: { self.credentialsStore.gatewayToken },
-            set: { self.credentialsStore.send(.gatewayTokenChanged(.init(token: .init(value: $0)))) })
+            set: { self.updateGatewayToken($0) })
     }
 
     private var currentProblem: GatewayConnectionProblem? {
@@ -397,12 +397,6 @@ struct OnboardingWizardView: View {
             }
             .onChange(of: self.discoveryRestartStore.restartRequestID) { _, _ in
                 self.gatewayController.restartDiscovery()
-            }
-            .onChange(of: self.gatewayToken) { _, newValue in
-                self.saveGatewayCredentials(token: newValue, password: self.gatewayPassword)
-            }
-            .onChange(of: self.gatewayPassword) { _, newValue in
-                self.saveGatewayCredentials(token: self.gatewayToken, password: newValue)
             }
             .onChange(of: self.appModel.lastGatewayProblem) { _, newValue in
                 self.updateConnectionIssue(problem: newValue, statusText: self.appModel.gatewayStatusText)
@@ -1036,13 +1030,18 @@ extension OnboardingWizardView {
         self.discoveryRestartStore.send(.discoveryDomainChanged)
     }
 
-    private func saveGatewayCredentials(token: String, password: String) {
-        let trimmedInstanceId = GatewaySettingsStore.currentInstanceID()
-        guard !trimmedInstanceId.isEmpty else { return }
-        let trimmedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
-        GatewaySettingsStore.saveGatewayToken(trimmedToken, instanceId: trimmedInstanceId)
-        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-        GatewaySettingsStore.saveGatewayPassword(trimmedPassword, instanceId: trimmedInstanceId)
+    private func updateGatewayToken(_ value: String) {
+        self.credentialsStore.send(.gatewayTokenChanged(.init(token: .init(value: value))))
+        self.credentialsStore.send(.gatewayTokenPersistenceRequested(.init(
+            value: .init(rawValue: value),
+            instanceId: .init(value: self.instanceId))))
+    }
+
+    private func updateGatewayPassword(_ value: String) {
+        self.credentialsStore.send(.gatewayPasswordChanged(.init(password: .init(value: value))))
+        self.credentialsStore.send(.gatewayPasswordPersistenceRequested(.init(
+            value: .init(rawValue: value),
+            instanceId: .init(value: self.instanceId))))
     }
 
     private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
