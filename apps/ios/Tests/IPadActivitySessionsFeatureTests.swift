@@ -91,9 +91,10 @@ struct IPadActivitySessionsFeatureTests {
             $0.loadingPhase = .inFlight
             $0.loadErrorText = nil
         }
-        #expect(store.state.screenPresentation.sessionMetricValue == "...")
-        #expect(store.state.screenPresentation.feedHeaderValue == "Loading")
-        #expect(store.state.screenPresentation.showsLoadingSessionsPlaceholder)
+        let loadingPresentation = store.state.screenPresentation(sessionsAvailability: .init(value: true))
+        #expect(loadingPresentation.sessionMetricValue == "...")
+        #expect(loadingPresentation.feedHeaderValue == "Loading")
+        #expect(loadingPresentation.showsLoadingSessionsPlaceholder)
         await store.receive(.refreshResponse(.init(result: .success(.init(entries: loadedSessions))))) {
             $0.loadingPhase = .idle
             $0.sessionEntries = .init(entries: loadedSessions)
@@ -101,8 +102,9 @@ struct IPadActivitySessionsFeatureTests {
         await store.finish()
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
-        #expect(store.state.screenPresentation.sessionMetricValue == "8")
-        #expect(store.state.screenPresentation.sessionRows.map(\.id) == [
+        let loadedPresentation = store.state.screenPresentation(sessionsAvailability: .init(value: true))
+        #expect(loadedPresentation.sessionMetricValue == "8")
+        #expect(loadedPresentation.sessionRows.map(\.id) == [
             "chat-session-chat-9",
             "chat-session-chat-8",
             "chat-session-chat-7",
@@ -112,8 +114,8 @@ struct IPadActivitySessionsFeatureTests {
             "chat-session-chat-3",
             "chat-session-chat-2",
         ])
-        #expect(store.state.screenPresentation.feedHeaderValue == nil)
-        #expect(!store.state.screenPresentation.showsLoadingSessionsPlaceholder)
+        #expect(loadedPresentation.feedHeaderValue == nil)
+        #expect(!loadedPresentation.showsLoadingSessionsPlaceholder)
         #expect(store.state.visibleSessions.map(\.key) == [
             "chat-9",
             "chat-8",
@@ -154,8 +156,9 @@ struct IPadActivitySessionsFeatureTests {
         await store.finish()
 
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
-        #expect(store.state.screenPresentation.sessionMetricValue == "0")
-        #expect(store.state.screenPresentation.loadErrorText?.value == "Try again after the gateway reconnects.")
+        let presentation = store.state.screenPresentation(sessionsAvailability: .init(value: true))
+        #expect(presentation.sessionMetricValue == "0")
+        #expect(presentation.loadErrorText?.value == "Try again after the gateway reconnects.")
     }
 
     @Test func `gateway presentation refresh updates reducer state`() async {
@@ -174,7 +177,9 @@ struct IPadActivitySessionsFeatureTests {
         #expect(store.state.gatewayPresentation.gatewayStateText == "Online")
         #expect(store.state.gatewayPresentation.agentCountText == "3")
         #expect(store.state.gatewayPresentation.gatewayDetailText == "studio.local:4455")
-        #expect(store.state.screenPresentation.gatewayPresentation == presentation)
+        #expect(
+            store.state.screenPresentation(sessionsAvailability: .init(value: true)).gatewayPresentation
+                == presentation)
     }
 
     @Test func `gateway presentation owns metric and row fallbacks`() {
@@ -211,6 +216,26 @@ struct IPadActivitySessionsFeatureTests {
 
         #expect(empty.gatewayStateText == "Offline")
         #expect(empty.gatewayDetailText == "No gateway connection")
+    }
+
+    @Test func `screen presentation owns empty session copy`() {
+        let state = IPadActivitySessionsFeature.State()
+
+        let available = state.screenPresentation(sessionsAvailability: .init(value: true)).emptySessionPresentation
+        #expect(available.icon == "bubble.left.and.text.bubble.right")
+        #expect(available.title == "No recent sessions")
+        #expect(available.detail == "Start a chat and it will appear here.")
+        #expect(available.value == "empty")
+        #expect(available.actionTitle == "Chat")
+        #expect(available.opensChat)
+
+        let offline = state.screenPresentation(sessionsAvailability: .init(value: false)).emptySessionPresentation
+        #expect(offline.icon == "bubble.left.and.text.bubble.right")
+        #expect(offline.title == "Session activity offline")
+        #expect(offline.detail == "Connect to the gateway to load recent chat activity.")
+        #expect(offline.value == "offline")
+        #expect(offline.actionTitle == nil)
+        #expect(!offline.opensChat)
     }
 
     private static func refreshRequest(

@@ -81,7 +81,30 @@ struct IPadActivitySessionsFeature {
                     .prefix(8))
         }
 
-        var screenPresentation: IPadActivityScreenPresentation {
+        func emptySessionPresentation(
+            sessionsAvailability: IPadActivitySessionsAvailable) -> IPadActivityEmptySessionPresentation
+        {
+            if sessionsAvailability.value {
+                return .init(
+                    icon: "bubble.left.and.text.bubble.right",
+                    title: "No recent sessions",
+                    detail: "Start a chat and it will appear here.",
+                    value: "empty",
+                    actionTitle: "Chat",
+                    opensChat: true)
+            }
+            return .init(
+                icon: "bubble.left.and.text.bubble.right",
+                title: "Session activity offline",
+                detail: "Connect to the gateway to load recent chat activity.",
+                value: "offline",
+                actionTitle: nil,
+                opensChat: false)
+        }
+
+        func screenPresentation(
+            sessionsAvailability: IPadActivitySessionsAvailable) -> IPadActivityScreenPresentation
+        {
             let sessionRows = self.visibleSessions.map {
                 CommandCenterTab.sessionWorkItem(
                     for: $0,
@@ -93,7 +116,8 @@ struct IPadActivitySessionsFeature {
                 sessionMetricValue: self.loadingPhase == .inFlight ? "..." : "\(sessionRows.count)",
                 feedHeaderValue: self.loadingPhase == .inFlight ? "Loading" : nil,
                 showsLoadingSessionsPlaceholder: self.loadingPhase == .inFlight && self.sessions.isEmpty,
-                loadErrorText: self.loadErrorText)
+                loadErrorText: self.loadErrorText,
+                emptySessionPresentation: self.emptySessionPresentation(sessionsAvailability: sessionsAvailability))
         }
     }
 
@@ -328,16 +352,15 @@ struct IPadActivityScreen: View {
                         action: nil)
                 } else if self.screenPresentation.sessionRows.isEmpty {
                     Divider().padding(.leading, 58)
+                    let presentation = self.screenPresentation.emptySessionPresentation
                     ProStatusRow(
-                        icon: "bubble.left.and.text.bubble.right",
-                        title: self.sessionsAvailable ? "No recent sessions" : "Session activity offline",
-                        detail: self.sessionsAvailable
-                            ? "Start a chat and it will appear here."
-                            : "Connect to the gateway to load recent chat activity.",
-                        value: self.sessionsAvailable ? "empty" : "offline",
+                        icon: presentation.icon,
+                        title: presentation.title,
+                        detail: presentation.detail,
+                        value: presentation.value,
                         color: .secondary,
-                        actionTitle: self.sessionsAvailable ? "Chat" : nil,
-                        action: self.sessionsAvailable ? self.openChat : nil)
+                        actionTitle: presentation.actionTitle,
+                        action: presentation.opensChat ? self.openChat : nil)
                 } else {
                     ForEach(self.screenPresentation.sessionRows) { row in
                         Divider().padding(.leading, 58)
@@ -377,7 +400,7 @@ struct IPadActivityScreen: View {
     }
 
     private var screenPresentation: IPadActivityScreenPresentation {
-        self.store.state.screenPresentation
+        self.store.state.screenPresentation(sessionsAvailability: .init(value: self.sessionsAvailable))
     }
 
     private func syncGatewayPresentation() {
@@ -426,6 +449,16 @@ struct IPadActivityScreenPresentation: Equatable, Sendable {
     let feedHeaderValue: String?
     let showsLoadingSessionsPlaceholder: Bool
     let loadErrorText: IPadActivitySessionsFailureMessage?
+    let emptySessionPresentation: IPadActivityEmptySessionPresentation
+}
+
+struct IPadActivityEmptySessionPresentation: Equatable, Sendable {
+    let icon: String
+    let title: String
+    let detail: String
+    let value: String
+    let actionTitle: String?
+    let opensChat: Bool
 }
 
 struct IPadActivityGatewayPresentationState: Equatable, Sendable {
