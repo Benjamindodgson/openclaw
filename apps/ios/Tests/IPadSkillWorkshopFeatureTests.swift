@@ -265,10 +265,16 @@ struct IPadSkillWorkshopFeatureTests {
         let selectedProposal = Self.proposal(id: "pending-1", status: "pending")
         let inspectingProposal = Self.proposal(id: "pending-2", status: "pending")
 
-        #expect(state.proposalInspectionControlsPresentation == .init(canInspect: true))
+        #expect(state.proposalInspectionControlsPresentation == .init(
+            title: "Inspect",
+            iconSystemName: "doc.text.magnifyingglass",
+            canInspect: true))
         #expect(state.screenPresentation(
             gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
-            sceneIsActive: true).proposalInspectionControlsPresentation == .init(canInspect: true))
+            sceneIsActive: true).proposalInspectionControlsPresentation == .init(
+            title: "Inspect",
+            iconSystemName: "doc.text.magnifyingglass",
+            canInspect: true))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,
             isSelected: false,
@@ -278,10 +284,16 @@ struct IPadSkillWorkshopFeatureTests {
         state.selectedProposalID = .init(value: selectedProposal.id)
         state.inspectingProposalID = .init(value: inspectingProposal.id)
 
-        #expect(state.proposalInspectionControlsPresentation == .init(canInspect: false))
+        #expect(state.proposalInspectionControlsPresentation == .init(
+            title: "Inspect",
+            iconSystemName: "doc.text.magnifyingglass",
+            canInspect: false))
         #expect(state.screenPresentation(
             gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
-            sceneIsActive: true).proposalInspectionControlsPresentation == .init(canInspect: false))
+            sceneIsActive: true).proposalInspectionControlsPresentation == .init(
+            title: "Inspect",
+            iconSystemName: "doc.text.magnifyingglass",
+            canInspect: false))
         #expect(state.proposalCardPresentation(for: selectedProposal) == .init(
             proposal: selectedProposal,
             isSelected: true,

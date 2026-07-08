@@ -220,6 +220,8 @@ struct IPadSkillWorkshopProposalActionControlsPresentation: Equatable, Sendable 
 }
 
 struct IPadSkillWorkshopProposalInspectionControlsPresentation: Equatable, Sendable {
+    let title: String
+    let iconSystemName: String
     let canInspect: Bool
 }
 

@@ -411,7 +411,10 @@ struct IPadSkillWorkshopFeature {
         }
 
         var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation {
-            .init(canInspect: self.inspectingProposalID == nil)
+            .init(
+                title: "Inspect",
+                iconSystemName: "doc.text.magnifyingglass",
+                canInspect: self.inspectingProposalID == nil)
         }
 
         private func proposalCount(forStatus status: String) -> Int {
@@ -1267,15 +1270,16 @@ struct IPadSkillWorkshopScreen: View {
     }
 
     private func proposalInspectButton(_ proposal: IPadSkillProposal) -> some View {
-        Button {
+        let inspectionPresentation = self.proposalInspectionControlsPresentation
+        return Button {
             Task { await self.inspect(proposalID: proposal.id, force: true) }
         } label: {
-            Label("Inspect", systemImage: "doc.text.magnifyingglass")
+            Label(inspectionPresentation.title, systemImage: inspectionPresentation.iconSystemName)
                 .frame(maxWidth: self.isCompactWidth ? .infinity : nil)
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        .disabled(!self.screenPresentation.proposalInspectionControlsPresentation.canInspect)
+        .disabled(!inspectionPresentation.canInspect)
     }
 
     private var refreshTaskID: String {
@@ -1297,6 +1301,10 @@ struct IPadSkillWorkshopScreen: View {
 
     private var proposalActionControlsPresentation: IPadSkillWorkshopProposalActionControlsPresentation {
         self.screenPresentation.proposalActionControlsPresentation
+    }
+
+    private var proposalInspectionControlsPresentation: IPadSkillWorkshopProposalInspectionControlsPresentation {
+        self.screenPresentation.proposalInspectionControlsPresentation
     }
 
     private var emptyProposalPresentation: IPadSkillWorkshopEmptyProposalPresentation {
