@@ -923,15 +923,15 @@ private struct IPadWorkboardCardDetailSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Card") {
-                    LabeledContent("Title", value: self.presentation.title)
-                    LabeledContent("Status", value: self.presentation.statusLabel)
+                Section(self.presentation.detailSectionTitle) {
+                    LabeledContent(self.presentation.titleFieldTitle, value: self.presentation.title)
+                    LabeledContent(self.presentation.statusFieldTitle, value: self.presentation.statusLabel)
                     if let notes = self.presentation.notesText {
                         Text(notes)
                     }
                 }
 
-                Section("Actions") {
+                Section(self.presentation.actionsSectionTitle) {
                     if self.presentation.showsOpenSessionAction {
                         Button(self.presentation.openSessionActionTitle, action: self.openSession)
                     }
@@ -947,11 +947,11 @@ private struct IPadWorkboardCardDetailSheet: View {
                         .disabled(!self.canWrite || self.isBusy)
                 }
             }
-            .navigationTitle("Card")
+            .navigationTitle(self.presentation.detailSheetTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(self.presentation.doneActionTitle) {
                         self.dismiss()
                     }
                 }
