@@ -1075,7 +1075,7 @@ struct IPadWorkboardFeature {
         case createResponse(CreateResponse)
 
         struct DispatchRequest: Equatable, Sendable {
-            var writeAccess: GatewayWriteAccess
+            var gatewayAccess: IPadWorkboardGatewayAccess
         }
 
         struct DispatchResponse: Equatable, Sendable {
@@ -1258,7 +1258,7 @@ struct IPadWorkboardFeature {
                 }
 
             case let .dispatchRequested(request):
-                guard request.writeAccess.canWrite, !state.isLoading else { return .none }
+                guard request.gatewayAccess.canWrite, !state.isLoading else { return .none }
                 state.dispatchPhase = .inFlight
                 state.errorText = nil
                 state.dispatchSummaryText = nil

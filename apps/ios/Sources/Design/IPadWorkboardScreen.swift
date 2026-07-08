@@ -654,8 +654,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private func dispatchCards() async {
-        await self.store.send(.dispatchRequested(.init(writeAccess: .init(canWrite: self.gatewayAccess.canWrite))))
-            .finish()
+        await self.store.send(.dispatchRequested(.init(gatewayAccess: self.gatewayAccess))).finish()
     }
 
     private func open(_ card: IPadWorkboardCard) {
