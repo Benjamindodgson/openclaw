@@ -442,9 +442,8 @@ struct IPadWorkboardScreen: View {
                     IPadWorkboardKanbanColumn(
                         presentation: self.store.state.kanbanLanePresentation(status: status),
                         cards: cards,
-                        moveActions: self.store.moveActionPresentations,
-                        actionControlPresentation: { card in
-                            self.store.state.cardActionControlPresentation(for: card, context: .kanban)
+                        cardPresentation: { card in
+                            self.store.state.kanbanCardPresentation(for: card)
                         },
                         openSession: { card in
                             self.open(card)
@@ -657,8 +656,7 @@ struct IPadWorkboardScreen: View {
 struct IPadWorkboardKanbanColumn: View {
     let presentation: IPadWorkboardKanbanLanePresentation
     let cards: [IPadWorkboardCard]
-    let moveActions: [IPadWorkboardMoveActionPresentation]
-    let actionControlPresentation: (IPadWorkboardCard) -> IPadWorkboardCardActionControlPresentation
+    let cardPresentation: (IPadWorkboardCard) -> IPadWorkboardKanbanCardPresentation
     let openSession: (IPadWorkboardCard) -> Void
     let inspect: (IPadWorkboardCard) -> Void
     let move: (IPadWorkboardCard, String) -> Void
@@ -689,9 +687,7 @@ struct IPadWorkboardKanbanColumn: View {
                         }
                         IPadWorkboardKanbanCard(
                             card: card,
-                            presentation: IPadWorkboardFeature.State.cardPresentation(for: card),
-                            moveActions: self.moveActions,
-                            actionControlPresentation: self.actionControlPresentation(card),
+                            presentation: self.cardPresentation(card),
                             openSession: {
                                 self.openSession(card)
                             },
@@ -730,9 +726,7 @@ private enum IPadWorkboardCardColor {
 
 private struct IPadWorkboardKanbanCard: View {
     let card: IPadWorkboardCard
-    let presentation: IPadWorkboardCardPresentation
-    let moveActions: [IPadWorkboardMoveActionPresentation]
-    let actionControlPresentation: IPadWorkboardCardActionControlPresentation
+    let presentation: IPadWorkboardKanbanCardPresentation
     let openSession: () -> Void
     let inspect: () -> Void
     let move: (String) -> Void
@@ -743,19 +737,19 @@ private struct IPadWorkboardKanbanCard: View {
             Button(action: self.inspect) {
                 VStack(alignment: .leading, spacing: 7) {
                     HStack(alignment: .top, spacing: 10) {
-                        ProIconBadge(systemName: self.presentation.iconSystemName, color: self.color)
+                        ProIconBadge(systemName: self.presentation.cardPresentation.iconSystemName, color: self.color)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(self.presentation.title)
+                            Text(self.presentation.cardPresentation.title)
                                 .font(.subheadline.weight(.semibold))
                                 .lineLimit(2)
-                            Text(self.presentation.detail)
+                            Text(self.presentation.cardPresentation.detail)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(3)
                         }
                     }
 
-                    if let labelsSummary = self.presentation.labelsSummary {
+                    if let labelsSummary = self.presentation.cardPresentation.labelsSummary {
                         Text(labelsSummary)
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
@@ -767,33 +761,33 @@ private struct IPadWorkboardKanbanCard: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
-                if self.presentation.showsOpenSessionAction {
+                if self.presentation.cardPresentation.showsOpenSessionAction {
                     Button(action: self.openSession) {
                         Image(systemName: "bubble.left.and.text.bubble.right")
                     }
-                    .accessibilityLabel(self.presentation.openSessionActionTitle)
+                    .accessibilityLabel(self.presentation.cardPresentation.openSessionActionTitle)
                     .buttonStyle(.bordered)
                     .controlSize(.mini)
                 }
 
                 Menu {
-                    ForEach(self.moveActions) { action in
+                    ForEach(self.presentation.moveActions) { action in
                         Button(action.menuTitle) {
                             self.move(action.status)
                         }
                     }
-                    Button(self.presentation.archiveActionTitle, action: self.archive)
+                    Button(self.presentation.cardPresentation.archiveActionTitle, action: self.archive)
                 } label: {
-                    Image(systemName: self.actionControlPresentation.iconSystemName)
+                    Image(systemName: self.presentation.actionControlPresentation.iconSystemName)
                         .frame(width: 22, height: 22)
                 }
-                .accessibilityLabel(self.actionControlPresentation.accessibilityLabel)
+                .accessibilityLabel(self.presentation.actionControlPresentation.accessibilityLabel)
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
-                .disabled(self.actionControlPresentation.isDisabled)
+                .disabled(self.presentation.actionControlPresentation.isDisabled)
 
                 Spacer(minLength: 4)
-                ProValuePill(value: self.presentation.statusLabel, color: self.color)
+                ProValuePill(value: self.presentation.cardPresentation.statusLabel, color: self.color)
             }
         }
         .padding(12)
@@ -801,7 +795,7 @@ private struct IPadWorkboardKanbanCard: View {
     }
 
     private var color: Color {
-        IPadWorkboardCardColor.value(for: self.presentation.tone)
+        IPadWorkboardCardColor.value(for: self.presentation.cardPresentation.tone)
     }
 }
 

@@ -376,13 +376,8 @@ private struct IPadWorkboardStatesPreview: View {
                     IPadWorkboardKanbanColumn(
                         presentation: IPadWorkboardFeature.State.kanbanLanePresentation(status: "todo", cardCount: 0),
                         cards: [],
-                        moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
-                        actionControlPresentation: { card in
-                            let presentation = IPadWorkboardFeature.State.cardPresentation(for: card)
-                            return IPadWorkboardFeature.State.cardActionControlPresentation(
-                                isBusy: false,
-                                context: .kanban,
-                                accessibilityLabel: presentation.actionMenuAccessibilityLabel)
+                        cardPresentation: { card in
+                            self.kanbanCardPresentation(for: card)
                         },
                         openSession: { _ in },
                         inspect: { _ in },
@@ -429,13 +424,8 @@ private struct IPadWorkboardStatesPreview: View {
                             status: status,
                             cardCount: cards.count),
                         cards: cards,
-                        moveActions: IPadWorkboardFeature.State.moveActionPresentations(for: self.statuses),
-                        actionControlPresentation: { card in
-                            let presentation = IPadWorkboardFeature.State.cardPresentation(for: card)
-                            return IPadWorkboardFeature.State.cardActionControlPresentation(
-                                isBusy: false,
-                                context: .kanban,
-                                accessibilityLabel: presentation.actionMenuAccessibilityLabel)
+                        cardPresentation: { card in
+                            self.kanbanCardPresentation(for: card)
                         },
                         openSession: { _ in },
                         inspect: { _ in },
@@ -452,6 +442,12 @@ private struct IPadWorkboardStatesPreview: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
             .textCase(.uppercase)
+    }
+
+    private func kanbanCardPresentation(for card: IPadWorkboardCard) -> IPadWorkboardKanbanCardPresentation {
+        var state = IPadWorkboardFeature.State()
+        state.statusEntries = .init(values: self.statuses.map { .init(value: $0) })
+        return state.kanbanCardPresentation(for: card)
     }
 }
 
