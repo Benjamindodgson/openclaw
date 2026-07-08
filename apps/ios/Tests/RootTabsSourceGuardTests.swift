@@ -5848,8 +5848,9 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains("await progressPersistenceClient.markCompleted(mark.mode)"))
         #expect(onboardingStateSource.contains("await progressPersistenceClient.markFirstRunIntroSeen()"))
         #expect(storesSource.contains("progressPersistenceClient: .liveValue"))
-        #expect(onboardingSource.contains("self.onboardingStateStore.send(.markCompleted(.init(mode: selectedMode)))"))
+        #expect(onboardingSource.contains("self.onboardingStateStore.send(.markCompleted(completionRequest))"))
         #expect(introFunction.contains("self.onboardingStateStore.send(.markFirstRunIntroSeen)"))
+        #expect(!onboardingSource.contains("self.onboardingStateStore.send(.markCompleted(.init(mode: selectedMode)))"))
         #expect(!onboardingSource.contains("OnboardingStateStore.markCompleted(mode: selectedMode)"))
         #expect(!onboardingSource.contains("OnboardingStateStore.markFirstRunIntroSeen()"))
     }
@@ -5883,17 +5884,36 @@ struct RootTabsSourceGuardTests {
         let gatewayConnectionCompletion = try Self.extract(
             onboardingStateSource,
             from: "struct GatewayConnectionCompletion",
+            to: "struct GatewayConnectionSuccess")
+        let gatewayConnectionSuccess = try Self.extract(
+            onboardingStateSource,
+            from: "struct GatewayConnectionSuccess",
             to: "struct ConnectionIssueDetection")
 
         #expect(onboardingStateSource.contains("struct OnboardingGatewayMarkedCompleted: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct GatewayConnectionCompletion: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct GatewayConnectionSuccess: Equatable, Sendable"))
         #expect(gatewayConnectionCompletion.contains("var markedCompleted: OnboardingGatewayMarkedCompleted"))
+        #expect(gatewayConnectionSuccess.contains("var selectedMode: OnboardingConnectionMode?"))
+        #expect(onboardingStateSource.contains(
+            "var gatewayConnectionCompletionRequest: OnboardingStateFeature.Action.CompletionMark?"))
         #expect(onboardingStateSource.contains("case gatewayConnected(GatewayConnectionCompletion)"))
+        #expect(onboardingStateSource.contains("case gatewayConnectionSucceeded(GatewayConnectionSuccess)"))
+        #expect(onboardingStateSource.contains("case gatewayConnectionSuccessHandled"))
+        #expect(onboardingStateSource.contains("private static func applyGatewayConnected("))
+        #expect(onboardingStateSource.contains("state.gatewayConnectionCompletionRequest = completionRequest"))
+        #expect(onboardingStateSource.contains(
+            "success.selectedMode.map { OnboardingStateFeature.Action.CompletionMark(mode: $0) }"))
         #expect(onboardingStateSource.contains("if completion.markedCompleted.value"))
         #expect(onboardingStateSource.contains("state.completionMark = completion.markedCompleted"))
-        #expect(onboardingSource.contains("self.statusStore.send(.gatewayConnected(.init("))
-        #expect(onboardingSource.contains("markedCompleted: .init(value: shouldMarkCompleted && selectedMode != nil)"))
+        #expect(onboardingSource.contains(
+            "self.statusStore.send(.gatewayConnectionSucceeded(.init(selectedMode: self.selectedMode)))"))
+        #expect(onboardingSource.contains("self.statusStore.gatewayConnectionCompletionRequest"))
+        #expect(onboardingSource.contains("self.onboardingStateStore.send(.markCompleted(completionRequest))"))
+        #expect(onboardingSource.contains("self.statusStore.send(.gatewayConnectionSuccessHandled)"))
         #expect(!gatewayConnectionCompletion.contains("var markedCompleted: Bool"))
+        #expect(!onboardingSource.contains("let shouldMarkCompleted = !self.statusStore.didMarkCompleted"))
+        #expect(!onboardingSource.contains("markedCompleted: .init(value: shouldMarkCompleted && selectedMode != nil)"))
         #expect(!onboardingStateSource.contains("state.didMarkCompleted = true"))
     }
 

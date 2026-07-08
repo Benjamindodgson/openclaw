@@ -427,12 +427,11 @@ struct OnboardingWizardView: View {
             .onChange(of: self.appModel.gatewayServerName) { _, newValue in
                 guard newValue != nil else { return }
                 self.presentationStore.send(.qrScannerDismissed)
-                let shouldMarkCompleted = !self.statusStore.didMarkCompleted
-                if shouldMarkCompleted, let selectedMode {
-                    self.onboardingStateStore.send(.markCompleted(.init(mode: selectedMode)))
+                self.statusStore.send(.gatewayConnectionSucceeded(.init(selectedMode: self.selectedMode)))
+                if let completionRequest = self.statusStore.gatewayConnectionCompletionRequest {
+                    self.onboardingStateStore.send(.markCompleted(completionRequest))
                 }
-                self.statusStore.send(.gatewayConnected(.init(
-                    markedCompleted: .init(value: shouldMarkCompleted && selectedMode != nil))))
+                self.statusStore.send(.gatewayConnectionSuccessHandled)
                 self.stepStore.send(.stepChanged(.init(step: .success)))
             }
             .onChange(of: self.scenePhase) { _, newValue in
