@@ -14,6 +14,7 @@ struct OnboardingWizardView: View {
     @AppStorage("gateway.discovery.domain") private var discoveryDomain: String = ""
     @AppStorage("onboarding.developerMode") private var developerModeEnabled: Bool = false
     @State private var stepStore: StoreOf<OnboardingStepFeature>
+    @State private var onboardingStateStore: StoreOf<OnboardingStateFeature>
     @State private var credentialsStore: StoreOf<OnboardingCredentialsFeature>
 
     @State private var selectedPhoto: PhotosPickerItem?
@@ -55,6 +56,12 @@ struct OnboardingWizardView: View {
                     step: OnboardingStateStore.shouldPresentFirstRunIntro() ? .intro : .welcome))
             {
                 OnboardingStepFeature()
+            }
+        },
+        onboardingStateStore: StoreOf<OnboardingStateFeature>? = nil,
+        onboardingStateStoreFactory: () -> StoreOf<OnboardingStateFeature> = {
+            Store(initialState: OnboardingStateFeature.State()) {
+                OnboardingStateFeature()
             }
         },
         credentialsStore: StoreOf<OnboardingCredentialsFeature>? = nil,
@@ -130,6 +137,7 @@ struct OnboardingWizardView: View {
         self.onClose = onClose
         self.gatewayTrustPromptStoreFactory = gatewayTrustPromptStoreFactory
         let resolvedStepStore = stepStore ?? stepStoreFactory()
+        let resolvedOnboardingStateStore = onboardingStateStore ?? onboardingStateStoreFactory()
         let resolvedCredentialsStore = credentialsStore ?? credentialsStoreFactory()
         let resolvedStatusStore = statusStore ?? statusStoreFactory()
         let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
@@ -141,6 +149,7 @@ struct OnboardingWizardView: View {
         let resolvedSetupCodeStore = setupCodeStore ?? setupCodeStoreFactory()
         let resolvedPhotoImportStore = photoImportStore ?? photoImportStoreFactory()
         self._stepStore = State(wrappedValue: resolvedStepStore)
+        self._onboardingStateStore = State(wrappedValue: resolvedOnboardingStateStore)
         self._credentialsStore = State(wrappedValue: resolvedCredentialsStore)
         self._statusStore = State(wrappedValue: resolvedStatusStore)
         self._presentationStore = State(wrappedValue: resolvedPresentationStore)
@@ -1113,7 +1122,10 @@ extension OnboardingWizardView {
 
     private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
         if problem.suggestsOnboardingReset {
-            GatewayOnboardingReset.reset(appModel: self.appModel, instanceId: self.instanceId)
+            await self.onboardingStateStore
+                .send(.onboardingResetRequested(.init(
+                    instanceId: .init(value: self.instanceId))))
+                .finish()
             self.credentialsStore.send(.reset)
             self.statusStore.send(.gatewayProblemResetScanStarted)
             self.stepStore.send(.stepChanged(.init(step: .connect)))

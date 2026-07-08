@@ -148,6 +148,30 @@ import Testing
         }
     }
 
+    @Test @MainActor func `onboarding state reducer resets through client`() async {
+        let resetProbe = OnboardingResetProbe()
+        let store = TestStore(initialState: OnboardingStateFeature.State(
+            isCompleted: true,
+            firstRunIntroSeen: true,
+            hasSavedGatewayConnection: false,
+            gatewayServerName: nil))
+        {
+            OnboardingStateFeature(resetClient: resetProbe.client)
+        }
+
+        await store.send(.onboardingResetRequested(.init(
+            instanceId: .init(value: " instance-reset "))))
+        {
+            $0.completion = .init(isCompleted: false)
+            $0.firstRunIntroSeenState = .init(value: false)
+            $0.launchPresentation = .init(shouldPresent: true)
+            $0.firstRunIntroPresentation = .init(shouldPresent: true)
+        }
+        await store.finish()
+
+        #expect(resetProbe.resetInstanceIds == [.init(value: " instance-reset ")])
+    }
+
     @Test @MainActor func `presentation reducer owns scanner and problem detail state`() async {
         let store = TestStore(initialState: OnboardingPresentationFeature.State()) {
             OnboardingPresentationFeature()
@@ -944,6 +968,16 @@ import Testing
 
     private func reset(_ defaults: TestDefaults) {
         defaults.defaults.removePersistentDomain(forName: defaults.suiteName)
+    }
+
+    private final class OnboardingResetProbe: @unchecked Sendable {
+        var resetInstanceIds: [OnboardingGatewayCurrentInstanceID] = []
+
+        var client: OnboardingResetClient {
+            OnboardingResetClient(reset: { instanceId in
+                self.resetInstanceIds.append(instanceId)
+            })
+        }
     }
 
     private final class OnboardingDiscoveryRestartSleepProbe: @unchecked Sendable {
