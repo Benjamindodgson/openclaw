@@ -104,13 +104,13 @@ struct IPadWorkboardFeatureTests {
             title: "Workboard",
             subtitle: "All boards / Active")
         #expect(state.screenChromePresentation == defaultChrome)
-        #expect(state.screenPresentation.screenChromePresentation == defaultChrome)
+        #expect(state.screenPresentation(canRead: true, sceneIsActive: true).screenChromePresentation == defaultChrome)
 
         state.selectedBoardID = .init(value: "planning")
         state.selectedStatus = .init(value: "blocked")
 
         #expect(state.workboardSubtitle == "planning / Blocked")
-        #expect(state.screenPresentation.screenChromePresentation == .init(
+        #expect(state.screenPresentation(canRead: true, sceneIsActive: true).screenChromePresentation == .init(
             title: "Workboard",
             subtitle: "planning / Blocked"))
     }
@@ -127,7 +127,8 @@ struct IPadWorkboardFeatureTests {
             cardCount: 1,
             value: "1",
             cardCountLabel: "1 cards"))
-        #expect(state.screenPresentation.queueSummaryPresentation == state.queueSummaryPresentation)
+        #expect(state.screenPresentation(canRead: true, sceneIsActive: true).queueSummaryPresentation ==
+            state.queueSummaryPresentation)
     }
 
     @Test func `workboard refresh control presentation is reducer owned`() {
@@ -146,12 +147,27 @@ struct IPadWorkboardFeatureTests {
             compactAccessibilityLabel: "Refresh workboard",
             isDisabled: true,
             showsProgress: true))
-        #expect(state.screenPresentation.refreshControlPresentation == state.refreshControlPresentation)
+        #expect(state.screenPresentation(canRead: true, sceneIsActive: true).refreshControlPresentation ==
+            state.refreshControlPresentation)
 
         state.refreshPhase = .idle
         state.dispatchPhase = .inFlight
         #expect(state.refreshControlPresentation.isDisabled)
         #expect(state.refreshControlPresentation.showsProgress)
+    }
+
+    @Test func `workboard refresh task id is reducer owned`() {
+        var state = IPadWorkboardFeature.State()
+
+        #expect(state.refreshTaskID(canRead: true, sceneIsActive: true) == "connected:active:all")
+        #expect(state.refreshTaskID(canRead: false, sceneIsActive: false) == "offline:inactive:all")
+        #expect(state.screenPresentation(canRead: true, sceneIsActive: true).refreshTaskID == "connected:active:all")
+
+        state.selectedBoardID = .init(value: "planning")
+        #expect(state.refreshTaskID(canRead: true, sceneIsActive: false) == "connected:inactive:planning")
+        #expect(state.screenPresentation(
+            canRead: false,
+            sceneIsActive: true).refreshTaskID == "offline:active:planning")
     }
 
     @Test func `workboard dispatch control presentation is reducer owned`() {
@@ -234,7 +250,8 @@ struct IPadWorkboardFeatureTests {
                 .init(id: "planning", title: "planning"),
             ])
         #expect(state.boardScopeMenuPresentation == defaultPresentation)
-        #expect(state.screenPresentation.boardScopeMenuPresentation == defaultPresentation)
+        #expect(state.screenPresentation(canRead: true, sceneIsActive: true).boardScopeMenuPresentation ==
+            defaultPresentation)
 
         state.selectedBoardID = .init(value: "planning")
         #expect(state.boardScopeMenuPresentation.selectedLabel == "planning")
@@ -259,7 +276,8 @@ struct IPadWorkboardFeatureTests {
         #expect(presentation.options.first?.accessibilityLabel == "Show Active cards")
         #expect(presentation.options.filter(\.isSelected).map(\.id) == ["active"])
         #expect(presentation.compactOptions.filter(\.isSelected).map(\.id) == ["active"])
-        #expect(state.screenPresentation.statusFilterControlPresentation == presentation)
+        #expect(state.screenPresentation(canRead: true, sceneIsActive: true).statusFilterControlPresentation ==
+            presentation)
 
         state.selectedStatus = .init(value: "review")
         #expect(state.statusFilterControlPresentation.selectedLabel == "Review")
