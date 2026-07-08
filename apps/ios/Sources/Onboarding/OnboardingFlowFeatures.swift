@@ -365,6 +365,72 @@ struct OnboardingPairingResumeFeature {
 }
 
 @Reducer
+struct OnboardingGatewayProblemPrimaryActionFeature {
+    static func title(for problem: GatewayConnectionProblem) -> String? {
+        GatewayProblemPrimaryAction.title(
+            for: problem,
+            retryTitle: "Retry connection",
+            resetTitle: "Scan QR again")
+    }
+
+    // swiftformat:disable redundantSendable
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var primaryActionDecision: PrimaryActionDecision?
+    }
+
+    enum PrimaryActionDecision: Equatable, Sendable {
+        case openProtocolMismatchHelp(GatewayConnectionProblem)
+        case resetAndScan
+        case retryConnection
+        case trustRotatedCertificate(GatewayConnectionProblem)
+    }
+
+    enum Action: Equatable, Sendable {
+        struct PrimaryActionRequest: Equatable, Sendable {
+            var problem: GatewayConnectionProblem
+        }
+
+        case primaryActionDecisionHandled
+        case primaryActionTapped(PrimaryActionRequest)
+    }
+
+    // swiftformat:enable redundantSendable
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .primaryActionDecisionHandled:
+                state.primaryActionDecision = nil
+                return .none
+
+            case let .primaryActionTapped(request):
+                let problem = request.problem
+                state.primaryActionDecision = Self.primaryActionDecision(for: problem)
+                return .none
+            }
+        }
+        .autoLogActions()
+    }
+
+    private static func primaryActionDecision(for problem: GatewayConnectionProblem) -> PrimaryActionDecision? {
+        if problem.suggestsOnboardingReset {
+            return .resetAndScan
+        }
+        if problem.canTrustRotatedCertificate {
+            return .trustRotatedCertificate(problem)
+        }
+        if problem.kind == .protocolMismatch {
+            return .openProtocolMismatchHelp(problem)
+        }
+        if problem.retryable {
+            return .retryConnection
+        }
+        return nil
+    }
+}
+
+@Reducer
 struct OnboardingQRPhotoImportFeature {
     static let imageLoadFailureMessage = OnboardingQRPhotoImportFailureMessage(
         value: "Could not load the selected image.")

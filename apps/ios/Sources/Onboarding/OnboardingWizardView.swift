@@ -28,6 +28,8 @@ struct OnboardingWizardView: View {
 
     @State private var pairingResumeStore: StoreOf<OnboardingPairingResumeFeature>
 
+    @State private var gatewayProblemPrimaryActionStore: StoreOf<OnboardingGatewayProblemPrimaryActionFeature>
+
     @State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>
 
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature>
@@ -100,6 +102,12 @@ struct OnboardingWizardView: View {
                 OnboardingPairingResumeFeature()
             }
         },
+        gatewayProblemPrimaryActionStore: StoreOf<OnboardingGatewayProblemPrimaryActionFeature>? = nil,
+        gatewayProblemPrimaryActionStoreFactory: () -> StoreOf<OnboardingGatewayProblemPrimaryActionFeature> = {
+            Store(initialState: OnboardingGatewayProblemPrimaryActionFeature.State()) {
+                OnboardingGatewayProblemPrimaryActionFeature()
+            }
+        },
         discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>? = nil,
         discoveryRestartStoreFactory: () -> StoreOf<OnboardingDiscoveryRestartFeature> = {
             Store(initialState: OnboardingDiscoveryRestartFeature.State()) {
@@ -144,6 +152,8 @@ struct OnboardingWizardView: View {
         let resolvedGatewayConnectionStore = gatewayConnectionStore ?? gatewayConnectionStoreFactory()
         let resolvedAppleReviewDemoStore = appleReviewDemoStore ?? appleReviewDemoStoreFactory()
         let resolvedPairingResumeStore = pairingResumeStore ?? pairingResumeStoreFactory()
+        let resolvedGatewayProblemPrimaryActionStore =
+            gatewayProblemPrimaryActionStore ?? gatewayProblemPrimaryActionStoreFactory()
         let resolvedDiscoveryRestartStore = discoveryRestartStore ?? discoveryRestartStoreFactory()
         let resolvedConnectionFormStore = connectionFormStore ?? connectionFormStoreFactory()
         let resolvedSetupCodeStore = setupCodeStore ?? setupCodeStoreFactory()
@@ -156,6 +166,7 @@ struct OnboardingWizardView: View {
         self._gatewayConnectionStore = State(wrappedValue: resolvedGatewayConnectionStore)
         self._appleReviewDemoStore = State(wrappedValue: resolvedAppleReviewDemoStore)
         self._pairingResumeStore = State(wrappedValue: resolvedPairingResumeStore)
+        self._gatewayProblemPrimaryActionStore = State(wrappedValue: resolvedGatewayProblemPrimaryActionStore)
         self._discoveryRestartStore = State(wrappedValue: resolvedDiscoveryRestartStore)
         self._connectionFormStore = State(wrappedValue: resolvedConnectionFormStore)
         self._setupCodeStore = State(wrappedValue: resolvedSetupCodeStore)
@@ -1077,14 +1088,16 @@ extension OnboardingWizardView {
     }
 
     private func gatewayProblemPrimaryActionTitle(_ problem: GatewayConnectionProblem) -> String? {
-        GatewayProblemPrimaryAction.title(
-            for: problem,
-            retryTitle: "Retry connection",
-            resetTitle: "Scan QR again")
+        OnboardingGatewayProblemPrimaryActionFeature.title(for: problem)
     }
 
     private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async {
-        if problem.suggestsOnboardingReset {
+        self.gatewayProblemPrimaryActionStore.send(.primaryActionTapped(.init(problem: problem)))
+        guard let decision = self.gatewayProblemPrimaryActionStore.primaryActionDecision else { return }
+        self.gatewayProblemPrimaryActionStore.send(.primaryActionDecisionHandled)
+
+        switch decision {
+        case .resetAndScan:
             await self.onboardingStateStore
                 .send(.onboardingResetRequested(.init(
                     instanceId: .init(value: self.instanceId))))
@@ -1094,8 +1107,8 @@ extension OnboardingWizardView {
             self.stepStore.send(.stepChanged(.init(step: .connect)))
             self.presentationStore.send(.qrScannerButtonTapped)
             return
-        }
-        if problem.canTrustRotatedCertificate {
+
+        case let .trustRotatedCertificate(problem):
             self.statusStore.send(.connectionStarted(.init(
                 id: .init(value: "trust-certificate"),
                 message: .init(value: "Updating gateway certificate…"),
@@ -1104,11 +1117,13 @@ extension OnboardingWizardView {
             defer { self.statusStore.send(.connectionFinished) }
             _ = await self.gatewayController.trustRotatedGatewayCertificate(from: problem)
             return
-        }
-        if GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem) {
+
+        case let .openProtocolMismatchHelp(problem):
+            _ = GatewayProblemPrimaryAction.openProtocolMismatchHelpIfNeeded(problem)
             return
+
+        case .retryConnection:
+            await self.retryLastAttempt()
         }
-        guard problem.retryable else { return }
-        await self.retryLastAttempt()
     }
 }
