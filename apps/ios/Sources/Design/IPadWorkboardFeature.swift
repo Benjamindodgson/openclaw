@@ -415,6 +415,7 @@ struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let refreshTaskID: String
     let queueSummaryPresentation: IPadWorkboardQueueSummaryPresentation
     let metricPresentations: [IPadWorkboardMetricPresentation]
+    let queryFieldPresentation: IPadWorkboardQueryFieldPresentation
     let refreshControlPresentation: IPadWorkboardRefreshControlPresentation
     let boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation
     let statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation
@@ -1555,6 +1556,7 @@ extension IPadWorkboardFeature.State {
                 sceneIsActive: sceneIsActive),
             queueSummaryPresentation: self.queueSummaryPresentation,
             metricPresentations: self.metricPresentations,
+            queryFieldPresentation: self.queryFieldPresentation,
             refreshControlPresentation: self.refreshControlPresentation,
             boardScopeMenuPresentation: self.boardScopeMenuPresentation,
             statusFilterControlPresentation: self.statusFilterControlPresentation,

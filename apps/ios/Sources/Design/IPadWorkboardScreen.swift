@@ -235,7 +235,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var searchField: some View {
-        let presentation = self.store.queryFieldPresentation
+        let presentation = self.screenPresentation.queryFieldPresentation
         return HStack(spacing: 8) {
             Image(systemName: presentation.iconSystemName)
                 .font(.caption.weight(.semibold))
@@ -420,7 +420,7 @@ struct IPadWorkboardScreen: View {
 
     private var queryBinding: Binding<String> {
         Binding(
-            get: { self.store.queryFieldPresentation.text },
+            get: { self.screenPresentation.queryFieldPresentation.text },
             set: { self.store.send(.queryChanged(.init(query: .init(value: $0)))) })
     }
 
