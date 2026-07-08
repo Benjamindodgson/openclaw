@@ -204,23 +204,15 @@ struct CommandCenterTab: View {
                 self.cardHeader(title: "Gateway")
 
                 HStack(spacing: 0) {
-                    self.gatewayFact(
-                        icon: "network",
-                        title: "Connection",
-                        value: self.gatewayStore.presentation.connectionText,
-                        color: self.gatewayStore.presentation.statusColor)
-                    Divider().frame(height: 38)
-                    self.gatewayFact(
-                        icon: "server.rack",
-                        title: "Address",
-                        value: self.gatewayStore.presentation.addressText,
-                        color: OpenClawBrand.accent)
-                    Divider().frame(height: 38)
-                    self.gatewayFact(
-                        icon: "person.2.fill",
-                        title: "Agents",
-                        value: self.gatewayStore.presentation.agentCountText,
-                        color: OpenClawBrand.accentHot)
+                    ForEach(
+                        Array(self.gatewayStore.presentation.factPresentations.enumerated()),
+                        id: \.element.id)
+                    { item in
+                        if item.offset > 0 {
+                            Divider().frame(height: 38)
+                        }
+                        self.gatewayFact(presentation: item.element)
+                    }
                 }
                 .padding(.vertical, 7)
             }
@@ -228,20 +220,20 @@ struct CommandCenterTab: View {
         .padding(.horizontal, OpenClawProMetric.pagePadding)
     }
 
-    private func gatewayFact(icon: String, title: String, value: String, color: Color) -> some View {
+    private func gatewayFact(presentation: CommandCenterGatewayFactPresentation) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 5) {
-                Image(systemName: icon)
+                Image(systemName: presentation.icon)
                     .font(.caption2.weight(.bold))
-                    .foregroundStyle(color)
-                Text(title)
+                    .foregroundStyle(presentation.iconColor)
+                Text(presentation.title)
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            Text(value)
+            Text(presentation.value)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(title == "Connection" ? color : .primary)
+                .foregroundStyle(presentation.valueColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
         }
@@ -545,6 +537,16 @@ struct CommandCenterGatewayServerName: Equatable, Sendable { var value: String? 
 struct CommandCenterGatewayAgentCount: Equatable, Sendable { var value: Int }
 struct CommandCenterGatewayActiveAgentName: Equatable, Sendable { var value: String }
 struct CommandCenterGatewayDisplayStatusText: Equatable, Sendable { var value: String }
+
+struct CommandCenterGatewayFactPresentation: Equatable, Identifiable, Sendable {
+    let id: String
+    let icon: String
+    let title: String
+    let value: String
+    let iconColor: Color
+    let valueColor: Color
+}
+
 // swiftformat:enable redundantSendable
 
 struct CommandCenterGatewayPresentationState: Equatable {
@@ -630,6 +632,32 @@ struct CommandCenterGatewayPresentationState: Equatable {
     var agentCountText: String {
         guard self.isConnected else { return "—" }
         return "\(self.gatewayAgentCount)"
+    }
+
+    var factPresentations: [CommandCenterGatewayFactPresentation] {
+        [
+            .init(
+                id: "connection",
+                icon: "network",
+                title: "Connection",
+                value: self.connectionText,
+                iconColor: self.statusColor,
+                valueColor: self.statusColor),
+            .init(
+                id: "address",
+                icon: "server.rack",
+                title: "Address",
+                value: self.addressText,
+                iconColor: OpenClawBrand.accent,
+                valueColor: .primary),
+            .init(
+                id: "agents",
+                icon: "person.2.fill",
+                title: "Agents",
+                value: self.agentCountText,
+                iconColor: OpenClawBrand.accentHot,
+                valueColor: .primary),
+        ]
     }
 
     var gatewaySubtitle: String {

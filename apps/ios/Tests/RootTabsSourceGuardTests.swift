@@ -936,7 +936,9 @@ struct RootTabsSourceGuardTests {
         #expect(settingsList.matches(of: /ProCard\(padding: 0/).count == 2)
         #expect(settingsRow.contains(".contentShape(Rectangle())"))
         #expect(!overviewSource.contains("ProCapsule("))
-        #expect(overviewSource.contains("value: self.gatewayStore.presentation.connectionText"))
+        #expect(overviewSource.contains("self.gatewayStore.presentation.factPresentations"))
+        #expect(overviewSource.contains("self.gatewayFact(presentation: item.element)"))
+        #expect(!overviewSource.contains("value: self.gatewayStore.presentation.connectionText"))
         #expect(overviewSource.contains("switch self.gatewayDisplayState"))
         #expect(overviewSource.contains("case .connecting:"))
         #expect(overviewSource.contains("case .error:"))
@@ -3941,6 +3943,7 @@ struct RootTabsSourceGuardTests {
     @Test func `command center gateway endpoints are typed presentation state`() throws {
         let source = try String(contentsOf: Self.commandCenterSourceURL(), encoding: .utf8)
 
+        #expect(source.contains("struct CommandCenterGatewayFactPresentation: Equatable, Identifiable, Sendable"))
         #expect(source.contains("struct CommandCenterGatewayRemoteAddress: Equatable, Sendable"))
         #expect(source.contains("struct CommandCenterGatewayServerName: Equatable, Sendable"))
         #expect(source.contains("var gatewayRemoteAddressState = CommandCenterGatewayRemoteAddress(value: nil)"))
@@ -3953,7 +3956,14 @@ struct RootTabsSourceGuardTests {
         #expect(source.contains("var gatewayServerName: String?"))
         #expect(source.contains("self.gatewayRemoteAddressState.value"))
         #expect(source.contains("self.gatewayServerNameState.value"))
+        #expect(source.contains("var factPresentations: [CommandCenterGatewayFactPresentation]"))
+        #expect(source.contains("id: \"connection\""))
+        #expect(source.contains("id: \"address\""))
+        #expect(source.contains("id: \"agents\""))
+        #expect(source.contains("self.gatewayStore.presentation.factPresentations.enumerated()"))
+        #expect(source.contains("private func gatewayFact(presentation: CommandCenterGatewayFactPresentation)"))
         #expect(!source.contains("var gatewayRemoteAddress: String?\n    var gatewayServerName: String?"))
+        #expect(!source.contains("private func gatewayFact(icon: String, title: String, value: String, color: Color)"))
     }
 
     @Test func `command center agent count is typed presentation state`() throws {
