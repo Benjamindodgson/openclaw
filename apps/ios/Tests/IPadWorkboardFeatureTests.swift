@@ -524,6 +524,8 @@ struct IPadWorkboardFeatureTests {
         #expect(state.statusMessagePresentations == [
             .init(id: "error", text: "offline", tone: .warn),
         ])
+        #expect(state.screenPresentation(gatewayAccess: .init(canRead: true, canWrite: true), sceneIsActive: true)
+            .statusMessagePresentations == state.statusMessagePresentations)
     }
 
     @Test func `workboard card action control presentation is reducer owned`() {

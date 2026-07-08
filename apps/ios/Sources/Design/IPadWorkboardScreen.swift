@@ -198,7 +198,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var statusMessageRows: some View {
-        ForEach(self.store.statusMessagePresentations) { message in
+        ForEach(self.screenPresentation.statusMessagePresentations) { message in
             Text(message.text)
                 .font(.caption2)
                 .foregroundStyle(Self.messageColor(for: message.tone))

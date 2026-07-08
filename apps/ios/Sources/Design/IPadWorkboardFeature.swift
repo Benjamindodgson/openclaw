@@ -417,6 +417,7 @@ struct IPadWorkboardScreenPresentation: Equatable, Sendable {
     let refreshControlPresentation: IPadWorkboardRefreshControlPresentation
     let boardScopeMenuPresentation: IPadWorkboardBoardScopeMenuPresentation
     let statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation
+    let statusMessagePresentations: [IPadWorkboardStatusMessagePresentation]
 }
 
 // swiftformat:enable redundantSendable
@@ -1554,7 +1555,8 @@ extension IPadWorkboardFeature.State {
             queueSummaryPresentation: self.queueSummaryPresentation,
             refreshControlPresentation: self.refreshControlPresentation,
             boardScopeMenuPresentation: self.boardScopeMenuPresentation,
-            statusFilterControlPresentation: self.statusFilterControlPresentation)
+            statusFilterControlPresentation: self.statusFilterControlPresentation,
+            statusMessagePresentations: self.statusMessagePresentations)
     }
 
     func refreshTaskID(gatewayAccess: IPadWorkboardGatewayAccess, sceneIsActive: Bool) -> String {
