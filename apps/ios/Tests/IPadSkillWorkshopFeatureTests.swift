@@ -530,9 +530,25 @@ struct IPadSkillWorkshopFeatureTests {
             iconSystemName: "magnifyingglass",
             clearButtonSystemName: "xmark.circle.fill",
             showsClearButton: false))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).queryFieldPresentation == .init(
+            text: "",
+            placeholder: "Search proposals",
+            iconSystemName: "magnifyingglass",
+            clearButtonSystemName: "xmark.circle.fill",
+            showsClearButton: false))
 
         state.query = .init(value: "gateway")
         #expect(state.queryFieldPresentation == .init(
+            text: "gateway",
+            placeholder: "Search proposals",
+            iconSystemName: "magnifyingglass",
+            clearButtonSystemName: "xmark.circle.fill",
+            showsClearButton: true))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).queryFieldPresentation == .init(
             text: "gateway",
             placeholder: "Search proposals",
             iconSystemName: "magnifyingglass",
