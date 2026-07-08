@@ -592,7 +592,7 @@ struct IPadWorkboardScreen: View {
     }
 
     private var compactWriteControlsPresentation: IPadWorkboardCompactWriteControlsPresentation {
-        self.store.state.compactWriteControlsPresentation(gatewayAccess: self.gatewayAccess)
+        self.screenPresentation.compactWriteControlsPresentation
     }
 
     private var statusFilterControlPresentation: IPadWorkboardStatusFilterControlPresentation {
