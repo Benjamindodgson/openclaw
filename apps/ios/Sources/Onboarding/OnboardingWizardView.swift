@@ -21,6 +21,8 @@ struct OnboardingWizardView: View {
 
     @State private var presentationStore: StoreOf<OnboardingPresentationFeature>
 
+    @State private var gatewayConnectionStore: StoreOf<OnboardingGatewayConnectionFeature>
+
     @State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>
 
     @State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature>
@@ -69,6 +71,12 @@ struct OnboardingWizardView: View {
                 OnboardingPresentationFeature()
             }
         },
+        gatewayConnectionStore: StoreOf<OnboardingGatewayConnectionFeature>? = nil,
+        gatewayConnectionStoreFactory: () -> StoreOf<OnboardingGatewayConnectionFeature> = {
+            Store(initialState: OnboardingGatewayConnectionFeature.State()) {
+                OnboardingGatewayConnectionFeature()
+            }
+        },
         discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>? = nil,
         discoveryRestartStoreFactory: () -> StoreOf<OnboardingDiscoveryRestartFeature> = {
             Store(initialState: OnboardingDiscoveryRestartFeature.State()) {
@@ -109,6 +117,7 @@ struct OnboardingWizardView: View {
         let resolvedCredentialsStore = credentialsStore ?? credentialsStoreFactory()
         let resolvedStatusStore = statusStore ?? statusStoreFactory()
         let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()
+        let resolvedGatewayConnectionStore = gatewayConnectionStore ?? gatewayConnectionStoreFactory()
         let resolvedDiscoveryRestartStore = discoveryRestartStore ?? discoveryRestartStoreFactory()
         let resolvedConnectionFormStore = connectionFormStore ?? connectionFormStoreFactory()
         let resolvedSetupCodeStore = setupCodeStore ?? setupCodeStoreFactory()
@@ -117,6 +126,7 @@ struct OnboardingWizardView: View {
         self._credentialsStore = State(wrappedValue: resolvedCredentialsStore)
         self._statusStore = State(wrappedValue: resolvedStatusStore)
         self._presentationStore = State(wrappedValue: resolvedPresentationStore)
+        self._gatewayConnectionStore = State(wrappedValue: resolvedGatewayConnectionStore)
         self._discoveryRestartStore = State(wrappedValue: resolvedDiscoveryRestartStore)
         self._connectionFormStore = State(wrappedValue: resolvedConnectionFormStore)
         self._setupCodeStore = State(wrappedValue: resolvedSetupCodeStore)
@@ -660,7 +670,7 @@ struct OnboardingWizardView: View {
 
             Section {
                 Button {
-                    self.openQRScannerFromOnboarding()
+                    Task { @MainActor in await self.openQRScannerFromOnboarding() }
                 } label: {
                     Label("Scan QR Code Again", systemImage: "qrcode.viewfinder")
                 }
@@ -890,9 +900,9 @@ extension OnboardingWizardView {
         }
     }
 
-    private func openQRScannerFromOnboarding() {
+    private func openQRScannerFromOnboarding() async {
         // Stop active reconnect loops before scanning new credentials.
-        self.appModel.disconnectGateway()
+        await self.gatewayConnectionStore.send(.disconnectRequested).finish()
         self.statusStore.send(.freshQRScanStarted)
         self.presentationStore.send(.qrScannerButtonTapped)
     }

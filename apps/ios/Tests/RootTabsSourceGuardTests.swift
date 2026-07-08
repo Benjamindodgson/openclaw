@@ -5004,6 +5004,10 @@ struct RootTabsSourceGuardTests {
         let onboardingPresentationStoreDeclaration = try Self.extract(
             onboardingSource,
             from: "@State private var presentationStore",
+            to: "@State private var gatewayConnectionStore")
+        let onboardingGatewayConnectionStoreDeclaration = try Self.extract(
+            onboardingSource,
+            from: "@State private var gatewayConnectionStore",
             to: "@State private var discoveryRestartStore")
         let discoveryRestartStoreDeclaration = try Self.extract(
             onboardingSource,
@@ -5077,6 +5081,29 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource
             .contains("let resolvedPresentationStore = presentationStore ?? presentationStoreFactory()"))
         #expect(onboardingSource.contains("self._presentationStore = State(wrappedValue: resolvedPresentationStore)"))
+        #expect(onboardingGatewayConnectionStoreDeclaration
+            .contains("@State private var gatewayConnectionStore: StoreOf<OnboardingGatewayConnectionFeature>"))
+        #expect(!onboardingGatewayConnectionStoreDeclaration.contains("= Store("))
+        #expect(onboardingSource
+            .contains("gatewayConnectionStore: StoreOf<OnboardingGatewayConnectionFeature>? = nil"))
+        #expect(onboardingSource
+            .contains("gatewayConnectionStoreFactory: () -> StoreOf<OnboardingGatewayConnectionFeature>"))
+        #expect(onboardingSource
+            .contains("let resolvedGatewayConnectionStore = gatewayConnectionStore ?? gatewayConnectionStoreFactory()"))
+        #expect(onboardingSource
+            .contains("self._gatewayConnectionStore = State(wrappedValue: resolvedGatewayConnectionStore)"))
+        #expect(rootSource.contains("gatewayConnectionStore: self.makeOnboardingGatewayConnectionStore()"))
+        #expect(storesSource.contains("func makeOnboardingGatewayConnectionStore()"))
+        #expect(storesSource
+            .contains("OnboardingGatewayConnectionFeature(disconnectClient: .live(appModel: self.appModel))"))
+        #expect(onboardingStateSource.contains("struct OnboardingGatewayDisconnectClient"))
+        #expect(onboardingStateSource.contains("var onboardingGatewayDisconnect: OnboardingGatewayDisconnectClient"))
+        #expect(onboardingStateSource.contains("struct OnboardingGatewayConnectionFeature"))
+        #expect(onboardingStateSource.contains("case disconnectRequested"))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingGatewayDisconnect)"))
+        #expect(onboardingStateSource.contains("await disconnectClient.disconnect()"))
+        #expect(onboardingSource.contains("await self.gatewayConnectionStore.send(.disconnectRequested).finish()"))
+        #expect(!onboardingSource.contains("self.appModel.disconnectGateway()"))
         #expect(onboardingSource.contains("@State private var discoveryRestartStore"))
         #expect(discoveryRestartStoreDeclaration
             .contains("@State private var discoveryRestartStore: StoreOf<OnboardingDiscoveryRestartFeature>"))

@@ -175,6 +175,18 @@ import Testing
         }
     }
 
+    @Test @MainActor func `gateway connection reducer delegates disconnect through client`() async {
+        let probe = OnboardingGatewayDisconnectProbe()
+        let store = TestStore(initialState: OnboardingGatewayConnectionFeature.State()) {
+            OnboardingGatewayConnectionFeature(disconnectClient: probe.client)
+        }
+
+        await store.send(.disconnectRequested)
+        await store.finish()
+
+        #expect(probe.disconnectCount == 1)
+    }
+
     @Test @MainActor func `photo import reducer classifies gateway and demo QR messages`() async {
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
@@ -564,8 +576,8 @@ import Testing
             $0.pendingManualAuthOverride = nil
         }
 
-        #expect(store.state.gatewayToken == "")
-        #expect(store.state.gatewayPassword == "")
+        #expect(store.state.gatewayToken.isEmpty)
+        #expect(store.state.gatewayPassword.isEmpty)
         #expect(!store.state.hasGatewayToken)
         #expect(!store.state.hasGatewayPassword)
     }
@@ -832,6 +844,16 @@ import Testing
                     self.continuation?.resume(throwing: CancellationError())
                     self.continuation = nil
                 }
+            })
+        }
+    }
+
+    private final class OnboardingGatewayDisconnectProbe: @unchecked Sendable {
+        var disconnectCount = 0
+
+        var client: OnboardingGatewayDisconnectClient {
+            OnboardingGatewayDisconnectClient(disconnect: {
+                self.disconnectCount += 1
             })
         }
     }
