@@ -208,6 +208,7 @@ struct IPadSkillWorkshopFeature {
                 refreshTaskID: self.refreshTaskID(
                     gatewayAccess: gatewayAccess,
                     sceneIsActive: sceneIsActive),
+                refreshControlPresentation: self.refreshControlPresentation,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -911,7 +912,7 @@ struct IPadSkillWorkshopScreen: View {
     private var filtersCard: some View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                let refreshPresentation = self.store.refreshControlPresentation
+                let refreshPresentation = self.screenPresentation.refreshControlPresentation
                 let statusFilterPresentation = self.store.statusFilterControlPresentation
                 self.agentScopeMenu
                 self.proposalSearchField
@@ -934,9 +935,7 @@ struct IPadSkillWorkshopScreen: View {
                     .tint(self.neutralControlTint)
                     .disabled(refreshPresentation.isDisabled)
 
-                    if refreshPresentation.showsProgress {
-                        ProgressView().controlSize(.small)
-                    }
+                    if refreshPresentation.showsProgress { ProgressView().controlSize(.small) }
                 }
                 self.feedbackMessageRows
             }
@@ -947,7 +946,7 @@ struct IPadSkillWorkshopScreen: View {
     private var compactFiltersCard: some View {
         ProCard(radius: OpenClawProMetric.cardRadius) {
             VStack(alignment: .leading, spacing: 12) {
-                let refreshPresentation = self.store.refreshControlPresentation
+                let refreshPresentation = self.screenPresentation.refreshControlPresentation
                 let statusFilterPresentation = self.store.statusFilterControlPresentation
                 let queueSummary = self.store.queueSummaryPresentation
                 HStack(alignment: .firstTextBaseline, spacing: 10) {

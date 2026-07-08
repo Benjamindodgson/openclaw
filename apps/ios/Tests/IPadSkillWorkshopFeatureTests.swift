@@ -483,10 +483,24 @@ struct IPadSkillWorkshopFeatureTests {
             iconSystemName: "arrow.clockwise",
             isDisabled: false,
             showsProgress: false))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).refreshControlPresentation == .init(
+            title: "Refresh",
+            iconSystemName: "arrow.clockwise",
+            isDisabled: false,
+            showsProgress: false))
 
         state.loadingPhase = .inFlight
         #expect(state.isRefreshInFlight)
         #expect(state.refreshControlPresentation == .init(
+            title: "Refresh",
+            iconSystemName: "arrow.clockwise",
+            isDisabled: true,
+            showsProgress: true))
+        #expect(state.screenPresentation(
+            gatewayAccess: .init(canRead: true, canWrite: true, hasOperatorAdminScope: true),
+            sceneIsActive: true).refreshControlPresentation == .init(
             title: "Refresh",
             iconSystemName: "arrow.clockwise",
             isDisabled: true,
