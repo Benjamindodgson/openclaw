@@ -895,91 +895,6 @@ import Testing
         }
     }
 
-    @Test @MainActor func `connection form reducer normalizes ports and mode defaults`() async {
-        let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
-            OnboardingConnectionFormFeature()
-        }
-
-        await store.send(.initialized(.init(
-            host: .init(value: "openclaw.local"),
-            port: .init(value: 18789),
-            tls: .init(value: true),
-            lastMode: .developerLocal)))
-        {
-            $0.selectedMode = .developerLocal
-            $0.manualHostState = .init(value: "localhost")
-            $0.manualTLSState = .init(value: false)
-        }
-
-        await store.send(.manualPortTextChanged(.init(text: .init(value: "65abc536")))) {
-            $0.manualPortState = .init(value: 65535)
-            $0.manualPortTextState = .init(value: "65535")
-        }
-
-        await store.send(.manualPortTextChanged(.init(text: .init(value: "0")))) {
-            $0.manualPortState = .init(value: 0)
-            $0.manualPortTextState = .init(value: "")
-        }
-
-        #expect(!store.state.canConnectManual)
-
-        await store.send(.manualConnectionRequested)
-
-        await store.send(.modeSelected(.init(mode: .remoteDomain))) {
-            $0.selectedMode = .remoteDomain
-            $0.manualHostState = .init(value: "")
-            $0.manualPortState = .init(value: 18789)
-            $0.manualPortTextState = .init(value: "18789")
-            $0.manualTLSState = .init(value: true)
-        }
-
-        await store.send(.manualHostChanged(.init(host: .init(value: "gateway.example.com")))) {
-            $0.manualHostState = .init(value: "gateway.example.com")
-        }
-
-        #expect(store.state.manualHost == "gateway.example.com")
-
-        await store.send(.manualTLSChanged(.init(useTLS: .init(value: false)))) {
-            $0.manualTLSState = .init(value: false)
-        }
-
-        #expect(!store.state.manualTLS)
-
-        #expect(store.state.canConnectManual)
-
-        await store.send(.gatewayLinkApplied(.init(
-            host: .init(value: "studio.local"),
-            port: .init(value: 19000),
-            tls: .init(value: false))))
-        {
-            $0.manualHostState = .init(value: "studio.local")
-            $0.manualPortState = .init(value: 19000)
-            $0.manualPortTextState = .init(value: "19000")
-            $0.manualTLSState = .init(value: false)
-        }
-
-        await store.send(.manualConnectionRequested) {
-            $0.manualConnectionRequest = OnboardingConnectionFormFeature.ManualConnectionRequest(
-                host: .init(value: "studio.local"),
-                port: .init(value: 19000),
-                useTLS: .init(value: false))
-        }
-
-        await store.send(.manualConnectionRequestHandled) {
-            $0.manualConnectionRequest = nil
-        }
-
-        await store.send(.developerModeDisabled)
-
-        await store.send(.selectedModeChanged(.init(mode: .developerLocal))) {
-            $0.selectedMode = .developerLocal
-        }
-
-        await store.send(.developerModeDisabled) {
-            $0.selectedMode = nil
-        }
-    }
-
     private struct TestDefaults {
         var suiteName: String
         var defaults: UserDefaults
@@ -1102,6 +1017,117 @@ import Testing
     }
 }
 
+extension OnboardingStateStoreTests {
+    @Test @MainActor func `connection form reducer normalizes ports and mode defaults`() async {
+        let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
+            OnboardingConnectionFormFeature()
+        }
+
+        await store.send(.initialized(.init(
+            host: .init(value: "openclaw.local"),
+            port: .init(value: 18789),
+            tls: .init(value: true),
+            lastMode: .developerLocal)))
+        {
+            $0.selectedMode = .developerLocal
+            $0.manualHostState = .init(value: "localhost")
+            $0.manualTLSState = .init(value: false)
+        }
+
+        await store.send(.manualPortTextChanged(.init(text: .init(value: "65abc536")))) {
+            $0.manualPortState = .init(value: 65535)
+            $0.manualPortTextState = .init(value: "65535")
+        }
+
+        await store.send(.manualPortTextChanged(.init(text: .init(value: "0")))) {
+            $0.manualPortState = .init(value: 0)
+            $0.manualPortTextState = .init(value: "")
+        }
+
+        #expect(!store.state.canConnectManual)
+
+        await store.send(.manualConnectionRequested)
+
+        await store.send(.modeSelected(.init(mode: .remoteDomain))) {
+            $0.selectedMode = .remoteDomain
+            $0.manualHostState = .init(value: "")
+            $0.manualPortState = .init(value: 18789)
+            $0.manualPortTextState = .init(value: "18789")
+            $0.manualTLSState = .init(value: true)
+        }
+
+        await store.send(.manualHostChanged(.init(host: .init(value: "gateway.example.com")))) {
+            $0.manualHostState = .init(value: "gateway.example.com")
+        }
+
+        #expect(store.state.manualHost == "gateway.example.com")
+
+        await store.send(.manualTLSChanged(.init(useTLS: .init(value: false)))) {
+            $0.manualTLSState = .init(value: false)
+        }
+
+        #expect(!store.state.manualTLS)
+
+        #expect(store.state.canConnectManual)
+
+        await store.send(.gatewayLinkApplied(.init(
+            host: .init(value: "studio.local"),
+            port: .init(value: 19000),
+            tls: .init(value: false))))
+        {
+            $0.manualHostState = .init(value: "studio.local")
+            $0.manualPortState = .init(value: 19000)
+            $0.manualPortTextState = .init(value: "19000")
+            $0.manualTLSState = .init(value: false)
+        }
+
+        await store.send(.manualConnectionRequested) {
+            $0.manualConnectionRequest = OnboardingConnectionFormFeature.ManualConnectionRequest(
+                host: .init(value: "studio.local"),
+                port: .init(value: 19000),
+                useTLS: .init(value: false))
+        }
+
+        await store.send(.manualConnectionRequestHandled) {
+            $0.manualConnectionRequest = nil
+        }
+
+        await store.send(.developerModeDisabled)
+
+        await store.send(.selectedModeChanged(.init(mode: .developerLocal))) {
+            $0.selectedMode = .developerLocal
+        }
+
+        await store.send(.developerModeDisabled) {
+            $0.selectedMode = nil
+        }
+    }
+
+    @Test @MainActor func `connection form reducer loads saved connection defaults`() async {
+        let defaultsProbe = OnboardingConnectionFormDefaultsProbe()
+        defaultsProbe.defaults = .init(
+            host: .init(value: "saved.example.com"),
+            port: .init(value: 443),
+            tls: .init(value: true),
+            lastMode: .remoteDomain,
+            hasSavedGatewayConnection: .init(value: true))
+        let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
+            OnboardingConnectionFormFeature(defaultsClient: defaultsProbe.client)
+        }
+
+        await store.send(.initialConnectionLoadRequested) {
+            $0.manualHostState = .init(value: "saved.example.com")
+            $0.manualPortState = .init(value: 443)
+            $0.manualPortTextState = .init(value: "443")
+            $0.manualTLSState = .init(value: true)
+            $0.selectedMode = .remoteDomain
+            $0.savedGatewayConnection = .init(value: true)
+        }
+
+        #expect(defaultsProbe.loadCount == 1)
+    }
+}
+
 private final class OnboardingProgressPersistenceProbe: @unchecked Sendable {
     var completedModes: [OnboardingConnectionMode?] = []
     var firstRunIntroSeenCount = 0
@@ -1114,5 +1140,22 @@ private final class OnboardingProgressPersistenceProbe: @unchecked Sendable {
             markFirstRunIntroSeen: {
                 self.firstRunIntroSeenCount += 1
             })
+    }
+}
+
+private final class OnboardingConnectionFormDefaultsProbe: @unchecked Sendable {
+    var defaults = OnboardingConnectionFormDefaults(
+        host: .init(value: "openclaw.local"),
+        port: .init(value: 18789),
+        tls: .init(value: true),
+        lastMode: nil,
+        hasSavedGatewayConnection: .init(value: false))
+    var loadCount = 0
+
+    var client: OnboardingConnectionFormDefaultsClient {
+        OnboardingConnectionFormDefaultsClient(loadDefaults: {
+            self.loadCount += 1
+            return self.defaults
+        })
     }
 }

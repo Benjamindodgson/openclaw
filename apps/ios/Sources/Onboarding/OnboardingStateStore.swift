@@ -187,7 +187,57 @@ struct OnboardingManualPortText: Equatable, Sendable { var value: String }
 struct OnboardingManualTLS: Equatable, Sendable { var value: Bool }
 
 struct OnboardingScannerErrorMessage: Equatable, Sendable { var value: String }
+
+struct OnboardingConnectionFormDefaults: Equatable, Sendable {
+    var host: OnboardingManualHost
+    var port: OnboardingManualPort
+    var tls: OnboardingManualTLS
+    var lastMode: OnboardingConnectionMode?
+    var hasSavedGatewayConnection: OnboardingHasSavedGatewayConnection
+}
+
 // swiftformat:enable redundantSendable
+
+struct OnboardingConnectionFormDefaultsClient {
+    var loadDefaults: @Sendable () -> OnboardingConnectionFormDefaults
+}
+
+extension OnboardingConnectionFormDefaultsClient: DependencyKey {
+    static let liveValue = OnboardingConnectionFormDefaultsClient(loadDefaults: {
+        let lastGatewayConnection = GatewaySettingsStore.loadLastGatewayConnection()
+        var initialConnection: (host: String, port: Int, tls: Bool) = ("openclaw.local", 18789, true)
+        if let lastGatewayConnection {
+            switch lastGatewayConnection {
+            case let .manual(host, port, useTLS, _):
+                initialConnection = (host, port, useTLS)
+            case .discovered:
+                break
+            }
+        }
+        return .init(
+            host: .init(value: initialConnection.host),
+            port: .init(value: initialConnection.port),
+            tls: .init(value: initialConnection.tls),
+            lastMode: OnboardingStateStore.lastMode(),
+            hasSavedGatewayConnection: .init(value: lastGatewayConnection != nil))
+    })
+
+    static let testValue = OnboardingConnectionFormDefaultsClient(loadDefaults: {
+        .init(
+            host: .init(value: "openclaw.local"),
+            port: .init(value: 18789),
+            tls: .init(value: true),
+            lastMode: nil,
+            hasSavedGatewayConnection: .init(value: false))
+    })
+}
+
+extension DependencyValues {
+    var onboardingConnectionFormDefaults: OnboardingConnectionFormDefaultsClient {
+        get { self[OnboardingConnectionFormDefaultsClient.self] }
+        set { self[OnboardingConnectionFormDefaultsClient.self] = newValue }
+    }
+}
 
 @Reducer
 struct OnboardingStateFeature {
@@ -1482,6 +1532,12 @@ struct OnboardingSetupCodeFeature {
 
 @Reducer
 struct OnboardingConnectionFormFeature {
+    private let defaultsClientOverride: OnboardingConnectionFormDefaultsClient?
+
+    init(defaultsClient: OnboardingConnectionFormDefaultsClient? = nil) {
+        self.defaultsClientOverride = defaultsClient
+    }
+
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
@@ -1491,6 +1547,7 @@ struct OnboardingConnectionFormFeature {
         var manualPortState = OnboardingManualPort(value: 18789)
         var manualPortTextState = OnboardingManualPortText(value: "18789")
         var manualTLSState = OnboardingManualTLS(value: true)
+        var savedGatewayConnection = OnboardingHasSavedGatewayConnection(value: false)
 
         var manualHost: String {
             self.manualHostState.value
@@ -1510,6 +1567,10 @@ struct OnboardingConnectionFormFeature {
 
         var manualTLS: Bool {
             self.manualTLSState.value
+        }
+
+        var hasSavedGatewayConnection: Bool {
+            self.savedGatewayConnection.value
         }
 
         var canConnectManual: Bool {
@@ -1570,6 +1631,7 @@ struct OnboardingConnectionFormFeature {
 
         case developerModeDisabled
         case gatewayLinkApplied(GatewayLinkApplication)
+        case initialConnectionLoadRequested
         case initialized(Initialization)
         case manualConnectionRequested
         case manualConnectionRequestHandled
@@ -1584,6 +1646,9 @@ struct OnboardingConnectionFormFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingConnectionFormDefaults) var dependencyDefaultsClient
+            let defaultsClient = self.defaultsClientOverride ?? dependencyDefaultsClient
+
             switch action {
             case .developerModeDisabled:
                 if state.selectedMode == .developerLocal {
@@ -1601,20 +1666,17 @@ struct OnboardingConnectionFormFeature {
                 }
                 return .none
 
+            case .initialConnectionLoadRequested:
+                Self.applyInitialization(defaultsClient.loadDefaults(), to: &state)
+                return .none
+
             case let .initialized(initialization):
-                if state.normalizedManualHost.isEmpty {
-                    state.manualHostState = initialization.host
-                    state.manualPortState = initialization.port
-                    state.manualTLSState = initialization.tls
-                }
-                state.syncManualPortText()
-                if state.selectedMode == nil {
-                    state.selectedMode = initialization.lastMode
-                }
-                if state.selectedMode == .developerLocal, state.manualHost == "openclaw.local" {
-                    state.manualHostState = .init(value: "localhost")
-                    state.manualTLSState = .init(value: false)
-                }
+                Self.applyInitialization(.init(
+                    host: initialization.host,
+                    port: initialization.port,
+                    tls: initialization.tls,
+                    lastMode: initialization.lastMode,
+                    hasSavedGatewayConnection: state.savedGatewayConnection), to: &state)
                 return .none
 
             case .manualConnectionRequested:
@@ -1663,6 +1725,26 @@ struct OnboardingConnectionFormFeature {
             }
         }
         .autoLogActions()
+    }
+
+    private static func applyInitialization(
+        _ initialization: OnboardingConnectionFormDefaults,
+        to state: inout State)
+    {
+        if state.normalizedManualHost.isEmpty {
+            state.manualHostState = initialization.host
+            state.manualPortState = initialization.port
+            state.manualTLSState = initialization.tls
+        }
+        state.savedGatewayConnection = initialization.hasSavedGatewayConnection
+        state.syncManualPortText()
+        if state.selectedMode == nil {
+            state.selectedMode = initialization.lastMode
+        }
+        if state.selectedMode == .developerLocal, state.manualHost == "openclaw.local" {
+            state.manualHostState = .init(value: "localhost")
+            state.manualTLSState = .init(value: false)
+        }
     }
 }
 
