@@ -205,9 +205,7 @@ struct IPadSkillWorkshopFeature {
         {
             .init(
                 screenChromePresentation: self.screenChromePresentation,
-                refreshTaskID: self.refreshTaskID(
-                    gatewayAccess: gatewayAccess,
-                    sceneIsActive: sceneIsActive),
+                refreshTaskID: self.refreshTaskID(gatewayAccess: gatewayAccess, sceneIsActive: sceneIsActive),
                 refreshControlPresentation: self.refreshControlPresentation,
                 statusFilterControlPresentation: self.statusFilterControlPresentation,
                 queryFieldPresentation: self.queryFieldPresentation,
@@ -216,6 +214,7 @@ struct IPadSkillWorkshopFeature {
                 metricPresentations: self.metricPresentations,
                 agentScopeMenuPresentation: self.agentScopeMenuPresentation,
                 proposalListPresentation: self.proposalListPresentation,
+                proposalBoardPresentation: self.proposalBoardPresentation,
                 proposalActionControlsPresentation: self.proposalActionControlsPresentation(
                     gatewayAccess: gatewayAccess),
                 proposalInspectionControlsPresentation: self.proposalInspectionControlsPresentation,
@@ -1091,7 +1090,7 @@ struct IPadSkillWorkshopScreen: View {
     private var proposalBoard: some View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 12) {
-                let boardPresentation = self.store.proposalBoardPresentation
+                let boardPresentation = self.screenPresentation.proposalBoardPresentation
                 let actionControlsPresentation = self.proposalActionControlsPresentation
                 let inspectionControlsPresentation = self.proposalInspectionControlsPresentation
                 ForEach(boardPresentation.lanes) { lane in

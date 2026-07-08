@@ -174,6 +174,7 @@ struct IPadSkillWorkshopFeatureTests {
         #expect(state.proposalBoardPresentation.lanes.map(\.title) == ["Pending"])
         #expect(state.proposalBoardPresentation.lanes.map(\.value) == ["1"])
         #expect(state.proposalBoardPresentation.lanes.first?.proposals.map(\.id) ?? [] == ["pending-match"])
+        #expect(pendingScreenPresentation.proposalBoardPresentation == state.proposalBoardPresentation)
         #expect(state.proposalDetailPresentation(forID: "pending-match")?.proposal.id == "pending-match")
         #expect(state.proposalDetailPresentation(forID: "missing") == nil)
 
@@ -225,6 +226,7 @@ struct IPadSkillWorkshopFeatureTests {
             "rejected",
         ])
         let boardLanes = state.proposalBoardPresentation.lanes
+        #expect(allScreenPresentation.proposalBoardPresentation == state.proposalBoardPresentation)
         #expect(boardLanes.map(\.value) == ["1", "0", "1", "1", "0"])
         #expect(boardLanes[0].proposals.map(\.id) == ["pending-match"])
         #expect(boardLanes[1].proposals.map(\.id) == [])
