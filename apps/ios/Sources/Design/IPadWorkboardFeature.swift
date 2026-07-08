@@ -1064,8 +1064,7 @@ struct IPadWorkboardFeature {
         case clearQueryTapped
 
         struct CreateRequest: Equatable, Sendable {
-            var readAccess: GatewayReadAccess
-            var writeAccess: GatewayWriteAccess
+            var gatewayAccess: IPadWorkboardGatewayAccess
         }
 
         struct CreateResponse: Equatable, Sendable {
@@ -1212,8 +1211,8 @@ struct IPadWorkboardFeature {
 
             case let .createRequested(request):
                 if let message = state.createUnavailableMessage(
-                    canRead: request.readAccess.canRead,
-                    canWrite: request.writeAccess.canWrite)
+                    canRead: request.gatewayAccess.canRead,
+                    canWrite: request.gatewayAccess.canWrite)
                 {
                     state.errorText = .init(value: message)
                     return .none

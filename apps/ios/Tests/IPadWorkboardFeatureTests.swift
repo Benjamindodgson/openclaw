@@ -697,10 +697,7 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.createRequested(.init(
-            readAccess: .init(canRead: true),
-            writeAccess: .init(canWrite: true))))
-        {
+        await store.send(.createRequested(.init(gatewayAccess: .init(canRead: true, canWrite: true)))) {
             $0.cardCreationPhase = .inFlight
             $0.errorText = nil
         }
@@ -723,10 +720,7 @@ struct IPadWorkboardFeatureTests {
             IPadWorkboardFeature(client: client)
         }
 
-        await store.send(.createRequested(.init(
-            readAccess: .init(canRead: true),
-            writeAccess: .init(canWrite: true))))
-        {
+        await store.send(.createRequested(.init(gatewayAccess: .init(canRead: true, canWrite: true)))) {
             $0.cardCreationPhase = .inFlight
             $0.errorText = nil
         }
