@@ -95,6 +95,9 @@ struct IPadActivitySessionsFeatureTests {
         #expect(loadingPresentation.sessionMetricValue == "...")
         #expect(loadingPresentation.feedHeaderPresentation.value == "Loading")
         #expect(loadingPresentation.showsLoadingSessionsPlaceholder)
+        #expect(loadingPresentation.loadingSessionsPresentation.title == "Loading sessions")
+        #expect(loadingPresentation.loadingSessionsPresentation.detail == "Fetching recent activity from the gateway.")
+        #expect(loadingPresentation.loadingSessionsPresentation.value == "loading")
         await store.receive(.refreshResponse(.init(result: .success(.init(entries: loadedSessions))))) {
             $0.loadingPhase = .idle
             $0.sessionEntries = .init(entries: loadedSessions)
@@ -158,7 +161,9 @@ struct IPadActivitySessionsFeatureTests {
         #expect(probe.requestedLimits == [CommandCenterTab.recentSessionsFetchLimit])
         let presentation = Self.screenPresentation(store.state)
         #expect(presentation.sessionMetricValue == "0")
-        #expect(presentation.loadErrorText?.value == "Try again after the gateway reconnects.")
+        #expect(presentation.unavailableSessionsPresentation?.title == "Sessions unavailable")
+        #expect(presentation.unavailableSessionsPresentation?.detail == "Try again after the gateway reconnects.")
+        #expect(presentation.unavailableSessionsPresentation?.value == "error")
     }
 
     @Test func `gateway presentation refresh updates reducer state`() async {
