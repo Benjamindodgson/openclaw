@@ -244,6 +244,37 @@ import Testing
         #expect(probe.resumeCount == 1)
     }
 
+    @Test @MainActor func `connection form reducer delegates manual connection through client`() async {
+        let probe = OnboardingManualConnectionProbe()
+        let request = OnboardingConnectionFormFeature.ManualConnectionRequest(
+            host: .init(value: "studio.local"),
+            port: .init(value: 19000),
+            useTLS: .init(value: false),
+            statusAction: .connectionStarted(.init(
+                id: .init(value: "manual"),
+                message: .init(value: "Connecting to studio.local…"),
+                statusLine: .init(value: "Connecting to studio.local:19000…"),
+                clearsIssue: .init(value: true))))
+        let authOverride = GatewayConnectionController.ManualAuthOverride.explicit(
+            token: " token ",
+            bootstrapToken: " bootstrap ",
+            password: " password ")
+        let store = TestStore(initialState: OnboardingConnectionFormFeature.State()) {
+            OnboardingConnectionFormFeature(manualConnectionClient: probe.client)
+        }
+
+        await store.send(.manualConnectionEffectRequested(.init(
+            request: request,
+            authOverride: authOverride)))
+        await store.finish()
+
+        #expect(probe.connections == [.init(
+            host: .init(value: "studio.local"),
+            port: .init(value: 19000),
+            useTLS: .init(value: false),
+            authOverride: authOverride)])
+    }
+
     @Test @MainActor func `photo import reducer classifies gateway and demo QR messages`() async {
         let link = GatewayConnectDeepLink(
             host: "gateway.example.com",
@@ -1153,6 +1184,27 @@ import Testing
         var client: OnboardingPairingResumeClient {
             OnboardingPairingResumeClient(resume: {
                 self.resumeCount += 1
+            })
+        }
+    }
+
+    private final class OnboardingManualConnectionProbe: @unchecked Sendable {
+        struct Connection: Equatable {
+            var host: OnboardingManualHost
+            var port: OnboardingManualPort
+            var useTLS: OnboardingManualTLS
+            var authOverride: GatewayConnectionController.ManualAuthOverride?
+        }
+
+        var connections: [Connection] = []
+
+        var client: OnboardingManualConnectionClient {
+            OnboardingManualConnectionClient(connect: { host, port, useTLS, authOverride in
+                self.connections.append(.init(
+                    host: host,
+                    port: port,
+                    useTLS: useTLS,
+                    authOverride: authOverride))
             })
         }
     }

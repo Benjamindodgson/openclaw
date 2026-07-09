@@ -1085,11 +1085,9 @@ extension OnboardingWizardView {
             pendingOverride: self.credentialsStore.pendingManualAuthOverride,
             password: self.gatewayPassword)
         self.credentialsStore.send(.pendingManualAuthOverrideConsumed)
-        await self.gatewayController.connectManual(
-            host: request.host.value,
-            port: request.port.value,
-            useTLS: request.useTLS.value,
-            authOverride: authOverride)
+        await self.connectionFormStore
+            .send(.manualConnectionEffectRequested(.init(request: request, authOverride: authOverride)))
+            .finish()
     }
 
     private func retryLastAttempt(silent: Bool = false) async {
