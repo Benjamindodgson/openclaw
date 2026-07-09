@@ -868,6 +868,7 @@ struct RootTabs: View {
                     },
                     onboardingStateStore: self.makeOnboardingStateStore(),
                     credentialsStore: self.makeOnboardingCredentialsStore(),
+                    statusStore: self.makeOnboardingStatusStore(),
                     gatewayConnectionStore: self.makeOnboardingGatewayConnectionStore(),
                     appleReviewDemoStore: self.makeOnboardingAppleReviewDemoStore(),
                     pairingResumeStore: self.makeOnboardingPairingResumeStore())

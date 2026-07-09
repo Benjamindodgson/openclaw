@@ -6,6 +6,10 @@ struct OnboardingPairingResumeClockClient {
     var now: @Sendable () -> OnboardingPairingResumeRequestTime
 }
 
+struct OnboardingRetryConnectionClient {
+    var connectLastKnown: @MainActor @Sendable () async -> Void
+}
+
 extension OnboardingPairingResumeClockClient: DependencyKey {
     static let liveValue = OnboardingPairingResumeClockClient(now: {
         .init(value: Date())
@@ -16,16 +20,34 @@ extension OnboardingPairingResumeClockClient: DependencyKey {
     })
 }
 
+extension OnboardingRetryConnectionClient: DependencyKey {
+    static let liveValue = OnboardingRetryConnectionClient(connectLastKnown: {})
+    static let testValue = OnboardingRetryConnectionClient(connectLastKnown: {})
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        OnboardingRetryConnectionClient(connectLastKnown: {
+            await gatewayController.connectLastKnown()
+        })
+    }
+}
+
 extension DependencyValues {
     var onboardingPairingResumeClock: OnboardingPairingResumeClockClient {
         get { self[OnboardingPairingResumeClockClient.self] }
         set { self[OnboardingPairingResumeClockClient.self] = newValue }
+    }
+
+    var onboardingRetryConnection: OnboardingRetryConnectionClient {
+        get { self[OnboardingRetryConnectionClient.self] }
+        set { self[OnboardingRetryConnectionClient.self] = newValue }
     }
 }
 
 @Reducer
 struct OnboardingStatusFeature {
     private let clockOverride: OnboardingPairingResumeClockClient?
+    private let retryConnectionClientOverride: OnboardingRetryConnectionClient?
 
     static let defaultStatusLine = "In your OpenClaw chat, run /pair qr, then scan the code here."
     static let noSavedPairingStatusLine =
@@ -60,11 +82,15 @@ struct OnboardingStatusFeature {
         silent: OnboardingRetryConnectionSilence)
         -> RetryConnectionRequest
     {
-        .init(statusAction: .retryConnectionStarted(.init(silent: silent)))
+        .init(silent: silent)
     }
 
-    init(clock: OnboardingPairingResumeClockClient? = nil) {
+    init(
+        clock: OnboardingPairingResumeClockClient? = nil,
+        retryConnectionClient: OnboardingRetryConnectionClient? = nil)
+    {
         self.clockOverride = clock
+        self.retryConnectionClientOverride = retryConnectionClient
     }
 
     // swiftformat:disable redundantSendable
@@ -97,7 +123,7 @@ struct OnboardingStatusFeature {
     }
 
     struct RetryConnectionRequest: Equatable, Sendable {
-        var statusAction: OnboardingStatusFeature.Action
+        var silent: OnboardingRetryConnectionSilence
     }
 
     @ObservableState
@@ -217,6 +243,7 @@ struct OnboardingStatusFeature {
         case noSavedPairingFound
         case pairingResumeStarted
         case qrScannerOpeningStarted
+        case retryConnectionRequested(RetryConnectionRequest)
         case retryConnectionStarted(RetryConnectionStart)
         case scannerErrorReceived(ScannerError)
     }
@@ -226,7 +253,9 @@ struct OnboardingStatusFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.onboardingPairingResumeClock) var dependencyClock
+            @Dependency(\.onboardingRetryConnection) var dependencyRetryConnectionClient
             let clock = self.clockOverride ?? dependencyClock
+            let retryConnectionClient = self.retryConnectionClientOverride ?? dependencyRetryConnectionClient
 
             switch action {
             case .automaticPairingResumeRequested:
@@ -374,13 +403,15 @@ struct OnboardingStatusFeature {
                 state.statusLineState = .init(value: "Opening QR scanner…")
                 return .none
 
-            case let .retryConnectionStarted(start):
-                let connectionID = start.silent.value ? "retry-auto" : "retry"
-                state.connectingGatewayIDState = .init(value: connectionID)
-                if !start.silent.value {
-                    state.connectMessageState = .init(value: "Retrying…")
-                    state.statusLineState = .init(value: "Retrying last connection…")
+            case let .retryConnectionRequested(request):
+                Self.applyRetryConnectionStarted(.init(silent: request.silent), to: &state)
+                return .run { [retryConnectionClient] send in
+                    await retryConnectionClient.connectLastKnown()
+                    await send(.connectionFinished)
                 }
+
+            case let .retryConnectionStarted(start):
+                Self.applyRetryConnectionStarted(start, to: &state)
                 return .none
 
             case let .scannerErrorReceived(error):
@@ -419,6 +450,18 @@ struct OnboardingStatusFeature {
                 state.connectMessageState = .init(value: trimmedStatus)
                 state.statusLineState = .init(value: trimmedStatus)
             }
+        }
+    }
+
+    private static func applyRetryConnectionStarted(
+        _ start: Action.RetryConnectionStart,
+        to state: inout State)
+    {
+        let connectionID = start.silent.value ? "retry-auto" : "retry"
+        state.connectingGatewayIDState = .init(value: connectionID)
+        if !start.silent.value {
+            state.connectMessageState = .init(value: "Retrying…")
+            state.statusLineState = .init(value: "Retrying last connection…")
         }
     }
 

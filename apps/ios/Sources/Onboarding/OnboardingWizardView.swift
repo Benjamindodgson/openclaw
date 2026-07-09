@@ -1095,9 +1095,7 @@ extension OnboardingWizardView {
     private func retryLastAttempt(silent: Bool = false) async {
         // Keep current auth/pairing issue sticky while retrying to avoid Step 3 UI flip-flop.
         let request = OnboardingStatusFeature.retryConnectionRequest(silent: .init(value: silent))
-        self.statusStore.send(request.statusAction)
-        defer { self.statusStore.send(.connectionFinished) }
-        await self.gatewayController.connectLastKnown()
+        await self.statusStore.send(.retryConnectionRequested(request)).finish()
     }
 
     private func gatewayProblemPrimaryActionTitle(_ problem: GatewayConnectionProblem) -> String? {
