@@ -220,6 +220,21 @@ import Testing
         #expect(probe.disconnectCount == 1)
     }
 
+    @Test @MainActor func `gateway connection reducer delegates discovered gateway connect through client`() async {
+        let probe = OnboardingDiscoveredGatewayConnectionProbe()
+        let store = TestStore(initialState: OnboardingGatewayConnectionFeature.State()) {
+            OnboardingGatewayConnectionFeature(discoveredGatewayConnectionClient: probe.client)
+        }
+        let request = OnboardingGatewayConnectionFeature.Action.DiscoveredGatewayConnectionRequest(
+            id: .init(value: "gateway-id"),
+            name: .init(value: "Studio Gateway"))
+
+        await store.send(.discoveredGatewayConnectionEffectRequested(request))
+        await store.finish()
+
+        #expect(probe.connectionIDs == [.init(value: "gateway-id")])
+    }
+
     @Test @MainActor func `apple review demo reducer delegates enable through client`() async {
         let probe = OnboardingAppleReviewDemoProbe()
         let store = TestStore(initialState: OnboardingAppleReviewDemoFeature.State()) {
@@ -1189,6 +1204,16 @@ import Testing
         var client: OnboardingGatewayDisconnectClient {
             OnboardingGatewayDisconnectClient(disconnect: {
                 self.disconnectCount += 1
+            })
+        }
+    }
+
+    private final class OnboardingDiscoveredGatewayConnectionProbe: @unchecked Sendable {
+        var connectionIDs: [OnboardingConnectionID] = []
+
+        var client: OnboardingDiscoveredGatewayConnectionClient {
+            OnboardingDiscoveredGatewayConnectionClient(connect: { id in
+                self.connectionIDs.append(id)
             })
         }
     }

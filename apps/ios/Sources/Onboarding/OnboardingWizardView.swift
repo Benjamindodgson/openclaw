@@ -1047,14 +1047,15 @@ extension OnboardingWizardView {
     }
 
     private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
-        self.gatewayConnectionStore.send(.discoveredGatewayConnectionRequested(.init(
+        let request = OnboardingGatewayConnectionFeature.Action.DiscoveredGatewayConnectionRequest(
             id: .init(value: gateway.id),
-            name: .init(value: gateway.name))))
+            name: .init(value: gateway.name))
+        self.gatewayConnectionStore.send(.discoveredGatewayConnectionRequested(request))
         guard let statusAction = self.gatewayConnectionStore.discoveredGatewayConnectionStatusAction else { return }
         self.gatewayConnectionStore.send(.discoveredGatewayConnectionStatusHandled)
         self.statusStore.send(statusAction)
         defer { self.statusStore.send(.connectionFinished) }
-        await self.gatewayController.connect(gateway)
+        await self.gatewayConnectionStore.send(.discoveredGatewayConnectionEffectRequested(request)).finish()
     }
 
     private func selectMode(_ mode: OnboardingConnectionMode) {
