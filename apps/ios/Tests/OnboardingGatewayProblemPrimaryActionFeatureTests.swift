@@ -62,6 +62,26 @@ import Testing
         #expect(OnboardingGatewayProblemPrimaryActionFeature.title(for: Self.noActionProblem()) == nil)
     }
 
+    @Test @MainActor func `rotated certificate trust delegates through client`() async {
+        let problem = Self.rotatedCertificateProblem()
+        let probe = OnboardingGatewayProblemTrustProbe()
+        let store = TestStore(initialState: OnboardingGatewayProblemPrimaryActionFeature.State()) {
+            OnboardingGatewayProblemPrimaryActionFeature(trustClient: probe.client)
+        }
+        let request = OnboardingGatewayProblemPrimaryActionFeature.CertificateTrustRequest(
+            problem: problem,
+            statusAction: .connectionStarted(.init(
+                id: .init(value: "trust-certificate"),
+                message: .init(value: "Updating gateway certificate…"),
+                statusLine: .init(value: "Updating gateway certificate…"),
+                clearsIssue: .init(value: false))))
+
+        await store.send(.rotatedCertificateTrustRequested(request))
+        await store.finish()
+
+        #expect(probe.trustedProblems == [problem])
+    }
+
     private static func resetProblem() -> GatewayConnectionProblem {
         GatewayConnectionProblem(
             kind: .gatewayAuthTokenMismatch,
@@ -116,5 +136,16 @@ import Testing
             message: "Scan a fresh QR code or update token/password.",
             retryable: false,
             pauseReconnect: false)
+    }
+
+    private final class OnboardingGatewayProblemTrustProbe: @unchecked Sendable {
+        var trustedProblems: [GatewayConnectionProblem] = []
+
+        var client: OnboardingGatewayProblemTrustClient {
+            OnboardingGatewayProblemTrustClient(trustRotatedCertificate: { problem in
+                self.trustedProblems.append(problem)
+                return true
+            })
+        }
     }
 }

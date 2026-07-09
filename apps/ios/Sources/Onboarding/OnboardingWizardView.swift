@@ -1121,8 +1121,10 @@ extension OnboardingWizardView {
 
         case let .trustRotatedCertificate(request):
             self.statusStore.send(request.statusAction)
-            defer { self.statusStore.send(.connectionFinished) }
-            _ = await self.gatewayController.trustRotatedGatewayCertificate(from: request.problem)
+            await self.gatewayProblemPrimaryActionStore
+                .send(.rotatedCertificateTrustRequested(request))
+                .finish()
+            self.statusStore.send(.connectionFinished)
             return
 
         case let .openProtocolMismatchHelp(problem):

@@ -372,6 +372,12 @@ struct OnboardingPairingResumeFeature {
 
 @Reducer
 struct OnboardingGatewayProblemPrimaryActionFeature {
+    private let trustClientOverride: OnboardingGatewayProblemTrustClient?
+
+    init(trustClient: OnboardingGatewayProblemTrustClient? = nil) {
+        self.trustClientOverride = trustClient
+    }
+
     static func title(for problem: GatewayConnectionProblem) -> String? {
         GatewayProblemPrimaryAction.title(
             for: problem,
@@ -411,12 +417,16 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
 
         case primaryActionDecisionHandled
         case primaryActionTapped(PrimaryActionRequest)
+        case rotatedCertificateTrustRequested(CertificateTrustRequest)
     }
 
     // swiftformat:enable redundantSendable
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingGatewayProblemTrust) var dependencyTrustClient
+            let trustClient = self.trustClientOverride ?? dependencyTrustClient
+
             switch action {
             case .primaryActionDecisionHandled:
                 state.primaryActionDecision = nil
@@ -426,6 +436,11 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
                 let problem = request.problem
                 state.primaryActionDecision = Self.primaryActionDecision(for: problem)
                 return .none
+
+            case let .rotatedCertificateTrustRequested(request):
+                return .run { [trustClient] _ in
+                    _ = await trustClient.trustRotatedCertificate(request.problem)
+                }
             }
         }
         .autoLogActions()
@@ -466,6 +481,29 @@ struct OnboardingGatewayProblemPrimaryActionFeature {
                 message: .init(value: "Updating gateway certificate…"),
                 statusLine: .init(value: "Updating gateway certificate…"),
                 clearsIssue: .init(value: false))))
+    }
+}
+
+struct OnboardingGatewayProblemTrustClient {
+    var trustRotatedCertificate: @MainActor @Sendable (GatewayConnectionProblem) async -> Bool
+}
+
+extension OnboardingGatewayProblemTrustClient: DependencyKey {
+    static let liveValue = OnboardingGatewayProblemTrustClient(trustRotatedCertificate: { _ in false })
+    static let testValue = OnboardingGatewayProblemTrustClient(trustRotatedCertificate: { _ in false })
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        OnboardingGatewayProblemTrustClient(trustRotatedCertificate: { problem in
+            await gatewayController.trustRotatedGatewayCertificate(from: problem)
+        })
+    }
+}
+
+extension DependencyValues {
+    var onboardingGatewayProblemTrust: OnboardingGatewayProblemTrustClient {
+        get { self[OnboardingGatewayProblemTrustClient.self] }
+        set { self[OnboardingGatewayProblemTrustClient.self] = newValue }
     }
 }
 

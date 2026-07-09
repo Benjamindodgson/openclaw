@@ -238,6 +238,16 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeOnboardingGatewayProblemPrimaryActionStore()
+        -> StoreOf<OnboardingGatewayProblemPrimaryActionFeature>
+    {
+        Store(initialState: OnboardingGatewayProblemPrimaryActionFeature.State()) {
+            OnboardingGatewayProblemPrimaryActionFeature(
+                trustClient: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
     func makeSettingsGatewaySetupStatusStore() -> StoreOf<SettingsGatewaySetupStatusFeature> {
         Store(initialState: SettingsGatewaySetupStatusFeature.State()) {
             SettingsGatewaySetupStatusFeature()
