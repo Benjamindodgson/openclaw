@@ -417,9 +417,6 @@ struct OnboardingWizardView: View {
             .onChange(of: self.discoveryDomain) { _, _ in
                 self.scheduleDiscoveryRestart()
             }
-            .onChange(of: self.discoveryRestartStore.restartRequestID) { _, _ in
-                self.gatewayController.restartDiscovery()
-            }
             .onChange(of: self.appModel.lastGatewayProblem) { _, newValue in
                 self.updateConnectionIssue(problem: newValue, statusText: self.appModel.gatewayStatusText)
             }
@@ -619,7 +616,7 @@ struct OnboardingWizardView: View {
                 }
 
                 Button("Restart Discovery") {
-                    self.gatewayController.restartDiscovery()
+                    Task { await self.discoveryRestartStore.send(.restartRequested).finish() }
                 }
                 .disabled(self.connectingGatewayID != nil)
             }

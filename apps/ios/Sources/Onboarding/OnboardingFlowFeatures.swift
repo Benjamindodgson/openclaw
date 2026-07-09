@@ -88,14 +88,19 @@ struct OnboardingPresentationFeature {
 
 @Reducer
 struct OnboardingDiscoveryRestartFeature {
+    private let restartClientOverride: OnboardingDiscoveryRestartClient?
     private let sleepOverride: OnboardingDiscoveryRestartSleepClient?
 
     private enum CancelID {
         case restart
     }
 
-    init(sleeper: OnboardingDiscoveryRestartSleepClient? = nil) {
+    init(
+        sleeper: OnboardingDiscoveryRestartSleepClient? = nil,
+        restartClient: OnboardingDiscoveryRestartClient? = nil)
+    {
         self.sleepOverride = sleeper
+        self.restartClientOverride = restartClient
     }
 
     // swiftformat:disable redundantSendable
@@ -112,13 +117,16 @@ struct OnboardingDiscoveryRestartFeature {
         case disappeared
         case discoveryDomainChanged
         case restartDelayElapsed
+        case restartRequested
     }
 
     // swiftformat:enable redundantSendable
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingDiscoveryRestart) var dependencyRestartClient
             @Dependency(\.onboardingDiscoveryRestartSleep) var dependencySleeper
+            let restartClient = self.restartClientOverride ?? dependencyRestartClient
             let sleeper = self.sleepOverride ?? dependencySleeper
 
             switch action {
@@ -131,7 +139,14 @@ struct OnboardingDiscoveryRestartFeature {
 
             case .restartDelayElapsed:
                 state.restartRequestIDState = .init(value: state.restartRequestID &+ 1)
-                return .none
+                return .run { [restartClient] _ in
+                    await restartClient.restart()
+                }
+
+            case .restartRequested:
+                return .run { [restartClient] _ in
+                    await restartClient.restart()
+                }
 
             case .disappeared:
                 return .cancel(id: CancelID.restart)
@@ -141,8 +156,24 @@ struct OnboardingDiscoveryRestartFeature {
     }
 }
 
+struct OnboardingDiscoveryRestartClient {
+    var restart: @MainActor @Sendable () -> Void
+}
+
 struct OnboardingDiscoveryRestartSleepClient {
     var sleep: @Sendable () async throws -> Void
+}
+
+extension OnboardingDiscoveryRestartClient: DependencyKey {
+    static let liveValue = OnboardingDiscoveryRestartClient(restart: {})
+    static let testValue = OnboardingDiscoveryRestartClient(restart: {})
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        OnboardingDiscoveryRestartClient(restart: {
+            gatewayController.restartDiscovery()
+        })
+    }
 }
 
 extension OnboardingDiscoveryRestartSleepClient: DependencyKey {
@@ -154,6 +185,11 @@ extension OnboardingDiscoveryRestartSleepClient: DependencyKey {
 }
 
 extension DependencyValues {
+    var onboardingDiscoveryRestart: OnboardingDiscoveryRestartClient {
+        get { self[OnboardingDiscoveryRestartClient.self] }
+        set { self[OnboardingDiscoveryRestartClient.self] = newValue }
+    }
+
     var onboardingDiscoveryRestartSleep: OnboardingDiscoveryRestartSleepClient {
         get { self[OnboardingDiscoveryRestartSleepClient.self] }
         set { self[OnboardingDiscoveryRestartSleepClient.self] = newValue }
