@@ -871,7 +871,8 @@ struct RootTabs: View {
                     statusStore: self.makeOnboardingStatusStore(),
                     gatewayConnectionStore: self.makeOnboardingGatewayConnectionStore(),
                     appleReviewDemoStore: self.makeOnboardingAppleReviewDemoStore(),
-                    pairingResumeStore: self.makeOnboardingPairingResumeStore())
+                    pairingResumeStore: self.makeOnboardingPairingResumeStore(),
+                    gatewayProblemPrimaryActionStore: self.makeOnboardingGatewayProblemPrimaryActionStore())
                     .environment(self.appModel)
                     .environment(self.voiceWake)
                     .environment(self.gatewayController)

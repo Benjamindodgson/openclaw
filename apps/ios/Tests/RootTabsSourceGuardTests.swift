@@ -7557,6 +7557,8 @@ struct RootTabsSourceGuardTests {
     @Test func `onboarding gateway problem primary action is reducer decision owned`() throws {
         let onboardingSource = try String(contentsOf: Self.onboardingWizardSourceURL(), encoding: .utf8)
         let onboardingFeatureSource = try Self.onboardingFeatureSource()
+        let rootSource = try String(contentsOf: Self.rootTabsSourceURL(), encoding: .utf8)
+        let storesSource = try String(contentsOf: Self.rootTabsStoresSourceURL(), encoding: .utf8)
         let actionPrefix = try Self.extract(
             onboardingSource,
             from: "private func handleGatewayProblemPrimaryAction(_ problem: GatewayConnectionProblem) async",
@@ -7571,6 +7573,8 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingFeatureSource.contains("GatewayProblemPrimaryAction.title("))
         #expect(onboardingFeatureSource.contains("retryTitle: \"Retry connection\""))
         #expect(onboardingFeatureSource.contains("resetTitle: \"Scan QR again\""))
+        #expect(onboardingFeatureSource.contains("struct OnboardingGatewayProblemTrustClient"))
+        #expect(onboardingFeatureSource.contains("var onboardingGatewayProblemTrust: OnboardingGatewayProblemTrustClient"))
         #expect(onboardingFeatureSource.contains("var primaryActionDecision: PrimaryActionDecision?"))
         #expect(onboardingFeatureSource.contains("struct CertificateTrustRequest: Equatable, Sendable"))
         #expect(onboardingFeatureSource.contains("var problem: GatewayConnectionProblem"))
@@ -7588,6 +7592,9 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingFeatureSource.contains("struct PrimaryActionRequest: Equatable, Sendable"))
         #expect(onboardingFeatureSource.contains("case primaryActionTapped(PrimaryActionRequest)"))
         #expect(onboardingFeatureSource.contains("case primaryActionDecisionHandled"))
+        #expect(onboardingFeatureSource.contains("case rotatedCertificateTrustRequested(CertificateTrustRequest)"))
+        #expect(onboardingFeatureSource.contains("@Dependency(\\.onboardingGatewayProblemTrust)"))
+        #expect(onboardingFeatureSource.contains("await trustClient.trustRotatedCertificate(request.problem)"))
         #expect(onboardingFeatureSource.contains(
             "state.primaryActionDecision = Self.primaryActionDecision(for: problem)"))
         #expect(onboardingFeatureSource.contains("state.primaryActionDecision = nil"))
@@ -7614,6 +7621,10 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains(
             "gatewayProblemPrimaryActionStoreFactory: () -> StoreOf<OnboardingGatewayProblemPrimaryActionFeature>"))
         #expect(onboardingSource.contains("OnboardingGatewayProblemPrimaryActionFeature()"))
+        #expect(rootSource.contains(
+            "gatewayProblemPrimaryActionStore: self.makeOnboardingGatewayProblemPrimaryActionStore()"))
+        #expect(storesSource.contains("func makeOnboardingGatewayProblemPrimaryActionStore()"))
+        #expect(storesSource.contains("trustClient: .live(gatewayController: self.gatewayController)"))
         #expect(onboardingSource.contains("OnboardingGatewayProblemPrimaryActionFeature.title(for: problem)"))
         #expect(actionPrefix.contains(".send(.primaryActionTapped(.init(problem: problem)))"))
         #expect(actionPrefix.contains(
@@ -7621,8 +7632,9 @@ struct RootTabsSourceGuardTests {
         #expect(actionPrefix.contains(".send(.primaryActionDecisionHandled)"))
         #expect(trustCertificateAction.contains("self.statusStore.send(request.statusAction)"))
         #expect(!trustCertificateAction.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
-        #expect(trustCertificateAction.contains(
-            "trustRotatedGatewayCertificate(from: request.problem)"))
+        #expect(trustCertificateAction.contains(".send(.rotatedCertificateTrustRequested(request))"))
+        #expect(trustCertificateAction.contains(".finish()"))
+        #expect(!trustCertificateAction.contains("trustRotatedGatewayCertificate(from: request.problem)"))
         #expect(!onboardingSource.contains("GatewayProblemPrimaryAction.title("))
         #expect(!actionPrefix.contains("problem.suggestsOnboardingReset"))
         #expect(!actionPrefix.contains("problem.canTrustRotatedCertificate"))
