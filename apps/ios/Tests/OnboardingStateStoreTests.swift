@@ -358,8 +358,9 @@ import Testing
     }
 
     @Test @MainActor func `discovery restart reducer schedules restart request`() async {
+        let restartProbe = OnboardingDiscoveryRestartProbe()
         let store = TestStore(initialState: OnboardingDiscoveryRestartFeature.State()) {
-            OnboardingDiscoveryRestartFeature()
+            OnboardingDiscoveryRestartFeature(restartClient: restartProbe.client)
         }
 
         await store.send(.discoveryDomainChanged)
@@ -367,8 +368,22 @@ import Testing
         await store.receive(.restartDelayElapsed) {
             $0.restartRequestIDState = .init(value: 1)
         }
+        await store.finish()
 
+        #expect(restartProbe.restartCount == 1)
         #expect(store.state.restartRequestID == 1)
+    }
+
+    @Test @MainActor func `discovery restart reducer delegates immediate restart through client`() async {
+        let restartProbe = OnboardingDiscoveryRestartProbe()
+        let store = TestStore(initialState: OnboardingDiscoveryRestartFeature.State()) {
+            OnboardingDiscoveryRestartFeature(restartClient: restartProbe.client)
+        }
+
+        await store.send(.restartRequested)
+        await store.finish()
+
+        #expect(restartProbe.restartCount == 1)
     }
 
     @Test @MainActor func `discovery restart reducer cancels pending restart on disappear`() async {
@@ -1135,6 +1150,16 @@ import Testing
         var client: OnboardingResetClient {
             OnboardingResetClient(reset: { instanceId in
                 self.resetInstanceIds.append(instanceId)
+            })
+        }
+    }
+
+    private final class OnboardingDiscoveryRestartProbe: @unchecked Sendable {
+        var restartCount = 0
+
+        var client: OnboardingDiscoveryRestartClient {
+            OnboardingDiscoveryRestartClient(restart: {
+                self.restartCount += 1
             })
         }
     }

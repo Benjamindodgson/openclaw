@@ -238,6 +238,14 @@ extension RootTabs {
     }
 
     @MainActor
+    func makeOnboardingDiscoveryRestartStore() -> StoreOf<OnboardingDiscoveryRestartFeature> {
+        Store(initialState: OnboardingDiscoveryRestartFeature.State()) {
+            OnboardingDiscoveryRestartFeature(
+                restartClient: .live(gatewayController: self.gatewayController))
+        }
+    }
+
+    @MainActor
     func makeOnboardingGatewayProblemPrimaryActionStore()
         -> StoreOf<OnboardingGatewayProblemPrimaryActionFeature>
     {

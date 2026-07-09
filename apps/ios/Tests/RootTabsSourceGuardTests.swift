@@ -5191,6 +5191,9 @@ struct RootTabsSourceGuardTests {
             .contains("let resolvedDiscoveryRestartStore = discoveryRestartStore ?? discoveryRestartStoreFactory()"))
         #expect(onboardingSource
             .contains("self._discoveryRestartStore = State(wrappedValue: resolvedDiscoveryRestartStore)"))
+        #expect(rootSource.contains("discoveryRestartStore: self.makeOnboardingDiscoveryRestartStore()"))
+        #expect(storesSource.contains("func makeOnboardingDiscoveryRestartStore()"))
+        #expect(storesSource.contains("restartClient: .live(gatewayController: self.gatewayController)"))
         #expect(connectionFormStoreDeclaration
             .contains("@State private var connectionFormStore: StoreOf<OnboardingConnectionFormFeature>"))
         #expect(!connectionFormStoreDeclaration.contains("= Store("))
@@ -5228,7 +5231,8 @@ struct RootTabsSourceGuardTests {
             "GatewayTrustPromptFeature(client: .live(gatewayController: self.gatewayController))"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.disappeared)"))
         #expect(onboardingSource.contains("self.discoveryRestartStore.send(.discoveryDomainChanged)"))
-        #expect(onboardingSource.contains("self.discoveryRestartStore.restartRequestID"))
+        #expect(onboardingSource.contains("self.discoveryRestartStore.send(.restartRequested)"))
+        #expect(!onboardingSource.contains("self.gatewayController.restartDiscovery()"))
         #expect(onboardingSource.contains("await self.credentialsStore.send(.setupLinkApplied(.init(link: link))).finish()"))
         #expect(onboardingSource.contains("pendingOverride: self.credentialsStore.pendingManualAuthOverride"))
         #expect(onboardingSource.contains("self.credentialsStore.send(.pendingManualAuthOverrideConsumed)"))
@@ -5260,11 +5264,15 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource
             .contains("GatewayOnboardingReset.prepareForBootstrapPairing(appModel: appModel, instanceId: instanceId)"))
         #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartFeature"))
+        #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartClient"))
         #expect(onboardingStateSource.contains("struct OnboardingDiscoveryRestartRequestID: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("var restartRequestIDState = OnboardingDiscoveryRestartRequestID(value: 0)"))
         #expect(onboardingStateSource.contains("var restartRequestID: Int {\n            self.restartRequestIDState.value"))
         #expect(onboardingStateSource.contains(
             "state.restartRequestIDState = .init(value: state.restartRequestID &+ 1)"))
+        #expect(onboardingStateSource.contains("case restartRequested"))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingDiscoveryRestart)"))
+        #expect(onboardingStateSource.contains("await restartClient.restart()"))
         #expect(onboardingStateSource.contains("struct OnboardingQRPhotoImportFeature"))
         #expect(onboardingStateSource.contains("struct OnboardingQRMessage: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct OnboardingQRPhotoImportFailureMessage: Equatable, Sendable"))

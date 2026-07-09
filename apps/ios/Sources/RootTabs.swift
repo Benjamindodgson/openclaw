@@ -873,6 +873,7 @@ struct RootTabs: View {
                     appleReviewDemoStore: self.makeOnboardingAppleReviewDemoStore(),
                     pairingResumeStore: self.makeOnboardingPairingResumeStore(),
                     gatewayProblemPrimaryActionStore: self.makeOnboardingGatewayProblemPrimaryActionStore(),
+                    discoveryRestartStore: self.makeOnboardingDiscoveryRestartStore(),
                     connectionFormStore: self.makeOnboardingConnectionFormStore())
                     .environment(self.appModel)
                     .environment(self.voiceWake)
