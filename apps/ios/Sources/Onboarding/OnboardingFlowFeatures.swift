@@ -200,6 +200,10 @@ struct OnboardingGatewayDisconnectClient {
     var disconnect: @MainActor @Sendable () -> Void
 }
 
+struct OnboardingDiscoveredGatewayConnectionClient {
+    var connect: @MainActor @Sendable (OnboardingConnectionID) async -> Void
+}
+
 extension OnboardingGatewayDisconnectClient: DependencyKey {
     static let liveValue = OnboardingGatewayDisconnectClient(disconnect: {})
     static let testValue = OnboardingGatewayDisconnectClient(disconnect: {})
@@ -212,19 +216,42 @@ extension OnboardingGatewayDisconnectClient: DependencyKey {
     }
 }
 
+extension OnboardingDiscoveredGatewayConnectionClient: DependencyKey {
+    static let liveValue = OnboardingDiscoveredGatewayConnectionClient(connect: { _ in })
+    static let testValue = OnboardingDiscoveredGatewayConnectionClient(connect: { _ in })
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        OnboardingDiscoveredGatewayConnectionClient(connect: { id in
+            guard let gateway = gatewayController.gateways.first(where: { $0.id == id.value }) else { return }
+            await gatewayController.connect(gateway)
+        })
+    }
+}
+
 extension DependencyValues {
     var onboardingGatewayDisconnect: OnboardingGatewayDisconnectClient {
         get { self[OnboardingGatewayDisconnectClient.self] }
         set { self[OnboardingGatewayDisconnectClient.self] = newValue }
     }
+
+    var onboardingDiscoveredGatewayConnection: OnboardingDiscoveredGatewayConnectionClient {
+        get { self[OnboardingDiscoveredGatewayConnectionClient.self] }
+        set { self[OnboardingDiscoveredGatewayConnectionClient.self] = newValue }
+    }
 }
 
 @Reducer
 struct OnboardingGatewayConnectionFeature {
+    private let discoveredGatewayConnectionClientOverride: OnboardingDiscoveredGatewayConnectionClient?
     private let disconnectClientOverride: OnboardingGatewayDisconnectClient?
 
-    init(disconnectClient: OnboardingGatewayDisconnectClient? = nil) {
+    init(
+        disconnectClient: OnboardingGatewayDisconnectClient? = nil,
+        discoveredGatewayConnectionClient: OnboardingDiscoveredGatewayConnectionClient? = nil)
+    {
         self.disconnectClientOverride = disconnectClient
+        self.discoveredGatewayConnectionClientOverride = discoveredGatewayConnectionClient
     }
 
     // swiftformat:disable redundantSendable
@@ -255,6 +282,7 @@ struct OnboardingGatewayConnectionFeature {
             var name: OnboardingDiscoveredGatewayName
         }
 
+        case discoveredGatewayConnectionEffectRequested(DiscoveredGatewayConnectionRequest)
         case disconnectRequested
         case discoveredGatewayConnectionRequested(DiscoveredGatewayConnectionRequest)
         case discoveredGatewayConnectionStatusHandled
@@ -264,10 +292,18 @@ struct OnboardingGatewayConnectionFeature {
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
+            @Dependency(\.onboardingDiscoveredGatewayConnection) var dependencyDiscoveredGatewayConnectionClient
             @Dependency(\.onboardingGatewayDisconnect) var dependencyDisconnectClient
+            let discoveredGatewayConnectionClient =
+                self.discoveredGatewayConnectionClientOverride ?? dependencyDiscoveredGatewayConnectionClient
             let disconnectClient = self.disconnectClientOverride ?? dependencyDisconnectClient
 
             switch action {
+            case let .discoveredGatewayConnectionEffectRequested(request):
+                return .run { [discoveredGatewayConnectionClient] _ in
+                    await discoveredGatewayConnectionClient.connect(request.id)
+                }
+
             case .disconnectRequested:
                 return .run { [disconnectClient] _ in
                     await disconnectClient.disconnect()
