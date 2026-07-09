@@ -5200,6 +5200,10 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource
             .contains("let resolvedConnectionFormStore = connectionFormStore ?? connectionFormStoreFactory()"))
         #expect(onboardingSource.contains("self._connectionFormStore = State(wrappedValue: resolvedConnectionFormStore)"))
+        #expect(rootSource.contains("connectionFormStore: self.makeOnboardingConnectionFormStore()"))
+        #expect(storesSource.contains("func makeOnboardingConnectionFormStore()"))
+        #expect(storesSource.contains("OnboardingConnectionFormFeature("))
+        #expect(storesSource.contains("manualConnectionClient: .live(gatewayController: self.gatewayController)"))
         #expect(setupCodeStoreDeclaration
             .contains("@State private var setupCodeStore: StoreOf<OnboardingSetupCodeFeature>"))
         #expect(!setupCodeStoreDeclaration.contains("= Store("))
@@ -7152,6 +7156,10 @@ struct RootTabsSourceGuardTests {
             onboardingStateSource,
             from: "struct ManualConnectionRequest",
             to: "enum Action")
+        let manualConnectionEffectRequest = try Self.extract(
+            onboardingStateSource,
+            from: "struct ManualConnectionEffectRequest",
+            to: "struct ManualHostChange")
         let manualHostChange = try Self.extract(
             onboardingStateSource,
             from: "struct ManualHostChange",
@@ -7228,6 +7236,9 @@ struct RootTabsSourceGuardTests {
         #expect(!onboardingSource.contains("!self.connectionFormStore.hasSavedGatewayConnection"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.gatewayLinkApplied(.init("))
         #expect(onboardingStateSource.contains("struct ManualConnectionRequest: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct ManualConnectionEffectRequest: Equatable, Sendable"))
+        #expect(onboardingStateSource.contains("struct OnboardingManualConnectionClient"))
+        #expect(onboardingStateSource.contains("var onboardingManualConnection: OnboardingManualConnectionClient"))
         #expect(onboardingStateSource.contains("struct ManualHostChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ManualPortTextChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct ManualTLSChange: Equatable, Sendable"))
@@ -7236,12 +7247,16 @@ struct RootTabsSourceGuardTests {
         #expect(manualConnectionRequest.contains("var useTLS: OnboardingManualTLS"))
         #expect(manualConnectionRequest.contains("var statusAction: OnboardingStatusFeature.Action"))
         #expect(!manualConnectionRequest.contains("var connectionStart: OnboardingStatusFeature.Action.ConnectionStart"))
+        #expect(manualConnectionEffectRequest.contains("var request: ManualConnectionRequest"))
+        #expect(manualConnectionEffectRequest
+            .contains("var authOverride: GatewayConnectionController.ManualAuthOverride?"))
         #expect(manualHostChange.contains("var host: OnboardingManualHost"))
         #expect(manualPortTextChange.contains("var text: OnboardingManualPortText"))
         #expect(manualTLSChange.contains("var useTLS: OnboardingManualTLS"))
         #expect(onboardingStateSource.contains("struct ModeSelection: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("struct SelectedModeChange: Equatable, Sendable"))
         #expect(onboardingStateSource.contains("case manualConnectionRequested"))
+        #expect(onboardingStateSource.contains("case manualConnectionEffectRequested(ManualConnectionEffectRequest)"))
         #expect(onboardingStateSource.contains("case manualHostChanged(ManualHostChange)"))
         #expect(onboardingStateSource.contains("case manualPortTextChanged(ManualPortTextChange)"))
         #expect(onboardingStateSource.contains("case manualTLSChanged(ManualTLSChange)"))
@@ -7258,12 +7273,17 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingStateSource.contains(
             "statusAction: .connectionStarted(Self.manualConnectionStart(host: manualHost, port: manualPort))"))
         #expect(onboardingStateSource.contains("private static func manualConnectionStart("))
+        #expect(onboardingStateSource.contains("@Dependency(\\.onboardingManualConnection)"))
+        #expect(onboardingStateSource.contains("await manualConnectionClient.connect("))
         #expect(onboardingStateSource.contains("id: .init(value: \"manual\")"))
         #expect(onboardingStateSource.contains("message: .init(value: \"Connecting to \\(host.value)…\")"))
         #expect(onboardingStateSource.contains("statusLine: .init(value: \"Connecting to \\(host.value):\\(port.value)…\")"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualConnectionRequested)"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualConnectionRequestHandled)"))
         #expect(connectManualFunction.contains("self.statusStore.send(request.statusAction)"))
+        #expect(connectManualFunction.contains(".send(.manualConnectionEffectRequested(.init("))
+        #expect(connectManualFunction.contains("request: request"))
+        #expect(connectManualFunction.contains("authOverride: authOverride"))
         #expect(!connectManualFunction.contains("self.statusStore.send(.connectionStarted(request.connectionStart))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.modeSelected(.init(mode: mode)))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(activation.connectionFormAction)"))
@@ -7271,9 +7291,10 @@ struct RootTabsSourceGuardTests {
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualPortTextChanged(.init(text: .init(value: $0))))"))
         #expect(onboardingSource.contains("self.connectionFormStore.send(.manualTLSChanged(.init(useTLS: .init(value: $0))))"))
         #expect(onboardingSource.contains("get: { self.connectionFormStore.manualTLS }"))
-        #expect(onboardingSource.contains("host: request.host.value"))
-        #expect(onboardingSource.contains("port: request.port.value"))
-        #expect(onboardingSource.contains("useTLS: request.useTLS.value"))
+        #expect(onboardingStateSource.contains("host: host.value"))
+        #expect(onboardingStateSource.contains("port: port.value"))
+        #expect(onboardingStateSource.contains("useTLS: useTLS.value"))
+        #expect(!connectManualFunction.contains("self.gatewayController.connectManual("))
         #expect(!onboardingStateSource.contains("var manualHost = \"\""))
         #expect(!onboardingStateSource.contains("var manualPort = 18789"))
         #expect(!onboardingStateSource.contains("var manualPortText = \"18789\""))

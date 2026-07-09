@@ -234,9 +234,14 @@ struct OnboardingSetupCodeFeature {
 @Reducer
 struct OnboardingConnectionFormFeature {
     private let defaultsClientOverride: OnboardingConnectionFormDefaultsClient?
+    private let manualConnectionClientOverride: OnboardingManualConnectionClient?
 
-    init(defaultsClient: OnboardingConnectionFormDefaultsClient? = nil) {
+    init(
+        defaultsClient: OnboardingConnectionFormDefaultsClient? = nil,
+        manualConnectionClient: OnboardingManualConnectionClient? = nil)
+    {
         self.defaultsClientOverride = defaultsClient
+        self.manualConnectionClientOverride = manualConnectionClient
     }
 
     // swiftformat:disable redundantSendable
@@ -313,6 +318,11 @@ struct OnboardingConnectionFormFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct ManualConnectionEffectRequest: Equatable, Sendable {
+            var request: ManualConnectionRequest
+            var authOverride: GatewayConnectionController.ManualAuthOverride?
+        }
+
         struct ManualHostChange: Equatable, Sendable { var host: OnboardingManualHost }
         struct ManualPortTextChange: Equatable, Sendable { var text: OnboardingManualPortText }
         struct ManualTLSChange: Equatable, Sendable { var useTLS: OnboardingManualTLS }
@@ -335,6 +345,7 @@ struct OnboardingConnectionFormFeature {
         case gatewayLinkApplied(GatewayLinkApplication)
         case initialConnectionLoadRequested
         case initialized(Initialization)
+        case manualConnectionEffectRequested(ManualConnectionEffectRequest)
         case manualConnectionRequested
         case manualConnectionRequestHandled
         case manualHostChanged(ManualHostChange)
@@ -349,7 +360,9 @@ struct OnboardingConnectionFormFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             @Dependency(\.onboardingConnectionFormDefaults) var dependencyDefaultsClient
+            @Dependency(\.onboardingManualConnection) var dependencyManualConnectionClient
             let defaultsClient = self.defaultsClientOverride ?? dependencyDefaultsClient
+            let manualConnectionClient = self.manualConnectionClientOverride ?? dependencyManualConnectionClient
 
             switch action {
             case .developerModeDisabled:
@@ -380,6 +393,15 @@ struct OnboardingConnectionFormFeature {
                     lastMode: initialization.lastMode,
                     hasSavedGatewayConnection: state.savedGatewayConnection), to: &state)
                 return .none
+
+            case let .manualConnectionEffectRequested(request):
+                return .run { [manualConnectionClient] _ in
+                    await manualConnectionClient.connect(
+                        request.request.host,
+                        request.request.port,
+                        request.request.useTLS,
+                        request.authOverride)
+                }
 
             case .manualConnectionRequested:
                 state.manualConnectionRequest = nil
@@ -462,5 +484,36 @@ struct OnboardingConnectionFormFeature {
             message: .init(value: "Connecting to \(host.value)…"),
             statusLine: .init(value: "Connecting to \(host.value):\(port.value)…"),
             clearsIssue: .init(value: true))
+    }
+}
+
+struct OnboardingManualConnectionClient {
+    var connect: @MainActor @Sendable (
+        OnboardingManualHost,
+        OnboardingManualPort,
+        OnboardingManualTLS,
+        GatewayConnectionController.ManualAuthOverride?) async -> Void
+}
+
+extension OnboardingManualConnectionClient: DependencyKey {
+    static let liveValue = OnboardingManualConnectionClient(connect: { _, _, _, _ in })
+    static let testValue = OnboardingManualConnectionClient(connect: { _, _, _, _ in })
+
+    @MainActor
+    static func live(gatewayController: GatewayConnectionController) -> Self {
+        OnboardingManualConnectionClient(connect: { host, port, useTLS, authOverride in
+            await gatewayController.connectManual(
+                host: host.value,
+                port: port.value,
+                useTLS: useTLS.value,
+                authOverride: authOverride)
+        })
+    }
+}
+
+extension DependencyValues {
+    var onboardingManualConnection: OnboardingManualConnectionClient {
+        get { self[OnboardingManualConnectionClient.self] }
+        set { self[OnboardingManualConnectionClient.self] = newValue }
     }
 }
