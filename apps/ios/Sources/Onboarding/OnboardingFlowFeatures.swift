@@ -257,12 +257,35 @@ struct OnboardingGatewayConnectionFeature {
     // swiftformat:disable redundantSendable
     @ObservableState
     struct State: Equatable, Sendable {
+        struct DiscoveredGatewayRow: Equatable, Identifiable, Sendable {
+            var connectionID: OnboardingConnectionID
+            var name: OnboardingDiscoveredGatewayName
+            var lanHost: OnboardingDiscoveredGatewayHost
+            var tailnetDNS: OnboardingDiscoveredGatewayHost
+
+            var id: String {
+                self.connectionID.value
+            }
+
+            var presentation: DiscoveredGatewayRowPresentation {
+                OnboardingGatewayConnectionFeature.State.discoveredGatewayRowPresentation(
+                    lanHost: self.lanHost,
+                    tailnetDNS: self.tailnetDNS)
+            }
+        }
+
         struct DiscoveredGatewayRowPresentation: Equatable, Sendable {
             var displayHost: OnboardingDiscoveredGatewayHost
             var canConnect: Bool
         }
 
         var discoveredGatewayConnectionStatusAction: OnboardingStatusFeature.Action?
+        var discoveredGatewayRows: [DiscoveredGatewayRow] = []
+        var discoveryStatusTextState = OnboardingDiscoveryStatusText(value: "Idle")
+
+        var discoveryStatusText: String {
+            self.discoveryStatusTextState.value
+        }
 
         static func discoveredGatewayRowPresentation(
             lanHost: OnboardingDiscoveredGatewayHost,
@@ -277,11 +300,17 @@ struct OnboardingGatewayConnectionFeature {
     }
 
     enum Action: Equatable, Sendable {
+        struct DiscoverySnapshot: Equatable, Sendable {
+            var statusText: OnboardingDiscoveryStatusText
+            var rows: [State.DiscoveredGatewayRow]
+        }
+
         struct DiscoveredGatewayConnectionRequest: Equatable, Sendable {
             var id: OnboardingConnectionID
             var name: OnboardingDiscoveredGatewayName
         }
 
+        case discoverySnapshotChanged(DiscoverySnapshot)
         case discoveredGatewayConnectionEffectRequested(DiscoveredGatewayConnectionRequest)
         case disconnectRequested
         case discoveredGatewayConnectionRequested(DiscoveredGatewayConnectionRequest)
@@ -299,6 +328,11 @@ struct OnboardingGatewayConnectionFeature {
             let disconnectClient = self.disconnectClientOverride ?? dependencyDisconnectClient
 
             switch action {
+            case let .discoverySnapshotChanged(snapshot):
+                state.discoveryStatusTextState = snapshot.statusText
+                state.discoveredGatewayRows = snapshot.rows
+                return .none
+
             case let .discoveredGatewayConnectionEffectRequested(request):
                 return .run { [discoveredGatewayConnectionClient] _ in
                     await discoveredGatewayConnectionClient.connect(request.id)

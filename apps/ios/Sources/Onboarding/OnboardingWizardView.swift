@@ -409,6 +409,7 @@ struct OnboardingWizardView: View {
             }
             .onAppear {
                 self.initializeState()
+                self.syncGatewayDiscoverySnapshot()
                 self.requestLocalNetworkAccessIfPastIntro(reason: "onboarding_appear")
             }
             .onDisappear {
@@ -416,6 +417,12 @@ struct OnboardingWizardView: View {
             }
             .onChange(of: self.discoveryDomain) { _, _ in
                 self.scheduleDiscoveryRestart()
+            }
+            .onChange(of: self.gatewayController.discoveryStatusText) { _, _ in
+                self.syncGatewayDiscoverySnapshot()
+            }
+            .onChange(of: self.gatewayController.gateways) { _, _ in
+                self.syncGatewayDiscoverySnapshot()
             }
             .onChange(of: self.appModel.lastGatewayProblem) { _, newValue in
                 self.updateConnectionIssue(problem: newValue, statusText: self.appModel.gatewayStatusText)
@@ -549,7 +556,7 @@ struct OnboardingWizardView: View {
         if let selectedMode {
             Section {
                 LabeledContent("Mode", value: selectedMode.title)
-                LabeledContent("Discovery", value: self.gatewayController.discoveryStatusText)
+                LabeledContent("Discovery", value: self.gatewayConnectionStore.discoveryStatusText)
                 LabeledContent("Status", value: self.appModel.gatewayDisplayStatusText)
                 LabeledContent("Progress", value: self.statusLine)
             } header: {
@@ -581,16 +588,16 @@ struct OnboardingWizardView: View {
     private var homeNetworkConnectSection: some View {
         Group {
             Section("Discovered Gateways") {
-                if self.gatewayController.gateways.isEmpty {
+                if self.gatewayConnectionStore.discoveredGatewayRows.isEmpty {
                     Text("No gateways found yet.")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(self.gatewayController.gateways) { gateway in
+                    ForEach(self.gatewayConnectionStore.discoveredGatewayRows) { gateway in
                         let presentation = self.discoveredGatewayRowPresentation(gateway)
 
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(gateway.name)
+                                Text(gateway.name.value)
                                 if let host = presentation.displayHost.value {
                                     Text(host)
                                         .font(.footnote)
@@ -601,7 +608,7 @@ struct OnboardingWizardView: View {
                             Button {
                                 Task { await self.connectDiscoveredGateway(gateway) }
                             } label: {
-                                if self.connectingGatewayID == gateway.id {
+                                if self.connectingGatewayID == gateway.connectionID.value {
                                     ProgressView()
                                         .progressViewStyle(.circular)
                                 } else if !presentation.canConnect {
@@ -1034,6 +1041,12 @@ extension OnboardingWizardView {
         self.discoveryRestartStore.send(.discoveryDomainChanged)
     }
 
+    private func syncGatewayDiscoverySnapshot() {
+        self.gatewayConnectionStore.send(.discoverySnapshotChanged(.init(
+            statusText: .init(value: self.gatewayController.discoveryStatusText),
+            rows: self.gatewayController.gateways.map(Self.discoveredGatewayRow))))
+    }
+
     private func updateGatewayToken(_ value: String) {
         self.credentialsStore.send(.gatewayTokenInputChanged(.init(
             value: .init(value: value),
@@ -1046,10 +1059,12 @@ extension OnboardingWizardView {
             instanceId: .init(value: self.instanceId))))
     }
 
-    private func connectDiscoveredGateway(_ gateway: GatewayDiscoveryModel.DiscoveredGateway) async {
+    private func connectDiscoveredGateway(
+        _ gateway: OnboardingGatewayConnectionFeature.State.DiscoveredGatewayRow) async
+    {
         let request = OnboardingGatewayConnectionFeature.Action.DiscoveredGatewayConnectionRequest(
-            id: .init(value: gateway.id),
-            name: .init(value: gateway.name))
+            id: gateway.connectionID,
+            name: gateway.name)
         self.gatewayConnectionStore.send(.discoveredGatewayConnectionRequested(request))
         guard let statusAction = self.gatewayConnectionStore.discoveredGatewayConnectionStatusAction else { return }
         self.gatewayConnectionStore.send(.discoveredGatewayConnectionStatusHandled)
@@ -1063,10 +1078,19 @@ extension OnboardingWizardView {
     }
 
     private func discoveredGatewayRowPresentation(
-        _ gateway: GatewayDiscoveryModel.DiscoveredGateway)
+        _ gateway: OnboardingGatewayConnectionFeature.State.DiscoveredGatewayRow)
         -> OnboardingGatewayConnectionFeature.State.DiscoveredGatewayRowPresentation
     {
-        OnboardingGatewayConnectionFeature.State.discoveredGatewayRowPresentation(
+        gateway.presentation
+    }
+
+    private static func discoveredGatewayRow(
+        _ gateway: GatewayDiscoveryModel.DiscoveredGateway)
+        -> OnboardingGatewayConnectionFeature.State.DiscoveredGatewayRow
+    {
+        .init(
+            connectionID: .init(value: gateway.id),
+            name: .init(value: gateway.name),
             lanHost: .init(value: gateway.lanHost),
             tailnetDNS: .init(value: gateway.tailnetDns))
     }

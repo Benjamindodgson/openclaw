@@ -185,6 +185,8 @@ struct OnboardingSetupCode: Equatable, Sendable { var value: String }
 
 struct OnboardingSetupCodeStatusMessage: Equatable, Sendable { var value: String? }
 
+struct OnboardingDiscoveryStatusText: Equatable, Sendable { var value: String }
+
 struct OnboardingDiscoveryRestartRequestID: Equatable, Sendable { var value: Int }
 
 struct OnboardingDiscoveredGatewayName: Equatable, Sendable { var value: String }

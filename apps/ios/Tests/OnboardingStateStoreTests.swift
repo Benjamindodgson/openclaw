@@ -235,6 +235,28 @@ import Testing
         #expect(probe.connectionIDs == [.init(value: "gateway-id")])
     }
 
+    @Test @MainActor func `gateway connection reducer owns discovery snapshot state`() async {
+        let row = OnboardingGatewayConnectionFeature.State.DiscoveredGatewayRow(
+            connectionID: .init(value: "gateway-id"),
+            name: .init(value: "Studio Gateway"),
+            lanHost: .init(value: " studio.local "),
+            tailnetDNS: .init(value: nil))
+        let store = TestStore(initialState: OnboardingGatewayConnectionFeature.State()) {
+            OnboardingGatewayConnectionFeature()
+        }
+
+        await store.send(.discoverySnapshotChanged(.init(
+            statusText: .init(value: "Searching"),
+            rows: [row])))
+        {
+            $0.discoveryStatusTextState = .init(value: "Searching")
+            $0.discoveredGatewayRows = [row]
+        }
+
+        #expect(store.state.discoveryStatusText == "Searching")
+        #expect(store.state.discoveredGatewayRows.first?.presentation.displayHost == .init(value: "studio.local"))
+    }
+
     @Test @MainActor func `apple review demo reducer delegates enable through client`() async {
         let probe = OnboardingAppleReviewDemoProbe()
         let store = TestStore(initialState: OnboardingAppleReviewDemoFeature.State()) {
